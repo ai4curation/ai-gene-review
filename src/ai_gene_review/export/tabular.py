@@ -6,6 +6,7 @@ from typing import Dict, List, Any, Union, Optional
 import pandas as pd
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
+from ai_gene_review.export.annotation_export import _dict_to_obj
 
 
 class TabularExporter:
@@ -30,8 +31,7 @@ class TabularExporter:
         with open(file_path, "r") as f:
             data = yaml.safe_load(f)
 
-        # Parse into GeneReview model
-        gene_review = GeneReview.model_validate(data)
+        gene_review = _dict_to_obj(data)
 
         return self._flatten_existing_annotations(gene_review)
 

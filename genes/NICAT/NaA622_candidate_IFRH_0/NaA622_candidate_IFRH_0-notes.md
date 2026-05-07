@@ -1,0 +1,4 @@
+# NaA622_candidate_IFRH_0 Notes
+
+- The full preprint makes **A622/NaGR** one of the mechanistically resolved enzymes in nicotine synthesis, so IFRH_0 remains an A622-like paralog that has to be compared explicitly against the primary A622 mapping rather than dropped as noise. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "A622 = NaGR, a nicotinic acid N-glucoside reductase"; "A622 and BBL should be treated as core late-pathway enzymes with direct mechanistic support, not as loose historical candidates."]
+- Because the paper is strongest for pathway role and weaker for exact NICAT accession resolution, IFRH_0 remains a live alternate A622-like candidate until the paralog split is settled directly. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]

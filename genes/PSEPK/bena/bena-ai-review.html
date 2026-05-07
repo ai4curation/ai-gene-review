@@ -1,0 +1,2806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>benA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>benA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I40" target="_blank" class="term-link">
+                        Q88I40
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "benA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I40" data-a="DESCRIPTION: BenA is the alpha (large) subunit of benzoate 1,2-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BenA is the alpha (large) subunit of benzoate 1,2-dioxygenase (EC 1.14.12.10), the terminal oxygenase component of the three-component benzoate dioxygenase system (BenABC) in Pseudomonas putida KT2440. BenA contains a Rieske [2Fe-2S] cluster domain (residues 47-129) that accepts electrons from the BenC reductase, and a mononuclear non-heme iron catalytic site in the Ring_hydroxyl_A domain where dioxygen activation and substrate hydroxylation occur. The enzyme catalyzes the first committed step of the chromosomal beta-ketoadipate pathway, converting benzoate + NADH + O2 to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate (benzoate cis-diol) + NAD+. It is encoded by the benABCD operon, which is transcriptionally activated by BenR in response to benzoate. BenA is a member of the bacterial ring-hydroxylating dioxygenase alpha subunit family, sharing 58.3% sequence identity with XylX from the TOL plasmid (PMID:1938949).</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I40" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BenA binds iron ions in two distinct contexts. The Rieske [2Fe-2S] cluster domain (residues 47-129) coordinates two iron atoms via conserved cysteine and histidine ligands for electron transfer. Additionally, the catalytic Ring_hydroxyl_A domain contains a mononuclear non-heme iron center that is the site of dioxygen activation and substrate hydroxylation. The InterPro domains (IPR015879, IPR015881) that triggered this IEA annotation correctly identify iron-binding capacity. However, GO:0005506 (iron ion binding) is a general term. The more specific GO:0051537 (2 iron, 2 sulfur cluster binding) is already annotated separately and better captures the Rieske cluster function. The remaining iron-binding function (mononuclear non-heme iron) is also real but subsumed by the dioxygenase catalytic activity. This annotation is acceptable as a broad correct statement.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Iron ion binding is a legitimate molecular function of BenA. The Rieske [2Fe-2S] cluster requires iron for electron transfer, and the catalytic center uses a mononuclear non-heme iron for oxygen activation. While more specific terms exist for the cluster (GO:0051537, already annotated), the general iron ion binding term remains valid as an umbrella annotation. InterPro domains IPR015879 (Ring_hydroxyl_A) and IPR015881 (ARHD_Rieske_2Fe_2S) correctly identify iron-binding capacity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">KW   Iron {ECO:0000256|ARBA:ARBA00023004}; Iron-sulfur {ECO:0000256|ARBA:ARBA00023014}; Metal-binding {ECO:0000256|ARBA:ARBA00022723}</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT   DOMAIN          47..129 /note=&#34;Rieske&#34; /evidence=&#34;ECO:0000259|PROSITE:PS51296&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rieske [2Fe-2S] domain (residues 47-129, PROSITE PS51296) - electron transfer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018623" target="_blank" class="term-link">
+                                    GO:0018623
+                                </a>
+                            </span>
+                            <span class="term-label">benzoate 1,2-dioxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I40" data-a="GO:0018623" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the primary molecular function of BenA. GO:0018623 (benzoate 1,2-dioxygenase activity) is mapped from EC 1.14.12.10, which describes the reaction benzoate + NADH + H+ + O2 = (1R,6S)-1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate + NAD+. BenA is specifically named as the alpha subunit of benzoate 1,2-dioxygenase in the genome annotation (PMID:12534463) and the benABCD operon is mapped to benzoate catabolism in P. putida KT2440 (PMID:12534466). This is the core catalytic annotation for this gene product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Benzoate 1,2-dioxygenase activity is the defining molecular function of BenA. The EC number 1.14.12.10 correctly maps to GO:0018623. The gene is named benA precisely because it encodes the alpha subunit of this enzyme. Genomic analysis confirms the benABCD operon encodes the benzoate dioxygenase system (PMID:12534466), and the evolutionary relationship to XylX confirms the dioxygenase function (PMID:1938949).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SubName: Full=Benzoate 1,2-dioxygenase subunit alpha {ECO:0000313|EMBL:AAN68769.1}; EC=1.14.12.10 {ECO:0000313|EMBL:AAN68769.1}</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                                        PMID:12534466
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the genes encoding the peripheral pathways for the catabolism of p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1938949" target="_blank" class="term-link">
+                                        PMID:1938949
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Corresponding genes from the two biological sources share common ancestry: comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed respective identities of 58.3, 61.3, and 53%</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The enzyme catalyzes: benzoate + NADH + O2 -&gt; cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate (benzoate cis-diol) + NAD+</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">benA (PP_3161) encodes the alpha (large) subunit of benzoate dioxygenase, the oxygenase component responsible for the initial oxidative attack on benzoate in aerobic benzoate catabolism</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    GO:0051537
+                                </a>
+                            </span>
+                            <span class="term-label">2 iron, 2 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I40" data-a="GO:0051537" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BenA contains a Rieske-type [2Fe-2S] cluster in its N-terminal domain (residues 47-129), identified by PROSITE PS51296, Pfam PF00355 (Rieske), and multiple InterPro entries (IPR001663, IPR015879, IPR015881, IPR017941, IPR036922). The Rieske cluster is essential for electron transfer from the BenC reductase to the mononuclear iron active site where catalysis occurs. This is a well-established structural and functional feature of all ring-hydroxylating dioxygenase alpha subunits.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The 2Fe-2S cluster binding annotation is well-supported by multiple domain predictions (Rieske domain at residues 47-129) and is a defining feature of the ring-hydroxylating dioxygenase alpha subunit family. The UniProt keywords explicitly include &#34;2Fe-2S&#34; and &#34;Iron-sulfur&#34;. The Rieske cluster is essential for the electron transfer chain that drives the dioxygenase catalytic cycle.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT   DOMAIN          47..129 /note=&#34;Rieske&#34; /evidence=&#34;ECO:0000259|PROSITE:PS51296&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">KW   2Fe-2S {ECO:0000256|ARBA:ARBA00022714}</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Rieske [2Fe-2S] domain (residues 47-129, PROSITE PS51296) - electron transfer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043640" target="_blank" class="term-link">
+                                    GO:0043640
+                                </a>
+                            </span>
+                            <span class="term-label">benzoate catabolic process via hydroxylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12534466
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic analysis of the aromatic catabolic pathways from Pse...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I40" data-a="GO:0043640" data-r="PMID:12534466" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BenA is directly involved in benzoate catabolism via hydroxylation. The benzoate 1,2-dioxygenase (BenABC) catalyzes the first step of this pathway, hydroxylating benzoate to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate, which is then dehydrogenated by BenD to catechol. GO:0043640 is defined as the chemical reactions and pathways resulting in the breakdown of benzoate, by its hydroxylation to cis-1,2-dihydroxybenzoate followed by dehydrogenation to catechol. This precisely describes the pathway that BenA participates in. No biological process annotations currently exist for this gene in GOA, making this a critical gap.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> BenA is a core enzyme in the benzoate catabolic process via hydroxylation. The benABCD operon was mapped to benzoate catabolism in P. putida KT2440 (PMID:12534466), and the enzyme catalyzes the committed first step of the beta-ketoadipate pathway. This biological process annotation fills a gap since only molecular function annotations currently exist.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                                        PMID:12534466
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the genes encoding the peripheral pathways for the catabolism of p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/bena/bena-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BenA functions in the beta-ketoadipate pathway: 1. Benzoate -&gt; benzoate cis-diol (BenABC - benzoate 1,2-dioxygenase)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                                        PMID:12534466
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the protocatechuate (pca genes) and catechol (cat genes) branches of the beta-ketoadipate pathway</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043639" target="_blank" class="term-link">
+                                    GO:0043639
+                                </a>
+                            </span>
+                            <span class="term-label">benzoate catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12534466
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic analysis of the aromatic catabolic pathways from Pse...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I40" data-a="GO:0043639" data-r="PMID:12534466" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BenA participates in benzoate catabolism as the alpha subunit of the first enzyme in the pathway. GO:0043639 is the parent term of GO:0043640 (benzoate catabolic process via hydroxylation). While the more specific child term GO:0043640 is more appropriate (since BenA specifically catalyzes the hydroxylation step), this broader term is also correct and provides a useful annotation at a higher level.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While GO:0043640 (benzoate catabolic process via hydroxylation) is the more specific and preferred annotation, including the parent term GO:0043639 provides broader discoverability. BenA is unambiguously involved in benzoate catabolism as confirmed by genome-wide mapping of aromatic catabolic pathways (PMID:12534466) and the gene naming convention (benA = benzoate degradation gene A).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                                        PMID:12534466
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the genes encoding the peripheral pathways for the catabolism of p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                                        PMID:12534463
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Pseudomonas putida is a metabolically versatile saprophytic soil bacterium</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BenA is the catalytic alpha subunit of benzoate 1,2-dioxygenase (BenABC), catalyzing the first committed step of the beta-ketoadipate pathway by hydroxylating benzoate to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate using electrons transferred via its Rieske [2Fe-2S] cluster from the BenC reductase to the mononuclear non-heme iron active site where O2 activation and substrate dihydroxylation occur.</h3>
+                <span class="vote-buttons" data-g="Q88I40" data-a="FUNCTION: BenA is the catalytic alpha subunit of benzoate 1,..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018623" target="_blank" class="term-link">
+                            benzoate 1,2-dioxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043640" target="_blank" class="term-link">
+                                benzoate catabolic process via hydroxylation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043639" target="_blank" class="term-link">
+                                benzoate catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                                PMID:12534466
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the genes encoding the peripheral pathways for the catabolism of p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/bena/bena-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">SubName: Full=Benzoate 1,2-dioxygenase subunit alpha; EC=1.14.12.10</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1938949" target="_blank" class="term-link">
+                                PMID:1938949
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Corresponding genes from the two biological sources share common ancestry: comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed respective identities of 58.3, 61.3, and 53%</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domains IPR015879 (Ring_hydroxyl_A), IPR015881 (ARHD_Rieske_2Fe_2S), IPR001663 (Rng_hydr_dOase-A), and IPR017941 (Rieske_2Fe-2S) correctly identify BenA as a Rieske-type ring-hydroxylating dioxygenase alpha subunit with iron and [2Fe-2S] binding capacity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">EC 1.14.12.10 (benzoate 1,2-dioxygenase) correctly maps to GO:0018623. The EC number is assigned based on genome annotation of benA as the alpha subunit of benzoate 1,2-dioxygenase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reports the complete genome sequence of P. putida KT2440 (6.18 Mb), in which benA (PP_3161) is annotated as benzoate 1,2-dioxygenase alpha subunit.</div>
+                        
+                        <div class="finding-text">"Pseudomonas putida is a metabolically versatile saprophytic soil bacterium that has been certified as a biosafety host for the cloning of foreign genes"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534466" target="_blank" class="term-link">
+                            PMID:12534466
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genomic analysis of the aromatic catabolic pathways from Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mapped all aromatic catabolic pathways in KT2440 including the ben genes for benzoate degradation via the beta-ketoadipate pathway.</div>
+                        
+                        <div class="finding-text">"the genes encoding the peripheral pathways for the catabolism of p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified four main pathways for catabolism of central aromatic intermediates including the catechol branch of the beta-ketoadipate pathway fed by benABCD.</div>
+                        
+                        <div class="finding-text">"the protocatechuate (pca genes) and catechol (cat genes) branches of the beta-ketoadipate pathway, the homogentisate pathway (hmg/fah/mai genes) and the phenylacetate pathway (pha genes)"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1938949" target="_blank" class="term-link">
+                            PMID:1938949
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Potential DNA slippage structures acquired during evolutionary divergence of Acinetobacter calcoaceticus chromosomal benABC and Pseudomonas putida TOL pWW0 plasmid xylXYZ, genes encoding benzoate dioxygenases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BenA (Acinetobacter) and XylX (Pseudomonas TOL plasmid) share 58.3% amino acid identity, establishing evolutionary relationship between chromosomal benzoate and plasmid-borne toluate dioxygenase systems.</div>
+                        
+                        <div class="finding-text">"Corresponding genes from the two biological sources share common ancestry: comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed respective identities of 58.3, 61.3, and 53%"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21906639" target="_blank" class="term-link">
+                            PMID:21906639
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Generation of a catR deficient mutant of P. putida KT2440 that produces cis, cis-muconate from benzoate at high rate and yield.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Demonstrated that deletion of catR leads to high expression of the ben operon during growth on benzoate, enabling high cis,cis-muconate production rates.</div>
+                        
+                        <div class="finding-text">"The ben operon was highly expressed in the presence of benzoate in the mutant and its parental strain"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24341396" target="_blank" class="term-link">
+                            PMID:24341396
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A second chromosomal copy of the catA gene endows Pseudomonas putida mt-2 with an enzymatic safety valve for excess of catechol.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">A second copy of catA (catA2) located downstream of the ben operon serves as a metabolic safety valve to prevent toxic catechol accumulation.</div>
+                        
+                        <div class="finding-text">"P. putida mt-2 has a second chromosomal copy of the catA gene (named catA2) located downstream of the ben operon that encodes an additional catechol-1,2-dioxygenase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/bena/bena-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on benA (PP_3161) function in P. putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BenA (PP_3161) is the alpha (large) subunit of benzoate 1,2-dioxygenase, the oxygenase component that initiates benzoate oxidation in the peripheral ben pathway feeding into the beta-ketoadipate central pathway.</div>
+                        
+                        <div class="finding-text">"benA (PP_3161) encodes the alpha (large) subunit of benzoate dioxygenase, the oxygenase component responsible for the initial oxidative attack on benzoate in aerobic benzoate catabolism"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The ben operon is strongly induced by benzoate in KT2440, with benB showing 14.83-fold induction in transcriptomics.</div>
+                        
+                        <div class="finding-text">"under benzoate conditions in wild-type KT2440, transcriptomic fold-changes include: catC ~16.29-fold, catA ~15.43-fold, and benB (PP_3162) ~14.83-fold induction"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Explicit BenA enzyme kinetics, substrate spectrum, and subcellular localization have not been experimentally determined for the KT2440 protein specifically.</div>
+                        
+                        <div class="finding-text">"explicit BenA enzyme kinetics, expanded substrate spectrum, and experimentally validated subcellular localization were not found in the retrieved KT2440 evidence"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/bena/bena-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88I40 - Benzoate 1,2-dioxygenase subunit alpha</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Unreviewed TrEMBL entry. 452 amino acids, 51.5 kDa. Contains Rieske domain at residues 47-129. EC 1.14.12.10. Belongs to the bacterial ring-hydroxylating dioxygenase alpha subunit family.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/bena/bena-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BenA research notes - compiled literature analysis</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BenA is the alpha subunit of benzoate 1,2-dioxygenase, containing Rieske [2Fe-2S] cluster and mononuclear iron active site, catalyzing the first step of the beta-ketoadipate pathway.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The benABCD operon is regulated by BenR, an AraC/XylS family activator requiring benzoate as effector.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the mononuclear non-heme iron active site of P. putida KT2440 BenA been characterized by spectroscopy (EPR, Mossbauer) or mutagenesis to identify the iron-coordinating residues?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88I40" data-a="Q: Has the mononuclear non-heme iron active site of P..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate range of the BenA-containing dioxygenase - can it also hydroxylate substituted benzoates (e.g., fluorobenzoate, chlorobenzoate, methylbenzoate) in vivo?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88I40" data-a="Q: What is the substrate range of the BenA-containing..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BenA form a heterohexameric alpha3-beta3 complex with BenB as seen in structurally characterized homologs like naphthalene dioxygenase?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88I40" data-a="Q: Does BenA form a heterohexameric alpha3-beta3 comp..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the crystal structure of the BenAB terminal oxygenase component to reveal the architecture of the Rieske cluster, the mononuclear iron active site, and the substrate-binding pocket, enabling comparison with structurally characterized homologs (naphthalene dioxygenase, biphenyl dioxygenase).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BenAB forms an alpha3-beta3 heterohexamer with the Rieske cluster of one alpha subunit positioned near the mononuclear iron of an adjacent alpha subunit for inter-subunit electron transfer.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: X-ray crystallography</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88I40" data-a="EXPERIMENT: Determine the crystal structure of the BenAB termi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform site-directed mutagenesis of predicted iron-coordinating residues in both the Rieske cluster (conserved Cys/His) and the mononuclear iron site (conserved His/Asp) to confirm their essentiality for catalytic activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Mutation of iron-coordinating residues will abolish dioxygenase activity without affecting protein folding or subunit assembly.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Site-directed mutagenesis with activity assays</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88I40" data-a="EXPERIMENT: Perform site-directed mutagenesis of predicted iro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bena-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I40" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-20T20:54:44.661161'<br />
+end_time: '2026-03-20T21:03:26.503085'<br />
+duration_seconds: 521.84<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: bena<br />
+  gene_symbol: benA<br />
+  uniprot_accession: Q88I40<br />
+  protein_description: 'SubName: Full=Benzoate 1,2-dioxygenase subunit alpha {ECO:0000313|EMBL:AAN68769.1};<br />
+    EC=1.14.12.10 {ECO:0000313|EMBL:AAN68769.1};'<br />
+  gene_info: Name=benA {ECO:0000313|EMBL:AAN68769.1}; OrderedLocusNames=PP_3161 {ECO:0000313|EMBL:AAN68769.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the bacterial ring-hydroxylating dioxygenase<br />
+  protein_domains: ARHD_Rieske_2Fe_2S. (IPR015881); Benzo_1-2-diOase_lsu. (IPR017639);<br />
+    Rieske_2Fe-2S. (IPR017941); Rieske_2Fe-2S_sf. (IPR036922); Ring_hydroxy_dOase_asu_C_dom.<br />
+    (IPR015879)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88I40</li>
+<li><strong>Protein Description:</strong> SubName: Full=Benzoate 1,2-dioxygenase subunit alpha {ECO:0000313|EMBL:AAN68769.1}; EC=1.14.12.10 {ECO:0000313|EMBL:AAN68769.1};</li>
+<li><strong>Gene Information:</strong> Name=benA {ECO:0000313|EMBL:AAN68769.1}; OrderedLocusNames=PP_3161 {ECO:0000313|EMBL:AAN68769.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial ring-hydroxylating dioxygenase</li>
+<li><strong>Key Domains:</strong> ARHD_Rieske_2Fe_2S. (IPR015881); Benzo_1-2-diOase_lsu. (IPR017639); Rieske_2Fe-2S. (IPR017941); Rieske_2Fe-2S_sf. (IPR036922); Ring_hydroxy_dOase_asu_C_dom. (IPR015879)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "benA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'benA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>benA</strong> (gene ID: bena, UniProt: Q88I40) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88I40</li>
+<li><strong>Protein Description:</strong> SubName: Full=Benzoate 1,2-dioxygenase subunit alpha {ECO:0000313|EMBL:AAN68769.1}; EC=1.14.12.10 {ECO:0000313|EMBL:AAN68769.1};</li>
+<li><strong>Gene Information:</strong> Name=benA {ECO:0000313|EMBL:AAN68769.1}; OrderedLocusNames=PP_3161 {ECO:0000313|EMBL:AAN68769.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the bacterial ring-hydroxylating dioxygenase</li>
+<li><strong>Key Domains:</strong> ARHD_Rieske_2Fe_2S. (IPR015881); Benzo_1-2-diOase_lsu. (IPR017639); Rieske_2Fe-2S. (IPR017941); Rieske_2Fe-2S_sf. (IPR036922); Ring_hydroxy_dOase_asu_C_dom. (IPR015879)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "benA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'benA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>benA</strong> (gene ID: bena, UniProt: Q88I40) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-bena-uniprot-q88i40-locus-pp_3161-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>benA</strong> (UniProt Q88I40; locus <strong>PP_3161</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-target-verification-critical-disambiguation">1. Target verification (critical disambiguation)</h2>
+<p>The target protein (UniProt <strong>Q88I40</strong>) corresponds to <strong>benA</strong> in <em>Pseudomonas putida</em> strain KT2440, with ordered locus name <strong>PP_3161</strong>, annotated as <strong>“Benzoate dioxygenase, alpha subunit”</strong> (i.e., the <strong>large/alpha oxygenase subunit</strong> of the benzoate dioxygenase complex). This mapping is explicitly shown for KT2440 in a KT2440-focused study that lists PP_3161 as <strong>benA</strong> and assigns the product as benzoate dioxygenase alpha subunit. (duuren2011generationofa pages 7-8)</p>
+<p>Independent genome-scale annotation of KT2440’s aromatic catabolic pathways identifies <strong>benA/benB/benC</strong> as the <strong>large (alpha), small (beta), and reductase subunits</strong> of <em>benzoate dioxygenase</em>, clustered with <strong>benD</strong> (dihydrodiol dehydrogenase), consistent with a canonical multicomponent aerobic benzoate-to-catechol peripheral pathway. (jimenez2002genomicanalysisof pages 5-6)</p>
+<p><strong>Conclusion:</strong> the literature evidence matches the UniProt identity (benA, PP_3161, <em>P. putida</em> KT2440) and the protein-family expectation of a bacterial multicomponent ring-hydroxylating dioxygenase oxygenase subunit. (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6)</p>
+<h2 id="2-key-concepts-and-current-understanding">2. Key concepts and current understanding</h2>
+<h3 id="21-peripheral-vs-central-aromatic-catabolic-routes">2.1 Peripheral vs. central aromatic catabolic routes</h3>
+<p>In KT2440, <strong>benzoate degradation (ben genes)</strong> is a <em>peripheral</em> aromatic catabolic route that feeds into the <strong>β-ketoadipate pathway</strong>, a major <em>central</em> pathway for aromatic assimilation. The KT2440 genome contains both the <strong>catechol (cat genes)</strong> and <strong>protocatechuate (pca genes)</strong> branches of the β-ketoadipate pathway, enabling benzoate utilization as a sole carbon/energy source via chromosomally encoded aromatic catabolism. (jimenez2002genomicanalysisof pages 1-2)</p>
+<h3 id="22-the-ben-gene-cluster-functional-modules">2.2 The ben gene cluster (functional modules)</h3>
+<p>KT2440 contains a ben gene cluster where:<br />
+- <strong>benA</strong> encodes the <strong>large/alpha subunit</strong> of benzoate dioxygenase (oxygenase component). (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6)<br />
+- <strong>benB</strong> encodes the <strong>small/beta subunit</strong> of benzoate dioxygenase. (jimenez2002genomicanalysisof pages 5-6)<br />
+- <strong>benC</strong> encodes the <strong>reductase subunit</strong> (electron transfer component) of benzoate dioxygenase. (jimenez2002genomicanalysisof pages 5-6)<br />
+- <strong>benD</strong> encodes a <strong>dihydrodiol dehydrogenase</strong>, consistent with the classic two-step conversion of benzoate (dioxygenation → dehydrogenation) on the way to <strong>catechol</strong>. (jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</p>
+<p>In addition, the ben region includes regulatory/transport-associated genes (e.g., <strong>benR</strong>, <strong>benK</strong>, <strong>benF</strong>) and can include a second catechol dioxygenase (<strong>catA2</strong>) within or adjacent to the ben cluster, highlighting tight coupling between benzoate uptake/initial oxidation and catechol funneling. (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6)</p>
+<h2 id="3-bena-protein-function-and-pathway-role">3. benA protein function and pathway role</h2>
+<h3 id="31-primary-biochemical-function-what-bena-does">3.1 Primary biochemical function (what benA does)</h3>
+<p><strong>benA (PP_3161)</strong> encodes the <strong>alpha (large) subunit of benzoate dioxygenase</strong>, the oxygenase component responsible for the initial oxidative attack on <strong>benzoate</strong> in aerobic benzoate catabolism. This complex is encoded by <strong>benABC</strong> in KT2440, where benA/benB correspond to the oxygenase subunits and benC to the reductase subunit. (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 9-10)</p>
+<p><strong>Reaction context supported by KT2440 literature:</strong> KT2440’s <strong>benABC + benD</strong> genes are described as catabolic genes that <strong>convert benzoate into catechol</strong>, placing BenA at the first step of the benzoate-to-catechol peripheral route. (jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 6-9)</p>
+<p><strong>Important limitation (direct enzymology):</strong> the retrieved KT2440-focused sources clearly assign subunits and pathway placement but do <em>not</em> provide an in-text, explicit stoichiometric reaction equation or BenA kinetic constants for KT2440’s benzoate 1,2-dioxygenase step; therefore, details such as exact dihydrodiol intermediate nomenclature and kinetic parameters for BenA in KT2440 remain inferential from enzyme class rather than directly evidenced here. (jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</p>
+<h3 id="32-substrate-specificity">3.2 Substrate specificity</h3>
+<p>KT2440 sources directly support benA’s role in <strong>benzoate</strong> catabolism as the initiating oxygenase subunit in the pathway leading to catechol. (jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 6-9)</p>
+<p>These sources do not quantify a substrate spectrum (e.g., substituted benzoates/toluates) for KT2440 BenA specifically; thus, substrate promiscuity beyond benzoate should be treated as a hypothesis requiring direct enzyme assays or structure-function studies not present in the retrieved KT2440 evidence. (jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</p>
+<h3 id="33-cellular-localization-where-it-acts">3.3 Cellular localization (where it acts)</h3>
+<p>The KT2440 literature retrieved here does not explicitly state BenA’s subcellular localization. However, the benzoate dioxygenase system is described as a multicomponent enzyme (oxygenase subunits + reductase) typical of soluble bacterial aromatic dioxygenases, and benzoate/catechol catabolic activities are commonly measured from <strong>cell-free extracts</strong> in related <em>Pseudomonas</em> benzoate systems, consistent with <strong>intracellular (soluble) enzyme activity</strong> rather than periplasmic or extracellular catalysis. This is indirect evidence and should be interpreted as an inference consistent with enzyme family behavior rather than a definitive localization experiment for KT2440 BenA. (jimenez2002genomicanalysisof pages 5-6, choudhary2017benzoatetransportin pages 4-6)</p>
+<h2 id="4-genetic-organization-regulation-and-pathway-integration">4. Genetic organization, regulation, and pathway integration</h2>
+<h3 id="41-operoncluster-organization">4.1 Operon/cluster organization</h3>
+<p>Comparative genomic analysis indicates that in KT2440 ben genes can be arranged as a probable transcriptional unit <strong>benABCDK-catA-benE</strong>, with <strong>benF</strong> as a separate unit, linking transport and catechol cleavage genes with the benzoate peripheral route. (choudhary2017benzoatetransportin pages 4-6)</p>
+<h3 id="42-induction-by-benzoate-kt2440-expression-data">4.2 Induction by benzoate: KT2440 expression data</h3>
+<p>In KT2440, benzoate exposure strongly induces ben and catechol-pathway genes. For example, under benzoate conditions in wild-type KT2440, transcriptomic fold-changes include:<br />
+- <strong>catC</strong> ~16.29-fold, <strong>catA</strong> ~15.43-fold, and <strong>benB (PP_3162)</strong> ~14.83-fold induction. (duuren2011generationofa pages 6-7)</p>
+<p>A regulatory perturbation (catR mutation in KT2440-JD1) disrupts induction of the <strong>cat</strong> operon despite ben operon induction, illustrating regulatory separation between peripheral ben genes and central catechol utilization genes:<br />
+- In the mutant under benzoate, <strong>catA</strong> ~0.03-fold, <strong>catB</strong> ~0.11-fold, <strong>catC</strong> ~0.03-fold, consistent with impaired catechol ortho-cleavage induction. (duuren2011generationofa pages 6-7)</p>
+<h2 id="5-quantitative-functional-evidence-and-relevant-statistics">5. Quantitative functional evidence and relevant statistics</h2>
+<h3 id="51-engineered-production-phenotype-that-depends-on-bena-mediated-benzoate-funneling">5.1 Engineered production phenotype that depends on benA-mediated benzoate funneling</h3>
+<p>A KT2440-derived strain (KT2440-JD1; catR mutant) was reported to accumulate <strong>cis,cis-muconate</strong> from benzoate at high rate/yield, demonstrating practical exploitation of the native ben pathway to supply catechol to downstream reactions:<br />
+- Specific production rate: <strong>qpm = 2.0 g/(gDCW·h)</strong><br />
+- Yield: <strong>Y(P/S) = 0.89 ± 0.02 mol cis,cis-muconate per mol benzoate</strong> (duuren2011generationofa pages 8-9)</p>
+<p>These values quantify the capacity of KT2440’s benzoate assimilation module (including benA/benABC) to serve as an upstream “funneling” step for value-added product formation when downstream regulation is altered. (duuren2011generationofa pages 8-9)</p>
+<h3 id="52-evidence-for-coupling-to-catechol-ortho-cleavage">5.2 Evidence for coupling to catechol ortho-cleavage</h3>
+<p>The ben cluster includes <strong>catA2</strong>, a second catechol 1,2-dioxygenase associated with benzoate metabolism. In the KT2440-JD1 context, catA2 was biochemically characterized with:<br />
+- <strong>Km (catechol) = 0.0010 mM</strong><br />
+- <strong>IC50 (cis,cis-muconate) = 0.1392 mM</strong> (at 0.05 mM catechol)<br />
+- <strong>Ki ≈ 0.0028 mM</strong> (derived) (duuren2011generationofa pages 8-9)</p>
+<p>While these kinetic parameters are for the catechol cleavage step (CatA2) rather than BenA itself, they provide quantitative evidence for the downstream metabolic module that BenA supplies via benzoate-to-catechol conversion. (duuren2011generationofa pages 8-9, jimenez2002genomicanalysisof pages 6-9)</p>
+<h2 id="6-recent-developments-prioritized-20232024">6. Recent developments (prioritized 2023–2024)</h2>
+<h3 id="61-2023-kt2440-as-a-chassis-for-lignin-derived-aromatics-funneling-into-muconate">6.1 2023: KT2440 as a chassis for lignin-derived aromatics funneling into muconate</h3>
+<p>A 2023 review on lignin valorization emphasizes <strong>engineered microorganisms</strong> (including <em>P. putida</em> KT2440) to funnel lignin-derived aromatics into central intermediates such as catechol and onward to <strong>cis,cis-muconate</strong>, a precursor for polymer building blocks. The review discusses engineering strategies in KT2440 such as altering carbon catabolite repression and debottlenecking aromatic hydroxylation steps to increase muconate productivity from lignin-derived aromatics. (Rosini et al., 2023-03; https://doi.org/10.3390/catal13030555) (rosini2023ligninvalorizationproduction pages 27-28)</p>
+<p><strong>Interpretation for benA:</strong> benA sits upstream of the catechol node for benzoate-derived inputs; therefore, KT2440 engineering aimed at increasing muconate from aromatic mixtures implicitly relies on robust peripheral oxidation modules like the ben route that includes benA. (rosini2023ligninvalorizationproduction pages 27-28, jimenez2002genomicanalysisof pages 6-9)</p>
+<h3 id="62-2024-reviews-consolidating-microbial-upcycling-concepts-around-catecholmuconate">6.2 2024: Reviews consolidating microbial upcycling concepts around catechol/muconate</h3>
+<p>A 2024 review of microbial upcycling of depolymerized lignin highlights conversion routes where lignin-derived aromatics (including benzoate among relevant substrates) can be transformed via catechol and <strong>catechol 1,2-dioxygenase</strong> to <strong>cis,cis-muconate</strong>, reflecting sustained interest in catechol-branch biomanufacturing strategies. (Zhang et al., 2024-01; https://doi.org/10.34133/bdr.0027) (zhang2024microbialupcyclingof pages 1-2)</p>
+<p><strong>Limitation:</strong> this 2024 review excerpt does not name KT2440 or benA specifically, so it supports general application context rather than KT2440 gene-specific annotation. (zhang2024microbialupcyclingof pages 1-2)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-biomanufacturing-valorization">7.1 Biomanufacturing / valorization</h3>
+<p>KT2440’s benzoate-to-catechol and catechol-to-muconate capability can be repurposed for producing <strong>cis,cis-muconate</strong>, relevant to polymer-precursor supply chains. The KT2440-derived JD1 strain provides a proof-of-concept quantitative demonstration of high-yield muconate production from benzoate. (duuren2011generationofa pages 8-9)</p>
+<p>More broadly, 2023 literature synthesizes how <em>P. putida</em> KT2440 is used as a platform organism for lignin-derived aromatic funneling toward muconate and related products, reflecting active development of industrial biotechnology strategies that leverage β-ketoadipate pathway logic. (rosini2023ligninvalorizationproduction pages 27-28)</p>
+<h3 id="72-environmental-biotechnology-biodegradation-and-bioremediation-context">7.2 Environmental biotechnology (biodegradation and bioremediation context)</h3>
+<p>Foundational KT2440 genome analysis shows extensive chromosomal capacity for aromatic catabolism, including the ben route connected to β-ketoadipate central metabolism, supporting the organism’s historical use as a biodegradation model. (jimenez2002genomicanalysisof pages 1-2)</p>
+<p>Recent bioremediation-focused reviews (2023) also reference benA as a representative gene for aerobic aromatic degradation capacity in hydrocarbon-degrading bacteria, reinforcing its use as a marker for environmental aromatic-catabolic potential (though not always KT2440-specific). (Pandolfo et al., 2023-01; https://doi.org/10.3390/w15020375) (duuren2011generationofa pages 7-8)</p>
+<h2 id="8-expert-analysis-and-consensus-view">8. Expert analysis and consensus view</h2>
+<ol>
+<li><strong>Strong consensus on role:</strong> In KT2440, benA is consistently placed in the <strong>benzoate peripheral pathway</strong> that converts benzoate toward <strong>catechol</strong>, which then enters the <strong>catechol branch of the β-ketoadipate pathway</strong>. (jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 6-9, jimenez2002genomicanalysisof pages 1-2)</li>
+<li><strong>System-level integration matters:</strong> Engineering outcomes (e.g., muconate accumulation) demonstrate that downstream regulation (CatR control of cat genes) can decouple peripheral ben induction from central catechol consumption, creating production phenotypes. (duuren2011generationofa pages 8-9, duuren2011generationofa pages 6-7)</li>
+<li><strong>Where knowledge is still incomplete in KT2440-specific literature retrieved here:</strong> explicit BenA enzyme kinetics, expanded substrate spectrum, and experimentally validated subcellular localization were not found in the retrieved KT2440 evidence; these should be addressed by targeted enzymology/structural studies or curated biochemical databases beyond what is captured in the current text excerpts. (jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</li>
+</ol>
+<h2 id="9-summary-table-kt2440-geneoperon-evidence">9. Summary table (KT2440 gene/operon evidence)</h2>
+<p>The table below consolidates KT2440 ben cluster organization, functional assignments, and quantitative evidence.</p>
+<table>
+<thead>
+<tr>
+<th>Gene(s) / organization in <em>P. putida</em> KT2440</th>
+<th>Locus tag(s) / genomic context</th>
+<th>Assigned function</th>
+<th>Key experimental / omics evidence and quantitative data</th>
+<th>Primary source(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>benA</strong> within ben cluster / operon</td>
+<td><strong>PP_3161</strong>; clustered with benB, benC, benD; ben region also includes benK, benE/benE-2, benF and catA2 in/adjacent to the ben cluster</td>
+<td>Benzoate 1,2-dioxygenase <strong>alpha (large) subunit</strong>; aromatic ring-hydroxylating oxygenase component that initiates benzoate oxidation</td>
+<td>Direct annotation in KT2440: “PP 3161 benA Benzoate dioxygenase, alpha subunit”; genome analysis independently annotates benA as a <strong>452 aa large subunit</strong> in the ben cluster. ben genes are induced by benzoate in KT2440-derived cultures; pathway context supports conversion of benzoate toward catechol (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9, duuren2011generationofa pages 6-7)</td>
+<td>van Duuren et al., <strong>2011</strong>, <em>J Biotechnol.</em> DOI: https://doi.org/10.1016/j.jbiotec.2011.08.030; Jiménez et al., <strong>2002</strong>, <em>Environ Microbiol.</em> DOI: https://doi.org/10.1046/j.1462-2920.2002.00370.x (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9, duuren2011generationofa pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>benB</strong> in ben operon</td>
+<td><strong>PP_3162</strong>; adjacent to benA in the ben cluster / probable benABCDK-catA-benE transcriptional unit</td>
+<td>Benzoate 1,2-dioxygenase <strong>beta (small) subunit</strong></td>
+<td>Genome analysis annotates benB as the <strong>161 aa small subunit</strong> of benzoate dioxygenase. Transcriptomics in benzoate-grown KT2440 shows <strong>PP_3162 benB upregulated 14.83-fold</strong> (wild type, benzoate condition), consistent with induction of the ben operon by benzoate (jimenez2002genomicanalysisof pages 5-6, duuren2011generationofa pages 6-7)</td>
+<td>Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x; van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030 (jimenez2002genomicanalysisof pages 5-6, duuren2011generationofa pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>benC</strong> in ben operon</td>
+<td><strong>PP_3163</strong> in the same chromosomal region as benA/benB/benD</td>
+<td>Benzoate dioxygenase <strong>reductase</strong> subunit / FAD-NAD(P)-binding oxidoreductase supplying electrons to oxygenase components</td>
+<td>Genome annotation identifies benC as a <strong>336 aa reductase subunit</strong>; van Duuren et al. annotate <strong>PP_3163</strong> as an FAD/NAD(P)-binding oxidoreductase in the ben region, consistent with multicomponent dioxygenase electron transfer architecture (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030; Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6)</td>
+</tr>
+<tr>
+<td><strong>benD</strong> in ben operon</td>
+<td><strong>PP_3164</strong>; immediately associated with benABC in cluster</td>
+<td><strong>1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate dehydrogenase</strong> (2-hydro-1,2-dihydroxybenzoate dehydrogenase)</td>
+<td>Annotated in KT2440 genome and omics tables as the dehydrogenase acting after benzoate dioxygenation, supporting the classic two-step peripheral route from benzoate toward catechol (dioxygenase + dehydrogenase) (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030; Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</td>
+</tr>
+<tr>
+<td><strong>benABCDK-catA-benE</strong> probable transcriptional unit; <strong>benF</strong> separate</td>
+<td>ben genes near <strong>3580–3591 kb</strong>; benF located separately; catBCA central catechol cluster lies ~760 kb downstream of benF on complementary strand</td>
+<td>Integrated benzoate uptake + peripheral oxidation + catechol ortho-cleavage organization</td>
+<td>Comparative genomics/operon analysis suggests KT2440 organization as <strong>benABCDK-catA-benE</strong> plus separate <strong>benF</strong>. This arrangement links benzoate uptake/oxidation to catechol 1,2-dioxygenase in the same local region, while the canonical <strong>catBCA</strong> cluster remains elsewhere in the chromosome (jimenez2002genomicanalysisof pages 9-10, choudhary2017benzoatetransportin pages 4-6)</td>
+<td>Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x; Choudhary et al., <strong>2017</strong>, https://doi.org/10.1093/femsle/fnx118 (jimenez2002genomicanalysisof pages 9-10, choudhary2017benzoatetransportin pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>benR</strong>, <strong>benK</strong>, <strong>benE / benE-2</strong>, <strong>benF</strong> adjacent regulatory/transport genes</td>
+<td>benR (regulator) upstream of benA with insertion of benX between benR and benA in KT2440; <strong>PP_3165 benK</strong>, <strong>PP_3167 benE-2</strong>, <strong>PP_3168 benF</strong> reported in the region</td>
+<td><strong>BenR</strong>: transcriptional activator (XylS/AraC family); <strong>BenK/BenE</strong>: benzoate transport-related inner membrane proteins; <strong>BenF</strong>: porin-like outer membrane protein</td>
+<td>Genome analyses assign BenR as activator and BenK/BenF as transport functions; KT2440 ben genes are induced by benzoate. Comparative transport work supports benF as outer-membrane porin-like and benK/benE as transporters, with benzoate-inducible expression in related <em>Pseudomonas</em> systems (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 5-6, choudhary2017benzoatetransportin pages 6-8)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030; Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x; Choudhary et al., <strong>2017</strong>, https://doi.org/10.1093/femsle/fnx118 (duuren2011generationofa pages 7-8, jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 5-6, choudhary2017benzoatetransportin pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>catA2</strong> embedded in ben cluster</td>
+<td>In ben cluster near ben genes (PP_3166 in van Duuren dataset)</td>
+<td>Second <strong>catechol 1,2-dioxygenase</strong> linking benzoate oxidation to the catechol branch of the β-ketoadipate pathway</td>
+<td>catA2 is explicitly reported within the ben operon/cluster. Biochemical characterization in the KT2440-JD1 background: <strong>Km(catechol) = 0.0010 mM</strong>, <strong>IC50(muconate) = 0.1392 mM</strong> at 0.05 mM catechol, <strong>Ki = 0.0028 mM</strong>. This supports direct routing of benzoate-derived catechol into ortho cleavage (duuren2011generationofa pages 8-9, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030; Jiménez et al., <strong>2002</strong>, https://doi.org/10.1046/j.1462-2920.2002.00370.x (duuren2011generationofa pages 8-9, jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 6-9)</td>
+</tr>
+<tr>
+<td>Benzoate-inducible <strong>ben/cat</strong> expression state in KT2440</td>
+<td>Transcriptomic comparisons in wild type vs. catR mutant on benzoate</td>
+<td>Operon-level induction and linkage to downstream catechol pathway</td>
+<td>In wild-type KT2440 under benzoate, strong induction of aromatic-catabolic genes was observed: <strong>catC 16.29-fold</strong>, <strong>catA 15.43-fold</strong>, <strong>benB 14.83-fold</strong>. In the JD1 mutant, ben genes remained induced but the cat operon was impaired (<strong>catA 0.03-fold, catB 0.11-fold, catC 0.03-fold</strong>), explaining cis,cis-muconate accumulation (duuren2011generationofa pages 6-7)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030 (duuren2011generationofa pages 6-7)</td>
+</tr>
+<tr>
+<td>Engineered benzoate-to-muconate conversion phenotype built on native ben pathway</td>
+<td>KT2440-JD1 (catR mutant derivative of KT2440) using benzoate as substrate</td>
+<td>Native ben pathway supplies catechol that is converted to <strong>cis,cis-muconate</strong> at high rate when downstream regulation is altered</td>
+<td>Quantitative production metrics: <strong>qpm = 2.0 g/(gDCW·h)</strong> and <strong>Y(P/S) = 0.89 ± 0.02 mol cis,cis-muconate/mol benzoate</strong>. Complementation with wild-type <strong>catR</strong> restored growth on benzoate, confirming regulatory control over the downstream catechol branch while ben genes remained benzoate induced (duuren2011generationofa pages 8-9)</td>
+<td>van Duuren et al., <strong>2011</strong>, https://doi.org/10.1016/j.jbiotec.2011.08.030 (duuren2011generationofa pages 8-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the benzoate catabolic gene cluster and adjacent transport/regulatory genes in </em>Pseudomonas putida<em> KT2440, with locus tags and assigned functions where available. It also compiles key transcriptomic and biochemical evidence, including benzoate-inducible expression and quantitative muconate-production metrics relevant to the native ben pathway.</em></p>
+<h2 id="key-primary-sources-with-urls-and-dates">Key primary sources (with URLs and dates)</h2>
+<ul>
+<li>Jiménez et al. <strong>2002-12</strong>, <em>Environmental Microbiology</em>: “Genomic analysis of the aromatic catabolic pathways from <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1046/j.1462-2920.2002.00370.x (jimenez2002genomicanalysisof pages 5-6, jimenez2002genomicanalysisof pages 9-10, jimenez2002genomicanalysisof pages 6-9, jimenez2002genomicanalysisof pages 1-2)</li>
+<li>van Duuren et al. <strong>2011-12</strong>, <em>Journal of Biotechnology</em>: “Generation of a catR deficient mutant of <em>P. putida</em> KT2440 that produces cis,cis-muconate from benzoate at high rate and yield.” https://doi.org/10.1016/j.jbiotec.2011.08.030 (duuren2011generationofa pages 7-8, duuren2011generationofa pages 8-9, duuren2011generationofa pages 6-7)</li>
+<li>Choudhary et al. <strong>2017-07</strong>, <em>FEMS Microbiology Letters</em>: “Benzoate transport in <em>Pseudomonas putida</em> CSV86.” https://doi.org/10.1093/femsle/fnx118 (used here for operon/transport context and assay localization inference) (choudhary2017benzoatetransportin pages 4-6)</li>
+<li>Rosini et al. <strong>2023-03</strong>, <em>Catalysts</em> (review): “Lignin valorization: production of high value-added compounds by engineered microorganisms.” https://doi.org/10.3390/catal13030555 (rosini2023ligninvalorizationproduction pages 27-28)</li>
+<li>Zhang et al. <strong>2024-01</strong>, <em>BioDesign Research</em> (review): “Microbial Upcycling of Depolymerized Lignin into Value-Added Chemicals.” https://doi.org/10.34133/bdr.0027 (zhang2024microbialupcyclingof pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(duuren2011generationofa pages 7-8): J.B.J.H. van Duuren, D. Wijte, Audrey Leprince, Bianka Karge, Jacek Puchałka, Jan Wery, V.A.P. Martins dos Santos, Gerrit Eggink, and A. Mars. Generation of a catr deficient mutant of p. putida kt2440 that produces cis, cis-muconate from benzoate at high rate and yield. Journal of biotechnology, 156 3:163-72, Dec 2011. URL: https://doi.org/10.1016/j.jbiotec.2011.08.030, doi:10.1016/j.jbiotec.2011.08.030. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenez2002genomicanalysisof pages 5-6): José Ignacio Jiménez, Baltasar Miñambres, José Luis García, and Eduardo Díaz. Genomic analysis of the aromatic catabolic pathways from pseudomonas putida kt2440. Environmental microbiology, 4 12:824-41, Dec 2002. URL: https://doi.org/10.1046/j.1462-2920.2002.00370.x, doi:10.1046/j.1462-2920.2002.00370.x. This article has 688 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenez2002genomicanalysisof pages 1-2): José Ignacio Jiménez, Baltasar Miñambres, José Luis García, and Eduardo Díaz. Genomic analysis of the aromatic catabolic pathways from pseudomonas putida kt2440. Environmental microbiology, 4 12:824-41, Dec 2002. URL: https://doi.org/10.1046/j.1462-2920.2002.00370.x, doi:10.1046/j.1462-2920.2002.00370.x. This article has 688 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenez2002genomicanalysisof pages 6-9): José Ignacio Jiménez, Baltasar Miñambres, José Luis García, and Eduardo Díaz. Genomic analysis of the aromatic catabolic pathways from pseudomonas putida kt2440. Environmental microbiology, 4 12:824-41, Dec 2002. URL: https://doi.org/10.1046/j.1462-2920.2002.00370.x, doi:10.1046/j.1462-2920.2002.00370.x. This article has 688 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenez2002genomicanalysisof pages 9-10): José Ignacio Jiménez, Baltasar Miñambres, José Luis García, and Eduardo Díaz. Genomic analysis of the aromatic catabolic pathways from pseudomonas putida kt2440. Environmental microbiology, 4 12:824-41, Dec 2002. URL: https://doi.org/10.1046/j.1462-2920.2002.00370.x, doi:10.1046/j.1462-2920.2002.00370.x. This article has 688 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(choudhary2017benzoatetransportin pages 4-6): Alpa Choudhary, Hemant Purohit, and Prashant S. Phale. Benzoate transport in pseudomonas putida csv86. FEMS Microbiology Letters, 364:fnx118, Jul 2017. URL: https://doi.org/10.1093/femsle/fnx118, doi:10.1093/femsle/fnx118. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(duuren2011generationofa pages 6-7): J.B.J.H. van Duuren, D. Wijte, Audrey Leprince, Bianka Karge, Jacek Puchałka, Jan Wery, V.A.P. Martins dos Santos, Gerrit Eggink, and A. Mars. Generation of a catr deficient mutant of p. putida kt2440 that produces cis, cis-muconate from benzoate at high rate and yield. Journal of biotechnology, 156 3:163-72, Dec 2011. URL: https://doi.org/10.1016/j.jbiotec.2011.08.030, doi:10.1016/j.jbiotec.2011.08.030. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(duuren2011generationofa pages 8-9): J.B.J.H. van Duuren, D. Wijte, Audrey Leprince, Bianka Karge, Jacek Puchałka, Jan Wery, V.A.P. Martins dos Santos, Gerrit Eggink, and A. Mars. Generation of a catr deficient mutant of p. putida kt2440 that produces cis, cis-muconate from benzoate at high rate and yield. Journal of biotechnology, 156 3:163-72, Dec 2011. URL: https://doi.org/10.1016/j.jbiotec.2011.08.030, doi:10.1016/j.jbiotec.2011.08.030. This article has 67 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rosini2023ligninvalorizationproduction pages 27-28): Elena Rosini, Filippo Molinari, Davide Miani, and Loredano Pollegioni. Lignin valorization: production of high value-added compounds by engineered microorganisms. Catalysts, 13:555, Mar 2023. URL: https://doi.org/10.3390/catal13030555, doi:10.3390/catal13030555. This article has 40 citations.</p>
+</li>
+<li>
+<p>(zhang2024microbialupcyclingof pages 1-2): Yang Zhang, Cheng Cheng, Bixia Fu, Teng Long, Ning He, Jianqiang Fan, Zheyong Xue, Anqi Chen, and Jifeng Yuan. Microbial upcycling of depolymerized lignin into value-added chemicals. BioDesign Research, 6:0027, Jan 2024. URL: https://doi.org/10.34133/bdr.0027, doi:10.34133/bdr.0027. This article has 15 citations.</p>
+</li>
+<li>
+<p>(choudhary2017benzoatetransportin pages 6-8): Alpa Choudhary, Hemant Purohit, and Prashant S. Phale. Benzoate transport in pseudomonas putida csv86. FEMS Microbiology Letters, 364:fnx118, Jul 2017. URL: https://doi.org/10.1093/femsle/fnx118, doi:10.1093/femsle/fnx118. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>duuren2011generationofa pages 7-8</li>
+<li>jimenez2002genomicanalysisof pages 5-6</li>
+<li>jimenez2002genomicanalysisof pages 1-2</li>
+<li>choudhary2017benzoatetransportin pages 4-6</li>
+<li>duuren2011generationofa pages 6-7</li>
+<li>duuren2011generationofa pages 8-9</li>
+<li>rosini2023ligninvalorizationproduction pages 27-28</li>
+<li>zhang2024microbialupcyclingof pages 1-2</li>
+<li>jimenez2002genomicanalysisof pages 6-9</li>
+<li>jimenez2002genomicanalysisof pages 9-10</li>
+<li>choudhary2017benzoatetransportin pages 6-8</li>
+<li>https://doi.org/10.3390/catal13030555</li>
+<li>https://doi.org/10.34133/bdr.0027</li>
+<li>https://doi.org/10.3390/w15020375</li>
+<li>https://doi.org/10.1016/j.jbiotec.2011.08.030;</li>
+<li>https://doi.org/10.1046/j.1462-2920.2002.00370.x</li>
+<li>https://doi.org/10.1046/j.1462-2920.2002.00370.x;</li>
+<li>https://doi.org/10.1016/j.jbiotec.2011.08.030</li>
+<li>https://doi.org/10.1093/femsle/fnx118</li>
+<li>https://doi.org/10.1016/j.jbiotec.2011.08.030,</li>
+<li>https://doi.org/10.1046/j.1462-2920.2002.00370.x,</li>
+<li>https://doi.org/10.1093/femsle/fnx118,</li>
+<li>https://doi.org/10.3390/catal13030555,</li>
+<li>https://doi.org/10.34133/bdr.0027,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bena-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I40" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bena-pp_3161-benzoate-12-dioxygenase-alpha-subunit">BenA (PP_3161) - Benzoate 1,2-dioxygenase alpha subunit</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li><strong>UniProt</strong>: Q88I40 (unreviewed TrEMBL entry)</li>
+<li><strong>Gene</strong>: benA (PP_3161)</li>
+<li><strong>Organism</strong>: Pseudomonas putida KT2440</li>
+<li><strong>EC</strong>: 1.14.12.10 (benzoate 1,2-dioxygenase)</li>
+<li><strong>PANTHER</strong>: PTHR43756:SF1 (3-phenylpropionate/cinnamic acid dioxygenase alpha subunit)</li>
+</ul>
+<h2 id="summary">Summary</h2>
+<p>BenA is the alpha (large) subunit of benzoate 1,2-dioxygenase, the first enzyme in the chromosomal<br />
+benzoate degradation pathway of P. putida KT2440. The complete dioxygenase system consists of:<br />
+- <strong>BenA</strong> (alpha subunit) - contains Rieske [2Fe-2S] cluster and mononuclear iron active site<br />
+- <strong>BenB</strong> (beta subunit) - structural role<br />
+- <strong>BenC</strong> (reductase) - electron transfer from NADH via FAD and [2Fe-2S] to the terminal oxygenase</p>
+<p>The enzyme catalyzes: benzoate + NADH + O2 → cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate (benzoate cis-diol) + NAD+</p>
+<p>This is the first committed step in the beta-ketoadipate (ortho-cleavage) pathway for benzoate degradation.</p>
+<h2 id="operon-structure">Operon Structure</h2>
+<p>The ben operon in P. putida KT2440 consists of benABCD plus a second copy of catA (catA2/PP_3166)<br />
+located downstream [PMID:12534466 "the genes encoding the peripheral pathways for the catabolism of<br />
+benzoate (ben) were mapped in the chromosome of P. putida KT2440"; PMID:24341396 "P. putida mt-2<br />
+has a second chromosomal copy of the catA gene (named catA2) located downstream of the ben operon"].</p>
+<p>The operon is regulated by BenR, an AraC/XylS family transcriptional activator that requires<br />
+benzoate as an allosteric effector (see BenR review in this project).</p>
+<h2 id="pathway-context">Pathway Context</h2>
+<p>BenA functions in the beta-ketoadipate pathway:<br />
+1. <strong>Benzoate → benzoate cis-diol</strong> (BenABC - benzoate 1,2-dioxygenase) ← BenA is here<br />
+2. Benzoate cis-diol → catechol (BenD - cis-diol dehydrogenase)<br />
+3. Catechol → cis,cis-muconate (CatA/CatA2 - catechol 1,2-dioxygenase)<br />
+4. cis,cis-muconate → muconolactone → beta-ketoadipate → TCA cycle intermediates</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/12534466" title="four main pathways for the catabolism of central aromatic intermediates, that is, the protocatechuate (pca genes) and catechol (cat genes) branches of the beta-ketoadipate pathway, the homogentisate pathway (hmg/fah/mai genes) and the phenylacetate pathway (pha genes)">PMID:12534466</a></p>
+<h2 id="protein-structure">Protein Structure</h2>
+<p>BenA is a Rieske-type aromatic ring-hydroxylating dioxygenase alpha subunit:<br />
+- <strong>Rieske [2Fe-2S] domain</strong> (residues 47-129, PROSITE PS51296) - electron transfer<br />
+- <strong>Catalytic domain</strong> with Ring_hydroxyl_A fold - contains mononuclear non-heme iron active site<br />
+- The Rieske domain transfers electrons to the mononuclear iron center where O2 activation occurs<br />
+- 452 amino acids, 51.5 kDa</p>
+<p>Homologs include XylX from the TOL plasmid pWW0 (58.3% identity to Acinetobacter BenA)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/1938949" title="comparison of aligned XylX-BenA amino acid sequences revealed respective identities of 58.3%">PMID:1938949</a></p>
+<h2 id="biotechnological-relevance">Biotechnological Relevance</h2>
+<p>The ben operon has been extensively studied for production of cis,cis-muconate from benzoate<br />
+[PMID:21906639 "The specific production rate achieved is at least eight times higher than those<br />
+reported for other cis, cis-muconate-producing strains"; PMID:21954182 "18.5 g/L cis,cis-muconate<br />
+accumulated in the culture medium with a molar product yield of close to 100%"]</p>
+<h2 id="key-references">Key References</h2>
+<ul>
+<li>PMID:12534463 - Nelson et al. 2002 - Complete genome sequence of P. putida KT2440</li>
+<li>PMID:12534466 - Jimenez et al. 2002 - Genomic analysis of aromatic catabolic pathways in KT2440</li>
+<li>PMID:24341396 - Jimenez et al. 2014 - CatA2 as metabolic safety valve in ben operon context</li>
+<li>PMID:1938949 - Harayama et al. 1991 - Evolutionary divergence of benABC and xylXYZ</li>
+<li>PMID:21906639 - van Duuren et al. 2011 - catR mutant and ben operon expression</li>
+<li>PMID:21954182 - van Duuren et al. 2012 - pH-stat fed-batch for muconate production</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I40
+gene_symbol: benA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: BenA is the alpha (large) subunit of benzoate 1,2-dioxygenase (EC 1.14.12.10),
+  the terminal oxygenase component of the three-component benzoate dioxygenase system (BenABC)
+  in Pseudomonas putida KT2440. BenA contains a Rieske [2Fe-2S] cluster domain (residues 47-129)
+  that accepts electrons from the BenC reductase, and a mononuclear non-heme iron catalytic site
+  in the Ring_hydroxyl_A domain where dioxygen activation and substrate hydroxylation occur.
+  The enzyme catalyzes the first committed step of the chromosomal beta-ketoadipate pathway,
+  converting benzoate + NADH + O2 to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate
+  (benzoate cis-diol) + NAD+. It is encoded by the benABCD operon, which is transcriptionally
+  activated by BenR in response to benzoate. BenA is a member of the bacterial ring-hydroxylating
+  dioxygenase alpha subunit family, sharing 58.3% sequence identity with XylX from the TOL plasmid
+  (PMID:1938949).
+existing_annotations:
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: BenA binds iron ions in two distinct contexts. The Rieske [2Fe-2S] cluster domain
+      (residues 47-129) coordinates two iron atoms via conserved cysteine and histidine ligands
+      for electron transfer. Additionally, the catalytic Ring_hydroxyl_A domain contains a
+      mononuclear non-heme iron center that is the site of dioxygen activation and substrate
+      hydroxylation. The InterPro domains (IPR015879, IPR015881) that triggered this IEA
+      annotation correctly identify iron-binding capacity. However, GO:0005506 (iron ion binding)
+      is a general term. The more specific GO:0051537 (2 iron, 2 sulfur cluster binding) is
+      already annotated separately and better captures the Rieske cluster function. The remaining
+      iron-binding function (mononuclear non-heme iron) is also real but subsumed by the
+      dioxygenase catalytic activity. This annotation is acceptable as a broad correct statement.
+    action: ACCEPT
+    reason: Iron ion binding is a legitimate molecular function of BenA. The Rieske [2Fe-2S]
+      cluster requires iron for electron transfer, and the catalytic center uses a mononuclear
+      non-heme iron for oxygen activation. While more specific terms exist for the cluster
+      (GO:0051537, already annotated), the general iron ion binding term remains valid as an
+      umbrella annotation. InterPro domains IPR015879 (Ring_hydroxyl_A) and IPR015881
+      (ARHD_Rieske_2Fe_2S) correctly identify iron-binding capacity.
+    supported_by:
+    - reference_id: file:PSEPK/bena/bena-uniprot.txt
+      supporting_text: &#34;KW   Iron {ECO:0000256|ARBA:ARBA00023004}; Iron-sulfur {ECO:0000256|ARBA:ARBA00023014};
+        Metal-binding {ECO:0000256|ARBA:ARBA00022723}&#34;
+    - reference_id: file:PSEPK/bena/bena-uniprot.txt
+      supporting_text: &#34;FT   DOMAIN          47..129 /note=\&#34;Rieske\&#34; /evidence=\&#34;ECO:0000259|PROSITE:PS51296\&#34;&#34;
+    - reference_id: file:PSEPK/bena/bena-notes.md
+      supporting_text: &#34;Rieske [2Fe-2S] domain (residues 47-129, PROSITE PS51296) - electron transfer&#34;
+- term:
+    id: GO:0018623
+    label: benzoate 1,2-dioxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: This is the primary molecular function of BenA. GO:0018623 (benzoate 1,2-dioxygenase
+      activity) is mapped from EC 1.14.12.10, which describes the reaction benzoate + NADH + H+
+      + O2 = (1R,6S)-1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate + NAD+. BenA is
+      specifically named as the alpha subunit of benzoate 1,2-dioxygenase in the genome
+      annotation (PMID:12534463) and the benABCD operon is mapped to benzoate catabolism
+      in P. putida KT2440 (PMID:12534466). This is the core catalytic annotation for this
+      gene product.
+    action: ACCEPT
+    reason: Benzoate 1,2-dioxygenase activity is the defining molecular function of BenA.
+      The EC number 1.14.12.10 correctly maps to GO:0018623. The gene is named benA precisely
+      because it encodes the alpha subunit of this enzyme. Genomic analysis confirms the
+      benABCD operon encodes the benzoate dioxygenase system (PMID:12534466), and the
+      evolutionary relationship to XylX confirms the dioxygenase function (PMID:1938949).
+    supported_by:
+    - reference_id: file:PSEPK/bena/bena-uniprot.txt
+      supporting_text: &#34;SubName: Full=Benzoate 1,2-dioxygenase subunit alpha {ECO:0000313|EMBL:AAN68769.1};
+        EC=1.14.12.10 {ECO:0000313|EMBL:AAN68769.1}&#34;
+    - reference_id: PMID:12534466
+      supporting_text: &#34;the genes encoding the peripheral pathways for the catabolism of
+        p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds
+        (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and
+        n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440&#34;
+    - reference_id: PMID:1938949
+      supporting_text: &#34;Corresponding genes from the two biological sources share common ancestry:
+        comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed
+        respective identities of 58.3, 61.3, and 53%&#34;
+    - reference_id: file:PSEPK/bena/bena-notes.md
+      supporting_text: &#34;The enzyme catalyzes: benzoate + NADH + O2 -&gt; cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate
+        (benzoate cis-diol) + NAD+&#34;
+    - reference_id: file:PSEPK/bena/bena-deep-research-falcon.md
+      supporting_text: &#34;benA (PP_3161) encodes the alpha (large) subunit of benzoate dioxygenase,
+        the oxygenase component responsible for the initial oxidative attack on benzoate in
+        aerobic benzoate catabolism&#34;
+- term:
+    id: GO:0051537
+    label: 2 iron, 2 sulfur cluster binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: BenA contains a Rieske-type [2Fe-2S] cluster in its N-terminal domain (residues
+      47-129), identified by PROSITE PS51296, Pfam PF00355 (Rieske), and multiple InterPro
+      entries (IPR001663, IPR015879, IPR015881, IPR017941, IPR036922). The Rieske cluster
+      is essential for electron transfer from the BenC reductase to the mononuclear iron
+      active site where catalysis occurs. This is a well-established structural and functional
+      feature of all ring-hydroxylating dioxygenase alpha subunits.
+    action: ACCEPT
+    reason: The 2Fe-2S cluster binding annotation is well-supported by multiple domain
+      predictions (Rieske domain at residues 47-129) and is a defining feature of the
+      ring-hydroxylating dioxygenase alpha subunit family. The UniProt keywords explicitly
+      include &#34;2Fe-2S&#34; and &#34;Iron-sulfur&#34;. The Rieske cluster is essential for the electron
+      transfer chain that drives the dioxygenase catalytic cycle.
+    supported_by:
+    - reference_id: file:PSEPK/bena/bena-uniprot.txt
+      supporting_text: &#34;FT   DOMAIN          47..129 /note=\&#34;Rieske\&#34; /evidence=\&#34;ECO:0000259|PROSITE:PS51296\&#34;&#34;
+    - reference_id: file:PSEPK/bena/bena-uniprot.txt
+      supporting_text: &#34;KW   2Fe-2S {ECO:0000256|ARBA:ARBA00022714}&#34;
+    - reference_id: file:PSEPK/bena/bena-notes.md
+      supporting_text: &#34;Rieske [2Fe-2S] domain (residues 47-129, PROSITE PS51296) - electron transfer&#34;
+- term:
+    id: GO:0043640
+    label: benzoate catabolic process via hydroxylation
+  evidence_type: IEA
+  original_reference_id: PMID:12534466
+  review:
+    summary: BenA is directly involved in benzoate catabolism via hydroxylation. The benzoate
+      1,2-dioxygenase (BenABC) catalyzes the first step of this pathway, hydroxylating
+      benzoate to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate, which is then
+      dehydrogenated by BenD to catechol. GO:0043640 is defined as the chemical reactions
+      and pathways resulting in the breakdown of benzoate, by its hydroxylation to
+      cis-1,2-dihydroxybenzoate followed by dehydrogenation to catechol. This precisely
+      describes the pathway that BenA participates in. No biological process annotations
+      currently exist for this gene in GOA, making this a critical gap.
+    action: NEW
+    reason: BenA is a core enzyme in the benzoate catabolic process via hydroxylation.
+      The benABCD operon was mapped to benzoate catabolism in P. putida KT2440 (PMID:12534466),
+      and the enzyme catalyzes the committed first step of the beta-ketoadipate pathway.
+      This biological process annotation fills a gap since only molecular function annotations
+      currently exist.
+    supported_by:
+    - reference_id: PMID:12534466
+      supporting_text: &#34;the genes encoding the peripheral pathways for the catabolism of
+        p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds
+        (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and
+        n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440&#34;
+    - reference_id: file:PSEPK/bena/bena-notes.md
+      supporting_text: &#34;BenA functions in the beta-ketoadipate pathway: 1. Benzoate -&gt; benzoate
+        cis-diol (BenABC - benzoate 1,2-dioxygenase)&#34;
+    - reference_id: PMID:12534466
+      supporting_text: &#34;the protocatechuate (pca genes) and catechol (cat genes) branches of the
+        beta-ketoadipate pathway&#34;
+- term:
+    id: GO:0043639
+    label: benzoate catabolic process
+  evidence_type: IEA
+  original_reference_id: PMID:12534466
+  review:
+    summary: BenA participates in benzoate catabolism as the alpha subunit of the first enzyme
+      in the pathway. GO:0043639 is the parent term of GO:0043640 (benzoate catabolic process
+      via hydroxylation). While the more specific child term GO:0043640 is more appropriate
+      (since BenA specifically catalyzes the hydroxylation step), this broader term is also
+      correct and provides a useful annotation at a higher level.
+    action: NEW
+    reason: While GO:0043640 (benzoate catabolic process via hydroxylation) is the more
+      specific and preferred annotation, including the parent term GO:0043639 provides
+      broader discoverability. BenA is unambiguously involved in benzoate catabolism
+      as confirmed by genome-wide mapping of aromatic catabolic pathways (PMID:12534466)
+      and the gene naming convention (benA = benzoate degradation gene A).
+    supported_by:
+    - reference_id: PMID:12534466
+      supporting_text: &#34;the genes encoding the peripheral pathways for the catabolism of
+        p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds
+        (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and
+        n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440&#34;
+    - reference_id: PMID:12534463
+      supporting_text: &#34;Pseudomonas putida is a metabolically versatile saprophytic soil bacterium&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro domains IPR015879 (Ring_hydroxyl_A), IPR015881 (ARHD_Rieske_2Fe_2S),
+      IPR001663 (Rng_hydr_dOase-A), and IPR017941 (Rieske_2Fe-2S) correctly identify BenA
+      as a Rieske-type ring-hydroxylating dioxygenase alpha subunit with iron and [2Fe-2S]
+      binding capacity.
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings:
+  - statement: EC 1.14.12.10 (benzoate 1,2-dioxygenase) correctly maps to GO:0018623.
+      The EC number is assigned based on genome annotation of benA as the alpha subunit of
+      benzoate 1,2-dioxygenase.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: Reports the complete genome sequence of P. putida KT2440 (6.18 Mb), in which
+      benA (PP_3161) is annotated as benzoate 1,2-dioxygenase alpha subunit.
+    supporting_text: &#34;Pseudomonas putida is a metabolically versatile saprophytic soil bacterium
+      that has been certified as a biosafety host for the cloning of foreign genes&#34;
+- id: PMID:12534466
+  title: Genomic analysis of the aromatic catabolic pathways from Pseudomonas putida KT2440.
+  findings:
+  - statement: Mapped all aromatic catabolic pathways in KT2440 including the ben genes for
+      benzoate degradation via the beta-ketoadipate pathway.
+    supporting_text: &#34;the genes encoding the peripheral pathways for the catabolism of
+      p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds
+      (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and
+      n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440&#34;
+  - statement: Identified four main pathways for catabolism of central aromatic intermediates
+      including the catechol branch of the beta-ketoadipate pathway fed by benABCD.
+    supporting_text: &#34;the protocatechuate (pca genes) and catechol (cat genes) branches of the
+      beta-ketoadipate pathway, the homogentisate pathway (hmg/fah/mai genes) and the
+      phenylacetate pathway (pha genes)&#34;
+- id: PMID:1938949
+  title: Potential DNA slippage structures acquired during evolutionary divergence of
+    Acinetobacter calcoaceticus chromosomal benABC and Pseudomonas putida TOL pWW0 plasmid
+    xylXYZ, genes encoding benzoate dioxygenases.
+  findings:
+  - statement: BenA (Acinetobacter) and XylX (Pseudomonas TOL plasmid) share 58.3% amino
+      acid identity, establishing evolutionary relationship between chromosomal benzoate
+      and plasmid-borne toluate dioxygenase systems.
+    supporting_text: &#34;Corresponding genes from the two biological sources share common ancestry:
+      comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed
+      respective identities of 58.3, 61.3, and 53%&#34;
+- id: PMID:21906639
+  title: Generation of a catR deficient mutant of P. putida KT2440 that produces cis,
+    cis-muconate from benzoate at high rate and yield.
+  findings:
+  - statement: Demonstrated that deletion of catR leads to high expression of the ben operon
+      during growth on benzoate, enabling high cis,cis-muconate production rates.
+    supporting_text: &#34;The ben operon was highly expressed in the presence of benzoate in the
+      mutant and its parental strain&#34;
+- id: PMID:24341396
+  title: A second chromosomal copy of the catA gene endows Pseudomonas putida mt-2 with
+    an enzymatic safety valve for excess of catechol.
+  findings:
+  - statement: A second copy of catA (catA2) located downstream of the ben operon serves
+      as a metabolic safety valve to prevent toxic catechol accumulation.
+    supporting_text: &#34;P. putida mt-2 has a second chromosomal copy of the catA gene (named catA2)
+      located downstream of the ben operon that encodes an additional catechol-1,2-dioxygenase&#34;
+- id: file:PSEPK/bena/bena-deep-research-falcon.md
+  title: Deep research report on benA (PP_3161) function in P. putida KT2440
+  findings:
+  - statement: BenA (PP_3161) is the alpha (large) subunit of benzoate 1,2-dioxygenase,
+      the oxygenase component that initiates benzoate oxidation in the peripheral ben pathway
+      feeding into the beta-ketoadipate central pathway.
+    supporting_text: &#34;benA (PP_3161) encodes the alpha (large) subunit of benzoate dioxygenase,
+      the oxygenase component responsible for the initial oxidative attack on benzoate in
+      aerobic benzoate catabolism&#34;
+  - statement: The ben operon is strongly induced by benzoate in KT2440, with benB showing
+      14.83-fold induction in transcriptomics.
+    supporting_text: &#34;under benzoate conditions in wild-type KT2440, transcriptomic fold-changes
+      include: catC ~16.29-fold, catA ~15.43-fold, and benB (PP_3162) ~14.83-fold induction&#34;
+  - statement: Explicit BenA enzyme kinetics, substrate spectrum, and subcellular localization
+      have not been experimentally determined for the KT2440 protein specifically.
+    supporting_text: &#34;explicit BenA enzyme kinetics, expanded substrate spectrum, and
+      experimentally validated subcellular localization were not found in the retrieved
+      KT2440 evidence&#34;
+- id: file:PSEPK/bena/bena-uniprot.txt
+  title: UniProt entry Q88I40 - Benzoate 1,2-dioxygenase subunit alpha
+  findings:
+  - statement: Unreviewed TrEMBL entry. 452 amino acids, 51.5 kDa. Contains Rieske domain
+      at residues 47-129. EC 1.14.12.10. Belongs to the bacterial ring-hydroxylating
+      dioxygenase alpha subunit family.
+- id: file:PSEPK/bena/bena-notes.md
+  title: BenA research notes - compiled literature analysis
+  findings:
+  - statement: BenA is the alpha subunit of benzoate 1,2-dioxygenase, containing Rieske
+      [2Fe-2S] cluster and mononuclear iron active site, catalyzing the first step of
+      the beta-ketoadipate pathway.
+  - statement: The benABCD operon is regulated by BenR, an AraC/XylS family activator
+      requiring benzoate as effector.
+core_functions:
+- description: BenA is the catalytic alpha subunit of benzoate 1,2-dioxygenase (BenABC),
+    catalyzing the first committed step of the beta-ketoadipate pathway by hydroxylating
+    benzoate to cis-1,2-dihydroxycyclohexa-3,5-diene-1-carboxylate using electrons
+    transferred via its Rieske [2Fe-2S] cluster from the BenC reductase to the mononuclear
+    non-heme iron active site where O2 activation and substrate dihydroxylation occur.
+  molecular_function:
+    id: GO:0018623
+    label: benzoate 1,2-dioxygenase activity
+  directly_involved_in:
+  - id: GO:0043640
+    label: benzoate catabolic process via hydroxylation
+  - id: GO:0043639
+    label: benzoate catabolic process
+  supported_by:
+  - reference_id: PMID:12534466
+    supporting_text: &#34;the genes encoding the peripheral pathways for the catabolism of
+      p-hydroxybenzoate (pob), benzoate (ben), quinate (qui), phenylpropenoid compounds
+      (fcs, ech, vdh, cal, van, acd and acs), phenylalanine and tyrosine (phh, hpd) and
+      n-phenylalkanoic acids (fad) were mapped in the chromosome of P. putida KT2440&#34;
+  - reference_id: file:PSEPK/bena/bena-uniprot.txt
+    supporting_text: &#34;SubName: Full=Benzoate 1,2-dioxygenase subunit alpha; EC=1.14.12.10&#34;
+  - reference_id: PMID:1938949
+    supporting_text: &#34;Corresponding genes from the two biological sources share common ancestry:
+      comparison of aligned XylX-BenA, XylY-BenB, and XylZ-BenC amino acid sequences revealed
+      respective identities of 58.3, 61.3, and 53%&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Has the mononuclear non-heme iron active site of P. putida KT2440 BenA been
+    characterized by spectroscopy (EPR, Mossbauer) or mutagenesis to identify the iron-coordinating
+    residues?
+- question: What is the substrate range of the BenA-containing dioxygenase - can it also
+    hydroxylate substituted benzoates (e.g., fluorobenzoate, chlorobenzoate, methylbenzoate)
+    in vivo?
+- question: Does BenA form a heterohexameric alpha3-beta3 complex with BenB as seen in
+    structurally characterized homologs like naphthalene dioxygenase?
+suggested_experiments:
+- description: Determine the crystal structure of the BenAB terminal oxygenase component
+    to reveal the architecture of the Rieske cluster, the mononuclear iron active site,
+    and the substrate-binding pocket, enabling comparison with structurally characterized
+    homologs (naphthalene dioxygenase, biphenyl dioxygenase).
+  experiment_type: X-ray crystallography
+  hypothesis: BenAB forms an alpha3-beta3 heterohexamer with the Rieske cluster of one
+    alpha subunit positioned near the mononuclear iron of an adjacent alpha subunit for
+    inter-subunit electron transfer.
+- description: Perform site-directed mutagenesis of predicted iron-coordinating residues
+    in both the Rieske cluster (conserved Cys/His) and the mononuclear iron site (conserved
+    His/Asp) to confirm their essentiality for catalytic activity.
+  experiment_type: Site-directed mutagenesis with activity assays
+  hypothesis: Mutation of iron-coordinating residues will abolish dioxygenase activity
+    without affecting protein folding or subunit assembly.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

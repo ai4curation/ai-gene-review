@@ -1,0 +1,209 @@
+name: GO Annotation Issue Scanner
+
+on:
+  schedule:
+    # Run daily at 10 AM UTC
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - report findings without creating PRs or issues'
+        required: false
+        default: 'false'
+        type: boolean
+      max_issues:
+        description: 'Maximum go-annotation issues to scan'
+        required: false
+        default: '30'
+        type: string
+      model:
+        description: "Claude model to use"
+        default: claude-opus-4-7
+        type: choice
+        options:
+          - claude-sonnet-4-6
+          - claude-haiku-4-5-20251001
+          - claude-opus-4-7
+
+concurrency:
+  group: go-annotation-scanner
+  cancel-in-progress: true
+
+jobs:
+  scan-and-act:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_FOR_PR }}
+
+      - name: Configure git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install python tools
+        run: uv sync
+
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Scan go-annotation issues and act
+        id: scanner
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR }}
+          GITHUB_TOKEN: ${{ secrets.PAT_FOR_PR }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.PAT_FOR_PR }}
+          show_full_output: true
+          claude_args: |
+            --dangerously-skip-permissions
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}}}'
+            --model ${{ inputs.model || 'claude-opus-4-7' }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            DRY_RUN: ${{ inputs.dry_run || 'false' }}
+            MAX_ISSUES: ${{ inputs.max_issues || '30' }}
+
+            You are an automated scanner that monitors the geneontology/go-annotation issue
+            tracker for open issues relevant to the AI Gene Review project. Your job is to
+            find ONE actionable issue, assess it, and either do the work or create a tracking
+            project — then stop.
+
+            Start by reading CLAUDE.md to understand repository conventions.
+
+            ## Step 1: Scan go-annotation issues
+
+            Fetch recent open issues from the upstream tracker, most recent first:
+
+            ```bash
+            gh issue list --repo geneontology/go-annotation --state open \
+              --limit $MAX_ISSUES --json number,title,body,labels,createdAt,updatedAt \
+              --jq 'sort_by(.updatedAt) | reverse'
+            ```
+
+            Look for issues that involve:
+            - Specific gene annotation problems (wrong GO terms, missing annotations,
+              over-annotations, evidence issues)
+            - Requests to review annotations for particular genes or gene families
+            - Systematic annotation quality concerns for specific organisms or GO branches
+            - Annotation rule problems (ARBA/UniRule — but defer pure ARBA issues to the
+              existing arba-issue-monitor workflow)
+            - Requests for new GO terms motivated by annotation gaps
+
+            Skip issues that are:
+            - Pure ontology editing requests (GO term definitions, relationships)
+            - Infrastructure/tooling issues for go-annotation itself
+            - Already covered by an existing ARBA review in this repo
+
+            ## Step 2: Avoid duplicates — THIS IS CRITICAL
+
+            Before selecting an issue, you MUST check that it is not already tracked here.
+            Search exhaustively:
+
+            ```bash
+            # Check existing issues in this repo
+            gh issue list --repo $REPO --state all --limit 200 --json number,title,body \
+              | jq -r '.[].title + " " + (.[].body // "")' | grep -i "KEYWORD"
+
+            # Check existing PRs
+            gh pr list --repo $REPO --state all --limit 200 --json number,title,body \
+              | jq -r '.[].title + " " + (.[].body // "")' | grep -i "KEYWORD"
+
+            # Check existing gene review files
+            find genes -name '*-ai-review.yaml' | grep -i "GENE_NAME"
+
+            # Check existing project files
+            ls projects/ | grep -i "KEYWORD"
+            ```
+
+            Search for the gene name, gene symbol, GO term ID, and go-annotation issue number.
+            If ANY of these searches find existing work, skip that issue and move to the next
+            candidate. Do not create duplicate tracking issues, PRs, or reviews.
+
+            ## Step 3: Select ONE issue and classify
+
+            Choose the best untracked issue. Prefer:
+            - Most recently updated (freshest signal from curators)
+            - Issues with clear, actionable scope
+            - Issues involving genes/organisms already partially covered in this repo
+
+            Classify the selected issue as either:
+
+            ### Type A: Single-gene review
+            The issue concerns a specific gene's annotations and can be addressed by
+            reviewing that gene. Examples: "wrong GO term for BRCA1", "missing annotations
+            for yeast CDC48", "over-annotation of human TP53 with broad terms".
+
+            ### Type B: Multi-gene or systematic project
+            The issue concerns a gene family, pathway, organism-wide problem, or systematic
+            annotation pattern. Examples: "review all autophagy annotations", "HSP70 family
+            annotations are inconsistent", "C. elegans annotations need updating".
+
+            ## Step 4: Take action
+
+            If DRY_RUN is true, report your analysis and stop without making changes.
+
+            ### For Type A (single-gene review):
+
+            1. Determine the organism and gene symbol.
+            2. Run `just fetch-gene <organism> <gene>` to set up the review files.
+            3. Use the `/review` skill to conduct the gene review following CLAUDE.md.
+            4. Create a PR with the review, linking to the go-annotation issue in the body:
+               "Addresses geneontology/go-annotation#NNN"
+            5. Create a tracking issue in this repo linking to both the PR and the upstream
+               go-annotation issue.
+
+            ### For Type B (project):
+
+            1. Do an initial analysis of the scope:
+               - How many genes are affected?
+               - Which organisms?
+               - What's the common annotation problem?
+               - What GO terms or branches are involved?
+            2. Create a project file at `projects/PROJECT_NAME.md` with:
+               - Summary of the go-annotation issue
+               - Link to geneontology/go-annotation#NNN
+               - Scope analysis (genes, organisms, GO terms involved)
+               - Candidate genes for initial review (5-10 concrete suggestions)
+               - Proposed approach and priority
+            3. Create a PR with the project file.
+            4. Create a tracking issue in this repo referencing the project and the
+               upstream go-annotation issue.
+
+            ## Guardrails
+
+            - Pick exactly ONE issue per run. Do not batch.
+            - Never guess GO IDs, PMIDs, gene symbols, or UniProt accessions.
+            - Never edit derived files — regenerate with just commands.
+            - Validate any gene review changes with `just validate <organism> <gene>`.
+            - If you cannot determine the organism or gene from the issue, skip it and
+              pick the next candidate.
+            - If the issue is ambiguous or would require extensive human judgment to scope,
+              create a tracking issue with your analysis rather than attempting the work.
+
+            End with a concise summary: issue scanned, issue selected (with link),
+            classification (Type A or B), action taken, and any blockers.
+
+      - name: Write step summary
+        if: always()
+        run: |
+          echo "## GO Annotation Issue Scanner Run" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.scanner.outputs.result }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY

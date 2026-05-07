@@ -1,0 +1,3286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ahpC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ahpC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88K52" target="_blank" class="term-link">
+                        Q88K52
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ahpC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88K52" data-a="DESCRIPTION: ahpC encodes the cytoplasmic peroxiredoxin/alkyl h..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ahpC encodes the cytoplasmic peroxiredoxin/alkyl hydroperoxide reductase C subunit of the AhpCF peroxide-detoxification system in Pseudomonas putida KT2440. It reduces hydrogen peroxide and organic hydroperoxides, contributes to cellular oxidant detoxification and oxidative-stress defense, and is under OxyR control.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004601" target="_blank" class="term-link">
+                                    GO:0004601
+                                </a>
+                            </span>
+                            <span class="term-label">peroxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0004601" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is directionally correct, but it is too generic for an AhpC-family peroxiredoxin. More specific peroxiredoxin terms are available and better capture the chemistry and family assignment of this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> AhpC is not just any peroxidase; it is specifically a peroxiredoxin/AhpC family peroxide reductase.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                                    peroxiredoxin activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Thiol-specific peroxidase that catalyzes the reduction of hydrogen peroxide and organic hydroperoxides to water and alcohols, respectively.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with the UniProt record and with the role of AhpC as a soluble intracellular peroxide-detoxification enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The available evidence supports AhpC as a soluble cytoplasmic protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization is not implausible, but for a bacterial protein it is largely redundant with the broader cytoplasm term already present in the annotation set.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is the clearer and less redundant cellular component term for this bacterial enzyme.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    cytoplasm
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006979" target="_blank" class="term-link">
+                                    GO:0006979
+                                </a>
+                            </span>
+                            <span class="term-label">response to oxidative stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0006979" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AhpC is clearly part of the peroxide-stress response network in P. putida, but this biological-process term is broader than the protein&#39;s direct core activity in oxidant detoxification.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is supported, but more specific detoxification terms better capture the direct evolved function of AhpC.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15352239" target="_blank" class="term-link">
+                                        PMID:15352239
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The up-regulated proteins include proteins involved in the: (i) oxidative stress response (AhpC, SodB,Tpx and Dsb)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                                        PMID:17107553
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These results are consistent with the conclusion, distinct from those observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR controlled expression of all the principal peroxide-degrading enzymes in P. putida.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008379" target="_blank" class="term-link">
+                                    GO:0008379
+                                </a>
+                            </span>
+                            <span class="term-label">thioredoxin peroxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0008379" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AhpC is a peroxide-reducing peroxiredoxin, but this thioredoxin-specific donor term is not the best fit for the P. putida AhpC protein, which functions in the AhpCF system and is paired with the dedicated reductase AhpF.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A donor-independent peroxiredoxin term is safer for the AhpC subunit itself than a thioredoxin-specific term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                                    peroxiredoxin activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12483614" target="_blank" class="term-link">
+                                        PMID:12483614
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most abundantly produced 24-kDa soluble protein was found to be similar to AhpC, the small subunit of alkyl hydroperoxide reductase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In P. putida, the AhpC catalytic cycle is coupled to a dedicated reductase AhpF, characterized as a flavoprotein/disulfide reductase that uses NADH as the reducing equivalent to restore AhpC from its oxidized form.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016209" target="_blank" class="term-link">
+                                    GO:0016209
+                                </a>
+                            </span>
+                            <span class="term-label">antioxidant activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0016209" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Antioxidant activity is consistent with AhpC biology, but it is a very broad parent molecular-function term compared with the more informative peroxiredoxin-specific annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is not wrong, but it should not be treated as the primary functional statement when more specific child terms are available.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plays a role in cell protection against oxidative stress by detoxifying peroxides.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AhpC is an oxidoreductase in the broadest sense, but this label is too unspecific to be useful for curation when peroxiredoxin-specific terms are available.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A more specific molecular-function term should replace this overly broad parent annotation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                                    peroxiredoxin activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Thiol-specific peroxidase that catalyzes the reduction of hydrogen peroxide and organic hydroperoxides to water and alcohols, respectively.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033554" target="_blank" class="term-link">
+                                    GO:0033554
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0033554" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This high-level stress-response term is broadly consistent with the experimental literature, but it is much less informative than the oxidant-detoxification and oxidative-stress terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is valid but too broad to count as a core functional summary.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15352239" target="_blank" class="term-link">
+                                        PMID:15352239
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The up-regulated proteins include proteins involved in the: (i) oxidative stress response (AhpC, SodB,Tpx and Dsb)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042744" target="_blank" class="term-link">
+                                    GO:0042744
+                                </a>
+                            </span>
+                            <span class="term-label">hydrogen peroxide catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0042744" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AhpC does participate in hydrogen peroxide detoxification, but the protein&#39;s documented substrate range is broader and includes organic hydroperoxides, so the current process term is too narrow as the main biological-process statement.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A broader oxidant-detoxification term better reflects the known chemistry of AhpC.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    cellular oxidant detoxification
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Thiol-specific peroxidase that catalyzes the reduction of hydrogen peroxide and organic hydroperoxides to water and alcohols, respectively.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045454" target="_blank" class="term-link">
+                                    GO:0045454
+                                </a>
+                            </span>
+                            <span class="term-label">cell redox homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0045454" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AhpC contributes to maintenance of the intracellular redox environment, but this systems-level term is broader than the direct peroxide-reducing role of the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is plausible and useful context, but it is secondary to the direct detoxification activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plays a role in cell protection against oxidative stress by detoxifying peroxides.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                                    GO:0051920
+                                </a>
+                            </span>
+                            <span class="term-label">peroxiredoxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0051920" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best existing GO molecular-function term for AhpC. The UniProt record, domain architecture, and the primary literature all support AhpC as an AhpC/Prx1-family peroxide-reducing peroxiredoxin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term captures the core catalytic identity of the protein without overcommitting to donor-specific chemistry at the single-gene-product level.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the peroxiredoxin family. AhpC/Prx1 subfamily.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12483614" target="_blank" class="term-link">
+                                        PMID:12483614
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most abundantly produced 24-kDa soluble protein was found to be similar to AhpC, the small subunit of alkyl hydroperoxide reductase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    GO:0098869
+                                </a>
+                            </span>
+                            <span class="term-label">cellular oxidant detoxification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0098869" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term best captures the direct biological-process role of AhpC in peroxide removal. The enzyme detoxifies peroxides and is part of the OxyR-controlled peroxide-defense system in P. putida.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The process term aligns with both the known chemistry of the enzyme and the regulatory/physiological evidence from P. putida.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plays a role in cell protection against oxidative stress by detoxifying peroxides.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                                        PMID:17107553
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These results are consistent with the conclusion, distinct from those observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR controlled expression of all the principal peroxide-degrading enzymes in P. putida.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0102039" target="_blank" class="term-link">
+                                    GO:0102039
+                                </a>
+                            </span>
+                            <span class="term-label">NADH-dependent peroxiredoxin activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K52" data-a="GO:0102039" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term likely reflects the chemistry of the AhpCF system rather than the AhpC subunit alone. AhpC is the peroxiredoxin component, whereas AhpF provides the NADH-linked reductant flow.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> For the single gene product ahpC, a donor-independent peroxiredoxin term is more defensible than a system-level NADH-dependent term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                                    peroxiredoxin activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12483614" target="_blank" class="term-link">
+                                        PMID:12483614
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Molecular cloning of the P. putida ahpC based on the N-terminal sequence allowed cloning of closely located ahpF, the large subunit of alkyl hydroperoxide reductase.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In P. putida, the AhpC catalytic cycle is coupled to a dedicated reductase AhpF, characterized as a flavoprotein/disulfide reductase that uses NADH as the reducing equivalent to restore AhpC from its oxidized form.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AhpC is the peroxiredoxin component of the AhpCF alkyl hydroperoxide reductase system. In the cytoplasm it reduces hydrogen peroxide and organic hydroperoxides, thereby contributing directly to cellular oxidant detoxification and oxidative-stress defense.</h3>
+                <span class="vote-buttons" data-g="Q88K52" data-a="FUNCTION: AhpC is the peroxiredoxin component of the AhpCF a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051920" target="_blank" class="term-link">
+                            peroxiredoxin activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                cellular oxidant detoxification
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ahpC/ahpC-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Thiol-specific peroxidase that catalyzes the reduction of hydrogen peroxide and organic hydroperoxides to water and alcohols, respectively. Plays a role in cell protection against oxidative stress by detoxifying peroxides.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                                PMID:17107553
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">These results are consistent with the conclusion, distinct from those observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR controlled expression of all the principal peroxide-degrading enzymes in P. putida.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12483614" target="_blank" class="term-link">
+                            PMID:12483614
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from Pseudomonas putida KT2442.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15352239" target="_blank" class="term-link">
+                            PMID:15352239
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insights into Pseudomonas putida KT2440 response to phenol-induced stress by quantitative proteomics.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17107553" target="_blank" class="term-link">
+                            PMID:17107553
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OxyR regulated the expression of two major catalases, KatA and KatB, along with peroxiredoxin, AhpC in Pseudomonas putida.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ahpC/ahpC-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for Pseudomonas putida ahpC (Q88K52)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AhpC is an AhpC/Prx1-family peroxiredoxin</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns cytoplasmic localization</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes reduction of hydrogen peroxide and organic hydroperoxides</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for Pseudomonas putida ahpC</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon synthesis supports ahpCF operon organization and OxyR regulation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon synthesis highlights rapid hydrogen-peroxide induction of ahpC in KT2440</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon synthesis notes that organic hydroperoxides may be preferred substrates in P. putida</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vivo substrate preference of P. putida AhpC for hydrogen peroxide versus organic hydroperoxides under different stress conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88K52" data-a="Q: What is the in vivo substrate preference of P. put..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does P. putida AhpC function exclusively with AhpF in vivo, or can it also draw reducing equivalents from thioredoxin-dependent systems?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88K52" data-a="Q: Does P. putida AhpC function exclusively with AhpF..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify P. putida AhpC together with AhpF and measure steady-state kinetics against hydrogen peroxide and several organic hydroperoxides to resolve substrate preference and donor coupling.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: P. putida AhpC will show higher catalytic efficiency toward organic hydroperoxides than toward hydrogen peroxide under AhpF/NADH-coupled assay conditions.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Enzyme kinetics with purified proteins</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88K52" data-a="EXPERIMENT: Purify P. putida AhpC together with AhpF and measu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct an ahpC deletion mutant and quantify growth, survival, and oxidant sensitivity during exposure to hydrogen peroxide, tert-butyl hydroperoxide, phenol, and toluene, followed by complementation with wild-type ahpC.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of ahpC will disproportionately sensitize P. putida to organic hydroperoxides and solvent-associated oxidative stress.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Targeted knockout and stress-phenotyping assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88K52" data-a="EXPERIMENT: Construct an ahpC deletion mutant and quantify gro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ahpC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K52" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88K52</li>
+<li><strong>Protein Description:</strong> RecName: Full=Alkyl hydroperoxide reductase C {ECO:0000256|ARBA:ARBA00017462, ECO:0000256|RuleBase:RU366004}; EC=1.11.1.26 {ECO:0000256|ARBA:ARBA00013021, ECO:0000256|RuleBase:RU366004}; AltName: Full=Peroxiredoxin {ECO:0000256|ARBA:ARBA00032077, ECO:0000256|RuleBase:RU366004}; AltName: Full=Thioredoxin peroxidase {ECO:0000256|ARBA:ARBA00032824, ECO:0000256|RuleBase:RU366004};</li>
+<li><strong>Gene Information:</strong> Name=ahpC {ECO:0000313|EMBL:AAN68051.1}; OrderedLocusNames=PP_2439 {ECO:0000313|EMBL:AAN68051.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the peroxiredoxin family. AhpC/Prx1 subfamily.</li>
+<li><strong>Key Domains:</strong> AhpC. (IPR017559); AhpC/TSA. (IPR000866); Peroxiredoxin. (IPR050217); Peroxiredoxin_AhpC-typ. (IPR024706); Peroxiredoxin_C. (IPR019479)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ahpC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ahpC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ahpC</strong> (gene ID: ahpC, UniProt: Q88K52) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-ahpc-uniprot-q88k52-locus-pp_2439-in-pseudomonas-putida-kt2440">Research report: <em>ahpC</em> (UniProt Q88K52; locus PP_2439) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-geneprotein-identity">1) Target verification (gene/protein identity)</h3>
+<p>The research target is <strong>alkyl hydroperoxide reductase C (AhpC)</strong>, a <strong>peroxiredoxin-family</strong> thiol peroxidase, encoded by <strong>ahpC</strong> with ordered locus name <strong>PP_2439</strong> in <em>Pseudomonas putida</em> KT2440, matching the user-provided UniProt context for Q88K52. This locus assignment is explicitly used in oxidative-stress transcriptomics for KT2440 (Table 2 lists <strong>ahpC = PP_2439</strong> and <strong>ahpF = PP_2440</strong>). (bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-ahpc-as-a-bacterial-peroxiredoxin-ahpcprx1-subfamily">2.1 AhpC as a bacterial peroxiredoxin (AhpC/Prx1 subfamily)</h4>
+<p>AhpC is the <strong>peroxidatic</strong> component (“C” subunit) of the bacterial <strong>alkyl hydroperoxide reductase (Ahp) system</strong>, belonging to the <strong>peroxiredoxin</strong> family. In <em>P. putida</em>, AhpC is observed as an abundant <strong>soluble ~24 kDa</strong> protein and is predicted/confirmed to be a <strong>2-Cys peroxiredoxin</strong> with conserved cysteines (e.g., <strong>Cys47 and Cys166</strong> in KT2442 AhpC), consistent with the canonical Prx catalytic cycle. (fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 3-4)</p>
+<h4 id="22-enzymatic-reaction-and-substrate-specificity">2.2 Enzymatic reaction and substrate specificity</h4>
+<p><strong>Reaction (functional definition):</strong> AhpC catalyzes the <strong>reduction of hydroperoxides</strong> (ROOH, including organic hydroperoxides and H2O2) to the corresponding products (ROH + H2O, for alkyl hydroperoxides). In <em>P. putida</em> KT2442, AhpC is described as reducing <strong>alkyl hydroperoxides to the corresponding alcohol</strong>, with oxidized AhpC then being recycled by AhpF. (fukumori2001molecularcloningand pages 6-8)</p>
+<p><strong>Substrate preference in <em>P. putida</em> evidence:</strong> Experimental phenotypes and expression studies in KT2442 indicate AhpC is especially important for <strong>organic hydroperoxide</strong> detoxification; hydrogen peroxide was reported as potentially <strong>not the preferred substrate</strong> for the <em>P. putida</em> AHPR system in the KT2442 context (e.g., AhpC overexpression increased resistance to t‑butyl hydroperoxide but did not similarly improve H2O2 resistance). (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 3-4)</p>
+<p><strong>General peroxiredoxin perspective:</strong> A dedicated review and <em>P. putida</em>-focused oxidative-stress review describe AhpC as a high-affinity peroxide detoxification tool (qualitatively “very low Km” for hydroperoxides is noted), but those sources do not provide numeric kinetic constants for <em>P. putida</em> AhpC in the retrieved text. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)</p>
+<h4 id="23-electron-donor-system-and-catalytic-cycling-ahpfnadh">2.3 Electron donor system and catalytic cycling (AhpF/NADH)</h4>
+<p>In <em>P. putida</em>, the AhpC catalytic cycle is coupled to a dedicated reductase <strong>AhpF</strong>, characterized as a <strong>flavoprotein/disulfide reductase</strong> that uses <strong>NADH</strong> as the reducing equivalent to restore AhpC from its oxidized form. This NADH dependence is repeatedly emphasized and is a key mechanistic constraint: the AhpCF system may be less suited for detoxifying very large peroxide loads because the peroxidase must be continually re-reduced at the expense of reducing equivalents. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)</p>
+<p>Consistent with this electron-transfer role, <em>P. putida</em> KT2442 AhpF is predicted to have conserved <strong>FAD-binding</strong> and <strong>NAD(P)H-binding</strong> motifs/domains typical of electron-transfer flavoenzymes, supporting an electron flow <strong>NAD(P)H → AhpF → AhpC → peroxide</strong>. (fukumori2001molecularcloningand pages 4-6)</p>
+<h3 id="3-pathway-context-operon-organization-and-regulation">3) Pathway context: operon organization and regulation</h3>
+<h4 id="31-operon-organization-and-transcriptional-architecture-ahpcf">3.1 Operon organization and transcriptional architecture (ahpCF)</h4>
+<p>In <em>P. putida</em> KT2442 (closely related to KT2440), <strong>ahpC and ahpF are adjacent and co-transcribed</strong> as an <strong>ahpCF operon</strong>, but with <strong>strong differential accumulation</strong> of transcripts/proteins.</p>
+<p>Key evidence includes:<br />
+- a predominant <strong>~0.7 kb</strong> transcript corresponding largely to <strong>ahpC</strong>, and a less abundant <strong>~2.7 kb</strong> transcript consistent with <strong>ahpCF</strong> co-transcription. (fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12)<br />
+- evidence for <strong>transcriptional attenuation</strong> between ahpC and ahpF: a stem-loop structure in the intergenic region can reduce readthrough to ahpF, explaining lower AhpF accumulation; deletion of this stem-loop increases ahpF expression. (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 4-6)<br />
+- mapped transcription start sites: in KT2442, ahpC transcription initiates from <strong>two closely spaced starts</strong> (<strong>P1 at −37; P2 at −28</strong> relative to the start site), and expression is reported as <strong>RpoS-independent</strong> (transcripts present even in an rpoS mutant). (hishinuma2006oxyrregulatedthe pages 6-7)</p>
+<h4 id="32-oxyr-controlled-oxidative-stress-regulon">3.2 OxyR-controlled oxidative stress regulon</h4>
+<p>A central regulatory concept is that <strong>OxyR</strong> serves as a peroxide-sensing transcriptional regulator that controls antioxidant genes including <strong>ahpC</strong>.</p>
+<p>Direct regulatory evidence in <em>P. putida</em> includes:<br />
+- <strong>OxyR binds the ahpC promoter region</strong> (gel shift/binding evidence). (hishinuma2006oxyrregulatedthe pages 1-2)<br />
+- mechanistic model: reduced OxyR can bind the promoter, while oxidized OxyR is linked to transcriptional activation (e.g., via interaction with RNA polymerase). (hishinuma2006oxyrregulatedthe pages 6-7)<br />
+- <strong>oxyR1 point mutation</strong>: in KT2442TOL, a point mutation in oxyR (Phe106→Ile is described for oxyR1) is associated with <strong>constitutively increased AhpC expression</strong>, consistent with an altered redox-sensing/activation state. (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 1-3)</p>
+<h3 id="4-cellular-localization-and-site-of-action">4) Cellular localization and site of action</h3>
+<p>Experimental fractionation in <em>P. putida</em> KT2442 recovered AhpC as a <strong>soluble protein</strong> in the <strong>soluble fraction</strong>, supporting a <strong>cytosolic</strong> site of action where intracellular hydroperoxides are detoxified. No evidence in the retrieved sources supports secretion or a membrane-anchored localization for AhpC. (fukumori2001molecularcloningand pages 3-4)</p>
+<h3 id="5-physiological-roles-phenotypes-and-quantitative-data">5) Physiological roles, phenotypes, and quantitative data</h3>
+<h4 id="51-organic-peroxide-resistance-and-solvent-associated-stress-tolerance-kt2442-studies">5.1 Organic peroxide resistance and solvent-associated stress tolerance (KT2442 studies)</h4>
+<p>In KT2442/KT2442TOL, AhpC is induced by oxidants and contributes to resistance to <strong>organic hydroperoxides</strong>:<br />
+- The 24-kDa AhpC-like protein is inducibly produced by <strong>H2O2</strong> or <strong>t‑butyl hydroperoxide (BHP)</strong> supplementation (but not by toluene alone in the parental strain). (fukumori2001molecularcloningand pages 3-4)<br />
+- Disk diffusion phenotypes show markedly increased resistance to BHP in the toluene-adapted strain (smaller zone = more resistant): <strong>BHP zone</strong> KT2442 <strong>30 ± 2 mm</strong>, KT2442TOL <strong>14 ± 1 mm</strong>, and oxyR revertant KT2442TOL-oxyR <strong>30 ± 2 mm</strong>. In contrast, <strong>H2O2 zones</strong> were similar across strains (<strong>23 ± 1</strong>, <strong>24 ± 1</strong>, <strong>25 ± 1 mm</strong>, respectively), supporting a more prominent AhpC role in organic peroxide defense than in bulk H2O2 detoxification under those conditions. (fukumori2001molecularcloningand pages 3-4)<br />
+- A toluene colony-formation phenotype links oxyR/AhpC regulation to solvent stress adaptation: colony-forming ability under toluene decreased from <strong>~92 ± 10%</strong> (KT2442TOL) to <strong>~51 ± 8%</strong> (KT2442TOL-oxyR), consistent with a partial contribution of OxyR-controlled oxidative-stress defenses (including AhpC) to solvent-associated fitness. (fukumori2001molecularcloningand pages 6-8)</p>
+<h4 id="52-rapid-induction-by-hydrogen-peroxide-in-kt2440-transcriptomics">5.2 Rapid induction by hydrogen peroxide in KT2440 (transcriptomics)</h4>
+<p>A genome-wide expression dataset for KT2440 exposed to hydrogen peroxide shows AhpC and AhpF are among the most strongly induced oxidative-stress genes early after exposure:<br />
+- <strong>ahpC (PP_2439): 74.7-fold</strong> induction at <strong>7 min</strong> (T1) and <strong>2.3-fold</strong> at <strong>60 min</strong> (T2).<br />
+- <strong>ahpF (PP_2440): 203.4-fold</strong> induction at <strong>7 min</strong> (T1) and <strong>3.5-fold</strong> at <strong>60 min</strong> (T2).<br />
+This time-resolved pattern indicates a rapid transcriptional spike followed by partial relaxation/adaptation. (bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h4 id="53-qpcr-evidence-for-strong-oxyr1-dependent-ahpc-upregulation">5.3 qPCR evidence for strong OxyR1-dependent ahpC upregulation</h4>
+<p>In <em>P. putida</em> (OxyR study), qPCR Ct values indicate that an <strong>oxyR1</strong> background causes very strong elevation of ahpC transcript abundance across growth states. Reported Ct values include (LOG phase) <strong>20.10 ± 0.34</strong> (oxyR) vs <strong>12.49 ± 0.75</strong> (oxyR1), and (stationary) <strong>15.16 ± 1.43</strong> (oxyR) vs <strong>10.67 ± 0.15</strong> (oxyR1). The large Ct decreases imply very large fold-changes in transcript abundance (since each Ct approximates a doubling under ideal PCR efficiency). (hishinuma2006oxyrregulatedthe pages 6-7)</p>
+<h3 id="6-recent-developments-20232024-and-emerging-applications">6) Recent developments (2023–2024) and emerging applications</h3>
+<p>Direct 2023–2024 primary studies centered specifically on <strong>KT2440 AhpC biochemistry</strong> were limited in the retrieved corpus. However, recent work in related environmental bacteria and applied contexts reinforces AhpC’s importance as part of oxidative-stress defense relevant to biotechnology.</p>
+<h4 id="61-bioremediation-context-oxidative-stress-during-aromatic-compound-degradation-2024">6.1 Bioremediation context: oxidative stress during aromatic compound degradation (2024)</h4>
+<p>A 2024 study in <em>Paraburkholderia xenovorans</em> (an environmental aromatic degrader) shows that aromatic degradation can trigger oxidative stress and upregulation of multiple detoxification enzymes, including <strong>alkyl hydroperoxide reductase/peroxiredoxin components</strong> among a broader antioxidant network. Importantly, the authors demonstrate a <strong>real-world implementation</strong>: overexpression of a redox protein (FldX1) improves degradation performance in <strong>soil microcosms</strong> (bioaugmentation) by mitigating oxidative stress, which in turn alters the need to induce antioxidant genes (including those in peroxide detoxification pathways). This supports the general translational principle that peroxide-defense modules like AhpC/AhpF are operationally important in field-relevant biodegradation scenarios, even when the specific organism differs from <em>P. putida</em>. (rodriguezcastro2024thelongchainflavodoxin pages 10-11)</p>
+<h3 id="7-expert-opinion-and-synthesis-authoritative-analyses">7) Expert opinion and synthesis (authoritative analyses)</h3>
+<p>Two overarching expert interpretations emerge from reviews and <em>P. putida</em> regulatory work:<br />
+1. <strong>AhpC is a high-affinity thiol peroxidase central to peroxide defense</strong>, especially at low-to-moderate peroxide levels where peroxiredoxins can be highly effective scavengers. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)<br />
+2. <strong>Dependence on reductant supply (NADH via AhpF)</strong> implies a potential limitation for coping with massive peroxide influx; thus, AhpC typically operates alongside catalases and other systems in a coordinated OxyR-controlled oxidative stress response. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6, bojanovic2017globaltranscriptionalresponses pages 10-11)</p>
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domains</td>
+<td>Target identity is consistent across sources: <strong>ahpC = PP_2439</strong> in <em>Pseudomonas putida</em> KT2440/KT2442, encoding a <strong>small, soluble ~24 kDa alkyl hydroperoxide reductase subunit C/peroxiredoxin</strong>. The protein is a <strong>2-Cys peroxiredoxin</strong> with conserved cysteines at positions <strong>Cys47</strong> and <strong>Cys166</strong>, matching the AhpC/Prx1 family assignment.</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 1-3, bojanovic2017globaltranscriptionalresponses pages 10-11)</td>
+</tr>
+<tr>
+<td>Reaction/substrates</td>
+<td>AhpC is the <strong>peroxidatic subunit</strong> of alkyl hydroperoxide reductase and reduces <strong>organic hydroperoxides to the corresponding alcohols</strong>; it can also detoxify <strong>H2O2</strong>, but evidence in <em>P. putida</em> suggests <strong>organic hydroperoxides are preferred substrates</strong> and H2O2 may be less preferred. Reviews note very low Km values for hydroperoxides qualitatively, but no numeric kinetics were recovered here for <em>P. putida</em> AhpC.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 6-8, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Electron donor/regeneration</td>
+<td>Oxidized AhpC is regenerated by <strong>AhpF</strong>, the dedicated <strong>NADH-dependent flavo-disulfide reductase/peroxiredoxin reductase</strong>. AhpF contains conserved <strong>FAD-binding</strong> and <strong>NAD(P)H-binding</strong> motifs, supporting electron flow from <strong>NADH → AhpF → AhpC → peroxide substrate</strong>.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 1-3, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td><strong>OxyR directly regulates ahpC</strong>. Purified OxyR binds upstream of ahpC; reduced OxyR can bind promoter DNA, whereas oxidized OxyR is linked to transcriptional activation. An <strong>oxyR1</strong> mutation causes constitutively elevated ahpC expression.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 1-3, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</td>
+</tr>
+<tr>
+<td>Operon/transcription</td>
+<td><strong>ahpC and ahpF are co-transcribed</strong> in an <strong>ahpCF operon</strong>. A major <strong>~0.7 kb ahpC transcript</strong> and a less abundant <strong>~2.7 kb ahpCF transcript</strong> were detected; an additional <strong>~1.4 kb ahpF RNA</strong> may arise from processing or a second promoter. A stem-loop between ahpC and ahpF likely attenuates downstream ahpF expression, explaining lower AhpF abundance. Transcription starts were mapped to two ahpC starts (<strong>P1 = -37, P2 = -28</strong>).</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Experimental descriptions identify AhpC as a <strong>soluble protein</strong> recovered in the <strong>soluble/cytosolic fraction</strong>; no evidence here supports secretion or membrane localization. Function is therefore most parsimoniously assigned to the <strong>cytosol</strong>, where it detoxifies intracellular peroxides generated by metabolism or chemical stress.</td>
+<td>Primary study; inference from fractionation/review</td>
+<td>(fukumori2001molecularcloningand pages 1-3, fukumori2001molecularcloningand pages 3-4)</td>
+</tr>
+<tr>
+<td>Physiological roles/phenotypes</td>
+<td>AhpC contributes to <strong>oxidative stress defense</strong>, especially against <strong>organic hydroperoxides</strong>. In KT2442, induction occurred with <strong>H2O2</strong> or <strong>t-butyl hydroperoxide (BHP)</strong>, but not toluene alone. Overproduction of AhpC in the toluene-adapted strain correlated with improved BHP resistance: inhibition zones were <strong>30 ± 2 mm</strong> in KT2442, <strong>14 ± 1 mm</strong> in KT2442TOL, and <strong>30 ± 2 mm</strong> in the oxyR-revertant; H2O2 zones remained similar (<strong>23 ± 1</strong>, <strong>24 ± 1</strong>, <strong>25 ± 1 mm</strong>, respectively). Heterologous expression of <em>P. putida</em> ahpC partially protected <em>E. coli</em> against BHP but not H2O2. Reversion of oxyR reduced colony formation in toluene from <strong>~92 ± 10%</strong> in KT2442TOL to <strong>~51 ± 8%</strong> in KT2442TOL-oxyR, linking OxyR/AhpC overexpression with solvent-associated stress tolerance.</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 1-3, fukumori2001molecularcloningand pages 3-4, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Quantitative expression stats</td>
+<td>Under H2O2 stress in KT2440, <strong>ahpC (PP_2439)</strong> increased <strong>74.7-fold at 7 min</strong> and <strong>2.3-fold at 60 min</strong>; <strong>ahpF (PP_2440)</strong> increased <strong>203.4-fold at 7 min</strong> and <strong>3.5-fold at 60 min</strong>. In an oxyR1 background, ahpC qPCR Ct values were <strong>20.10 ± 0.34</strong> (LOG oxyR) vs <strong>12.49 ± 0.75</strong> (LOG oxyR1), and <strong>15.16 ± 1.43</strong> (ST oxyR) vs <strong>10.67 ± 0.15</strong> (ST oxyR1), indicating very large transcript increases in oxyR1.</td>
+<td>Primary study</td>
+<td>(hishinuma2006oxyrregulatedthe pages 6-7, bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation for </em>Pseudomonas putida<em> AhpC (PP_2439; UniProt Q88K52), including enzymatic role, regulation, operon structure, localization, phenotypes, and quantitative expression evidence. It is useful as a compact evidence map linking the curated protein identity to experimental studies in </em>P. putida<em>.</em></p>
+<h3 id="9-key-evidence-figuretable">9) Key evidence figure/table</h3>
+<p>A cropped image of Table 2 reporting <strong>H2O2-induced fold changes</strong> for <strong>ahpC (PP_2439)</strong> and <strong>ahpF (PP_2440)</strong> at 7 min and 60 min is available for direct visual verification. (bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h3 id="10-practical-functional-annotation-concise">10) Practical functional annotation (concise)</h3>
+<ul>
+<li><strong>Primary molecular function:</strong> thiol-dependent <strong>peroxidase</strong> reducing <strong>organic hydroperoxides</strong> (and H2O2 under some conditions) using the <strong>AhpF/NADH</strong> reducing system. (fukumori2001molecularcloningand pages 6-8, kim2014oxidativestressresponse pages 5-6)</li>
+<li><strong>Likely cellular compartment:</strong> <strong>cytosol/soluble fraction</strong>. (fukumori2001molecularcloningand pages 3-4)</li>
+<li><strong>Pathway/regulon:</strong> <strong>OxyR-controlled oxidative stress regulon</strong>; <strong>ahpCF operon</strong> with transcriptional attenuation influencing AhpF abundance. (fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</li>
+</ul>
+<h3 id="limitations-of-the-current-evidence-set">Limitations of the current evidence set</h3>
+<p>While core function and regulation of <em>P. putida</em> AhpC are strongly supported by classic primary literature and authoritative reviews, the retrieved corpus contained <strong>few 2023–2024 studies directly focused on AhpC in <em>P. putida</em> KT2440</strong> with detailed enzymology (e.g., Km/kcat for specific hydroperoxide substrates). Consequently, quantitative enzymatic kinetics for the specific Q88K52 protein are not reported here, and the “recent developments” section relies partly on 2024 work in a closely related environmental biodegradation context rather than <em>P. putida</em> KT2440 itself. (hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 6-8, rodriguezcastro2024thelongchainflavodoxin pages 10-11)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bojanovic2017globaltranscriptionalresponses pages 10-11): Klara Bojanovič, Isotta D'Arrigo, and Katherine S. Long. Global transcriptional responses to osmotic, oxidative, and imipenem stress conditions in pseudomonas putida. Applied and Environmental Microbiology, Apr 2017. URL: https://doi.org/10.1128/aem.03236-16, doi:10.1128/aem.03236-16. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bojanovic2017globaltranscriptionalresponses media 03a7ec25): Klara Bojanovič, Isotta D'Arrigo, and Katherine S. Long. Global transcriptional responses to osmotic, oxidative, and imipenem stress conditions in pseudomonas putida. Applied and Environmental Microbiology, Apr 2017. URL: https://doi.org/10.1128/aem.03236-16, doi:10.1128/aem.03236-16. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 4-6): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 3-4): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 6-8): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(hishinuma2006oxyrregulatedthe pages 1-2): Sota Hishinuma, Masahiro Yuki, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr regulated the expression of two major catalases, kata and katb, along with peroxiredoxin, ahpc in pseudomonas putida. Environmental microbiology, 8 12:2115-24, Dec 2006. URL: https://doi.org/10.1111/j.1462-2920.2006.01088.x, doi:10.1111/j.1462-2920.2006.01088.x. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 5-6): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dubbs2007peroxiredoxinsinbacterial pages 9-12): James M. Dubbs and Skorn Mongkolsuk. Peroxiredoxins in bacterial antioxidant defense. Sub-cellular biochemistry, 44:143-93, Jan 2007. URL: https://doi.org/10.1007/978-1-4020-6051-9_7, doi:10.1007/978-1-4020-6051-9_7. This article has 133 citations.</p>
+</li>
+<li>
+<p>(hishinuma2006oxyrregulatedthe pages 6-7): Sota Hishinuma, Masahiro Yuki, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr regulated the expression of two major catalases, kata and katb, along with peroxiredoxin, ahpc in pseudomonas putida. Environmental microbiology, 8 12:2115-24, Dec 2006. URL: https://doi.org/10.1111/j.1462-2920.2006.01088.x, doi:10.1111/j.1462-2920.2006.01088.x. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 1-3): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(rodriguezcastro2024thelongchainflavodoxin pages 10-11): Laura Rodríguez-Castro, Roberto E. Durán, Valentina Méndez, Flavia Dorochesi, Daniela Zühlke, Katharina Riedel, and Michael Seeger. The long-chain flavodoxin fldx1 improves the biodegradation of 4-hydroxyphenylacetate and 3-hydroxyphenylacetate and counteracts the oxidative stress associated to aromatic catabolism in paraburkholderia xenovorans. Biological Research, Apr 2024. URL: https://doi.org/10.1186/s40659-024-00491-4, doi:10.1186/s40659-024-00491-4. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon.Body</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ahpC-deep-research-falcon.body.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K52" data-a="DOC: Deep Research Falcon.Body" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88K52</li>
+<li><strong>Protein Description:</strong> RecName: Full=Alkyl hydroperoxide reductase C {ECO:0000256|ARBA:ARBA00017462, ECO:0000256|RuleBase:RU366004}; EC=1.11.1.26 {ECO:0000256|ARBA:ARBA00013021, ECO:0000256|RuleBase:RU366004}; AltName: Full=Peroxiredoxin {ECO:0000256|ARBA:ARBA00032077, ECO:0000256|RuleBase:RU366004}; AltName: Full=Thioredoxin peroxidase {ECO:0000256|ARBA:ARBA00032824, ECO:0000256|RuleBase:RU366004};</li>
+<li><strong>Gene Information:</strong> Name=ahpC {ECO:0000313|EMBL:AAN68051.1}; OrderedLocusNames=PP_2439 {ECO:0000313|EMBL:AAN68051.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the peroxiredoxin family. AhpC/Prx1 subfamily.</li>
+<li><strong>Key Domains:</strong> AhpC. (IPR017559); AhpC/TSA. (IPR000866); Peroxiredoxin. (IPR050217); Peroxiredoxin_AhpC-typ. (IPR024706); Peroxiredoxin_C. (IPR019479)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ahpC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ahpC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ahpC</strong> (gene ID: ahpC, UniProt: Q88K52) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-ahpc-uniprot-q88k52-locus-pp_2439-in-pseudomonas-putida-kt2440">Research report: <em>ahpC</em> (UniProt Q88K52; locus PP_2439) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="1-target-verification-geneprotein-identity">1) Target verification (gene/protein identity)</h3>
+<p>The research target is <strong>alkyl hydroperoxide reductase C (AhpC)</strong>, a <strong>peroxiredoxin-family</strong> thiol peroxidase, encoded by <strong>ahpC</strong> with ordered locus name <strong>PP_2439</strong> in <em>Pseudomonas putida</em> KT2440, matching the user-provided UniProt context for Q88K52. This locus assignment is explicitly used in oxidative-stress transcriptomics for KT2440 (Table 2 lists <strong>ahpC = PP_2439</strong> and <strong>ahpF = PP_2440</strong>). (bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-ahpc-as-a-bacterial-peroxiredoxin-ahpcprx1-subfamily">2.1 AhpC as a bacterial peroxiredoxin (AhpC/Prx1 subfamily)</h4>
+<p>AhpC is the <strong>peroxidatic</strong> component (“C” subunit) of the bacterial <strong>alkyl hydroperoxide reductase (Ahp) system</strong>, belonging to the <strong>peroxiredoxin</strong> family. In <em>P. putida</em>, AhpC is observed as an abundant <strong>soluble ~24 kDa</strong> protein and is predicted/confirmed to be a <strong>2-Cys peroxiredoxin</strong> with conserved cysteines (e.g., <strong>Cys47 and Cys166</strong> in KT2442 AhpC), consistent with the canonical Prx catalytic cycle. (fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 3-4)</p>
+<h4 id="22-enzymatic-reaction-and-substrate-specificity">2.2 Enzymatic reaction and substrate specificity</h4>
+<p><strong>Reaction (functional definition):</strong> AhpC catalyzes the <strong>reduction of hydroperoxides</strong> (ROOH, including organic hydroperoxides and H2O2) to the corresponding products (ROH + H2O, for alkyl hydroperoxides). In <em>P. putida</em> KT2442, AhpC is described as reducing <strong>alkyl hydroperoxides to the corresponding alcohol</strong>, with oxidized AhpC then being recycled by AhpF. (fukumori2001molecularcloningand pages 6-8)</p>
+<p><strong>Substrate preference in <em>P. putida</em> evidence:</strong> Experimental phenotypes and expression studies in KT2442 indicate AhpC is especially important for <strong>organic hydroperoxide</strong> detoxification; hydrogen peroxide was reported as potentially <strong>not the preferred substrate</strong> for the <em>P. putida</em> AHPR system in the KT2442 context (e.g., AhpC overexpression increased resistance to t‑butyl hydroperoxide but did not similarly improve H2O2 resistance). (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 3-4)</p>
+<p><strong>General peroxiredoxin perspective:</strong> A dedicated review and <em>P. putida</em>-focused oxidative-stress review describe AhpC as a high-affinity peroxide detoxification tool (qualitatively “very low Km” for hydroperoxides is noted), but those sources do not provide numeric kinetic constants for <em>P. putida</em> AhpC in the retrieved text. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)</p>
+<h4 id="23-electron-donor-system-and-catalytic-cycling-ahpfnadh">2.3 Electron donor system and catalytic cycling (AhpF/NADH)</h4>
+<p>In <em>P. putida</em>, the AhpC catalytic cycle is coupled to a dedicated reductase <strong>AhpF</strong>, characterized as a <strong>flavoprotein/disulfide reductase</strong> that uses <strong>NADH</strong> as the reducing equivalent to restore AhpC from its oxidized form. This NADH dependence is repeatedly emphasized and is a key mechanistic constraint: the AhpCF system may be less suited for detoxifying very large peroxide loads because the peroxidase must be continually re-reduced at the expense of reducing equivalents. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)</p>
+<p>Consistent with this electron-transfer role, <em>P. putida</em> KT2442 AhpF is predicted to have conserved <strong>FAD-binding</strong> and <strong>NAD(P)H-binding</strong> motifs/domains typical of electron-transfer flavoenzymes, supporting an electron flow <strong>NAD(P)H → AhpF → AhpC → peroxide</strong>. (fukumori2001molecularcloningand pages 4-6)</p>
+<h3 id="3-pathway-context-operon-organization-and-regulation">3) Pathway context: operon organization and regulation</h3>
+<h4 id="31-operon-organization-and-transcriptional-architecture-ahpcf">3.1 Operon organization and transcriptional architecture (ahpCF)</h4>
+<p>In <em>P. putida</em> KT2442 (closely related to KT2440), <strong>ahpC and ahpF are adjacent and co-transcribed</strong> as an <strong>ahpCF operon</strong>, but with <strong>strong differential accumulation</strong> of transcripts/proteins.</p>
+<p>Key evidence includes:<br />
+- a predominant <strong>~0.7 kb</strong> transcript corresponding largely to <strong>ahpC</strong>, and a less abundant <strong>~2.7 kb</strong> transcript consistent with <strong>ahpCF</strong> co-transcription. (fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12)<br />
+- evidence for <strong>transcriptional attenuation</strong> between ahpC and ahpF: a stem-loop structure in the intergenic region can reduce readthrough to ahpF, explaining lower AhpF accumulation; deletion of this stem-loop increases ahpF expression. (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 4-6)<br />
+- mapped transcription start sites: in KT2442, ahpC transcription initiates from <strong>two closely spaced starts</strong> (<strong>P1 at −37; P2 at −28</strong> relative to the start site), and expression is reported as <strong>RpoS-independent</strong> (transcripts present even in an rpoS mutant). (hishinuma2006oxyrregulatedthe pages 6-7)</p>
+<h4 id="32-oxyr-controlled-oxidative-stress-regulon">3.2 OxyR-controlled oxidative stress regulon</h4>
+<p>A central regulatory concept is that <strong>OxyR</strong> serves as a peroxide-sensing transcriptional regulator that controls antioxidant genes including <strong>ahpC</strong>.</p>
+<p>Direct regulatory evidence in <em>P. putida</em> includes:<br />
+- <strong>OxyR binds the ahpC promoter region</strong> (gel shift/binding evidence). (hishinuma2006oxyrregulatedthe pages 1-2)<br />
+- mechanistic model: reduced OxyR can bind the promoter, while oxidized OxyR is linked to transcriptional activation (e.g., via interaction with RNA polymerase). (hishinuma2006oxyrregulatedthe pages 6-7)<br />
+- <strong>oxyR1 point mutation</strong>: in KT2442TOL, a point mutation in oxyR (Phe106→Ile is described for oxyR1) is associated with <strong>constitutively increased AhpC expression</strong>, consistent with an altered redox-sensing/activation state. (fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 1-3)</p>
+<h3 id="4-cellular-localization-and-site-of-action">4) Cellular localization and site of action</h3>
+<p>Experimental fractionation in <em>P. putida</em> KT2442 recovered AhpC as a <strong>soluble protein</strong> in the <strong>soluble fraction</strong>, supporting a <strong>cytosolic</strong> site of action where intracellular hydroperoxides are detoxified. No evidence in the retrieved sources supports secretion or a membrane-anchored localization for AhpC. (fukumori2001molecularcloningand pages 3-4)</p>
+<h3 id="5-physiological-roles-phenotypes-and-quantitative-data">5) Physiological roles, phenotypes, and quantitative data</h3>
+<h4 id="51-organic-peroxide-resistance-and-solvent-associated-stress-tolerance-kt2442-studies">5.1 Organic peroxide resistance and solvent-associated stress tolerance (KT2442 studies)</h4>
+<p>In KT2442/KT2442TOL, AhpC is induced by oxidants and contributes to resistance to <strong>organic hydroperoxides</strong>:<br />
+- The 24-kDa AhpC-like protein is inducibly produced by <strong>H2O2</strong> or <strong>t‑butyl hydroperoxide (BHP)</strong> supplementation (but not by toluene alone in the parental strain). (fukumori2001molecularcloningand pages 3-4)<br />
+- Disk diffusion phenotypes show markedly increased resistance to BHP in the toluene-adapted strain (smaller zone = more resistant): <strong>BHP zone</strong> KT2442 <strong>30 ± 2 mm</strong>, KT2442TOL <strong>14 ± 1 mm</strong>, and oxyR revertant KT2442TOL-oxyR <strong>30 ± 2 mm</strong>. In contrast, <strong>H2O2 zones</strong> were similar across strains (<strong>23 ± 1</strong>, <strong>24 ± 1</strong>, <strong>25 ± 1 mm</strong>, respectively), supporting a more prominent AhpC role in organic peroxide defense than in bulk H2O2 detoxification under those conditions. (fukumori2001molecularcloningand pages 3-4)<br />
+- A toluene colony-formation phenotype links oxyR/AhpC regulation to solvent stress adaptation: colony-forming ability under toluene decreased from <strong>~92 ± 10%</strong> (KT2442TOL) to <strong>~51 ± 8%</strong> (KT2442TOL-oxyR), consistent with a partial contribution of OxyR-controlled oxidative-stress defenses (including AhpC) to solvent-associated fitness. (fukumori2001molecularcloningand pages 6-8)</p>
+<h4 id="52-rapid-induction-by-hydrogen-peroxide-in-kt2440-transcriptomics">5.2 Rapid induction by hydrogen peroxide in KT2440 (transcriptomics)</h4>
+<p>A genome-wide expression dataset for KT2440 exposed to hydrogen peroxide shows AhpC and AhpF are among the most strongly induced oxidative-stress genes early after exposure:<br />
+- <strong>ahpC (PP_2439): 74.7-fold</strong> induction at <strong>7 min</strong> (T1) and <strong>2.3-fold</strong> at <strong>60 min</strong> (T2).<br />
+- <strong>ahpF (PP_2440): 203.4-fold</strong> induction at <strong>7 min</strong> (T1) and <strong>3.5-fold</strong> at <strong>60 min</strong> (T2).<br />
+This time-resolved pattern indicates a rapid transcriptional spike followed by partial relaxation/adaptation. (bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h4 id="53-qpcr-evidence-for-strong-oxyr1-dependent-ahpc-upregulation">5.3 qPCR evidence for strong OxyR1-dependent ahpC upregulation</h4>
+<p>In <em>P. putida</em> (OxyR study), qPCR Ct values indicate that an <strong>oxyR1</strong> background causes very strong elevation of ahpC transcript abundance across growth states. Reported Ct values include (LOG phase) <strong>20.10 ± 0.34</strong> (oxyR) vs <strong>12.49 ± 0.75</strong> (oxyR1), and (stationary) <strong>15.16 ± 1.43</strong> (oxyR) vs <strong>10.67 ± 0.15</strong> (oxyR1). The large Ct decreases imply very large fold-changes in transcript abundance (since each Ct approximates a doubling under ideal PCR efficiency). (hishinuma2006oxyrregulatedthe pages 6-7)</p>
+<h3 id="6-recent-developments-20232024-and-emerging-applications">6) Recent developments (2023–2024) and emerging applications</h3>
+<p>Direct 2023–2024 primary studies centered specifically on <strong>KT2440 AhpC biochemistry</strong> were limited in the retrieved corpus. However, recent work in related environmental bacteria and applied contexts reinforces AhpC’s importance as part of oxidative-stress defense relevant to biotechnology.</p>
+<h4 id="61-bioremediation-context-oxidative-stress-during-aromatic-compound-degradation-2024">6.1 Bioremediation context: oxidative stress during aromatic compound degradation (2024)</h4>
+<p>A 2024 study in <em>Paraburkholderia xenovorans</em> (an environmental aromatic degrader) shows that aromatic degradation can trigger oxidative stress and upregulation of multiple detoxification enzymes, including <strong>alkyl hydroperoxide reductase/peroxiredoxin components</strong> among a broader antioxidant network. Importantly, the authors demonstrate a <strong>real-world implementation</strong>: overexpression of a redox protein (FldX1) improves degradation performance in <strong>soil microcosms</strong> (bioaugmentation) by mitigating oxidative stress, which in turn alters the need to induce antioxidant genes (including those in peroxide detoxification pathways). This supports the general translational principle that peroxide-defense modules like AhpC/AhpF are operationally important in field-relevant biodegradation scenarios, even when the specific organism differs from <em>P. putida</em>. (rodriguezcastro2024thelongchainflavodoxin pages 10-11)</p>
+<h3 id="7-expert-opinion-and-synthesis-authoritative-analyses">7) Expert opinion and synthesis (authoritative analyses)</h3>
+<p>Two overarching expert interpretations emerge from reviews and <em>P. putida</em> regulatory work:<br />
+1. <strong>AhpC is a high-affinity thiol peroxidase central to peroxide defense</strong>, especially at low-to-moderate peroxide levels where peroxiredoxins can be highly effective scavengers. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6)<br />
+2. <strong>Dependence on reductant supply (NADH via AhpF)</strong> implies a potential limitation for coping with massive peroxide influx; thus, AhpC typically operates alongside catalases and other systems in a coordinated OxyR-controlled oxidative stress response. (hishinuma2006oxyrregulatedthe pages 1-2, kim2014oxidativestressresponse pages 5-6, bojanovic2017globaltranscriptionalresponses pages 10-11)</p>
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domains</td>
+<td>Target identity is consistent across sources: <strong>ahpC = PP_2439</strong> in <em>Pseudomonas putida</em> KT2440/KT2442, encoding a <strong>small, soluble ~24 kDa alkyl hydroperoxide reductase subunit C/peroxiredoxin</strong>. The protein is a <strong>2-Cys peroxiredoxin</strong> with conserved cysteines at positions <strong>Cys47</strong> and <strong>Cys166</strong>, matching the AhpC/Prx1 family assignment.</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 1-3, bojanovic2017globaltranscriptionalresponses pages 10-11)</td>
+</tr>
+<tr>
+<td>Reaction/substrates</td>
+<td>AhpC is the <strong>peroxidatic subunit</strong> of alkyl hydroperoxide reductase and reduces <strong>organic hydroperoxides to the corresponding alcohols</strong>; it can also detoxify <strong>H2O2</strong>, but evidence in <em>P. putida</em> suggests <strong>organic hydroperoxides are preferred substrates</strong> and H2O2 may be less preferred. Reviews note very low Km values for hydroperoxides qualitatively, but no numeric kinetics were recovered here for <em>P. putida</em> AhpC.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 6-8, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Electron donor/regeneration</td>
+<td>Oxidized AhpC is regenerated by <strong>AhpF</strong>, the dedicated <strong>NADH-dependent flavo-disulfide reductase/peroxiredoxin reductase</strong>. AhpF contains conserved <strong>FAD-binding</strong> and <strong>NAD(P)H-binding</strong> motifs, supporting electron flow from <strong>NADH → AhpF → AhpC → peroxide substrate</strong>.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 4-6, fukumori2001molecularcloningand pages 1-3, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td><strong>OxyR directly regulates ahpC</strong>. Purified OxyR binds upstream of ahpC; reduced OxyR can bind promoter DNA, whereas oxidized OxyR is linked to transcriptional activation. An <strong>oxyR1</strong> mutation causes constitutively elevated ahpC expression.</td>
+<td>Primary study; review</td>
+<td>(hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 1-3, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</td>
+</tr>
+<tr>
+<td>Operon/transcription</td>
+<td><strong>ahpC and ahpF are co-transcribed</strong> in an <strong>ahpCF operon</strong>. A major <strong>~0.7 kb ahpC transcript</strong> and a less abundant <strong>~2.7 kb ahpCF transcript</strong> were detected; an additional <strong>~1.4 kb ahpF RNA</strong> may arise from processing or a second promoter. A stem-loop between ahpC and ahpF likely attenuates downstream ahpF expression, explaining lower AhpF abundance. Transcription starts were mapped to two ahpC starts (<strong>P1 = -37, P2 = -28</strong>).</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Experimental descriptions identify AhpC as a <strong>soluble protein</strong> recovered in the <strong>soluble/cytosolic fraction</strong>; no evidence here supports secretion or membrane localization. Function is therefore most parsimoniously assigned to the <strong>cytosol</strong>, where it detoxifies intracellular peroxides generated by metabolism or chemical stress.</td>
+<td>Primary study; inference from fractionation/review</td>
+<td>(fukumori2001molecularcloningand pages 1-3, fukumori2001molecularcloningand pages 3-4)</td>
+</tr>
+<tr>
+<td>Physiological roles/phenotypes</td>
+<td>AhpC contributes to <strong>oxidative stress defense</strong>, especially against <strong>organic hydroperoxides</strong>. In KT2442, induction occurred with <strong>H2O2</strong> or <strong>t-butyl hydroperoxide (BHP)</strong>, but not toluene alone. Overproduction of AhpC in the toluene-adapted strain correlated with improved BHP resistance: inhibition zones were <strong>30 ± 2 mm</strong> in KT2442, <strong>14 ± 1 mm</strong> in KT2442TOL, and <strong>30 ± 2 mm</strong> in the oxyR-revertant; H2O2 zones remained similar (<strong>23 ± 1</strong>, <strong>24 ± 1</strong>, <strong>25 ± 1 mm</strong>, respectively). Heterologous expression of <em>P. putida</em> ahpC partially protected <em>E. coli</em> against BHP but not H2O2. Reversion of oxyR reduced colony formation in toluene from <strong>~92 ± 10%</strong> in KT2442TOL to <strong>~51 ± 8%</strong> in KT2442TOL-oxyR, linking OxyR/AhpC overexpression with solvent-associated stress tolerance.</td>
+<td>Primary study; review</td>
+<td>(fukumori2001molecularcloningand pages 6-8, fukumori2001molecularcloningand pages 1-3, fukumori2001molecularcloningand pages 3-4, kim2014oxidativestressresponse pages 5-6)</td>
+</tr>
+<tr>
+<td>Quantitative expression stats</td>
+<td>Under H2O2 stress in KT2440, <strong>ahpC (PP_2439)</strong> increased <strong>74.7-fold at 7 min</strong> and <strong>2.3-fold at 60 min</strong>; <strong>ahpF (PP_2440)</strong> increased <strong>203.4-fold at 7 min</strong> and <strong>3.5-fold at 60 min</strong>. In an oxyR1 background, ahpC qPCR Ct values were <strong>20.10 ± 0.34</strong> (LOG oxyR) vs <strong>12.49 ± 0.75</strong> (LOG oxyR1), and <strong>15.16 ± 1.43</strong> (ST oxyR) vs <strong>10.67 ± 0.15</strong> (ST oxyR1), indicating very large transcript increases in oxyR1.</td>
+<td>Primary study</td>
+<td>(hishinuma2006oxyrregulatedthe pages 6-7, bojanovic2017globaltranscriptionalresponses pages 10-11, bojanovic2017globaltranscriptionalresponses media 03a7ec25)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation for </em>Pseudomonas putida<em> AhpC (PP_2439; UniProt Q88K52), including enzymatic role, regulation, operon structure, localization, phenotypes, and quantitative expression evidence. It is useful as a compact evidence map linking the curated protein identity to experimental studies in </em>P. putida<em>.</em></p>
+<h3 id="9-key-evidence-figuretable">9) Key evidence figure/table</h3>
+<p>A cropped image of Table 2 reporting <strong>H2O2-induced fold changes</strong> for <strong>ahpC (PP_2439)</strong> and <strong>ahpF (PP_2440)</strong> at 7 min and 60 min is available for direct visual verification. (bojanovic2017globaltranscriptionalresponses media 03a7ec25)</p>
+<h3 id="10-practical-functional-annotation-concise">10) Practical functional annotation (concise)</h3>
+<ul>
+<li><strong>Primary molecular function:</strong> thiol-dependent <strong>peroxidase</strong> reducing <strong>organic hydroperoxides</strong> (and H2O2 under some conditions) using the <strong>AhpF/NADH</strong> reducing system. (fukumori2001molecularcloningand pages 6-8, kim2014oxidativestressresponse pages 5-6)</li>
+<li><strong>Likely cellular compartment:</strong> <strong>cytosol/soluble fraction</strong>. (fukumori2001molecularcloningand pages 3-4)</li>
+<li><strong>Pathway/regulon:</strong> <strong>OxyR-controlled oxidative stress regulon</strong>; <strong>ahpCF operon</strong> with transcriptional attenuation influencing AhpF abundance. (fukumori2001molecularcloningand pages 4-6, dubbs2007peroxiredoxinsinbacterial pages 9-12, hishinuma2006oxyrregulatedthe pages 6-7)</li>
+</ul>
+<h3 id="limitations-of-the-current-evidence-set">Limitations of the current evidence set</h3>
+<p>While core function and regulation of <em>P. putida</em> AhpC are strongly supported by classic primary literature and authoritative reviews, the retrieved corpus contained <strong>few 2023–2024 studies directly focused on AhpC in <em>P. putida</em> KT2440</strong> with detailed enzymology (e.g., Km/kcat for specific hydroperoxide substrates). Consequently, quantitative enzymatic kinetics for the specific Q88K52 protein are not reported here, and the “recent developments” section relies partly on 2024 work in a closely related environmental biodegradation context rather than <em>P. putida</em> KT2440 itself. (hishinuma2006oxyrregulatedthe pages 1-2, fukumori2001molecularcloningand pages 6-8, rodriguezcastro2024thelongchainflavodoxin pages 10-11)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(bojanovic2017globaltranscriptionalresponses pages 10-11): Klara Bojanovič, Isotta D'Arrigo, and Katherine S. Long. Global transcriptional responses to osmotic, oxidative, and imipenem stress conditions in pseudomonas putida. Applied and Environmental Microbiology, Apr 2017. URL: https://doi.org/10.1128/aem.03236-16, doi:10.1128/aem.03236-16. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bojanovic2017globaltranscriptionalresponses media 03a7ec25): Klara Bojanovič, Isotta D'Arrigo, and Katherine S. Long. Global transcriptional responses to osmotic, oxidative, and imipenem stress conditions in pseudomonas putida. Applied and Environmental Microbiology, Apr 2017. URL: https://doi.org/10.1128/aem.03236-16, doi:10.1128/aem.03236-16. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 4-6): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 3-4): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 6-8): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(hishinuma2006oxyrregulatedthe pages 1-2): Sota Hishinuma, Masahiro Yuki, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr regulated the expression of two major catalases, kata and katb, along with peroxiredoxin, ahpc in pseudomonas putida. Environmental microbiology, 8 12:2115-24, Dec 2006. URL: https://doi.org/10.1111/j.1462-2920.2006.01088.x, doi:10.1111/j.1462-2920.2006.01088.x. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2014oxidativestressresponse pages 5-6): Jisun Kim and Woojun Park. Oxidative stress response in pseudomonas putida. Applied Microbiology and Biotechnology, 98:6933-6946, Jun 2014. URL: https://doi.org/10.1007/s00253-014-5883-4, doi:10.1007/s00253-014-5883-4. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dubbs2007peroxiredoxinsinbacterial pages 9-12): James M. Dubbs and Skorn Mongkolsuk. Peroxiredoxins in bacterial antioxidant defense. Sub-cellular biochemistry, 44:143-93, Jan 2007. URL: https://doi.org/10.1007/978-1-4020-6051-9_7, doi:10.1007/978-1-4020-6051-9_7. This article has 133 citations.</p>
+</li>
+<li>
+<p>(hishinuma2006oxyrregulatedthe pages 6-7): Sota Hishinuma, Masahiro Yuki, Makoto Fujimura, and Fumiyasu Fukumori. Oxyr regulated the expression of two major catalases, kata and katb, along with peroxiredoxin, ahpc in pseudomonas putida. Environmental microbiology, 8 12:2115-24, Dec 2006. URL: https://doi.org/10.1111/j.1462-2920.2006.01088.x, doi:10.1111/j.1462-2920.2006.01088.x. This article has 86 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukumori2001molecularcloningand pages 1-3): Fumiyasu Fukumori and Mitsuru Kishii. Molecular cloning and transcriptional analysis of the alkyl hydroperoxide reductase genes from pseudomonas putida kt2442. The Journal of general and applied microbiology, 47 5:269-277, Oct 2001. URL: https://doi.org/10.2323/jgam.47.269, doi:10.2323/jgam.47.269. This article has 21 citations.</p>
+</li>
+<li>
+<p>(rodriguezcastro2024thelongchainflavodoxin pages 10-11): Laura Rodríguez-Castro, Roberto E. Durán, Valentina Méndez, Flavia Dorochesi, Daniela Zühlke, Katharina Riedel, and Michael Seeger. The long-chain flavodoxin fldx1 improves the biodegradation of 4-hydroxyphenylacetate and 3-hydroxyphenylacetate and counteracts the oxidative stress associated to aromatic catabolism in paraburkholderia xenovorans. Biological Research, Apr 2024. URL: https://doi.org/10.1186/s40659-024-00491-4, doi:10.1186/s40659-024-00491-4. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88K52
+gene_symbol: ahpC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  ahpC encodes the cytoplasmic peroxiredoxin/alkyl hydroperoxide reductase C
+  subunit of the AhpCF peroxide-detoxification system in Pseudomonas putida
+  KT2440. It reduces hydrogen peroxide and organic hydroperoxides, contributes
+  to cellular oxidant detoxification and oxidative-stress defense, and is under
+  OxyR control.
+existing_annotations:
+- term:
+    id: GO:0004601
+    label: peroxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This annotation is directionally correct, but it is too generic for an
+      AhpC-family peroxiredoxin. More specific peroxiredoxin terms are available
+      and better capture the chemistry and family assignment of this protein.
+    action: MODIFY
+    reason: &gt;-
+      AhpC is not just any peroxidase; it is specifically a peroxiredoxin/AhpC
+      family peroxide reductase.
+    proposed_replacement_terms:
+    - id: GO:0051920
+      label: peroxiredoxin activity
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Thiol-specific peroxidase that catalyzes the reduction of hydrogen
+        peroxide and organic hydroperoxides to water and alcohols,
+        respectively.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is consistent with the UniProt record and with
+      the role of AhpC as a soluble intracellular peroxide-detoxification
+      enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      The available evidence supports AhpC as a soluble cytoplasmic protein.
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This localization is not implausible, but for a bacterial protein it is
+      largely redundant with the broader cytoplasm term already present in the
+      annotation set.
+    action: MODIFY
+    reason: &gt;-
+      Cytoplasm is the clearer and less redundant cellular component term for
+      this bacterial enzyme.
+    proposed_replacement_terms:
+    - id: GO:0005737
+      label: cytoplasm
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0006979
+    label: response to oxidative stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      AhpC is clearly part of the peroxide-stress response network in P.
+      putida, but this biological-process term is broader than the protein&#39;s
+      direct core activity in oxidant detoxification.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is supported, but more specific detoxification terms better
+      capture the direct evolved function of AhpC.
+    supported_by:
+    - reference_id: PMID:15352239
+      supporting_text: &gt;-
+        The up-regulated proteins include proteins involved in the: (i)
+        oxidative stress response (AhpC, SodB,Tpx and Dsb)
+    - reference_id: PMID:17107553
+      supporting_text: &gt;-
+        These results are consistent with the conclusion, distinct from those
+        observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR
+        controlled expression of all the principal peroxide-degrading enzymes in
+        P. putida.
+- term:
+    id: GO:0008379
+    label: thioredoxin peroxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      AhpC is a peroxide-reducing peroxiredoxin, but this thioredoxin-specific
+      donor term is not the best fit for the P. putida AhpC protein, which
+      functions in the AhpCF system and is paired with the dedicated reductase
+      AhpF.
+    action: MODIFY
+    reason: &gt;-
+      A donor-independent peroxiredoxin term is safer for the AhpC subunit
+      itself than a thioredoxin-specific term.
+    proposed_replacement_terms:
+    - id: GO:0051920
+      label: peroxiredoxin activity
+    supported_by:
+    - reference_id: PMID:12483614
+      supporting_text: &gt;-
+        The most abundantly produced 24-kDa soluble protein was found to be
+        similar to AhpC, the small subunit of alkyl hydroperoxide reductase.
+    - reference_id: file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+      supporting_text: &gt;-
+        In P. putida, the AhpC catalytic cycle is coupled to a dedicated
+        reductase AhpF, characterized as a flavoprotein/disulfide reductase that
+        uses NADH as the reducing equivalent to restore AhpC from its oxidized
+        form.
+- term:
+    id: GO:0016209
+    label: antioxidant activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Antioxidant activity is consistent with AhpC biology, but it is a very
+      broad parent molecular-function term compared with the more informative
+      peroxiredoxin-specific annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is not wrong, but it should not be treated as the primary
+      functional statement when more specific child terms are available.
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Plays a role in cell protection against oxidative stress by detoxifying
+        peroxides.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      AhpC is an oxidoreductase in the broadest sense, but this label is too
+      unspecific to be useful for curation when peroxiredoxin-specific terms are
+      available.
+    action: MODIFY
+    reason: &gt;-
+      A more specific molecular-function term should replace this overly broad
+      parent annotation.
+    proposed_replacement_terms:
+    - id: GO:0051920
+      label: peroxiredoxin activity
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Thiol-specific peroxidase that catalyzes the reduction of hydrogen
+        peroxide and organic hydroperoxides to water and alcohols,
+        respectively.
+- term:
+    id: GO:0033554
+    label: cellular response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      This high-level stress-response term is broadly consistent with the
+      experimental literature, but it is much less informative than the
+      oxidant-detoxification and oxidative-stress terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The term is valid but too broad to count as a core functional summary.
+    supported_by:
+    - reference_id: PMID:15352239
+      supporting_text: &gt;-
+        The up-regulated proteins include proteins involved in the: (i)
+        oxidative stress response (AhpC, SodB,Tpx and Dsb)
+- term:
+    id: GO:0042744
+    label: hydrogen peroxide catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      AhpC does participate in hydrogen peroxide detoxification, but the
+      protein&#39;s documented substrate range is broader and includes organic
+      hydroperoxides, so the current process term is too narrow as the main
+      biological-process statement.
+    action: MODIFY
+    reason: &gt;-
+      A broader oxidant-detoxification term better reflects the known chemistry
+      of AhpC.
+    proposed_replacement_terms:
+    - id: GO:0098869
+      label: cellular oxidant detoxification
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Thiol-specific peroxidase that catalyzes the reduction of hydrogen
+        peroxide and organic hydroperoxides to water and alcohols,
+        respectively.
+- term:
+    id: GO:0045454
+    label: cell redox homeostasis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      AhpC contributes to maintenance of the intracellular redox environment,
+      but this systems-level term is broader than the direct peroxide-reducing
+      role of the enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is plausible and useful context, but it is secondary to the
+      direct detoxification activity.
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Plays a role in cell protection against oxidative stress by detoxifying
+        peroxides.
+- term:
+    id: GO:0051920
+    label: peroxiredoxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the best existing GO molecular-function term for AhpC. The UniProt
+      record, domain architecture, and the primary literature all support AhpC
+      as an AhpC/Prx1-family peroxide-reducing peroxiredoxin.
+    action: ACCEPT
+    reason: &gt;-
+      This term captures the core catalytic identity of the protein without
+      overcommitting to donor-specific chemistry at the single-gene-product
+      level.
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Belongs to the peroxiredoxin family. AhpC/Prx1 subfamily.
+    - reference_id: PMID:12483614
+      supporting_text: &gt;-
+        The most abundantly produced 24-kDa soluble protein was found to be
+        similar to AhpC, the small subunit of alkyl hydroperoxide reductase.
+- term:
+    id: GO:0098869
+    label: cellular oxidant detoxification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This term best captures the direct biological-process role of AhpC in
+      peroxide removal. The enzyme detoxifies peroxides and is part of the
+      OxyR-controlled peroxide-defense system in P. putida.
+    action: ACCEPT
+    reason: &gt;-
+      The process term aligns with both the known chemistry of the enzyme and
+      the regulatory/physiological evidence from P. putida.
+    supported_by:
+    - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+      supporting_text: &gt;-
+        Plays a role in cell protection against oxidative stress by detoxifying
+        peroxides.
+    - reference_id: PMID:17107553
+      supporting_text: &gt;-
+        These results are consistent with the conclusion, distinct from those
+        observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR
+        controlled expression of all the principal peroxide-degrading enzymes in
+        P. putida.
+- term:
+    id: GO:0102039
+    label: NADH-dependent peroxiredoxin activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This term likely reflects the chemistry of the AhpCF system rather than
+      the AhpC subunit alone. AhpC is the peroxiredoxin component, whereas AhpF
+      provides the NADH-linked reductant flow.
+    action: MODIFY
+    reason: &gt;-
+      For the single gene product ahpC, a donor-independent peroxiredoxin term
+      is more defensible than a system-level NADH-dependent term.
+    proposed_replacement_terms:
+    - id: GO:0051920
+      label: peroxiredoxin activity
+    supported_by:
+    - reference_id: PMID:12483614
+      supporting_text: &gt;-
+        Molecular cloning of the P. putida ahpC based on the N-terminal sequence
+        allowed cloning of closely located ahpF, the large subunit of alkyl
+        hydroperoxide reductase.
+    - reference_id: file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+      supporting_text: &gt;-
+        In P. putida, the AhpC catalytic cycle is coupled to a dedicated
+        reductase AhpF, characterized as a flavoprotein/disulfide reductase that
+        uses NADH as the reducing equivalent to restore AhpC from its oxidized
+        form.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12483614
+  title: Molecular cloning and transcriptional analysis of the alkyl hydroperoxide
+    reductase genes from Pseudomonas putida KT2442.
+  findings: []
+- id: PMID:15352239
+  title: Insights into Pseudomonas putida KT2440 response to phenol-induced stress
+    by quantitative proteomics.
+  findings: []
+- id: PMID:17107553
+  title: OxyR regulated the expression of two major catalases, KatA and KatB, along
+    with peroxiredoxin, AhpC in Pseudomonas putida.
+  findings: []
+- id: file:PSEPK/ahpC/ahpC-uniprot.txt
+  title: UniProt record for Pseudomonas putida ahpC (Q88K52)
+  findings:
+  - statement: AhpC is an AhpC/Prx1-family peroxiredoxin
+  - statement: UniProt assigns cytoplasmic localization
+  - statement: UniProt describes reduction of hydrogen peroxide and organic hydroperoxides
+- id: file:PSEPK/ahpC/ahpC-deep-research-falcon.md
+  title: Falcon deep research report for Pseudomonas putida ahpC
+  findings:
+  - statement: Falcon synthesis supports ahpCF operon organization and OxyR regulation
+  - statement: Falcon synthesis highlights rapid hydrogen-peroxide induction of ahpC in KT2440
+  - statement: Falcon synthesis notes that organic hydroperoxides may be preferred substrates in P. putida
+core_functions:
+- description: &gt;-
+    AhpC is the peroxiredoxin component of the AhpCF alkyl hydroperoxide
+    reductase system. In the cytoplasm it reduces hydrogen peroxide and organic
+    hydroperoxides, thereby contributing directly to cellular oxidant
+    detoxification and oxidative-stress defense.
+  supported_by:
+  - reference_id: file:PSEPK/ahpC/ahpC-uniprot.txt
+    supporting_text: &gt;-
+      Thiol-specific peroxidase that catalyzes the reduction of hydrogen
+      peroxide and organic hydroperoxides to water and alcohols,
+      respectively. Plays a role in cell protection against oxidative stress by
+      detoxifying peroxides.
+  - reference_id: PMID:17107553
+    supporting_text: &gt;-
+      These results are consistent with the conclusion, distinct from those
+      observed in an opportunistic pathogen Pseudomonas aeruginosa, that OxyR
+      controlled expression of all the principal peroxide-degrading enzymes in
+      P. putida.
+  molecular_function:
+    id: GO:0051920
+    label: peroxiredoxin activity
+  directly_involved_in:
+  - id: GO:0098869
+    label: cellular oxidant detoxification
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the in vivo substrate preference of P. putida AhpC for hydrogen
+    peroxide versus organic hydroperoxides under different stress conditions?
+- question: &gt;-
+    Does P. putida AhpC function exclusively with AhpF in vivo, or can it also
+    draw reducing equivalents from thioredoxin-dependent systems?
+suggested_experiments:
+- description: &gt;-
+    Purify P. putida AhpC together with AhpF and measure steady-state kinetics
+    against hydrogen peroxide and several organic hydroperoxides to resolve
+    substrate preference and donor coupling.
+  experiment_type: Enzyme kinetics with purified proteins
+  hypothesis: &gt;-
+    P. putida AhpC will show higher catalytic efficiency toward organic
+    hydroperoxides than toward hydrogen peroxide under AhpF/NADH-coupled assay
+    conditions.
+- description: &gt;-
+    Construct an ahpC deletion mutant and quantify growth, survival, and oxidant
+    sensitivity during exposure to hydrogen peroxide, tert-butyl hydroperoxide,
+    phenol, and toluene, followed by complementation with wild-type ahpC.
+  experiment_type: Targeted knockout and stress-phenotyping assay
+  hypothesis: &gt;-
+    Loss of ahpC will disproportionately sensitize P. putida to organic
+    hydroperoxides and solvent-associated oxidative stress.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

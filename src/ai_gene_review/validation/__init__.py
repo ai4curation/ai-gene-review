@@ -1,22 +1,11 @@
 """Validation subpackage for ai-gene-review.
 
-This package contains all validation-related modules:
-- Core validation logic
-- Term validation (ontology terms)
-- Publication validation
-- Validation reporting
+Schema, term, and reference validation are handled by CLI tools
+(linkml-validate, linkml-term-validator, linkml-reference-validator)
+invoked from the justfile.  This package contains only the custom
+best-practices checks and validation reporting.
 """
 
-from ai_gene_review.validation.publication_validator import (
-    PublicationValidator,
-    PublicationValidationResult,
-    validate_yaml_file_publications,
-)
-from ai_gene_review.validation.term_validator import (
-    TermValidator,
-    TermValidationResult,
-    validate_yaml_file,
-)
 from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
     ValidationIssue,
@@ -24,6 +13,7 @@ from ai_gene_review.validation.validation_report import (
     ValidationSeverity,
 )
 from ai_gene_review.validation.validator import (
+    check_best_practices_rules,
     get_schema_path,
     get_validation_summary,
     load_schema,
@@ -38,14 +28,8 @@ __all__ = [
     "get_validation_summary",
     "get_schema_path",
     "load_schema",
-    # Term validation
-    "TermValidator",
-    "TermValidationResult",
-    "validate_yaml_file",
-    # Publication validation
-    "PublicationValidator",
-    "PublicationValidationResult",
-    "validate_yaml_file_publications",
+    # Best practices
+    "check_best_practices_rules",
     # Validation reporting
     "ValidationReport",
     "ValidationIssue",

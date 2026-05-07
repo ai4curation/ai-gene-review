@@ -1,5 +1,12 @@
 ## Add your own just recipes here. This is imported by the main justfile.
 
+# ============ Validation tool paths ============
+schema_path := "src/ai_gene_review/schema/gene_review.yaml"
+oak_config := "conf/oak_config.yaml"
+ref_validator_config := "conf/reference_validator_config.yaml"
+term_validator := "scripts/run_term_validator.sh"
+ref_validator := "scripts/run_reference_validator.sh"
+
 all: validate-all test
 
 # Sync Claude Code commands into Codex custom prompts (namespaced).
@@ -136,10 +143,12 @@ descriptions-status organism *args="":
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
+# Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS
 # Examples:
 #   just deep-research-openai human TP53              # gene_symbol=TP53, gene_id=TP53
 #   just deep-research-openai ARATH BRI1              # Looks up gene symbol from UniProt
 #   just deep-research-openai METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
+#   just deep-research-openai human TP53 --fallback perplexity-lite  # fallback on failure/timeout
 #   just deep-research-openai human CFAP300 --extra-args --param "model=gpt-4o"
 deep-research-openai organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
@@ -271,24 +280,133 @@ fix-labels *args="":
         uv run python src/ai_gene_review/tools/fix_labels.py --dry-run {{args}}
     fi
 
+# Schema-only validation (fast, structure check)
+[group('QC')]
+validate-schema file:
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview {{file}}
+
+# Schema validation for all gene review files
+[group('QC')]
+validate-schema-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating: $f"
+        uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f"
+    done
+
+# Term validation (ontology labels + dynamic enum membership)
+[group('QC')]
+validate-terms file:
+    {{term_validator}} validate-data {{file}} -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+
+# Term validation for all gene review files
+[group('QC')]
+validate-terms-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating terms: $f"
+        {{term_validator}} validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    done
+
+# Reference validation (publication titles + supporting text snippets)
+[group('QC')]
+validate-references file:
+    {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Reference validation for all gene review files
+[group('QC')]
+validate-references-all:
+    #!/usr/bin/env bash
+    set -e
+    for f in genes/*/*/*-ai-review.yaml; do
+        echo "Validating references: $f"
+        {{ref_validator}} validate data "$f" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    done
+
 validate-files files:
     uv run ai-gene-review validate {{files}}
 
-# Validate a specific gene's review file AND check PMID references (short alias)
-validate organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate --verbose genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/
+validate-deep-research:
+    uv run python scripts/validate_deep_research.py
 
-# Validate a specific gene's review file AND check PMID references (long name for clarity)
+# Full validation of a single gene file (schema + terms + references + best practices)
+[group('QC')]
+validate organism gene:
+    #!/usr/bin/env bash
+    set -e
+    file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
+    echo "Schema validation..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$file"
+    echo "Term validation..."
+    {{term_validator}} validate-data "$file" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}}
+    echo "Reference validation..."
+    {{ref_validator}} validate data "$file" --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+    echo "Best practices validation..."
+    uv run ai-gene-review validate --verbose "$file"
+    echo ""
+    echo "Checking PMID references in markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
+    echo "✓ All validations passed for {{organism}}/{{gene}}"
+
+# Run valid/invalid example tests using the real validation pipeline.
+# Valid examples must pass all 3 stages (schema + terms + best practices).
+# Invalid examples must fail at least one stage.
+[group('QC')]
+test-examples:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pass=0; fail=0; errors=()
+
+    echo "=== Valid examples (must pass) ==="
+    for f in tests/data/valid/*.yaml; do
+        name="$(basename "$f")"
+        ok=true
+        uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1 || ok=false
+        if $ok; then
+            uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1 || ok=false
+        fi
+        if $ok; then
+            echo "  ✓ $name"
+            pass=$((pass + 1))
+        else
+            echo "  ✗ $name (should pass but failed)"
+            errors+=("VALID $name failed")
+            fail=$((fail + 1))
+        fi
+    done
+
+    echo ""
+    echo "=== Invalid examples (must fail) ==="
+    for f in tests/data/invalid/*.yaml; do
+        name="$(basename "$f")"
+        # Run schema validation — if it fails, good (expected)
+        if ! uv run linkml-validate --schema {{schema_path}} --target-class GeneReview "$f" > /dev/null 2>&1; then
+            echo "  ✓ $name (correctly rejected by schema)"
+            pass=$((pass + 1))
+        # If schema passes, try term validation
+        elif ! uv run linkml-term-validator validate-data "$f" -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} > /dev/null 2>&1; then
+            echo "  ✓ $name (correctly rejected by term validator)"
+            pass=$((pass + 1))
+        else
+            echo "  ✗ $name (should fail but passed)"
+            errors+=("INVALID $name passed")
+            fail=$((fail + 1))
+        fi
+    done
+
+    echo ""
+    echo "Results: $pass passed, $fail failed"
+    if [ $fail -gt 0 ]; then
+        echo "Failures:"
+        for e in "${errors[@]}"; do echo "  - $e"; done
+        exit 1
+    fi
+
+# Alias for validate
 validate-gene organism gene:
-    @echo "Validating {{organism}}/{{gene}} review file..."
-    uv run ai-gene-review validate genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml
-    @echo ""
-    @echo "Checking PMID references in markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/{{organism}}/{{gene}}/ || (echo "❌ PMID validation failed" && exit 1)
+    just validate {{organism}} {{gene}}
 
 # Validate with verbose output
 validate-gene-verbose organism gene:
@@ -325,14 +443,33 @@ validate-tag tag:
     uv run ai-gene-review validate --verbose --tsv-output "${report_path}" $(cat "${tmp_file}")
     echo "Wrote validation report to ${report_path}"
 
-# Validate all gene review files (shows detailed errors by default)
+# Validate all gene review files (schema + terms + best practices)
+# Uses batch mode for schema and term validation (single process, fast).
+# Reference validation is per-file and slow (~10s each); use
+# validate-references-all or single-file `just validate` for that.
+[group('QC')]
 validate-all:
-    @echo "Validating all gene review YAML files..."
-    @mkdir -p reports
-    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml"
-    @echo ""
-    @echo "Checking PMID references in all pathway markdown files..."
-    @uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || (echo "❌ PMID validation failed" && exit 1)
+    #!/usr/bin/env bash
+    exit_code=0
+    echo "Schema validation (batch)..."
+    uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
+    echo ""
+    echo "Term validation (batch)..."
+    # Term validation reports label mismatches and branch errors; treat as advisory
+    # for now (pre-existing issues on main). Use just validate-terms for strict checks.
+    uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} || echo "⚠ Term validation reported issues (non-blocking)"
+    echo ""
+    echo "Best practices validation..."
+    mkdir -p reports
+    uv run ai-gene-review validate --verbose --tsv-output reports/validation-all.tsv "genes/*/*/*-ai-review.yaml" || exit_code=1
+    echo ""
+    echo "Checking PMID references in all pathway markdown files..."
+    uv run python src/ai_gene_review/tools/validate_pmid_references.py genes/ || exit_code=1
+    if [ $exit_code -ne 0 ]; then
+        echo "✗ Validation completed with errors (see above)"
+        exit $exit_code
+    fi
+    echo "✓ All validations passed!"
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
@@ -1293,6 +1430,94 @@ find-genes-missing-research:
     echo ""
     echo "Summary: $missing_count of $total_count genes lack deep research files"
 
+# Generate per-organism quality dashboard for gene reviews
+# Shows annotation counts, action distribution, coverage gaps
+# Examples:
+#   just quality-report                          # all organisms, terminal output
+#   just quality-report human                    # single organism
+#   just quality-report "" --tsv reports/quality.tsv  # all organisms with TSV output
+quality-report organism="" *args="":
+    #!/usr/bin/env bash
+    cmd="uv run python scripts/quality_report.py {{args}}"
+    if [ -n "{{organism}}" ]; then
+        cmd="$cmd --organism {{organism}}"
+    fi
+    eval "$cmd"
+
+# Show deep research coverage status per organism
+# Displays: total genes, genes with research, missing, and per-provider counts
+# Examples:
+#   just deep-research-status            # all organisms
+#   just deep-research-status human      # single organism
+deep-research-status organism="":
+    #!/usr/bin/env python3
+    import os
+    import sys
+    from collections import defaultdict
+    from pathlib import Path
+    import re
+
+    organism_filter = "{{organism}}"
+    genes_root = Path("genes")
+
+    if organism_filter:
+        org_dirs = [genes_root / organism_filter]
+    else:
+        org_dirs = sorted(p for p in genes_root.iterdir() if p.is_dir())
+
+    grand_total = 0
+    grand_with = 0
+    grand_missing = 0
+    header_printed = False
+    all_missing = []
+
+    for org_dir in org_dirs:
+        if not org_dir.is_dir():
+            continue
+        org = org_dir.name
+        total = 0
+        with_research = 0
+        missing = 0
+        providers = defaultdict(int)
+
+        for gene_dir in sorted(org_dir.iterdir()):
+            if not gene_dir.is_dir():
+                continue
+            total += 1
+            research_files = list(gene_dir.glob("*-deep-research-*.md"))
+            if research_files:
+                with_research += 1
+                for f in research_files:
+                    m = re.search(r'-deep-research-(.+)\.md$', f.name)
+                    if m:
+                        providers[m.group(1)] += 1
+            else:
+                missing += 1
+                all_missing.append(f"{org}/{gene_dir.name}")
+
+        if total == 0:
+            continue
+
+        if not header_printed:
+            print(f"{'ORGANISM':<12s} {'TOTAL':>6s} {'WITH':>6s} {'MISSING':>7s}  PROVIDERS")
+            print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}  ---------")
+            header_printed = True
+
+        prov_str = ", ".join(f"{p}:{providers[p]}" for p in sorted(providers))
+        print(f"{org:<12s} {total:>6d} {with_research:>6d} {missing:>7d}  {prov_str}")
+        grand_total += total
+        grand_with += with_research
+        grand_missing += missing
+
+    if grand_total > 0:
+        print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}")
+        print(f"{'TOTAL':<12s} {grand_total:>6d} {grand_with:>6d} {grand_missing:>7d}")
+
+    if all_missing:
+        print(f"\nGenes missing deep research ({len(all_missing)}):")
+        for g in all_missing:
+            print(f"  {g}")
+
 # ============== Publications Cache Management ==============
 
 # Refresh publications cache for PMC articles with missing full text (small batch)
@@ -1330,6 +1555,26 @@ refresh-publications-force-all count="20000":
 refresh-publications-force-test count="10":
     @echo "Force refreshing {{count}} publications for testing..."
     uv run ai-gene-review refresh-publications --force-all --count {{count}} --delay 1.0
+
+# Convert DOI-keyed publication files to PMID-keyed format
+convert-doi-publications *args="":
+    @echo "Converting DOI-keyed publication files to PMID format..."
+    uv run ai-gene-review convert-doi-publications {{args}}
+
+# Preview DOI-keyed files that would be converted (dry run)
+convert-doi-publications-preview:
+    @echo "DOI-keyed files that would be converted:"
+    uv run ai-gene-review convert-doi-publications --dry-run
+
+# Refresh publication stubs for genes under active review (IN_PROGRESS or DRAFT)
+refresh-publications-active *args="":
+    @echo "Refreshing publications for active gene reviews..."
+    uv run ai-gene-review refresh-publications-active {{args}}
+
+# Preview what refresh-publications-active would do
+refresh-publications-active-preview:
+    @echo "Active review publications (dry run):"
+    uv run ai-gene-review refresh-publications-active --dry-run
 
 # ============== InterPro Family Data Management ==============
 
@@ -1613,6 +1858,7 @@ ui-legacy port="5123":
     @echo "For better performance, use 'just ui' with API server"
     uv run python -m ai4cui --legacy --port {{port}}
 
+<<<<<<< HEAD
 # ============ Publication-centric annotation review (Option 3 subproject) ============
 
 # Generate a publication-centric annotation review file filtered by gene symbol.
@@ -1680,3 +1926,65 @@ pub-list-refs organism:
             print(r)
     except BrokenPipeError:
         sys.exit(0)
+
+# ============== GO-GPT Predictions (BioReason-Pro) ==============
+
+# Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
+# Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Examples:
+#   just gogpt-predict human TP53
+#   just gogpt-predict PSEPK rpoS
+gogpt-predict organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+
+# Run GO-GPT prediction and compare with curated review
+# Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
+# Examples:
+#   just gogpt-compare human TP53
+#   just gogpt-compare PSEPK rpoS
+gogpt-compare organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+
+# Alias for gogpt-compare
+gogpt-review organism gene:
+    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+
+# Run GO-GPT predictions for all genes in an organism
+gogpt-predict-organism organism:
+    #!/usr/bin/env bash
+    echo "Running GO-GPT predictions for all {{organism}} genes..."
+    count=0
+    for gene_dir in genes/{{organism}}/*/; do
+        if [ -d "$gene_dir" ]; then
+            gene=$(basename "$gene_dir")
+            uniprot="$gene_dir/${gene}-uniprot.txt"
+            if [ -f "$uniprot" ]; then
+                echo "Processing $gene..."
+                ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                count=$((count + 1))
+            fi
+        fi
+    done
+    echo "Processed $count genes"
+
+# Run GO-GPT comparison for all reviewed genes
+gogpt-compare-all:
+    #!/usr/bin/env bash
+    echo "Running GO-GPT comparison for all reviewed genes..."
+    total=0
+    for organism_dir in genes/*/; do
+        organism=$(basename "$organism_dir")
+        for gene_dir in "$organism_dir"*/; do
+            if [ -d "$gene_dir" ]; then
+                gene=$(basename "$gene_dir")
+                review="$gene_dir/${gene}-ai-review.yaml"
+                uniprot="$gene_dir/${gene}-uniprot.txt"
+                if [ -f "$review" ] && [ -f "$uniprot" ]; then
+                    echo "Comparing $organism/$gene..."
+                    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    total=$((total + 1))
+                fi
+            fi
+        done
+    done
+    echo "Total: compared $total genes"

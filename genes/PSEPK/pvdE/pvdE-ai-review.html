@@ -1,0 +1,2676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pvdE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pvdE</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F82" target="_blank" class="term-link">
+                        Q88F82
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_4216</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pvdE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F82" data-a="DESCRIPTION: PvdE is a predicted inner membrane ABC exporter re..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PvdE is a predicted inner membrane ABC exporter required for pyoverdine biosynthesis in Pseudomonas putida KT2440. It is a fused transporter with an N-terminal multi-pass transmembrane domain and a C-terminal ABC ATPase domain. Based on conserved domain architecture, the UniProt annotation, and experimental work on homologous Pseudomonas PvdE proteins, its most likely role is ATP-driven export of the pyoverdine precursor PVDIq from the cytoplasmic membrane to the periplasm, where downstream maturation steps generate fluorescent pyoverdine. Direct biochemical evidence for the KT2440 protein itself appears limited, so substrate specificity should be interpreted as a strong orthology-based inference rather than a strain-specific demonstration.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>pyoverdine precursor transmembrane transporter activity</h3>
+                <span class="vote-buttons" data-g="Q88F82" data-a="pyoverdine precursor transmembrane transporter activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The ATP-dependent directed movement of a pyoverdine biosynthetic precursor, such as PVDIq, across a membrane.</p>
+            
+
+            
+
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:PSEPK/pvdE/pvdE-notes.md
+                    
+                    
+                    : A useful new term would be &#34;pyoverdine precursor transmembrane transporter activity&#34;.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too generic. PvdE contains a canonical ABC transporter nucleotide-binding domain and necessarily binds ATP, but this parent term is much less informative than the existing transporter activity annotations.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. UniProt describes PvdE as a cell membrane multi-pass protein, and the sequence contains multiple predicted transmembrane helices in the N-terminal half, consistent with a bacterial inner membrane ABC exporter.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdE/pvdE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">UniProt predicts cell membrane localization and multiple transmembrane helices, consistent with an inner membrane transporter.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015833" target="_blank" class="term-link">
+                                    GO:0015833
+                                </a>
+                            </span>
+                            <span class="term-label">peptide transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0015833" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Only partially satisfactory. PvdE probably exports a peptidyl pyoverdine precursor, so the annotation is not entirely wrong, but the biologically relevant process is siderophore-related precursor traffic in the pyoverdine pathway rather than general peptide transport.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015891" target="_blank" class="term-link">
+                                    siderophore transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too generic to be useful once GO:0005886 plasma membrane is present.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but generic. ATP hydrolysis is expected for an ABC exporter and is mechanistically necessary, but the transporter-function terms carry the main biological meaning.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034040" target="_blank" class="term-link">
+                                    GO:0034040
+                                </a>
+                            </span>
+                            <span class="term-label">ATPase-coupled lipid transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0034040" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Unsupported and likely incorrect. The best current functional inference is transport of a pyoverdine precursor, not a lipid substrate.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdE/pvdE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0034040 ATPase-coupled lipid transmembrane transporter activity is not supported; the inferred cargo is a pyoverdine precursor rather than a lipid.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042626" target="_blank" class="term-link">
+                                    GO:0042626
+                                </a>
+                            </span>
+                            <span class="term-label">ATPase-coupled transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0042626" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct as a high-level molecular function term for an ABC exporter, but less informative than GO:0140359 and less substrate-aware than GO:1904680.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0055085" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too general. A more specific biological process term exists for the role most strongly supported here, namely movement of a siderophore-related precursor within the pyoverdine pathway.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015891" target="_blank" class="term-link">
+                                    siderophore transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140359" target="_blank" class="term-link">
+                                    GO:0140359
+                                </a>
+                            </span>
+                            <span class="term-label">ABC-type transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0140359" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and currently the best general molecular function term. The domain architecture and transporter topology strongly support classification as an ABC exporter.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdE/pvdE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0140359 ABC-type transporter activity is the most reliable current molecular function term for the KT2440 protein.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904680" target="_blank" class="term-link">
+                                    GO:1904680
+                                </a>
+                            </span>
+                            <span class="term-label">peptide transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:1904680" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Probably the closest available substrate-class molecular function term. The experimentally supported role of homologous PvdE proteins is export of a peptidyl pyoverdine precursor, although the term still misses the siderophore-precursor context and should be interpreted cautiously.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdE/pvdE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The best-supported specific role is ATP-dependent export of the pyoverdine precursor PVDIq from the cytoplasmic side of the inner membrane to the periplasm.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019290" target="_blank" class="term-link">
+                                    GO:0019290
+                                </a>
+                            </span>
+                            <span class="term-label">siderophore biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24816606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24816606
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PvdP is a tyrosinase that drives maturation of the pyoverdin...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F82" data-a="GO:0019290" data-r="PMID:24816606" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. PvdE acts within the pyoverdine biosynthetic pathway by moving the precursor into the periplasm for subsequent maturation steps, so biosynthetic-process annotation is appropriate in addition to transport.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pvdE/pvdE-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0019290 siderophore biosynthetic process is justified because PvdE acts within the pyoverdine maturation pathway rather than in general peptide transport.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-driven inner membrane export of a pyoverdine precursor during siderophore biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88F82" data-a="FUNCTION: ATP-driven inner membrane export of a pyoverdine p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140359" target="_blank" class="term-link">
+                            ABC-type transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015891" target="_blank" class="term-link">
+                                siderophore transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019290" target="_blank" class="term-link">
+                                siderophore biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88F82
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for pvdE</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdE is a pyoverdine ABC export system protein with fused ATPase and permease features</div>
+                        
+                        <div class="finding-text">"Pyoverdine ABC export system, fused ATPase and permease components"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdE is a cell membrane multi-pass protein</div>
+                        
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cell membrane"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19459056" target="_blank" class="term-link">
+                            PMID:19459056
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23126435" target="_blank" class="term-link">
+                            PMID:23126435
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pyoverdine biosynthesis and secretion in Pseudomonas aeruginosa: implications for metal homeostasis</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24816606" target="_blank" class="term-link">
+                            PMID:24816606
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PvdP is a tyrosinase that drives maturation of the pyoverdine chromophore in Pseudomonas aeruginosa</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pvdE/pvdE-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes on pvdE evidence and GO term review</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PvdE is best interpreted as an ATP-driven inner-membrane exporter involved in pyoverdine precursor translocation</div>
+                        
+                        <div class="finding-text">"The best-supported specific role is ATP-dependent export of the pyoverdine precursor PVDIq from the cytoplasmic side of the inner membrane to the periplasm."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The specific substrate assignment is orthology-based rather than directly demonstrated in KT2440</div>
+                        
+                        <div class="finding-text">"The specific substrate assignment is based on experimental work in Pseudomonas aeruginosa and on strong orthology/domain conservation, not on a direct biochemical assay of the KT2440 protein."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F82" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:59:12.839026'<br />
+end_time: '2026-03-21T14:08:36.698251'<br />
+duration_seconds: 563.78<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: pvdE<br />
+  gene_symbol: pvdE<br />
+  uniprot_accession: Q88F82<br />
+  protein_description: 'SubName: Full=Pyoverdine ABC export system, fused ATPase and<br />
+    permease components {ECO:0000313|EMBL:AAN69797.1};'<br />
+  gene_info: Name=pvdE {ECO:0000313|EMBL:AAN69797.1}; OrderedLocusNames=PP_4216 {ECO:0000313|EMBL:AAN69797.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf.<br />
+    (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); Cyc_pep_transpt_SyrD/YojI.<br />
+    (IPR005898)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88F82</li>
+<li><strong>Protein Description:</strong> SubName: Full=Pyoverdine ABC export system, fused ATPase and permease components {ECO:0000313|EMBL:AAN69797.1};</li>
+<li><strong>Gene Information:</strong> Name=pvdE {ECO:0000313|EMBL:AAN69797.1}; OrderedLocusNames=PP_4216 {ECO:0000313|EMBL:AAN69797.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf. (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); Cyc_pep_transpt_SyrD/YojI. (IPR005898)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pvdE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pvdE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pvdE</strong> (gene ID: pvdE, UniProt: Q88F82) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88F82</li>
+<li><strong>Protein Description:</strong> SubName: Full=Pyoverdine ABC export system, fused ATPase and permease components {ECO:0000313|EMBL:AAN69797.1};</li>
+<li><strong>Gene Information:</strong> Name=pvdE {ECO:0000313|EMBL:AAN69797.1}; OrderedLocusNames=PP_4216 {ECO:0000313|EMBL:AAN69797.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); ABC1_TM_dom. (IPR011527); ABC1_TM_sf. (IPR036640); ABC_transporter-like_ATP-bd. (IPR003439); Cyc_pep_transpt_SyrD/YojI. (IPR005898)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pvdE" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pvdE' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pvdE</strong> (gene ID: pvdE, UniProt: Q88F82) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pvde-uniprot-q88f82-locus-pp_4216-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>pvdE</strong> (UniProt Q88F82; locus <strong>PP_4216</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The UniProt accession <strong>Q88F82</strong> corresponds to <strong>PvdE</strong> in <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054/DSM 6125), with ordered locus name <strong>PP_4216</strong>. In KT2440-focused literature, <strong>pvdE is explicitly identified as PP_4216</strong> and described as a <strong>cytoplasmic (inner) membrane ABC transporter</strong> responsible for transporting a <strong>non-fluorescent pyoverdine precursor</strong> into the <strong>periplasm</strong>, matching the UniProt description of a fused ATPase+permease exporter (stein2023navigatingpyoverdineand pages 22-25). This matches primary mechanistic work in <em>Pseudomonas aeruginosa</em> that characterizes PvdE as an <strong>export-type ABC transporter with fused ATPase and permease components</strong> required for periplasmic steps of pyoverdine maturation (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 2-4).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-pyoverdine-and-the-pyoverdine-circuit">1.1 Pyoverdine and the “pyoverdine circuit”</h4>
+<p><strong>Pyoverdine (PVD)</strong> is a high-affinity siderophore used by fluorescent pseudomonads to scavenge ferric iron (Fe3+) under iron limitation. The KT2440 pyoverdine system is described as a multi-compartment “circuit” spanning (i) <strong>cytoplasmic synthesis</strong>, (ii) <strong>periplasmic maturation</strong>, (iii) <strong>export to the extracellular space</strong>, and (iv) <strong>re-uptake of ferripyoverdine</strong> via TonB-dependent receptors (henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5, stein2023navigatingpyoverdineand pages 22-25).</p>
+<h4 id="12-what-pvde-is-functional-class">1.2 What PvdE is (functional class)</h4>
+<p>PvdE is an <strong>inner membrane ABC exporter</strong> (ATP-binding cassette transporter) that—unusually for many bacterial ABC exporters—is described here as a <strong>single polypeptide with fused ATPase and permease components</strong>, mediating export of a biosynthetic intermediate rather than export of a final metabolite (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 2-4).</p>
+<h4 id="13-what-pvde-transports-substrate-definition">1.3 What PvdE transports (substrate definition)</h4>
+<p>Multiple sources describe the substrate as a <strong>non-fluorescent pyoverdine precursor</strong>, also referred to as <strong>ferribactin</strong> (or ferribactin-like precursor) in review summaries. This precursor is exported <strong>from the cytoplasm to the periplasm</strong>, where chromophore maturation produces the fluorescent pyoverdine scaffold (janakiev2023secondarymetabolitesof pages 1-3, yeterian2010synthesisofthe pages 6-8, stein2023navigatingpyoverdineand pages 22-25).</p>
+<h3 id="2-functional-role-of-pvde-in-the-pyoverdine-pathway">2) Functional role of PvdE in the pyoverdine pathway</h3>
+<h4 id="21-cellular-localization-and-directionality">2.1 Cellular localization and directionality</h4>
+<p>For KT2440, PvdE (PP_4216) is described as <strong>present in the cytoplasmic membrane</strong> and responsible for moving a precursor into the <strong>periplasmic space</strong> (stein2023navigatingpyoverdineand pages 22-25). In <em>P. aeruginosa</em>, experimental fractionation and microscopy support a model in which pyoverdine biosynthesis begins in the cytoplasm and continues in the <strong>periplasm</strong> after PvdE-dependent transport (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 1-2).</p>
+<h4 id="22-mechanistic-placement-linking-cytoplasmic-nrps-synthesis-to-periplasmic-maturation">2.2 Mechanistic placement: linking cytoplasmic NRPS synthesis to periplasmic maturation</h4>
+<p>Recent 2024 work on pyoverdine NRPS organization emphasizes that pyoverdine biosynthesis begins in the cytoplasm with NRPS activity and proceeds to a periplasmic maturation stage; it explicitly references PvdE as the exporter of the <strong>acylated ferribactin</strong> precursor (manko2024pvdlorchestratesthe pages 1-2). Primary evidence supports that the periplasm contains a distinct precursor form (PVDIp) and that the chromophore maturation is periplasmic (yeterian2010synthesisofthe pages 8-10).</p>
+<h3 id="3-experimental-evidence-and-quantitative-data-supporting-pvde-function">3) Experimental evidence and quantitative data supporting PvdE function</h3>
+<h4 id="31-pvde-is-essential-for-pyoverdine-production-in-a-mechanistically-characterized-ortholog-system">3.1 pvdE is essential for pyoverdine production in a mechanistically characterized ortholog system</h4>
+<p>In <em>P. aeruginosa</em>, mutation of <strong>pvdE</strong> <strong>almost completely prevented pyoverdine production</strong>, and complementation restored production, consistent with PvdE being required for an obligate step in synthesis/export (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 2-4). Fluorescence microscopy showed <strong>no periplasmic fluorescence</strong> in the pvdE mutant, while complemented strains restored periplasmic fluorescence similar to wild type (yeterian2010synthesisofthe pages 6-8).</p>
+<h4 id="32-subcellular-fractionation-periplasmic-accumulation-depends-on-pvde">3.2 Subcellular fractionation: periplasmic accumulation depends on PvdE</h4>
+<p>Fractionation experiments showed a <strong>~5-fold higher fluorescence in the periplasmic fraction of wild type</strong> relative to the pvdE mutant, with restoration upon complementation. Fluorescence was not detected in cytoplasm or membrane fractions in those preparations, supporting periplasmic accumulation/maturation after export (yeterian2010synthesisofthe pages 6-8).</p>
+<h4 id="33-evidence-for-a-distinct-exportedmatured-intermediate-pvdip-vs-pvdi">3.3 Evidence for a distinct exported/matured intermediate (PVDIp vs PVDI)</h4>
+<p>A periplasmic fluorescent intermediate <strong>PVDIp</strong> differs chemically from mature secreted pyoverdine <strong>PVDI</strong>:<br />
+- Mass spectrometry: <strong>PVDIp m/z 1301.40</strong> vs <strong>PVDI m/z 1334.60</strong> (yeterian2010synthesisofthe pages 8-10).<br />
+- Electrophoretic behavior differs on cellulose acetate membranes (yeterian2010synthesisofthe pages 8-10).<br />
+These differences support that PvdE exports a precursor that undergoes <strong>additional periplasmic processing</strong> before secretion.</p>
+<h4 id="34-downstream-periplasmic-maturation-steps-influence-final-yield-context-for-pvde-role">3.4 Downstream periplasmic maturation steps influence final yield (context for PvdE role)</h4>
+<p>In the same framework, periplasmic maturation enzymes strongly affect final output: a <strong>pvdQ</strong> mutant showed only a <strong>17% decrease</strong> in chromophore-formation kinetics but a much larger <strong>~70% reduction</strong> in mature pyoverdine production after overnight culture, highlighting that periplasmic steps downstream of PvdE substantially shape final product release (yeterian2010synthesisofthe pages 8-10).</p>
+<h3 id="4-pathway-integration-in-p-putida-kt2440-pvde-vs-downstream-secretion-systems">4) Pathway integration in <em>P. putida</em> KT2440: PvdE vs downstream secretion systems</h3>
+<p>A key nuance for KT2440 annotation is that PvdE performs an <strong>inner-membrane cytoplasm→periplasm export</strong> step, whereas export of mature pyoverdine from the periplasm to the extracellular environment is mediated by distinct <strong>tripartite efflux pumps</strong>.</p>
+<h4 id="41-kt2440-efflux-network-for-pyoverdine-secretion-downstream-of-pvde">4.1 KT2440 efflux network for pyoverdine secretion (downstream of PvdE)</h4>
+<p>KT2440 uses overlapping tripartite systems for extracellular secretion of pyoverdine:<br />
+- <strong>PvdRT-OpmQ (ABC-type tripartite efflux)</strong> and <strong>MdtABC-OpmB (RND-type tripartite efflux)</strong> are involved in pyoverdine secretion; double deletion strongly affects growth under iron limitation and shifts pyoverdine distribution (less in medium, more in periplasm) (henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5).<br />
+- A 2023 study identifies <strong>ParXY</strong> as influencing pyoverdine production/secretion in a background where other secretion systems are inactive, demonstrating redundancy/overlap among efflux systems under iron limitation (stein2023therndefflux pages 1-2).<br />
+This KT2440 work supports a compartmental model where <strong>PvdE is upstream</strong> of these tripartite pumps: PvdE delivers the precursor to the periplasm for maturation, and tripartite pumps then secrete mature siderophore outward.</p>
+<h4 id="42-quantitative-assay-conditions-used-in-recent-kt2440-secretion-research">4.2 Quantitative assay conditions used in recent KT2440 secretion research</h4>
+<p>The 2023 KT2440 efflux work provides recent quantitative experimental context relevant to real-world implementation/testing:<br />
+- Iron limitation often imposed with <strong>1 mM 2,2′-bipyridyl</strong> (stein2023therndefflux pages 1-2).<br />
+- Rescue experiments supplemented purified pyoverdine at <strong>10 µM</strong>, and FeCl3/CuSO4 at <strong>1 µM</strong> in iron-limited CAA medium; additional FeCl3 rescue range <strong>100–400 µM</strong> in KB + bipyridyl conditions (stein2023therndefflux pages 13-15).</p>
+<h3 id="5-regulation-and-systems-level-context-recent-understanding">5) Regulation and systems-level context (recent understanding)</h3>
+<p>Iron acquisition in <em>Pseudomonas</em> is controlled by regulatory networks including Fur and extra-cytoplasmic function sigma factors and cell-surface signaling cascades; recent reviews emphasize that iron homeostasis is tightly integrated with virulence and stress responses in <em>Pseudomonas aeruginosa</em> (sanchez‐jimenez2023mechanismsofiron pages 8-10). While that review is focused on <em>P. aeruginosa</em>, it provides authoritative modern framing of why siderophore pathways (including biosynthesis and transport steps) are high-value intervention points.</p>
+<h3 id="6-current-applications-and-real-world-implementations-connected-to-pvdepyoverdine-pathways">6) Current applications and real-world implementations connected to PvdE/pyoverdine pathways</h3>
+<p>Direct PvdE-targeted applications are uncommon in the accessible literature; most implementations target the <strong>pyoverdine pathway as a system</strong>.</p>
+<h4 id="61-biotechnologydiagnostics-pyoverdine-as-a-readout-and-chemical-tool">6.1 Biotechnology/diagnostics: pyoverdine as a readout and chemical tool</h4>
+<p>A KT2440-focused 2023 dissertation overview highlights:<br />
+- <strong>“Siderotyping”</strong>: using isoelectric focusing (IEF) patterns of pyoverdines to help classify <em>Pseudomonas</em> strains.<br />
+- <strong>Biosensing</strong>: a <strong>pyoverdine-based biosensor</strong> concept where pyoverdine quenches fluorescence of the pollutant <strong>furazolidone</strong>, enabling rapid detection (stein2023navigatingpyoverdineand pages 22-25).<br />
+Because PvdE is required to generate mature exported pyoverdine (via precursor export and enabling periplasmic maturation), it is indirectly critical to any pyoverdine-based detection or production process.</p>
+<h4 id="62-anti-virulence-and-therapeutic-strategies-pathogen-focused">6.2 Anti-virulence and therapeutic strategies (pathogen-focused)</h4>
+<p>A 2023 review on iron homeostasis in <em>P. aeruginosa</em> highlights therapeutic strategies that target iron acquisition mechanisms—including disruption of siderophore production and uptake, “Trojan-horse” approaches exploiting siderophore uptake systems, and the idea that siderophore transporters can be vaccine targets (sanchez‐jimenez2023mechanismsofiron pages 8-10). Although this is not KT2440-specific, it represents authoritative expert opinion on how siderophore pathways are translated into interventions.</p>
+<h4 id="63-ecological-and-host-interaction-roles-2024-perspective">6.3 Ecological and host-interaction roles (2024 perspective)</h4>
+<p>A 2024 review emphasizes expanding “non-classical” roles of siderophores (binding non-iron metals, contributing to stress tolerance, signaling), reinforcing that siderophore pathways have consequences beyond iron uptake alone (arnold2024nonclassicalrolesof pages 1-2). This broadens how PvdE-supported pyoverdine production could matter in complex environments.</p>
+<h3 id="7-relevant-statistics-and-comparative-constants-recently-summarized">7) Relevant statistics and comparative constants (recently summarized)</h3>
+<p>Recent KT2440-focused work reports a very high pyoverdine affinity for Fe3+ with an example <strong>kD ~10^-32 M^-1</strong>, and also summarizes siderophore binding strengths more broadly (10^17–10^43 M^-1) (stein2023therndefflux pages 1-2, stein2023navigatingpyoverdineand pages 22-25). It also provides comparator host-protein constants (e.g., transferrin kD ~10^-22 M; albumin kD ~10^-5 M; siderocalin kD ~4×10^-10 M; FepA affinity for Fe-enterobactin ~2×10^-10 M), illustrating why siderophores can outcompete host iron-binding proteins in relevant contexts (stein2023navigatingpyoverdineand pages 22-25).</p>
+<h3 id="8-evidence-grading-and-organism-specific-caveats">8) Evidence grading and organism-specific caveats</h3>
+<ul>
+<li><strong>High-confidence annotation for KT2440 PvdE identity, localization (inner membrane), and pathway placement</strong> comes from KT2440-specific sources mapping <strong>pvdE to PP_4216</strong> and describing cytoplasm→periplasm export (stein2023navigatingpyoverdineand pages 22-25).</li>
+<li><strong>Strong mechanistic and quantitative evidence</strong> for the role of PvdE in precursor export and periplasmic maturation comes from <em>P. aeruginosa</em> primary studies (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 8-10).</li>
+<li><strong>Gap:</strong> direct, KT2440-specific biochemical transport assays of PvdE (e.g., reconstituted transport, substrate specificity mapping) were not found in the retrieved full-text set; KT2440 recent work is richer on <strong>downstream secretion efflux systems</strong> rather than the PvdE step itself (henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5, stein2023therndefflux pages 1-2).</li>
+</ul>
+<hr />
+<h3 id="summary-table-quick-reference">Summary table (quick reference)</h3>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Summary for <em>Pseudomonas putida</em> KT2440 PvdE (PP_4216; UniProt Q88F82)</th>
+<th>Evidence / citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identity</td>
+<td><strong>pvdE = PP_4216</strong> in <em>P. putida</em> KT2440; annotated as the pyoverdine ABC export system protein involved in pyoverdine precursor export during siderophore biosynthesis.</td>
+<td>Explicitly mapped in KT2440 pyoverdine literature and dissertation summary (stein2023navigatingpyoverdineand pages 22-25)</td>
+</tr>
+<tr>
+<td>Domain architecture / transporter class</td>
+<td>Predicted <strong>export-type ABC transporter</strong> with <strong>fused ATPase and permease components</strong>; this matches UniProt domain architecture and the experimentally characterized <em>Pseudomonas</em> PvdE ortholog class.</td>
+<td>Conserved description in pyoverdine biosynthesis literature; experimentally defined in <em>P. aeruginosa</em> as a fused ATPase/permease export ABC transporter (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 2-4)</td>
+</tr>
+<tr>
+<td>Predicted localization</td>
+<td>Located in the <strong>cytoplasmic (inner) membrane</strong>.</td>
+<td>KT2440-specific review/dissertation states pvdE is present in the cytoplasmic membrane; orthologous experimental work places PvdE at the inner membrane (stein2023navigatingpyoverdineand pages 22-25, yeterian2010synthesisofthe pages 6-8)</td>
+</tr>
+<tr>
+<td>Transport direction / compartmental role</td>
+<td>Catalyzes export of precursor <strong>from cytoplasm to periplasm</strong>; maturation of pyoverdine then proceeds in the periplasm before final secretion outside the cell.</td>
+<td>KT2440 summaries and <em>P. aeruginosa</em> primary evidence support cytoplasm→periplasm transport and periplasmic maturation (stein2023navigatingpyoverdineand pages 22-25, janakiev2023secondarymetabolitesof pages 1-3, yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Primary substrate</td>
+<td>Best-supported substrate assignment is a <strong>non-fluorescent pyoverdine precursor</strong>, often described as <strong>ferribactin / PVDI precursor</strong>.</td>
+<td>KT2440 reviews call it a non-fluorescent precursor or ferribactin; <em>P. aeruginosa</em> work identifies a pyoverdine precursor exported for maturation (janakiev2023secondarymetabolitesof pages 1-3, yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 8-10)</td>
+</tr>
+<tr>
+<td>Pathway step</td>
+<td>PvdE acts <strong>after cytoplasmic NRPS assembly</strong> of the precursor and <strong>before periplasmic chromophore maturation</strong>; downstream periplasmic enzymes include PvdN/PvdO/PvdP/PvdQ.</td>
+<td>Pathway placement from pyoverdine biosynthesis studies and recent review context (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 1-2, manko2024pvdlorchestratesthe pages 1-2, sanchez‐jimenez2023mechanismsofiron pages 8-10)</td>
+</tr>
+<tr>
+<td>Key experimental evidence for function</td>
+<td>In <em>P. aeruginosa</em>, <strong>pvdE mutation almost completely prevented pyoverdine production</strong>, eliminated detectable <strong>periplasmic fluorescence</strong>, and complementation restored the phenotype; periplasmic fluorescence in wild type was about <strong>5-fold higher</strong> than in the <strong>pvdE</strong> mutant.</td>
+<td>Direct mutant, microscopy, and fractionation evidence (yeterian2010synthesisofthe pages 6-8, yeterian2010synthesisofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Evidence for transported intermediate</td>
+<td>The periplasmic fluorescent precursor <strong>PVDIp</strong> differs from mature extracellular <strong>PVDI</strong>, supporting maturation after export. Reported masses: <strong>PVDIp m/z 1301.40</strong> versus <strong>PVDI m/z 1334.60</strong>.</td>
+<td>Mass spectrometry and biochemical comparison of precursor vs mature pyoverdine (yeterian2010synthesisofthe pages 8-10)</td>
+</tr>
+<tr>
+<td>Additional pathway quantitative context</td>
+<td>In periplasmic maturation studies, <strong>pvdQ</strong> mutation caused only a <strong>17% decrease</strong> in chromophore-related fluorescence but about <strong>70% lower</strong> overnight PVDI production, showing that post-PvdE periplasmic steps strongly shape mature product output.</td>
+<td>Quantitative downstream maturation phenotype (yeterian2010synthesisofthe pages 8-10)</td>
+</tr>
+<tr>
+<td>Iron-binding / siderophore context</td>
+<td>Pyoverdine in <em>P. putida</em> KT2440 is reported to have very high Fe(III) affinity, with an example <strong>kD of 10^-32 M^-1</strong> given in recent KT2440 work; siderophore affinities more broadly are summarized in the <strong>10^17 to 10^43 M^-1</strong> range in review context.</td>
+<td>Recent KT2440 study and dissertation context (stein2023therndefflux pages 1-2, stein2023navigatingpyoverdineand pages 22-25)</td>
+</tr>
+<tr>
+<td>Recent <em>P. putida</em> secretion context downstream of PvdE</td>
+<td>After periplasmic maturation, pyoverdine secretion to the exterior is mediated by overlapping tripartite efflux systems. In KT2440, <strong>PvdRT-OpmQ</strong> and <strong>MdtABC-OpmB</strong> contribute to secretion, and <strong>ParXY</strong> further influences pyoverdine production/secretion when other systems are inactive. These systems act <strong>downstream of PvdE</strong>, which handles the earlier inner-membrane export step.</td>
+<td>KT2440 secretion studies and recent 2023 paper (henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5, henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 12-15, stein2023therndefflux pages 1-2, stein2023therndefflux pages 13-15)</td>
+</tr>
+<tr>
+<td>Quantitative secretion-system context</td>
+<td>In <em>P. putida</em> KT2440 secretion experiments, purified pyoverdine was used at <strong>10 µM</strong> in rescue assays under iron-limited CAA conditions; FeCl3/CuSO4 rescue used <strong>1 µM</strong> in CAA and <strong>100–400 µM FeCl3</strong> in KB + bipyridyl.</td>
+<td>Experimental conditions from recent KT2440 secretion study (stein2023therndefflux pages 13-15)</td>
+</tr>
+<tr>
+<td>Evidence strength / annotation confidence</td>
+<td><strong>High confidence</strong> for assignment as a pyoverdine-precursor exporter because KT2440 gene identity and pathway placement match direct ortholog experiments in <em>P. aeruginosa</em>; <strong>direct KT2440 biochemical transport assays for PvdE itself remain limited</strong> relative to downstream secretion-system studies.</td>
+<td>Organism-specific annotation plus orthologous primary evidence (stein2023navigatingpyoverdineand pages 22-25, yeterian2010synthesisofthe pages 6-8, henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the current functional annotation of PvdE/PP_4216 in </em>Pseudomonas putida<em> KT2440, integrating KT2440-specific pathway context with direct mechanistic evidence from closely studied </em>Pseudomonas<em> orthologs. It highlights the protein’s identity, transporter class, substrate, cellular localization, pathway position, and the downstream secretion systems relevant to pyoverdine export.</em></p>
+<hr />
+<h3 id="key-source-urls-and-publication-dates-selected">Key source URLs and publication dates (selected)</h3>
+<ul>
+<li>Stein NV et al. <em>Microbiology Spectrum</em> (published <strong>2023-10-06</strong>). “The RND efflux system ParXY affects siderophore secretion in <em>Pseudomonas putida</em> KT2440.” https://doi.org/10.1128/spectrum.02300-23 (stein2023therndefflux pages 1-2, stein2023therndefflux pages 13-15)</li>
+<li>Sánchez-Jiménez A et al. <em>Microbial Biotechnology</em> (<strong>2023-03</strong>, vol 16 issue 7). “Mechanisms of iron homeostasis in <em>Pseudomonas aeruginosa</em> and emerging therapeutics…” https://doi.org/10.1111/1751-7915.14241 (sanchez‐jimenez2023mechanismsofiron pages 8-10)</li>
+<li>Manko H et al. <em>International Journal of Molecular Sciences</em> (published <strong>2024-05-30</strong>). “PvdL Orchestrates the Assembly…” https://doi.org/10.3390/ijms25116013 (manko2024pvdlorchestratesthe pages 1-2)</li>
+<li>Arnold E. <em>Frontiers in Cellular and Infection Microbiology</em> (published <strong>2024-09-20</strong>). “Non-classical roles of bacterial siderophores in pathogenesis.” https://doi.org/10.3389/fcimb.2024.1465719 (arnold2024nonclassicalrolesof pages 1-2)</li>
+<li>Yeterian E et al. <em>Amino Acids</em> (published <strong>2010-05</strong>). “Synthesis of the siderophore pyoverdine… involves a periplasmic maturation.” https://doi.org/10.1007/s00726-009-0358-0 (yeterian2010synthesisofthe pages 8-10, yeterian2010synthesisofthe pages 6-8)</li>
+<li>Henríquez T et al. <em>Environmental Microbiology Reports</em> (<strong>2019-11</strong>). “PvdRT-OpmQ and MdtABC-OpmB… involved in pyoverdine secretion in <em>P. putida</em> KT2440.” https://doi.org/10.1111/1758-2229.12708 (henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 22-25): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+<li>
+<p>(yeterian2010synthesisofthe pages 6-8): Emilie Yeterian, Lois W. Martin, Laurent Guillon, Laure Journet, Iain L. Lamont, and Isabelle J. Schalk. Synthesis of the siderophore pyoverdine in pseudomonas aeruginosa involves a periplasmic maturation. Amino Acids, 38:1447-1459, May 2010. URL: https://doi.org/10.1007/s00726-009-0358-0, doi:10.1007/s00726-009-0358-0. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yeterian2010synthesisofthe pages 2-4): Emilie Yeterian, Lois W. Martin, Laurent Guillon, Laure Journet, Iain L. Lamont, and Isabelle J. Schalk. Synthesis of the siderophore pyoverdine in pseudomonas aeruginosa involves a periplasmic maturation. Amino Acids, 38:1447-1459, May 2010. URL: https://doi.org/10.1007/s00726-009-0358-0, doi:10.1007/s00726-009-0358-0. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 1-5): Tania Henríquez, Nicola Victoria Stein, and Heinrich Jung. Pvdrt‐opmq and mdtabc‐opmb efflux systems are involved in pyoverdine secretion in pseudomonas putida kt2440. Environmental Microbiology Reports, 11:98–106, Nov 2019. URL: https://doi.org/10.1111/1758-2229.12708, doi:10.1111/1758-2229.12708. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(janakiev2023secondarymetabolitesof pages 1-3): Tamara Janakiev, Katarina Kruščić, and Ivica Dimkić. Secondary metabolites of pseudomonas and bacillus species in plant disease management. Microbiology, Mar 2023. URL: https://doi.org/10.63157/vgkq2736, doi:10.63157/vgkq2736. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yeterian2010synthesisofthe pages 1-2): Emilie Yeterian, Lois W. Martin, Laurent Guillon, Laure Journet, Iain L. Lamont, and Isabelle J. Schalk. Synthesis of the siderophore pyoverdine in pseudomonas aeruginosa involves a periplasmic maturation. Amino Acids, 38:1447-1459, May 2010. URL: https://doi.org/10.1007/s00726-009-0358-0, doi:10.1007/s00726-009-0358-0. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manko2024pvdlorchestratesthe pages 1-2): Hanna Manko, Tania Steffan, Véronique Gasser, Yves Mély, Isabelle Schalk, and Julien Godet. Pvdl orchestrates the assembly of the nonribosomal peptide synthetases involved in pyoverdine biosynthesis in pseudomonas aeruginosa. International Journal of Molecular Sciences, 25:6013, May 2024. URL: https://doi.org/10.3390/ijms25116013, doi:10.3390/ijms25116013. This article has 4 citations.</p>
+</li>
+<li>
+<p>(yeterian2010synthesisofthe pages 8-10): Emilie Yeterian, Lois W. Martin, Laurent Guillon, Laure Journet, Iain L. Lamont, and Isabelle J. Schalk. Synthesis of the siderophore pyoverdine in pseudomonas aeruginosa involves a periplasmic maturation. Amino Acids, 38:1447-1459, May 2010. URL: https://doi.org/10.1007/s00726-009-0358-0, doi:10.1007/s00726-009-0358-0. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stein2023therndefflux pages 1-2): Nicola Victoria Stein, Michelle Eder, Fabienne Burr, Sarah Stoss, Lorenz Holzner, Hans-Henning Kunz, and Heinrich Jung. The rnd efflux system parxy affects siderophore secretion in <i>pseudomonas putida</i> kt2440. Dec 2023. URL: https://doi.org/10.1128/spectrum.02300-23, doi:10.1128/spectrum.02300-23. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stein2023therndefflux pages 13-15): Nicola Victoria Stein, Michelle Eder, Fabienne Burr, Sarah Stoss, Lorenz Holzner, Hans-Henning Kunz, and Heinrich Jung. The rnd efflux system parxy affects siderophore secretion in <i>pseudomonas putida</i> kt2440. Dec 2023. URL: https://doi.org/10.1128/spectrum.02300-23, doi:10.1128/spectrum.02300-23. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sanchez‐jimenez2023mechanismsofiron pages 8-10): Ana Sánchez‐Jiménez, Francisco J. Marcos‐Torres, and María A. Llamas. Mechanisms of iron homeostasis in pseudomonas aeruginosa and emerging therapeutics directed to disrupt this vital process. Microbial Biotechnology, 16:1475-1491, Mar 2023. URL: https://doi.org/10.1111/1751-7915.14241, doi:10.1111/1751-7915.14241. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arnold2024nonclassicalrolesof pages 1-2): Elliot Arnold. Non-classical roles of bacterial siderophores in pathogenesis. Frontiers in Cellular and Infection Microbiology, Sep 2024. URL: https://doi.org/10.3389/fcimb.2024.1465719, doi:10.3389/fcimb.2024.1465719. This article has 21 citations.</p>
+</li>
+<li>
+<p>(henriquez2019pvdrt‐opmqandmdtabc‐opmb pages 12-15): Tania Henríquez, Nicola Victoria Stein, and Heinrich Jung. Pvdrt‐opmq and mdtabc‐opmb efflux systems are involved in pyoverdine secretion in pseudomonas putida kt2440. Environmental Microbiology Reports, 11:98–106, Nov 2019. URL: https://doi.org/10.1111/1758-2229.12708, doi:10.1111/1758-2229.12708. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>stein2023navigatingpyoverdineand pages 22-25</li>
+<li>manko2024pvdlorchestratesthe pages 1-2</li>
+<li>yeterian2010synthesisofthe pages 8-10</li>
+<li>yeterian2010synthesisofthe pages 6-8</li>
+<li>stein2023therndefflux pages 1-2</li>
+<li>stein2023therndefflux pages 13-15</li>
+<li>arnold2024nonclassicalrolesof pages 1-2</li>
+<li>yeterian2010synthesisofthe pages 2-4</li>
+<li>janakiev2023secondarymetabolitesof pages 1-3</li>
+<li>yeterian2010synthesisofthe pages 1-2</li>
+<li>https://doi.org/10.1128/spectrum.02300-23</li>
+<li>https://doi.org/10.1111/1751-7915.14241</li>
+<li>https://doi.org/10.3390/ijms25116013</li>
+<li>https://doi.org/10.3389/fcimb.2024.1465719</li>
+<li>https://doi.org/10.1007/s00726-009-0358-0</li>
+<li>https://doi.org/10.1111/1758-2229.12708</li>
+<li>https://doi.org/10.5282/edoc.32605,</li>
+<li>https://doi.org/10.1007/s00726-009-0358-0,</li>
+<li>https://doi.org/10.1111/1758-2229.12708,</li>
+<li>https://doi.org/10.63157/vgkq2736,</li>
+<li>https://doi.org/10.3390/ijms25116013,</li>
+<li>https://doi.org/10.1128/spectrum.02300-23,</li>
+<li>https://doi.org/10.1111/1751-7915.14241,</li>
+<li>https://doi.org/10.3389/fcimb.2024.1465719,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pvdE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F82" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pvde-notes">pvdE Notes</h1>
+<h2 id="identity-and-basic-architecture">Identity and basic architecture</h2>
+<ul>
+<li><code>pvdE</code> in <em>Pseudomonas putida</em> KT2440 corresponds to UniProt <code>Q88F82</code> / locus <code>PP_4216</code> and is annotated as a "Pyoverdine ABC export system, fused ATPase and permease components" [file:PSEPK/pvdE/pvdE-uniprot.txt, "SubName: Full=Pyoverdine ABC export system, fused ATPase and permease components"].</li>
+<li>PvdE is a 552 aa fused ABC exporter with an N-terminal multi-pass membrane domain and a C-terminal nucleotide-binding domain [file:PSEPK/pvdE/pvdE-uniprot.txt, "DOMAIN          12..299"] [file:PSEPK/pvdE/pvdE-uniprot.txt, "DOMAIN          336..552"].</li>
+<li>UniProt predicts cell membrane localization and multiple transmembrane helices, consistent with an inner membrane transporter [file:PSEPK/pvdE/pvdE-uniprot.txt, "SUBCELLULAR LOCATION: Cell membrane"] [file:PSEPK/pvdE/pvdE-uniprot.txt, "Multi-pass membrane protein"].</li>
+</ul>
+<h2 id="function-inference">Function inference</h2>
+<ul>
+<li><em>P. putida</em> KT2440 produces a characterized pyoverdine siderophore, so <code>pvdE</code> fits an intact pyoverdine biosynthetic/export module in this strain [PMID:19459056 Siderophore-mediated iron acquisition in the entomopathogenic bacterium Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440, "Structural analysis of the pyoverdine produced by the closely related P. putida KT2440 showed that this strain produces an already characterised pyoverdine"].</li>
+<li>In experimentally dissected pyoverdine biosynthesis in <em>Pseudomonas aeruginosa</em>, PvdE transports the precursor PVDIq to the periplasm before downstream maturation steps [PMID:24816606 PvdP is a tyrosinase that drives maturation of the pyoverdine chromophore in Pseudomonas aeruginosa, "PvdE transports PVDIq to the periplasm"].</li>
+<li>The best-supported specific role is ATP-dependent export of the pyoverdine precursor PVDIq from the cytoplasmic side of the inner membrane to the periplasm [PMID:24816606 PvdP is a tyrosinase that drives maturation of the pyoverdine chromophore in Pseudomonas aeruginosa, "PvdE transports PVDIq to the periplasm"].</li>
+<li>The specific substrate assignment is based on experimental work in <em>Pseudomonas aeruginosa</em> and on strong orthology/domain conservation, not on a direct biochemical assay of the KT2440 protein.</li>
+</ul>
+<h2 id="go-review-implications">GO review implications</h2>
+<ul>
+<li><code>GO:0005886</code> plasma membrane is appropriate for this protein because the UniProt entry calls it a cell membrane multi-pass protein and the topology is transporter-like.</li>
+<li><code>GO:0140359</code> ABC-type transporter activity is the most reliable current molecular function term for the KT2440 protein.</li>
+<li><code>GO:1904680</code> peptide transmembrane transporter activity is plausible because the transported cargo is a peptidyl pyoverdine precursor, but the term is still imperfect because it does not convey siderophore-precursor specificity.</li>
+<li><code>GO:0034040</code> ATPase-coupled lipid transmembrane transporter activity is not supported; the inferred cargo is a pyoverdine precursor rather than a lipid.</li>
+<li><code>GO:0015891</code> siderophore transport is a better biological process term than generic <code>transmembrane transport</code> for this protein.</li>
+<li><code>GO:0019290</code> siderophore biosynthetic process is justified because PvdE acts within the pyoverdine maturation pathway rather than in general peptide transport.</li>
+</ul>
+<h2 id="term-gap">Term gap</h2>
+<ul>
+<li>Current GO molecular function terms do not capture ATP-driven export of a pyoverdine precursor from the cytoplasmic membrane to the periplasm.</li>
+<li>A useful new term would be "pyoverdine precursor transmembrane transporter activity".</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F82
+gene_symbol: pvdE
+product_type: PROTEIN
+aliases:
+- PP_4216
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PvdE is a predicted inner membrane ABC exporter required for pyoverdine
+  biosynthesis in Pseudomonas putida KT2440. It is a fused transporter with an
+  N-terminal multi-pass transmembrane domain and a C-terminal ABC ATPase domain.
+  Based on conserved domain architecture, the UniProt annotation, and experimental
+  work on homologous Pseudomonas PvdE proteins, its most likely role is ATP-driven
+  export of the pyoverdine precursor PVDIq from the cytoplasmic membrane to the
+  periplasm, where downstream maturation steps generate fluorescent pyoverdine.
+  Direct biochemical evidence for the KT2440 protein itself appears limited, so
+  substrate specificity should be interpreted as a strong orthology-based
+  inference rather than a strain-specific demonstration.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct but too generic. PvdE contains a canonical ABC transporter
+      nucleotide-binding domain and necessarily binds ATP, but this parent term is
+      much less informative than the existing transporter activity annotations.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct. UniProt describes PvdE as a cell membrane multi-pass protein, and
+      the sequence contains multiple predicted transmembrane helices in the
+      N-terminal half, consistent with a bacterial inner membrane ABC exporter.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+      supporting_text: UniProt predicts cell membrane localization and multiple
+        transmembrane helices, consistent with an inner membrane transporter.
+- term:
+    id: GO:0015833
+    label: peptide transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Only partially satisfactory. PvdE probably exports a peptidyl pyoverdine
+      precursor, so the annotation is not entirely wrong, but the biologically
+      relevant process is siderophore-related precursor traffic in the pyoverdine
+      pathway rather than general peptide transport.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0015891
+      label: siderophore transport
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Too generic to be useful once GO:0005886 plasma membrane is present.
+    action: REMOVE
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct but generic. ATP hydrolysis is expected for an ABC exporter and is
+      mechanistically necessary, but the transporter-function terms carry the main
+      biological meaning.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0034040
+    label: ATPase-coupled lipid transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      Unsupported and likely incorrect. The best current functional inference is
+      transport of a pyoverdine precursor, not a lipid substrate.
+    action: REMOVE
+    supported_by:
+    - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+      supporting_text: GO:0034040 ATPase-coupled lipid transmembrane transporter
+        activity is not supported; the inferred cargo is a pyoverdine precursor
+        rather than a lipid.
+- term:
+    id: GO:0042626
+    label: ATPase-coupled transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      Correct as a high-level molecular function term for an ABC exporter, but less
+      informative than GO:0140359 and less substrate-aware than GO:1904680.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Too general. A more specific biological process term exists for the role most
+      strongly supported here, namely movement of a siderophore-related precursor
+      within the pyoverdine pathway.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0015891
+      label: siderophore transport
+- term:
+    id: GO:0140359
+    label: ABC-type transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct and currently the best general molecular function term. The domain
+      architecture and transporter topology strongly support classification as an
+      ABC exporter.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+      supporting_text: GO:0140359 ABC-type transporter activity is the most
+        reliable current molecular function term for the KT2440 protein.
+- term:
+    id: GO:1904680
+    label: peptide transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Probably the closest available substrate-class molecular function term. The
+      experimentally supported role of homologous PvdE proteins is export of a
+      peptidyl pyoverdine precursor, although the term still misses the
+      siderophore-precursor context and should be interpreted cautiously.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+      supporting_text: The best-supported specific role is ATP-dependent export of
+        the pyoverdine precursor PVDIq from the cytoplasmic side of the inner
+        membrane to the periplasm.
+- term:
+    id: GO:0019290
+    label: siderophore biosynthetic process
+  evidence_type: ISS
+  original_reference_id: PMID:24816606
+  review:
+    summary: &gt;-
+      Proposed new annotation. PvdE acts within the pyoverdine biosynthetic pathway
+      by moving the precursor into the periplasm for subsequent maturation steps,
+      so biosynthetic-process annotation is appropriate in addition to transport.
+    action: NEW
+    supported_by:
+    - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+      supporting_text: GO:0019290 siderophore biosynthetic process is justified
+        because PvdE acts within the pyoverdine maturation pathway rather than in
+        general peptide transport.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: UniProt:Q88F82
+  title: UniProt entry for pvdE
+  findings:
+  - statement: PvdE is a pyoverdine ABC export system protein with fused ATPase and
+      permease features
+    supporting_text: Pyoverdine ABC export system, fused ATPase and permease components
+  - statement: PvdE is a cell membrane multi-pass protein
+    supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+- id: PMID:19459056
+  title: Siderophore-mediated iron acquisition in the entomopathogenic bacterium
+    Pseudomonas entomophila L48 and its close relative Pseudomonas putida KT2440
+  full_text_unavailable: true
+  findings: []
+- id: PMID:23126435
+  title: &#39;Pyoverdine biosynthesis and secretion in Pseudomonas aeruginosa: implications
+    for metal homeostasis&#39;
+  full_text_unavailable: true
+  findings: []
+- id: PMID:24816606
+  title: PvdP is a tyrosinase that drives maturation of the pyoverdine chromophore
+    in Pseudomonas aeruginosa
+  full_text_unavailable: true
+  findings: []
+- id: file:PSEPK/pvdE/pvdE-notes.md
+  title: Curator notes on pvdE evidence and GO term review
+  findings:
+  - statement: PvdE is best interpreted as an ATP-driven inner-membrane exporter
+      involved in pyoverdine precursor translocation
+    supporting_text: The best-supported specific role is ATP-dependent export of
+      the pyoverdine precursor PVDIq from the cytoplasmic side of the inner
+      membrane to the periplasm.
+  - statement: The specific substrate assignment is orthology-based rather than
+      directly demonstrated in KT2440
+    supporting_text: The specific substrate assignment is based on experimental
+      work in Pseudomonas aeruginosa and on strong orthology/domain conservation,
+      not on a direct biochemical assay of the KT2440 protein.
+core_functions:
+- description: &gt;-
+    ATP-driven inner membrane export of a pyoverdine precursor during siderophore
+    biosynthesis.
+  molecular_function:
+    id: GO:0140359
+    label: ABC-type transporter activity
+  directly_involved_in:
+  - id: GO:0015891
+    label: siderophore transport
+  - id: GO:0019290
+    label: siderophore biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+proposed_new_terms:
+- proposed_name: pyoverdine precursor transmembrane transporter activity
+  proposed_definition: &gt;-
+    The ATP-dependent directed movement of a pyoverdine biosynthetic precursor,
+    such as PVDIq, across a membrane.
+  supported_by:
+  - reference_id: file:PSEPK/pvdE/pvdE-notes.md
+    supporting_text: A useful new term would be &#34;pyoverdine precursor transmembrane
+      transporter activity&#34;.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

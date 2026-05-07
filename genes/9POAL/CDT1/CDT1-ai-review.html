@@ -1,0 +1,3104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDT1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CDT1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/B5BSU2" target="_blank" class="term-link">
+                        B5BSU2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Miscanthus sinensis</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CDT1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="B5BSU2" data-a="DESCRIPTION: CDT1 (MsCDT1) is a small cysteine-rich peptide (55..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CDT1 (MsCDT1) is a small cysteine-rich peptide (55 AA, 27% cysteine) from Miscanthus sinensis that confers tolerance to heavy metal ions, particularly cadmium and copper. It belongs to the CYSTM1 family (Pfam PF12734, PANTHER PTHR35470). The protein localizes to the plasma membrane and cell wall, where it chelates heavy metal ions via its cysteine-rich C-terminal domain, preventing their entry into root cells and reducing intracellular accumulation. MsCDT1 was identified as part of a novel cysteine-rich peptide family first discovered in Digitaria ciliaris (DcCDT1) growing in a former mining area. All functional characterization derives from orthologs DcCDT1 (A9ZPI1), OsCDT1 (Q5VSB5), and OsCDT3 (Q5VRD7), transferred to MsCDT1 by sequence similarity (ISS). Note that despite its name, MsCDT1 falls in PANTHER subfamily SF6 (with OsCDT3/OsCDT5) rather than SF12 (with DcCDT1/OsCDT1), suggesting it may be phylogenetically closer to the CDT3 subfamily.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation based on UniProt subcellular location mapping. The UniProt entry for MsCDT1 states &#34;Cell membrane&#34; based on similarity to DcCDT1 (A9ZPI1). Ortholog DcCDT1 was experimentally shown to localize to cytoplasmic membranes via GFP fusion experiments [PMID:19017626]. This IEA is consistent with multiple ISS annotations and experimental data from orthologs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is central to MsCDT1 function. The protein is predicted to have a single transmembrane helix (residues 24-40) and the mechanism of heavy metal chelation requires membrane localization. GFP fusion experiments on orthologs DcCDT1 and OsCDT1 demonstrated targeting to cytoplasmic membranes [PMID:19017626, PMID:19816106].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are targeted to both cytoplasmic membranes and cell walls of plant cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19816106" target="_blank" class="term-link">
+                                        PMID:19816106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP fusion experiments demonstrate that DcCDT1 and OsCDT1 are targeted to both the plant cytoplasmic membranes and cell walls.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010038" target="_blank" class="term-link">
+                                    GO:0010038
+                                </a>
+                            </span>
+                            <span class="term-label">response to metal ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0010038" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from ARBA machine learning models. The term &#34;response to metal ion&#34; is a broad biological process term. CDT family genes are transcriptionally upregulated by cadmium treatment [PMID:19017626], and the protein itself functions in metal detoxification, so the term applies. However, more specific detoxification terms (GO:0071585, GO:0010273) already capture the core function better.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While CDT1 is involved in responding to metal ions, this broad term is redundant with the more specific detoxification of cadmium ion and detoxification of copper ion annotations already present. The protein&#39;s core function is metal chelation and detoxification, not a general stress response. Keeping as non-core since it is technically correct but less informative than the specific detoxification annotations.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Five DcCDT1 homologs (here termed OsCDT1-OsCDT5) have been identified in rice, and all of them were up-regulated to varying degrees in the above-ground tissues by CdCl(2) treatment.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0005886" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from DcCDT1 (A9ZPI1, Digitaria ciliaris), the founding member of the CDT family. DcCDT1 was experimentally localized to cytoplasmic membranes via GFP fusions in plant cells [PMID:19017626]. Although DcCDT1 is in PANTHER subfamily SF12 while MsCDT1 is in SF6, both share the CYSTM domain and predicted transmembrane helix, making plasma membrane localization highly conserved across the family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental evidence from the ortholog DcCDT1 (GFP fusion to plasma membrane), consistent predicted transmembrane topology (residues 24-40), and conserved function across the CYSTM1 family all support plasma membrane localization for MsCDT1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are targeted to both cytoplasmic membranes and cell walls of plant cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0005886" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT1 (Q5VSB5, Oryza sativa), which was also shown to localize to cytoplasmic membranes via GFP fusions [PMID:19017626]. This is a duplicate of the plasma membrane annotation transferred from a different ortholog. OsCDT1 is in PANTHER subfamily SF12 (different from MsCDT1&#39;s SF6), but the transmembrane topology and localization are conserved across the CYSTM1 family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the other plasma membrane annotations. OsCDT1 GFP fusion data provides independent experimental support for membrane localization in a grass species (rice), which strengthens the case for the closely related MsCDT1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are targeted to both cytoplasmic membranes and cell walls of plant cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0046872" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT3 (Q5VRD7, rice), which is in the same PANTHER subfamily SF6 as MsCDT1. MsCDT1 is a cysteine-rich peptide (15 out of 55 residues are Cys) with a conserved CYSTM domain, consistent with metal ion chelation. The broadly conserved cysteine residues in the C-terminal region (CECCLDCLCCCCS) are expected to coordinate metal ions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Metal ion binding is well supported by the protein&#39;s extreme cysteine content (27.3%) and the CYSTM domain architecture. The ISS transfer from OsCDT3 (same subfamily SF6) is phylogenetically appropriate. The UniProt function annotation states the protein chelates heavy metal ions at the plasma membrane. The more specific GO:0140487 (metal ion sequestering activity) is also annotated and captures the function more precisely, but metal ion binding is still informative as a general molecular function. Note that a 2024 study on yeast CYSTM proteins suggests membrane binding may involve palmitoylation of cysteine residues rather than a classical TM helix, which could affect the interpretation of metal-binding cysteines vs membrane-anchoring cysteines.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The 521 bp DcCDT1 cDNA contains an open reading frame of 168 bp and encodes a deduced peptide, DcCDT1, that is 55 amino acid residues in length, of which 15 (27.3%) are cysteine residues.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/CDT1/CDT1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Confers resistance to heavy metal ions (e.g. cadmium (CdCl(2)) and copper (CuCl(2))) by chelating them at the plasma membrane of root cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/CDT1/CDT1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CYSTM proteins are described as small peptides/proteins with a conserved cysteine-rich C-terminal module and membrane association [with recent evidence that membrane binding involves palmitoylation rather than classical TM insertion]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140487" target="_blank" class="term-link">
+                                    GO:0140487
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion sequestering activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0140487" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT3 (Q5VRD7, same PANTHER subfamily SF6). Metal ion sequestering activity accurately describes the core molecular function of CDT proteins: chelating heavy metal ions at the cell surface to prevent their entry into the cell. This is more specific than metal ion binding and directly reflects the detoxification mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precise molecular function term for CDT1. The protein&#39;s mechanism of action is to sequester (chelate) heavy metal ions at the plasma membrane, preventing cellular uptake. This is supported by yeast and plant experiments showing reduced intracellular Cd accumulation when CDT orthologs are expressed [PMID:19017626]. The ISS from OsCDT3 (same subfamily) is phylogenetically well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">DcCDT1 and OsCDT1 function to prevent entry of Cd into yeast and plant cells and thereby enhance their Cd tolerance.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19816106" target="_blank" class="term-link">
+                                        PMID:19816106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Constitutive expression of DcCDT1 or OsCDT1 confers Cd-tolerance to transgenic A. thaliana plants by lowering the accumulation of Cd in the cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990748" target="_blank" class="term-link">
+                                    GO:1990748
+                                </a>
+                            </span>
+                            <span class="term-label">cellular detoxification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:1990748" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT3 (Q5VRD7, same PANTHER subfamily SF6). CDT proteins are involved in detoxification, but this term is a broad parent of the more specific detoxification of cadmium ion (GO:0071585) and detoxification of copper ion (GO:0010273) already annotated. It adds no additional information beyond those more specific terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cellular detoxification is technically correct but redundant with the more specific child terms already present (detoxification of cadmium ion, detoxification of copper ion). The specific terms better capture CDT1&#39;s known function. Keeping as non-core since it is a valid parent term but does not add specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transgenic Arabidopsis thaliana plants overexpressing DcCDT1 or OsCDT1 displayed a Cd-tolerant phenotype and, consistent with our yeast data, accumulated lower amounts of Cd when grown on CdCl(2).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009505" target="_blank" class="term-link">
+                                    GO:0009505
+                                </a>
+                            </span>
+                            <span class="term-label">plant-type cell wall</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0009505" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT1 (Q5VSB5, rice). GFP fusion experiments on DcCDT1 and OsCDT1 showed targeting to both cytoplasmic membranes AND cell walls of plant cells [PMID:19017626]. The UniProt entry for MsCDT1 also notes cell wall localization based on similarity. MsCDT1 has a predicted signal/transmembrane helix that could enable secretion to the cell wall.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cell wall localization is experimentally demonstrated for CDT orthologs via GFP fusions and is consistent with the proposed mechanism of chelating metal ions at the cell surface to prevent entry. Both plasma membrane and cell wall localization represent core aspects of CDT1 function, as the protein needs to be at the cell surface to intercept incoming metal ions.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are targeted to both cytoplasmic membranes and cell walls of plant cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19816106" target="_blank" class="term-link">
+                                        PMID:19816106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">GFP fusion experiments demonstrate that DcCDT1 and OsCDT1 are targeted to both the plant cytoplasmic membranes and cell walls.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010273" target="_blank" class="term-link">
+                                    GO:0010273
+                                </a>
+                            </span>
+                            <span class="term-label">detoxification of copper ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0010273" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT1 (Q5VSB5, rice). The UniProt function annotation for MsCDT1 explicitly mentions resistance to copper (CuCl2) in addition to cadmium, based on similarity to DcCDT1. Copper tolerance was demonstrated in the original functional characterization [PMID:19017626].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Copper detoxification is part of the demonstrated heavy metal tolerance profile of the CDT family. The UniProt annotation specifically mentions copper (CuCl2) chelation at the plasma membrane. This represents a core biological process of MsCDT1.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9POAL/CDT1/CDT1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Confers resistance to heavy metal ions (e.g. cadmium (CdCl(2)) and copper (CuCl(2))) by chelating them at the plasma membrane of root cells, thus stopping their entry and reducing their accumulation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071585" target="_blank" class="term-link">
+                                    GO:0071585
+                                </a>
+                            </span>
+                            <span class="term-label">detoxification of cadmium ion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="B5BSU2" data-a="GO:0071585" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from OsCDT1 (Q5VSB5, rice). Cadmium detoxification is the primary characterized function of the CDT family. The founding member DcCDT1 was isolated via functional screening for cadmium tolerance in yeast, and transgenic plants showed reduced Cd accumulation [PMID:19017626]. This is the most representative annotation for MsCDT1&#39;s core biological process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cadmium detoxification is the defining function of the CDT family. DcCDT1 was discovered through Cd tolerance screening, and the gene family name (CADMIUM TOLERANCE) reflects this. Orthologs reduce Cd accumulation by 2-fold in yeast and confer Cd tolerance in transgenic Arabidopsis. This is unambiguously a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                        PMID:19017626
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">By means of functional screening using the cadmium (Cd)-sensitive ycf1 yeast mutant, we have isolated a novel cDNA clone, DcCDT1, from Digitaria ciliaris growing in a former mining area in northern Japan, and have shown that it confers Cd tolerance to the yeast cells, which accumulated almost 2-fold lower Cd levels than control cells.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19816106" target="_blank" class="term-link">
+                                        PMID:19816106
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Constitutive expression of DcCDT1 or OsCDT1 confers Cd-tolerance to transgenic A. thaliana plants by lowering the accumulation of Cd in the cells.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CDT1 functions as a heavy metal chelator via its highly cysteine-rich C-terminal region (15/55 residues = 27.3% Cys). The protein localizes to the plasma membrane and cell wall, where it sequesters heavy metal ions (primarily Cd2+ and Cu2+), preventing their entry into root cells and reducing intracellular accumulation. This is the core evolved function of the CYSTM1 family.</h3>
+                <span class="vote-buttons" data-g="B5BSU2" data-a="FUNCTION: CDT1 functions as a heavy metal chelator via its h..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140487" target="_blank" class="term-link">
+                            metal ion sequestering activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071585" target="_blank" class="term-link">
+                                detoxification of cadmium ion
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010273" target="_blank" class="term-link">
+                                detoxification of copper ion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009505" target="_blank" class="term-link">
+                                plant-type cell wall
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                                PMID:19017626
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">DcCDT1 and OsCDT1 function to prevent entry of Cd into yeast and plant cells and thereby enhance their Cd tolerance.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:9POAL/CDT1/CDT1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Confers resistance to heavy metal ions by chelating them at the plasma membrane of root cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19017626" target="_blank" class="term-link">
+                            PMID:19017626
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Novel cysteine-rich peptides from Digitaria ciliaris and Oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identified DcCDT1, a 55 AA cysteine-rich peptide (27.3% Cys) from Digitaria ciliaris that confers Cd tolerance to yeast and plants by reducing cellular Cd accumulation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GFP fusions show DcCDT1 and OsCDT1 localize to both cytoplasmic membranes and cell walls.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Transgenic Arabidopsis overexpressing DcCDT1 or OsCDT1 displayed Cd-tolerant phenotype with reduced Cd accumulation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Five rice homologs (OsCDT1-5) were identified, all upregulated by CdCl2 treatment.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19816106" target="_blank" class="term-link">
+                            PMID:19816106
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel plant cysteine-rich peptide family conferring cadmium tolerance to yeast and plants</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Monocots have multiple CDT homologs (rice has 5), while dicots have a single homolog.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirmed plasma membrane and cell wall targeting via GFP fusion experiments.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CDT family defines a novel class of cysteine-rich peptides involved in heavy metal tolerance.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9POAL/CDT1/CDT1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry for CDT1_MISSI (B5BSU2)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Function: Confers resistance to cadmium and copper by chelating them at the plasma membrane of root cells, preventing entry and reducing accumulation (by similarity to DcCDT1 A9ZPI1).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular location: Cell membrane (single-pass) and secreted to cell wall.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Belongs to the CYSTM1 family. 55 AA with transmembrane helix at residues 24-40.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9POAL/CDT1/CDT1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report on CDT1 (Falcon/Edison Scientific Literature)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Confirmed MsCDT1 identity as CYSTM family cadmium tolerance protein, distinct from unrelated eukaryotic DNA replication licensing factor CDT1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">2024 mechanistic update: yeast CYSTM proteins bind membranes via S-acylation (palmitoylation) rather than classical TM helix (Giolito et al. 2024, JBC), suggesting caution in interpreting plant CDT1 membrane topology.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">WRKY transcription factors (e.g. GmWRKY142) directly activate CDT1-like gene expression under cadmium stress in soybean (Cai et al. 2020, Front Plant Sci).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DcCDT1 also confers nickel hypersensitivity, suggesting metal specificity depends on exact cysteine motif arrangement.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9POAL/CDT1/CDT1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes on CDT1 review</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">MsCDT1 is in PANTHER subfamily SF6 (with OsCDT3/OsCDT5) rather than SF12 (with DcCDT1/OsCDT1), suggesting it is phylogenetically closer to CDT3 despite its CDT1 name.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CDT1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B5BSU2" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-22T22:43:06.562401'<br />
+end_time: '2026-04-22T23:05:17.245969'<br />
+duration_seconds: 1330.68<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: 9POAL<br />
+  gene_id: CDT1<br />
+  gene_symbol: CDT1<br />
+  uniprot_accession: B5BSU2<br />
+  protein_description: 'RecName: Full=Protein CADMIUM TOLERANCE 1 {ECO:0000303|PubMed:19816106};<br />
+    Short=Cd tolerant 1 {ECO:0000303|PubMed:19816106}; Short=MsCDT1 {ECO:0000303|PubMed:19816106};'<br />
+  gene_info: Name=CDT1 {ECO:0000303|PubMed:19816106};<br />
+  organism_full: Miscanthus sinensis (Chinese silver grass) (Saccharum japonicum).<br />
+  protein_family: Belongs to the CYSTM1 family. .<br />
+  protein_domains: CYSTM1_HM_Tolerance. (IPR051671); CYSTM_dom. (IPR028144); CYSTM<br />
+    (PF12734)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 37</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> B5BSU2</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein CADMIUM TOLERANCE 1 {ECO:0000303|PubMed:19816106}; Short=Cd tolerant 1 {ECO:0000303|PubMed:19816106}; Short=MsCDT1 {ECO:0000303|PubMed:19816106};</li>
+<li><strong>Gene Information:</strong> Name=CDT1 {ECO:0000303|PubMed:19816106};</li>
+<li><strong>Organism (full):</strong> Miscanthus sinensis (Chinese silver grass) (Saccharum japonicum).</li>
+<li><strong>Protein Family:</strong> Belongs to the CYSTM1 family. .</li>
+<li><strong>Key Domains:</strong> CYSTM1_HM_Tolerance. (IPR051671); CYSTM_dom. (IPR028144); CYSTM (PF12734)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CDT1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Miscanthus sinensis (Chinese silver grass) (Saccharum japonicum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CDT1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CDT1</strong> (gene ID: CDT1, UniProt: B5BSU2) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> B5BSU2</li>
+<li><strong>Protein Description:</strong> RecName: Full=Protein CADMIUM TOLERANCE 1 {ECO:0000303|PubMed:19816106}; Short=Cd tolerant 1 {ECO:0000303|PubMed:19816106}; Short=MsCDT1 {ECO:0000303|PubMed:19816106};</li>
+<li><strong>Gene Information:</strong> Name=CDT1 {ECO:0000303|PubMed:19816106};</li>
+<li><strong>Organism (full):</strong> Miscanthus sinensis (Chinese silver grass) (Saccharum japonicum).</li>
+<li><strong>Protein Family:</strong> Belongs to the CYSTM1 family. .</li>
+<li><strong>Key Domains:</strong> CYSTM1_HM_Tolerance. (IPR051671); CYSTM_dom. (IPR028144); CYSTM (PF12734)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "CDT1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Miscanthus sinensis (Chinese silver grass) (Saccharum japonicum).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'CDT1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>CDT1</strong> (gene ID: CDT1, UniProt: B5BSU2) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-miscanthus-sinensis-cdt1-uniprot-b5bsu2-protein-cadmium-tolerance-1-mscdt1">Research Report: Miscanthus sinensis <em>CDT1</em> (UniProt B5BSU2; “Protein CADMIUM TOLERANCE 1”, MsCDT1)</h2>
+<h3 id="executive-summary-identity-verified">Executive summary (identity-verified)</h3>
+<p>The UniProt target <strong>B5BSU2</strong> is a <strong>Miscanthus sinensis cadmium tolerance protein 1 (MsCDT1)</strong> belonging to the <strong>CYSTM (cysteine-rich transmembrane module) family</strong>, a group of small cysteine-rich membrane-associated proteins implicated in stress tolerance. This <strong>must be distinguished</strong> from the unrelated eukaryotic DNA replication licensing factor often also called “CDT1”; the literature reviewed here consistently uses CDT1 in the <strong>heavy-metal tolerance/CYSTM</strong> sense and explicitly places <strong>MsCDT1 among monocot CDT1 homologs</strong>. (venancio2010cystmanovel pages 2-3, cai2020transcriptionfactorgmwrky142 pages 12-14)</p>
+<h3 id="evidence-map-high-level">Evidence map (high-level)</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/feature</th>
+<th>Key evidence (experimental approach and quantitative results)</th>
+<th>Species/ortholog</th>
+<th>Notes/uncertainties</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity: CDT1 here is the cadmium-tolerance CYSTM-family peptide, not replication licensing CDT1</td>
+<td>Family-level analyses define plant CDT1 as a small cysteine-rich CYSTM protein associated with stress/heavy-metal tolerance; phylogeny places MsCDT1 with monocot/grass CDT1 homologs (venancio2010cystmanovel pages 2-3, cai2020transcriptionfactorgmwrky142 pages 12-14)</td>
+<td>MsCDT1 (Miscanthus sinensis), DcCDT1, OsCDT1, GmCDT1-1/2</td>
+<td>Important disambiguation because “CDT1” is widely used for unrelated replication factors in other taxa; evidence here supports the CYSTM cadmium-tolerance protein family assignment for UniProt B5BSU2 (venancio2010cystmanovel pages 2-3, cai2020transcriptionfactorgmwrky142 pages 12-14)</td>
+<td>Venancio et al. 2010, <em>Bioinformatics</em>, Nov 2010, https://doi.org/10.1093/bioinformatics/btp647; Cai et al. 2020, <em>Frontiers in Plant Science</em>, Jun 2020, https://doi.org/10.3389/fpls.2020.00724</td>
+</tr>
+<tr>
+<td>Primary function: confers cadmium tolerance by limiting cellular Cd accumulation</td>
+<td>Functional screen in Cd-sensitive <em>ycf1</em> yeast identified DcCDT1; expressing DcCDT1 conferred Cd tolerance and yeast accumulated almost 2-fold less Cd than control. In quantitative assays, yeast expressing DcCDT1 or OsCDT1 had ~51.4% and ~44.2% of control Cd content at 10 µM CdCl2 (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2)</td>
+<td>DcCDT1, OsCDT1; MsCDT1 mentioned as homolog</td>
+<td>Strongest direct evidence comes from orthologs, not Miscanthus protein itself; mechanism inferred as reduced entry/accumulation rather than direct transporter activity being biochemically demonstrated (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175</td>
+</tr>
+<tr>
+<td>Protein properties/domain architecture</td>
+<td>DcCDT1 encodes a 55-aa, ~6.4 kDa peptide with 15 Cys residues (~27.3% Cys). CYSTM proteins are described as small peptides/proteins with a conserved cysteine-rich C-terminal module and membrane association (kuramata2009novelcysteinerichpeptides pages 1-2, venancio2010cystmanovel pages 2-3)</td>
+<td>DcCDT1 representative; family inference to MsCDT1</td>
+<td>For MsCDT1/B5BSU2, domain assignment is supported by family analyses and UniProt/InterPro context rather than direct Miscanthus biochemical characterization in the retrieved literature (kuramata2009novelcysteinerichpeptides pages 1-2, venancio2010cystmanovel pages 2-3)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Venancio et al. 2010, <em>Bioinformatics</em>, Nov 2010, https://doi.org/10.1093/bioinformatics/btp647</td>
+</tr>
+<tr>
+<td>Subcellular localization: cell boundary/cell wall and membrane-associated</td>
+<td>GFP fusions showed DcCDT1/OsCDT1 fluorescence at the cellular boundary; onion-cell plasmolysis indicated association with plasma membrane/cell wall, and localization was described as cytoplasmic membranes plus cell wall/cell surface (kuramata2009novelcysteinerichpeptides pages 4-4, kuramata2009novelcysteinerichpeptides pages 4-5, kuramata2009novelcysteinerichpeptides media a4c70959)</td>
+<td>DcCDT1, OsCDT1; by homology relevant to MsCDT1</td>
+<td>Localization data are from orthologs and transient assays; exact topology in plants remains unresolved, and 2024 work warns C-terminal tagging can perturb CYSTM localization interpretations (giolito2024palmitoylationofcystm pages 8-10, kuramata2009novelcysteinerichpeptides media a4c70959)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Giolito et al. 2024, <em>Journal of Biological Chemistry</em>, Feb 2024, https://doi.org/10.1016/j.jbc.2023.105609</td>
+</tr>
+<tr>
+<td>Plant phenotype under Cd stress</td>
+<td>Arabidopsis overexpressing DcCDT1 had 1.7–1.8× longer roots at 150 µM CdCl2 and up to 2.3× longer roots at 200 µM CdCl2; shoot Cd contents were 41% and 48% of wild type in two transgenic lines. OsCDT1 overexpression also conferred Cd tolerance; OsCDT1 lines had ~1.7–2.6× and ~1.9–3.5× longer roots than WT at 150 and 200 µM CdCl2, respectively (kuramata2009novelcysteinerichpeptides pages 5-6, kuramata2009novelcysteinerichpeptides pages 7-8, kuramata2009novelcysteinerichpeptides pages 6-7)</td>
+<td>DcCDT1, OsCDT1</td>
+<td>Overexpression evidence is strong for function but heterologous; no direct Miscanthus transgenic study was retrieved (kuramata2009novelcysteinerichpeptides pages 5-6, kuramata2009novelcysteinerichpeptides pages 7-8)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175</td>
+</tr>
+<tr>
+<td>Mechanistic model: blocks Cd entry / limits uptake at cell surface</td>
+<td>Authors conclude DcCDT1/OsCDT1 “prevent entry of Cd” based on reduced Cd accumulation plus cell-surface localization. Reviews describe CDT1 peptides as membrane-localized cysteine-rich peptides that chelate Cd at the cell surface and inhibit further uptake (kuramata2009novelcysteinerichpeptides pages 1-2, huang2024wrkytranscriptionfactors pages 2-3)</td>
+<td>DcCDT1, OsCDT1, GmCDT1-1/2; inference to MsCDT1</td>
+<td>Direct biochemical Cd-binding or transport assays were not shown for MsCDT1 and remain limited for orthologs; uptake limitation may reflect chelation, altered membrane properties, or efflux-related effects (kuramata2009novelcysteinerichpeptides pages 7-8, venancio2010cystmanovel pages 2-3)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Huang et al. 2024, <em>International Journal of Molecular Sciences</em>, Oct 2024, https://doi.org/10.3390/ijms252010952</td>
+</tr>
+<tr>
+<td>Alternative/expanded mechanism from family analysis</td>
+<td>CYSTM papers propose that the conserved acidic residue and cysteine patch may alter membrane permeability, lipid interactions, redox state, or directly chelate metal ions (venancio2010cystmanovel pages 2-3, zvonarev2023theybr056waand pages 1-2)</td>
+<td>CYSTM/CDT1 family including MsCDT1 by homology</td>
+<td>These are mechanistic hypotheses from family/domain analysis and yeast/plant phenotypes, not fully resolved biochemical mechanisms for MsCDT1 (venancio2010cystmanovel pages 2-3, zvonarev2023theybr056waand pages 1-2)</td>
+<td>Venancio et al. 2010, <em>Bioinformatics</em>, Nov 2010, https://doi.org/10.1093/bioinformatics/btp647; Zvonarev et al. 2023, <em>Genes</em>, Apr 2023, https://doi.org/10.3390/genes14050987</td>
+</tr>
+<tr>
+<td>Recent mechanistic update: membrane anchoring may involve palmitoylation rather than a classical TM helix</td>
+<td>Yeast CYSTM/CYSPD proteins were shown by acyl-biotin exchange and other assays to be S-acylated/palmitoylated; palmitoylation was required for membrane binding/localization and stability, challenging a simple tail-anchored TM model (giolito2024palmitoylationofcystm pages 1-2, giolito2024palmitoylationofcystm pages 8-10, giolito2024palmitoylationofcystm pages 10-11)</td>
+<td>Yeast CYSTM orthologs; relevance by family analogy to plant CDT1/MsCDT1</td>
+<td>This is not direct plant CDT1 evidence, but it materially affects interpretation of CYSTM topology/mechanism and suggests caution in assuming a classical TM helix for MsCDT1 (giolito2024palmitoylationofcystm pages 8-10, giolito2024palmitoylationofcystm pages 10-11)</td>
+<td>Giolito et al. 2024, <em>Journal of Biological Chemistry</em>, Feb 2024, https://doi.org/10.1016/j.jbc.2023.105609</td>
+</tr>
+<tr>
+<td>Regulation: Cd-inducible expression and WRKY control</td>
+<td>Rice OsCDT genes were Cd responsive; in soybean, GmCDT1-1/2 were induced by Cd and GmWRKY142 directly bound W-box elements in CDT1 promoters to activate transcription. Overexpression of GmCDT1-1/2 reduced Cd accumulation and improved biomass under Cd stress (kuramata2009novelcysteinerichpeptides pages 1-2, huang2024wrkytranscriptionfactors pages 2-3, cai2020transcriptionfactorgmwrky142 pages 12-14)</td>
+<td>OsCDT1–5, GmCDT1-1/2; MsCDT1 positioned as close homolog in phylogeny</td>
+<td>Direct transcriptional regulation has not been shown for MsCDT1 in retrieved studies; pathway assignment is therefore by orthology/family conservation (cai2020transcriptionfactorgmwrky142 pages 12-14)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Cai et al. 2020, <em>Frontiers in Plant Science</em>, Jun 2020, https://doi.org/10.3389/fpls.2020.00724; Huang et al. 2024, <em>International Journal of Molecular Sciences</em>, Oct 2024, https://doi.org/10.3390/ijms252010952</td>
+</tr>
+<tr>
+<td>Broader pathway context in Cd detoxification</td>
+<td>2024 reviews place CDT1 alongside other Cd-defense mechanisms: extracellular uptake limitation, intracellular thiol chelation (GSH/phytochelatins), vacuolar sequestration, and transporter-mediated efflux/partitioning; one review also notes OsCCX2/OsCDT1 in node-associated Cd efflux/handling (huang2024wrkytranscriptionfactors pages 2-3, zhang2024theuptaketransfer pages 11-12)</td>
+<td>CDT1 family in plants; OsCDT1 specifically noted</td>
+<td>The review statement linking OsCDT1 nomenclature with OsCCX2 should be treated carefully because naming across rice Cd studies can be inconsistent; direct experimental details were not supplied in the excerpt (zhang2024theuptaketransfer pages 11-12)</td>
+<td>Huang et al. 2024, <em>International Journal of Molecular Sciences</em>, Oct 2024, https://doi.org/10.3390/ijms252010952; Zhang et al. 2024, <em>Cells</em>, May 2024, https://doi.org/10.3390/cells13110907</td>
+</tr>
+<tr>
+<td>Metal specificity beyond Cd</td>
+<td>DcCDT1 increased Cu tolerance in yeast and Arabidopsis; DcCDT1 overexpression also produced Ni hypersensitivity, while responses to Zn/Co/Pb/arsenate were limited or unchanged in some assays (kuramata2009novelcysteinerichpeptides pages 2-2, kuramata2009novelcysteinerichpeptides pages 5-6, kuramata2009novelcysteinerichpeptides pages 2-4)</td>
+<td>DcCDT1 primarily; family implication for CDT1s</td>
+<td>Suggests specificity depends on exact cysteine motif/arrangement; broader substrate range is not yet clear for MsCDT1 (kuramata2009novelcysteinerichpeptides pages 7-8, kuramata2009novelcysteinerichpeptides pages 2-4)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175</td>
+</tr>
+<tr>
+<td>MsCDT1-specific evidence status</td>
+<td>MsCDT1 is explicitly present as a homolog/sequence in phylogenetic datasets and deposited sequence lists, and Cai et al. place MsCDT1 within the CDT1 clade near other monocot homologs (cai2020transcriptionfactorgmwrky142 pages 12-14, kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2, kuramata2009novelcysteinerichpeptides pages 2-4)</td>
+<td>MsCDT1 (Miscanthus sinensis; UniProt B5BSU2)</td>
+<td>No direct wet-lab functional characterization of Miscanthus sinensis MsCDT1 was retrieved in the available contexts; annotation therefore relies on strong orthology plus family/domain evidence (kuramata2009novelcysteinerichpeptides pages 1-2, cai2020transcriptionfactorgmwrky142 pages 12-14)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Cai et al. 2020, <em>Frontiers in Plant Science</em>, Jun 2020, https://doi.org/10.3389/fpls.2020.00724</td>
+</tr>
+<tr>
+<td>Applications/real-world implementation</td>
+<td>Primary study proposes overexpressing OsCDT1 in rice, ideally with strong constitutive and root-specific promoters, to reduce Cd uptake in grain from contaminated areas. More broadly, 2024 reviews frame Cd-tolerance genes as tools for safer crops and phytoremediation; quantitative examples include one-year willow extracting 17% of soil Cd and four-year <em>Averrhoa carambola</em> removing 0.3–51.8% of surface-soil Cd (kuramata2009novelcysteinerichpeptides pages 7-8, zhang2024theuptaketransfer pages 14-15)</td>
+<td>OsCDT1 application concept; broader plant Cd-management context relevant to MsCDT1</td>
+<td>No Miscanthus-specific deployment of MsCDT1 was retrieved, but Miscanthus is a high-biomass grass, so MsCDT1 is relevant conceptually for bioenergy/phytoremediation engineering rather than yet-demonstrated field implementation in the cited context (kuramata2009novelcysteinerichpeptides pages 7-8, zhang2024theuptaketransfer pages 14-15)</td>
+<td>Kuramata et al. 2009, <em>Plant &amp; Cell Physiology</em>, Nov 2009, https://doi.org/10.1093/pcp/pcn175; Zhang et al. 2024, <em>Cells</em>, May 2024, https://doi.org/10.3390/cells13110907</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles experimentally supported functional annotation evidence for Miscanthus sinensis CDT1 (MsCDT1; UniProt B5BSU2) using direct data from close plant orthologs and family-level mechanistic studies. It highlights function, localization, regulation, applications, and key uncertainties relevant for annotation.</em></p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-cdt1mscdt1-in-plants-definition-and-inferred-primary-function">1.1 CDT1/MsCDT1 in plants (definition and inferred primary function)</h4>
+<p>“Cadmium tolerance 1” (<strong>CDT1</strong>) in plants refers to a family of <strong>very small, cysteine-rich peptides</strong> identified in grasses and other plants that <strong>increase cadmium (Cd) tolerance</strong> primarily by <strong>reducing cellular Cd accumulation</strong>. The founding primary study isolated <strong>DcCDT1</strong> from <em>Digitaria ciliaris</em> via functional screening in cadmium-sensitive yeast, and showed that CDT1 expression confers Cd tolerance and reduces Cd content in cells. (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2)</p>
+<p>Although <strong>direct wet-lab functional studies on Miscanthus MsCDT1</strong> were not retrieved in the available corpus, MsCDT1 is present as a <strong>close homolog</strong> in CDT1 phylogenies and sequence sets, supporting functional inference by <strong>orthology</strong>. (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2, cai2020transcriptionfactorgmwrky142 pages 12-14)</p>
+<h4 id="12-cystm-domainmodule-structure-concept">1.2 CYSTM domain/module (structure concept)</h4>
+<p>The CYSTM module was defined by comparative sequence analysis as a conserved C-terminal ~35–40 aa module with a <strong>cysteine patch</strong> and a conserved acidic residue, typically found at the extreme C-terminus of small proteins and associated with membrane localization and stress tolerance. Plant representatives including CDT1 are described as membrane proteins, and the family has been hypothesized to function via membrane-associated chelation/redox or permeability effects. (venancio2010cystmanovel pages 2-3)</p>
+<h3 id="2-function-biological-processes-and-pathways">2) Function, biological processes, and pathways</h3>
+<h4 id="21-experimentally-supported-function-in-close-orthologs-limiting-cd-accumulation-and-increasing-cd-tolerance">2.1 Experimentally supported function in close orthologs: limiting Cd accumulation and increasing Cd tolerance</h4>
+<p>The strongest direct functional evidence comes from <em>Digitaria</em> (DcCDT1) and rice (OsCDT1) orthologs:</p>
+<ul>
+<li>
+<p><strong>Yeast functional screen and Cd accumulation</strong>: DcCDT1 was identified by screening a Cd-sensitive <strong>ycf1</strong> yeast mutant. DcCDT1 expression conferred Cd tolerance and yeast accumulated <strong>~2× less Cd</strong> than controls; in a quantitative uptake assay, yeast expressing <strong>DcCDT1 or OsCDT1</strong> contained <strong>~51.4% and ~44.2%</strong> of control Cd content under Cd exposure conditions reported in the study. (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 2-2)</p>
+</li>
+<li>
+<p><strong>Plant overexpression phenotypes</strong>: Arabidopsis plants overexpressing <strong>DcCDT1</strong> displayed markedly improved growth on Cd media (e.g., <strong>~1.7–1.8× longer roots at 150 µM CdCl2; up to ~2.3× at 200 µM</strong> in representative lines) and <strong>reduced shoot Cd content</strong> (reported as <strong>41% and 48% of WT</strong> in two lines). OsCDT1 overexpression similarly increased Cd tolerance with <strong>root-length increases ~1.7–3.5×</strong> at 150–200 µM CdCl2 in the excerpted results. (kuramata2009novelcysteinerichpeptides pages 5-6, kuramata2009novelcysteinerichpeptides pages 7-8)</p>
+</li>
+</ul>
+<p>These data support functional annotation of MsCDT1 as a protein whose primary role is <strong>cadmium tolerance by limiting cellular Cd accumulation</strong>, rather than catalysis of a biochemical reaction or classical solute transport. (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 5-6)</p>
+<h4 id="22-mechanistic-models-what-is-known-vs-inferred">2.2 Mechanistic models (what is known vs inferred)</h4>
+<p><strong>Ortholog-based model:</strong> Kuramata et al. interpret reduced Cd accumulation plus cell-boundary localization to suggest CDT1 peptides <strong>“prevent entry of Cd”</strong> into yeast and plant cells. (kuramata2009novelcysteinerichpeptides pages 1-2)</p>
+<p><strong>Family-level hypotheses:</strong> CYSTM analyses propose that (i) the conserved acidic residue may mediate tight lipid association and alter membrane permeability, and/or (ii) cysteine patches may influence local redox environment or chelate metals. These ideas are largely <strong>hypothesis-driven</strong> from sequence conservation and phenotypes rather than definitive biochemical demonstration. (venancio2010cystmanovel pages 2-3)</p>
+<p><strong>Regulatory placement in Cd-response networks:</strong> A 2024 review summarizes CDT1 as a membrane-localized cysteine-rich peptide family that can <strong>chelate Cd at the cell surface</strong>, thereby inhibiting further uptake; and it connects CDT1 regulation to WRKY transcription factors (see below). (huang2024wrkytranscriptionfactors pages 2-3)</p>
+<p><strong>Key uncertainty:</strong> Neither the retrieved primary ortholog studies nor the reviews provide definitive biochemical proof of a specific molecular mechanism (e.g., direct Cd-binding constants, defined interaction partners, or a demonstrable pore/transport activity) for MsCDT1. The most robust evidence remains phenotypic and Cd-content outcomes. (kuramata2009novelcysteinerichpeptides pages 7-8, cai2020transcriptionfactorgmwrky142 pages 12-14)</p>
+<h4 id="23-regulation-and-signaling-authoritative-sources">2.3 Regulation and signaling (authoritative sources)</h4>
+<p>A well-supported regulatory module for CDT1-like genes is <strong>WRKY → CDT1</strong>:</p>
+<ul>
+<li>
+<p>In soybean, <strong>GmWRKY142</strong> is Cd-inducible and directly activates <strong>GmCDT1-1/GmCDT1-2</strong> expression by binding W-box elements in their promoters; overexpression of these CDT1-like genes reduced Cd accumulation and improved performance under Cd stress (as summarized in evidence extracted). (cai2020transcriptionfactorgmwrky142 pages 12-14)</p>
+</li>
+<li>
+<p>A 2024 WRKY review reiterates that CDT1 peptides act in <strong>uptake prevention</strong> by <strong>cell-surface chelation</strong> and describes <strong>GmWRKY142</strong> as an upstream activator of GmCDT1 genes under Cd stress. (huang2024wrkytranscriptionfactors pages 2-3)</p>
+</li>
+</ul>
+<p>Given MsCDT1’s placement among monocot homologs, it is plausible that similar transcriptional control modules exist in Miscanthus; however, <strong>direct Miscanthus regulatory data were not retrieved</strong> and should not be asserted beyond orthology-based hypothesis. (cai2020transcriptionfactorgmwrky142 pages 12-14)</p>
+<h3 id="3-subcellular-localization-where-the-gene-product-functions">3) Subcellular localization (where the gene product functions)</h3>
+<h4 id="31-ortholog-localization-evidence-cell-boundarycell-wallmembranes">3.1 Ortholog localization evidence (cell boundary/cell wall/membranes)</h4>
+<p>In the founding CDT1 study, GFP fusion experiments support cell-surface association:</p>
+<ul>
+<li><strong>DcCDT1–GFP / OsCDT1–GFP</strong> fluorescence localized to the <strong>cell boundary</strong> in plant cells, and plasmolysis assays in onion cells indicated signal associated with the <strong>plasma membrane and cell wall</strong>. (kuramata2009novelcysteinerichpeptides pages 4-4, kuramata2009novelcysteinerichpeptides pages 4-5, kuramata2009novelcysteinerichpeptides media a4c70959)</li>
+</ul>
+<p>These observations support annotation of MsCDT1 as a <strong>membrane/cell-surface-associated protein</strong>, consistent with the UniProt/InterPro “CYSTM” family designation.</p>
+<h4 id="32-2024-mechanistic-update-affecting-topology-interpretation-expert-analysis">3.2 2024 mechanistic update affecting topology interpretation (expert analysis)</h4>
+<p>A major 2024 mechanistic advance in the CYSTM field (in yeast) is that the conserved cysteine-rich domain can mediate membrane binding via <strong>S-acylation (palmitoylation)</strong> rather than acting as a classical transmembrane helix. Giolito et al. show yeast CYSTM proteins are palmitoylated and require palmitoylation for membrane association; they also caution that <strong>C-terminal GFP tagging may disrupt</strong> the C-terminal membrane-anchoring domain, potentially producing misleading localization results. (giolito2024palmitoylationofcystm pages 8-10, giolito2024palmitoylationofcystm pages 1-2)</p>
+<p>Implication for MsCDT1: while plant CDT1 orthologs show cell-surface association by GFP fusion microscopy, the <strong>exact membrane-anchoring mechanism and topology</strong> for MsCDT1 should be regarded as <strong>not fully resolved</strong> until plant-specific biochemical topology/PTM mapping is performed. (giolito2024palmitoylationofcystm pages 8-10, giolito2024palmitoylationofcystm pages 10-11)</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-2023-metal-stress-roles-and-membrane-localization-in-cystm-family-yeast">4.1 2023: metal-stress roles and membrane localization in CYSTM family (yeast)</h4>
+<p>A 2023 study reports yeast CYSTM proteins induced by multiple metal stresses and shows differing localization patterns (plasma/vacuolar versus internal membranes). While not plant CDT1, it supports the broader theme that CYSTM proteins are <strong>membrane-associated metal-stress factors</strong> across eukaryotes. (zvonarev2023theybr056waand pages 1-2)</p>
+<h4 id="42-2024-palmitoylation-dependent-membrane-binding-mechanistic-breakthrough">4.2 2024: palmitoylation-dependent membrane binding (mechanistic breakthrough)</h4>
+<p>Giolito et al. (JBC, Feb 2024) demonstrate that yeast CYSTM domains bind membranes through <strong>palmitoylation</strong>, influencing localization, stability, and turnover. They explicitly suggest that understanding topology and palmitoylation is prerequisite to resolving molecular function, and they note that earlier metal-chelation hypotheses may need reconsideration when cysteines are acylated. (giolito2024palmitoylationofcystm pages 1-2, giolito2024palmitoylationofcystm pages 10-11)</p>
+<h4 id="43-2024-authoritative-synthesis-of-cdt1s-place-in-plant-cd-response-networks">4.3 2024: authoritative synthesis of CDT1’s place in plant Cd-response networks</h4>
+<p>A 2024 WRKY-focused review positions CDT1 as part of a plant strategy to reduce Cd entry: <strong>membrane-localized cysteine-rich peptides</strong> that chelate Cd at the cell surface, with regulation by WRKY TFs (e.g., GmWRKY142). (huang2024wrkytranscriptionfactors pages 2-3)</p>
+<p>A 2024 cadmium uptake/transfer review notes naming/functional associations in rice where OsCDT1 is discussed in a Cd-handling context (including node-associated handling/efflux in the excerpt), reflecting ongoing efforts to integrate CDT1-like factors into systemic Cd partitioning models. (zhang2024theuptaketransfer pages 11-12)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-crop-engineering-to-reduce-cadmium-in-edible-tissues">5.1 Crop engineering to reduce cadmium in edible tissues</h4>
+<p>The original CDT1 work explicitly proposes a translational path: overexpressing <strong>OsCDT1 in rice</strong>, ideally using a <strong>strong constitutive and root-specific promoter</strong>, to reduce Cd uptake in Cd-contaminated areas and improve food safety. (kuramata2009novelcysteinerichpeptides pages 7-8)</p>
+<h4 id="52-phytoremediation-and-cd-mitigation-context-for-high-biomass-grasses-like-miscanthus">5.2 Phytoremediation and Cd mitigation (context for high-biomass grasses like Miscanthus)</h4>
+<p>A 2024 review summarizes practical remediation strategies (plant selection, amendments, engineered materials) and provides quantitative examples of removal efficiencies in specific systems, illustrating the application space into which Miscanthus (a high-biomass grass) could fit, though MsCDT1-specific field deployments were not retrieved:</p>
+<ul>
+<li>One-year-old <strong>willow</strong> reported extracting <strong>17%</strong> of soil Cd in a cited example; four-year-old <strong>Averrhoa carambola</strong> reported removing <strong>0.3–51.8%</strong> of surface-soil Cd across conditions. (zhang2024theuptaketransfer pages 14-15)</li>
+<li>Cd hyperaccumulators are described as plants that can accumulate <strong>&gt;0.01% Cd</strong> in aboveground dry weight, with some exceeding <strong>100 mg kg−1</strong> in aerial tissues. (zhang2024theuptaketransfer pages 12-14)</li>
+</ul>
+<p>These statistics contextualize why genes that limit Cd uptake (like CDT1 orthologs) are of interest for both <strong>crop safety</strong> and <strong>remediation strategies</strong>, depending on whether the goal is to reduce edible-tissue Cd or to tolerate/accumulate Cd for cleanup. (zhang2024theuptaketransfer pages 14-15, zhang2024theuptaketransfer pages 12-14)</p>
+<h3 id="6-practical-functional-annotation-for-mscdt1-b5bsu2-with-evidence-grading">6) Practical functional annotation for MsCDT1 (B5BSU2) with evidence grading</h3>
+<p><strong>Best-supported annotation (orthology + direct functional evidence in close monocot homologs):</strong><br />
+* <strong>Biological process:</strong> cellular response to cadmium ion; cadmium ion detoxification/tolerance (kuramata2009novelcysteinerichpeptides pages 1-2, kuramata2009novelcysteinerichpeptides pages 5-6)<br />
+* <strong>Molecular function (operational):</strong> cadmium-tolerance factor that reduces cellular Cd accumulation (not an enzyme/transport reaction) (kuramata2009novelcysteinerichpeptides pages 2-2, kuramata2009novelcysteinerichpeptides pages 5-6)<br />
+* <strong>Cellular component (most supported):</strong> cell periphery/plasma membrane and/or cell wall-associated compartment (based on DcCDT1/OsCDT1 GFP fusion localization) (kuramata2009novelcysteinerichpeptides media a4c70959)</p>
+<p><strong>Mechanism (supported as hypothesis, not proven biochemically for MsCDT1):</strong><br />
+* Surface chelation and/or membrane-permeability modulation limiting Cd entry (venancio2010cystmanovel pages 2-3, huang2024wrkytranscriptionfactors pages 2-3)<br />
+* Potential palmitoylation-mediated membrane binding/topology considerations (extrapolated from yeast CYSTM mechanistic work; plant confirmation pending) (giolito2024palmitoylationofcystm pages 1-2, giolito2024palmitoylationofcystm pages 10-11)</p>
+<h3 id="7-limitations-of-available-evidence-critical-transparency">7) Limitations of available evidence (critical transparency)</h3>
+<p>No direct 2023–2024 primary studies experimentally characterizing <strong>Miscanthus sinensis MsCDT1 (UniProt B5BSU2)</strong> were retrieved in the available context. Therefore, conclusions about MsCDT1 rely on (i) <strong>strong orthology</strong> to experimentally tested grass CDT1 proteins and (ii) <strong>family-level mechanistic insights</strong> from CYSTM studies (including yeast). This is a standard and defensible annotation approach, but MsCDT1-specific localization, post-translational modifications, and interaction partners remain open research needs. (kuramata2009novelcysteinerichpeptides pages 1-2, giolito2024palmitoylationofcystm pages 1-2)</p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Kuramata M. et al. “Novel cysteine-rich peptides from <em>Digitaria ciliaris</em> and <em>Oryza sativa</em> enhance tolerance to cadmium by limiting its cellular accumulation.” <em>Plant &amp; Cell Physiology</em> (Nov 2009). https://doi.org/10.1093/pcp/pcn175 (kuramata2009novelcysteinerichpeptides pages 1-2)</li>
+<li>Venancio T.M. et al. “CYSTM, a novel cysteine-rich transmembrane module with a role in stress tolerance across eukaryotes.” <em>Bioinformatics</em> (Nov 2010). https://doi.org/10.1093/bioinformatics/btp647 (venancio2010cystmanovel pages 2-3)</li>
+<li>Xu Y. et al. “CYSTM… involved in environmental stresses in <em>Arabidopsis thaliana</em>.” <em>Plant and Cell Physiology</em> (Feb 2018). https://doi.org/10.1093/pcp/pcx202 (xu2018cystmanovel pages 4-7)</li>
+<li>Cai Z. et al. “Transcription Factor GmWRKY142 Confers Cadmium Resistance by Up-Regulating the Cadmium Tolerance 1-Like Genes.” <em>Frontiers in Plant Science</em> (Jun 2020). https://doi.org/10.3389/fpls.2020.00724 (cai2020transcriptionfactorgmwrky142 pages 12-14)</li>
+<li>Zvonarev A. et al. “The YBR056W-A and Its Ortholog YDR034W-B… CYSTM Family… manganese stress.” <em>Genes</em> (Apr 2023). https://doi.org/10.3390/genes14050987 (zvonarev2023theybr056waand pages 1-2)</li>
+<li>Giolito M.L. et al. “Palmitoylation of CYSTM (CYSPD) proteins in yeast.” <em>Journal of Biological Chemistry</em> (Feb 2024). https://doi.org/10.1016/j.jbc.2023.105609 (giolito2024palmitoylationofcystm pages 1-2)</li>
+<li>Zhang X. et al. “The Uptake, Transfer, and Detoxification of Cadmium in Plants and Its Exogenous Effects.” <em>Cells</em> (May 2024). https://doi.org/10.3390/cells13110907 (zhang2024theuptaketransfer pages 14-15)</li>
+<li>Huang Y. et al. “WRKY Transcription Factors in Response to Metal Stress in Plants: A Review.” <em>International Journal of Molecular Sciences</em> (Oct 2024). https://doi.org/10.3390/ijms252010952 (huang2024wrkytranscriptionfactors pages 2-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(venancio2010cystmanovel pages 2-3): T. M. Venancio, L. Aravind, and Alex Bateman. Cystm, a novel cysteine-rich transmembrane module with a role in stress tolerance across eukaryotes. Bioinformatics, 26:149-152, Nov 2010. URL: https://doi.org/10.1093/bioinformatics/btp647, doi:10.1093/bioinformatics/btp647. This article has 73 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cai2020transcriptionfactorgmwrky142 pages 12-14): Zhandong Cai, Peiqi Xian, Huan Wang, Rongbin Lin, Tengxiang Lian, Yanbo Cheng, Qibin Ma, and Hai Nian. Transcription factor gmwrky142 confers cadmium resistance by up-regulating the cadmium tolerance 1-like genes. Frontiers in Plant Science, Jun 2020. URL: https://doi.org/10.3389/fpls.2020.00724, doi:10.3389/fpls.2020.00724. This article has 85 citations.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 1-2): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 2-2): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 4-4): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 4-5): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides media a4c70959): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giolito2024palmitoylationofcystm pages 8-10): María Luz Giolito, Gonzalo Bigliani, Rocío Meinero, and Javier Valdez Taubas. Palmitoylation of cystm (cyspd) proteins in yeast. Journal of Biological Chemistry, 300:105609, Feb 2024. URL: https://doi.org/10.1016/j.jbc.2023.105609, doi:10.1016/j.jbc.2023.105609. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 5-6): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 7-8): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 6-7): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huang2024wrkytranscriptionfactors pages 2-3): Yuanzhi Huang, Zhaofei Sun, and Xiangui Zhou. Wrky transcription factors in response to metal stress in plants: a review. International Journal of Molecular Sciences, 25:10952, Oct 2024. URL: https://doi.org/10.3390/ijms252010952, doi:10.3390/ijms252010952. This article has 33 citations.</p>
+</li>
+<li>
+<p>(zvonarev2023theybr056waand pages 1-2): Anton Zvonarev, Larisa Ledova, Lubov Ryazanova, Airat Valiakhmetov, Vasilina Farofonova, and Tatiana Kulakovskaya. The ybr056w-a and its ortholog ydr034w-b of s. cerevisiae belonging to cystm family participate in manganese stress overcoming. Genes, 14:987, Apr 2023. URL: https://doi.org/10.3390/genes14050987, doi:10.3390/genes14050987. This article has 4 citations.</p>
+</li>
+<li>
+<p>(giolito2024palmitoylationofcystm pages 1-2): María Luz Giolito, Gonzalo Bigliani, Rocío Meinero, and Javier Valdez Taubas. Palmitoylation of cystm (cyspd) proteins in yeast. Journal of Biological Chemistry, 300:105609, Feb 2024. URL: https://doi.org/10.1016/j.jbc.2023.105609, doi:10.1016/j.jbc.2023.105609. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(giolito2024palmitoylationofcystm pages 10-11): María Luz Giolito, Gonzalo Bigliani, Rocío Meinero, and Javier Valdez Taubas. Palmitoylation of cystm (cyspd) proteins in yeast. Journal of Biological Chemistry, 300:105609, Feb 2024. URL: https://doi.org/10.1016/j.jbc.2023.105609, doi:10.1016/j.jbc.2023.105609. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024theuptaketransfer pages 11-12): Xintong Zhang, Man Yang, Hui Yang, Ruiqi Pian, Jinxiang Wang, and Ai-Min Wu. The uptake, transfer, and detoxification of cadmium in plants and its exogenous effects. Cells, 13:907, May 2024. URL: https://doi.org/10.3390/cells13110907, doi:10.3390/cells13110907. This article has 90 citations.</p>
+</li>
+<li>
+<p>(kuramata2009novelcysteinerichpeptides pages 2-4): M. Kuramata, Shuichi Masuya, Yoshihiro Takahashi, E. Kitagawa, C. Inoue, S. Ishikawa, S. Youssefian, and T. Kusano. Novel cysteine-rich peptides from digitaria ciliaris and oryza sativa enhance tolerance to cadmium by limiting its cellular accumulation. Plant &amp; cell physiology, 50 1:106-17, Nov 2009. URL: https://doi.org/10.1093/pcp/pcn175, doi:10.1093/pcp/pcn175. This article has 111 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024theuptaketransfer pages 14-15): Xintong Zhang, Man Yang, Hui Yang, Ruiqi Pian, Jinxiang Wang, and Ai-Min Wu. The uptake, transfer, and detoxification of cadmium in plants and its exogenous effects. Cells, 13:907, May 2024. URL: https://doi.org/10.3390/cells13110907, doi:10.3390/cells13110907. This article has 90 citations.</p>
+</li>
+<li>
+<p>(zhang2024theuptaketransfer pages 12-14): Xintong Zhang, Man Yang, Hui Yang, Ruiqi Pian, Jinxiang Wang, and Ai-Min Wu. The uptake, transfer, and detoxification of cadmium in plants and its exogenous effects. Cells, 13:907, May 2024. URL: https://doi.org/10.3390/cells13110907, doi:10.3390/cells13110907. This article has 90 citations.</p>
+</li>
+<li>
+<p>(xu2018cystmanovel pages 4-7): Yang Xu, Zipeng Yu, Di Zhang, Jinguang Huang, Changai Wu, Guodong Yang, Kang Yan, Shizhong Zhang, and Chengchao Zheng. Cystm, a novel non-secreted cysteine-rich peptide family, involved in environmental stresses in arabidopsis thaliana. Plant and Cell Physiology, 59:423–438, Feb 2018. URL: https://doi.org/10.1093/pcp/pcx202, doi:10.1093/pcp/pcx202. This article has 61 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>zhang2024theuptaketransfer pages 11-12</li>
+<li>venancio2010cystmanovel pages 2-3</li>
+<li>kuramata2009novelcysteinerichpeptides pages 1-2</li>
+<li>huang2024wrkytranscriptionfactors pages 2-3</li>
+<li>kuramata2009novelcysteinerichpeptides pages 7-8</li>
+<li>zhang2024theuptaketransfer pages 14-15</li>
+<li>zhang2024theuptaketransfer pages 12-14</li>
+<li>xu2018cystmanovel pages 4-7</li>
+<li>giolito2024palmitoylationofcystm pages 1-2</li>
+<li>kuramata2009novelcysteinerichpeptides pages 2-2</li>
+<li>kuramata2009novelcysteinerichpeptides pages 4-4</li>
+<li>kuramata2009novelcysteinerichpeptides pages 4-5</li>
+<li>giolito2024palmitoylationofcystm pages 8-10</li>
+<li>kuramata2009novelcysteinerichpeptides pages 5-6</li>
+<li>kuramata2009novelcysteinerichpeptides pages 6-7</li>
+<li>giolito2024palmitoylationofcystm pages 10-11</li>
+<li>kuramata2009novelcysteinerichpeptides pages 2-4</li>
+<li>https://doi.org/10.1093/bioinformatics/btp647;</li>
+<li>https://doi.org/10.3389/fpls.2020.00724</li>
+<li>https://doi.org/10.1093/pcp/pcn175</li>
+<li>https://doi.org/10.1093/pcp/pcn175;</li>
+<li>https://doi.org/10.1093/bioinformatics/btp647</li>
+<li>https://doi.org/10.1016/j.jbc.2023.105609</li>
+<li>https://doi.org/10.3390/ijms252010952</li>
+<li>https://doi.org/10.3390/genes14050987</li>
+<li>https://doi.org/10.3389/fpls.2020.00724;</li>
+<li>https://doi.org/10.3390/ijms252010952;</li>
+<li>https://doi.org/10.3390/cells13110907</li>
+<li>https://doi.org/10.1093/pcp/pcx202</li>
+<li>https://doi.org/10.1093/bioinformatics/btp647,</li>
+<li>https://doi.org/10.3389/fpls.2020.00724,</li>
+<li>https://doi.org/10.1093/pcp/pcn175,</li>
+<li>https://doi.org/10.1016/j.jbc.2023.105609,</li>
+<li>https://doi.org/10.3390/ijms252010952,</li>
+<li>https://doi.org/10.3390/genes14050987,</li>
+<li>https://doi.org/10.3390/cells13110907,</li>
+<li>https://doi.org/10.1093/pcp/pcx202,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CDT1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B5BSU2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cdt1-mscdt1-miscanthus-sinensis-notes">CDT1 (MsCDT1) - Miscanthus sinensis - Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li>UniProt: B5BSU2 (CDT1_MISSI)</li>
+<li>Gene: CDT1 (also MsCDT1)</li>
+<li>Organism: Miscanthus sinensis (Chinese silver grass)</li>
+<li>Taxon: NCBITaxon:62337</li>
+<li>Protein: 55 AA, cysteine-rich peptide (15/55 = 27.3% Cys residues)</li>
+<li>Family: CYSTM1 (Pfam: PF12734), PANTHER: PTHR35470</li>
+<li>PANTHER subfamily: PTHR35470:SF6 (CYSTEINE-RICH TRANSMEMBRANE MODULE 2)</li>
+</ul>
+<h2 id="key-literature">Key Literature</h2>
+<h3 id="pmid19017626-kuramata-et-al-2009-plant-cell-physiol">PMID:19017626 - Kuramata et al. (2009) Plant Cell Physiol</h3>
+<ul>
+<li>Original identification of DcCDT1 from Digitaria ciliaris growing in a former mining area</li>
+<li>Isolated via functional screening using Cd-sensitive ycf1 yeast mutant</li>
+<li>DcCDT1 encodes 55 AA peptide with 15 Cys residues (27.3%)</li>
+<li>Five homologs (OsCDT1-OsCDT5) identified in rice, all upregulated by CdCl2 treatment</li>
+<li>GFP fusions show DcCDT1 and OsCDT1 targeted to cytoplasmic membranes AND cell walls</li>
+<li>Transgenic Arabidopsis overexpressing DcCDT1 or OsCDT1 showed Cd-tolerant phenotype</li>
+<li>Mechanism: prevents entry of Cd into cells, limiting cellular accumulation</li>
+<li>Also confers Cu tolerance (CuCl2)</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19017626" title="DcCDT1 and OsCDT1 function to prevent entry of Cd into yeast and plant cells and thereby enhance their Cd tolerance">PMID:19017626</a></li>
+</ul>
+<h3 id="pmid19816106-matsuda-et-al-2009-plant-signal-behav">PMID:19816106 - Matsuda et al. (2009) Plant Signal Behav</h3>
+<ul>
+<li>Commentary/review on the CDT family</li>
+<li>Monocots have multiple CDT homologs (rice has 5), dicots have only 1</li>
+<li>Confirmed plasma membrane and cell wall targeting via GFP fusions</li>
+<li>Cd tolerance via lowered accumulation in transgenic Arabidopsis</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/19816106" title="Constitutive expression of DcCDT1 or OsCDT1 confers Cd-tolerance to transgenic A. thaliana plants by lowering the accumulation of Cd in the cells">PMID:19816106</a></li>
+</ul>
+<h2 id="iss-reference-proteins">ISS Reference Proteins</h2>
+<p>The ISS annotations on MsCDT1 are transferred from two experimentally characterized proteins:</p>
+<h3 id="a9zpi1-dccdt1-digitaria-ciliaris">A9ZPI1 (DcCDT1 - Digitaria ciliaris)</h3>
+<ul>
+<li>The original CDT1 from southern crabgrass</li>
+<li>Experimentally characterized: function (IDA), subcellular location (IDA)</li>
+<li>Evidence: PMID:19017626, PMID:19816106</li>
+<li>Same subfamily as OsCDT1 (PTHR35470:SF12)</li>
+</ul>
+<h3 id="q5vrd7-oscdt3-oryza-sativa">Q5VRD7 (OsCDT3 - Oryza sativa)</h3>
+<ul>
+<li>Rice CDT3, experimentally characterized</li>
+<li>Plasma membrane localized, involved in ALUMINIUM tolerance (PMID:23888867)</li>
+<li>Same PANTHER subfamily as MsCDT1 (PTHR35470:SF6)</li>
+<li>Note: CDT3 was characterized for Al tolerance, not just Cd</li>
+</ul>
+<h3 id="q5vsb5-oscdt1-oryza-sativa">Q5VSB5 (OsCDT1 - Oryza sativa)</h3>
+<ul>
+<li>Rice CDT1, characterized in PMID:19017626</li>
+<li>In PANTHER subfamily SF12 (different from MsCDT1 which is in SF6)</li>
+</ul>
+<h2 id="panther-subfamily-note">PANTHER Subfamily Note</h2>
+<p>MsCDT1 (B5BSU2) is in PTHR35470:SF6, same as OsCDT3 (Q5VRD7), OsCDT5, and indica CDT3/CDT5.<br />
+DcCDT1 (A9ZPI1), OsCDT1 (Q5VSB5), and OsCDT2 are in PTHR35470:SF12.<br />
+This means MsCDT1 is phylogenetically closer to CDT3/CDT5 than to CDT1 from crabgrass/rice,<br />
+despite sharing the name "CDT1". The ISS transfers from Q5VRD7 (CDT3, same subfamily) are<br />
+phylogenetically more appropriate than those from A9ZPI1 (DcCDT1, different subfamily).</p>
+<h2 id="protein-features">Protein Features</h2>
+<ul>
+<li>Single transmembrane helix (residues 24-40)</li>
+<li>CYSTM domain (PF12734)</li>
+<li>Highly cysteine-rich C-terminal region: CECCLDCLCCCCS</li>
+<li>Predicted to chelate heavy metals via cysteine residues at plasma membrane</li>
+</ul>
+<h2 id="mechanism-of-action">Mechanism of Action</h2>
+<p>Based on the literature, CDT proteins function by:<br />
+1. Localizing to the plasma membrane and cell wall<br />
+2. Chelating heavy metal ions (Cd2+, Cu2+, possibly Al3+) via cysteine-rich regions<br />
+3. Preventing metal ion entry into the cell<br />
+4. Reducing intracellular metal accumulation</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: B5BSU2
+gene_symbol: CDT1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:62337
+  label: Miscanthus sinensis
+description: &gt;-
+  CDT1 (MsCDT1) is a small cysteine-rich peptide (55 AA, 27% cysteine) from Miscanthus sinensis
+  that confers tolerance to heavy metal ions, particularly cadmium and copper. It belongs to the
+  CYSTM1 family (Pfam PF12734, PANTHER PTHR35470). The protein localizes to the plasma membrane
+  and cell wall, where it chelates heavy metal ions via its cysteine-rich C-terminal domain,
+  preventing their entry into root cells and reducing intracellular accumulation. MsCDT1 was
+  identified as part of a novel cysteine-rich peptide family first discovered in Digitaria ciliaris
+  (DcCDT1) growing in a former mining area. All functional characterization derives from orthologs
+  DcCDT1 (A9ZPI1), OsCDT1 (Q5VSB5), and OsCDT3 (Q5VRD7), transferred to MsCDT1 by sequence
+  similarity (ISS). Note that despite its name, MsCDT1 falls in PANTHER subfamily SF6 (with
+  OsCDT3/OsCDT5) rather than SF12 (with DcCDT1/OsCDT1), suggesting it may be phylogenetically
+  closer to the CDT3 subfamily.
+
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation based on UniProt subcellular location mapping. The UniProt entry for MsCDT1
+      states &#34;Cell membrane&#34; based on similarity to DcCDT1 (A9ZPI1). Ortholog DcCDT1 was
+      experimentally shown to localize to cytoplasmic membranes via GFP fusion experiments
+      [PMID:19017626]. This IEA is consistent with multiple ISS annotations and experimental
+      data from orthologs.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane localization is central to MsCDT1 function. The protein is predicted to have
+      a single transmembrane helix (residues 24-40) and the mechanism of heavy metal chelation
+      requires membrane localization. GFP fusion experiments on orthologs DcCDT1 and OsCDT1
+      demonstrated targeting to cytoplasmic membranes [PMID:19017626, PMID:19816106].
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are
+        targeted to both cytoplasmic membranes and cell walls of plant cells.
+    - reference_id: PMID:19816106
+      supporting_text: &gt;-
+        GFP fusion experiments demonstrate that DcCDT1 and OsCDT1 are targeted to both the plant
+        cytoplasmic membranes and cell walls.
+
+- term:
+    id: GO:0010038
+    label: response to metal ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation from ARBA machine learning models. The term &#34;response to metal ion&#34; is a
+      broad biological process term. CDT family genes are transcriptionally upregulated by cadmium
+      treatment [PMID:19017626], and the protein itself functions in metal detoxification, so the
+      term applies. However, more specific detoxification terms (GO:0071585, GO:0010273) already
+      capture the core function better.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While CDT1 is involved in responding to metal ions, this broad term is redundant with the
+      more specific detoxification of cadmium ion and detoxification of copper ion annotations
+      already present. The protein&#39;s core function is metal chelation and detoxification, not a
+      general stress response. Keeping as non-core since it is technically correct but less
+      informative than the specific detoxification annotations.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Five DcCDT1 homologs (here termed OsCDT1-OsCDT5) have been identified in rice, and all
+        of them were up-regulated to varying degrees in the above-ground tissues by CdCl(2)
+        treatment.
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from DcCDT1 (A9ZPI1, Digitaria ciliaris), the founding member of
+      the CDT family. DcCDT1 was experimentally localized to cytoplasmic membranes via GFP fusions
+      in plant cells [PMID:19017626]. Although DcCDT1 is in PANTHER subfamily SF12 while MsCDT1 is
+      in SF6, both share the CYSTM domain and predicted transmembrane helix, making plasma membrane
+      localization highly conserved across the family.
+    action: ACCEPT
+    reason: &gt;-
+      Strong experimental evidence from the ortholog DcCDT1 (GFP fusion to plasma membrane),
+      consistent predicted transmembrane topology (residues 24-40), and conserved function across
+      the CYSTM1 family all support plasma membrane localization for MsCDT1.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are
+        targeted to both cytoplasmic membranes and cell walls of plant cells.
+
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT1 (Q5VSB5, Oryza sativa), which was also shown to
+      localize to cytoplasmic membranes via GFP fusions [PMID:19017626]. This is a duplicate of
+      the plasma membrane annotation transferred from a different ortholog. OsCDT1 is in PANTHER
+      subfamily SF12 (different from MsCDT1&#39;s SF6), but the transmembrane topology and localization
+      are conserved across the CYSTM1 family.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the other plasma membrane annotations. OsCDT1 GFP fusion data provides
+      independent experimental support for membrane localization in a grass species (rice), which
+      strengthens the case for the closely related MsCDT1.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are
+        targeted to both cytoplasmic membranes and cell walls of plant cells.
+
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT3 (Q5VRD7, rice), which is in the same PANTHER
+      subfamily SF6 as MsCDT1. MsCDT1 is a cysteine-rich peptide (15 out of 55 residues are Cys)
+      with a conserved CYSTM domain, consistent with metal ion chelation. The broadly conserved
+      cysteine residues in the C-terminal region (CECCLDCLCCCCS) are expected to coordinate metal
+      ions.
+    action: ACCEPT
+    reason: &gt;-
+      Metal ion binding is well supported by the protein&#39;s extreme cysteine content (27.3%) and
+      the CYSTM domain architecture. The ISS transfer from OsCDT3 (same subfamily SF6) is
+      phylogenetically appropriate. The UniProt function annotation states the protein chelates
+      heavy metal ions at the plasma membrane. The more specific GO:0140487 (metal ion
+      sequestering activity) is also annotated and captures the function more precisely, but
+      metal ion binding is still informative as a general molecular function. Note that a 2024
+      study on yeast CYSTM proteins suggests membrane binding may involve palmitoylation of
+      cysteine residues rather than a classical TM helix, which could affect the interpretation
+      of metal-binding cysteines vs membrane-anchoring cysteines.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        The 521 bp DcCDT1 cDNA contains an open reading frame of 168 bp and encodes a deduced
+        peptide, DcCDT1, that is 55 amino acid residues in length, of which 15 (27.3%) are
+        cysteine residues.
+    - reference_id: file:9POAL/CDT1/CDT1-uniprot.txt
+      supporting_text: &gt;-
+        Confers resistance to heavy metal ions (e.g. cadmium (CdCl(2)) and copper (CuCl(2)))
+        by chelating them at the plasma membrane of root cells.
+    - reference_id: file:9POAL/CDT1/CDT1-deep-research-falcon.md
+      supporting_text: &gt;-
+        CYSTM proteins are described as small peptides/proteins with a conserved cysteine-rich
+        C-terminal module and membrane association [with recent evidence that membrane binding
+        involves palmitoylation rather than classical TM insertion]
+
+- term:
+    id: GO:0140487
+    label: metal ion sequestering activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT3 (Q5VRD7, same PANTHER subfamily SF6). Metal ion
+      sequestering activity accurately describes the core molecular function of CDT proteins:
+      chelating heavy metal ions at the cell surface to prevent their entry into the cell. This
+      is more specific than metal ion binding and directly reflects the detoxification mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most precise molecular function term for CDT1. The protein&#39;s mechanism of action
+      is to sequester (chelate) heavy metal ions at the plasma membrane, preventing cellular
+      uptake. This is supported by yeast and plant experiments showing reduced intracellular Cd
+      accumulation when CDT orthologs are expressed [PMID:19017626]. The ISS from OsCDT3 (same
+      subfamily) is phylogenetically well-supported.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        DcCDT1 and OsCDT1 function to prevent entry of Cd into yeast and plant cells and thereby
+        enhance their Cd tolerance.
+    - reference_id: PMID:19816106
+      supporting_text: &gt;-
+        Constitutive expression of DcCDT1 or OsCDT1 confers Cd-tolerance to transgenic A. thaliana
+        plants by lowering the accumulation of Cd in the cells.
+
+- term:
+    id: GO:1990748
+    label: cellular detoxification
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT3 (Q5VRD7, same PANTHER subfamily SF6). CDT proteins
+      are involved in detoxification, but this term is a broad parent of the more specific
+      detoxification of cadmium ion (GO:0071585) and detoxification of copper ion (GO:0010273)
+      already annotated. It adds no additional information beyond those more specific terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cellular detoxification is technically correct but redundant with the more specific child
+      terms already present (detoxification of cadmium ion, detoxification of copper ion). The
+      specific terms better capture CDT1&#39;s known function. Keeping as non-core since it is a valid
+      parent term but does not add specificity.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Transgenic Arabidopsis thaliana plants overexpressing DcCDT1 or OsCDT1 displayed a
+        Cd-tolerant phenotype and, consistent with our yeast data, accumulated lower amounts
+        of Cd when grown on CdCl(2).
+
+- term:
+    id: GO:0009505
+    label: plant-type cell wall
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT1 (Q5VSB5, rice). GFP fusion experiments on DcCDT1
+      and OsCDT1 showed targeting to both cytoplasmic membranes AND cell walls of plant cells
+      [PMID:19017626]. The UniProt entry for MsCDT1 also notes cell wall localization based on
+      similarity. MsCDT1 has a predicted signal/transmembrane helix that could enable secretion
+      to the cell wall.
+    action: ACCEPT
+    reason: &gt;-
+      Cell wall localization is experimentally demonstrated for CDT orthologs via GFP fusions and
+      is consistent with the proposed mechanism of chelating metal ions at the cell surface to
+      prevent entry. Both plasma membrane and cell wall localization represent core aspects of
+      CDT1 function, as the protein needs to be at the cell surface to intercept incoming metal
+      ions.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        Localization of green fluorescent protein fusions suggests that DcCDT1 and OsCDT1 are
+        targeted to both cytoplasmic membranes and cell walls of plant cells.
+    - reference_id: PMID:19816106
+      supporting_text: &gt;-
+        GFP fusion experiments demonstrate that DcCDT1 and OsCDT1 are targeted to both the plant
+        cytoplasmic membranes and cell walls.
+
+- term:
+    id: GO:0010273
+    label: detoxification of copper ion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT1 (Q5VSB5, rice). The UniProt function annotation
+      for MsCDT1 explicitly mentions resistance to copper (CuCl2) in addition to cadmium, based
+      on similarity to DcCDT1. Copper tolerance was demonstrated in the original functional
+      characterization [PMID:19017626].
+    action: ACCEPT
+    reason: &gt;-
+      Copper detoxification is part of the demonstrated heavy metal tolerance profile of the CDT
+      family. The UniProt annotation specifically mentions copper (CuCl2) chelation at the plasma
+      membrane. This represents a core biological process of MsCDT1.
+    supported_by:
+    - reference_id: file:9POAL/CDT1/CDT1-uniprot.txt
+      supporting_text: &gt;-
+        Confers resistance to heavy metal ions (e.g. cadmium (CdCl(2)) and copper (CuCl(2)))
+        by chelating them at the plasma membrane of root cells, thus stopping their entry and
+        reducing their accumulation.
+
+- term:
+    id: GO:0071585
+    label: detoxification of cadmium ion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from OsCDT1 (Q5VSB5, rice). Cadmium detoxification is the
+      primary characterized function of the CDT family. The founding member DcCDT1 was isolated
+      via functional screening for cadmium tolerance in yeast, and transgenic plants showed
+      reduced Cd accumulation [PMID:19017626]. This is the most representative annotation for
+      MsCDT1&#39;s core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Cadmium detoxification is the defining function of the CDT family. DcCDT1 was discovered
+      through Cd tolerance screening, and the gene family name (CADMIUM TOLERANCE) reflects this.
+      Orthologs reduce Cd accumulation by 2-fold in yeast and confer Cd tolerance in transgenic
+      Arabidopsis. This is unambiguously a core function.
+    supported_by:
+    - reference_id: PMID:19017626
+      supporting_text: &gt;-
+        By means of functional screening using the cadmium (Cd)-sensitive ycf1 yeast mutant, we
+        have isolated a novel cDNA clone, DcCDT1, from Digitaria ciliaris growing in a former
+        mining area in northern Japan, and have shown that it confers Cd tolerance to the yeast
+        cells, which accumulated almost 2-fold lower Cd levels than control cells.
+    - reference_id: PMID:19816106
+      supporting_text: &gt;-
+        Constitutive expression of DcCDT1 or OsCDT1 confers Cd-tolerance to transgenic A. thaliana
+        plants by lowering the accumulation of Cd in the cells.
+
+references:
+- id: PMID:19017626
+  title: &gt;-
+    Novel cysteine-rich peptides from Digitaria ciliaris and Oryza sativa enhance tolerance to
+    cadmium by limiting its cellular accumulation
+  findings:
+  - statement: &gt;-
+      Identified DcCDT1, a 55 AA cysteine-rich peptide (27.3% Cys) from Digitaria ciliaris that
+      confers Cd tolerance to yeast and plants by reducing cellular Cd accumulation.
+  - statement: &gt;-
+      GFP fusions show DcCDT1 and OsCDT1 localize to both cytoplasmic membranes and cell walls.
+  - statement: &gt;-
+      Transgenic Arabidopsis overexpressing DcCDT1 or OsCDT1 displayed Cd-tolerant phenotype with
+      reduced Cd accumulation.
+  - statement: &gt;-
+      Five rice homologs (OsCDT1-5) were identified, all upregulated by CdCl2 treatment.
+- id: PMID:19816106
+  title: &gt;-
+    A novel plant cysteine-rich peptide family conferring cadmium tolerance to yeast and plants
+  findings:
+  - statement: &gt;-
+      Monocots have multiple CDT homologs (rice has 5), while dicots have a single homolog.
+  - statement: &gt;-
+      Confirmed plasma membrane and cell wall targeting via GFP fusion experiments.
+  - statement: &gt;-
+      CDT family defines a novel class of cysteine-rich peptides involved in heavy metal tolerance.
+- id: GO_REF:0000024
+  title: &gt;-
+    Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:9POAL/CDT1/CDT1-uniprot.txt
+  title: UniProt entry for CDT1_MISSI (B5BSU2)
+  findings:
+  - statement: &gt;-
+      Function: Confers resistance to cadmium and copper by chelating them at the plasma membrane
+      of root cells, preventing entry and reducing accumulation (by similarity to DcCDT1 A9ZPI1).
+  - statement: &gt;-
+      Subcellular location: Cell membrane (single-pass) and secreted to cell wall.
+  - statement: &gt;-
+      Belongs to the CYSTM1 family. 55 AA with transmembrane helix at residues 24-40.
+- id: file:9POAL/CDT1/CDT1-deep-research-falcon.md
+  title: Deep research report on CDT1 (Falcon/Edison Scientific Literature)
+  findings:
+  - statement: &gt;-
+      Confirmed MsCDT1 identity as CYSTM family cadmium tolerance protein, distinct from
+      unrelated eukaryotic DNA replication licensing factor CDT1.
+  - statement: &gt;-
+      2024 mechanistic update: yeast CYSTM proteins bind membranes via S-acylation
+      (palmitoylation) rather than classical TM helix (Giolito et al. 2024, JBC), suggesting
+      caution in interpreting plant CDT1 membrane topology.
+  - statement: &gt;-
+      WRKY transcription factors (e.g. GmWRKY142) directly activate CDT1-like gene expression
+      under cadmium stress in soybean (Cai et al. 2020, Front Plant Sci).
+  - statement: &gt;-
+      DcCDT1 also confers nickel hypersensitivity, suggesting metal specificity depends on
+      exact cysteine motif arrangement.
+- id: file:9POAL/CDT1/CDT1-notes.md
+  title: Curator notes on CDT1 review
+  findings:
+  - statement: &gt;-
+      MsCDT1 is in PANTHER subfamily SF6 (with OsCDT3/OsCDT5) rather than SF12 (with
+      DcCDT1/OsCDT1), suggesting it is phylogenetically closer to CDT3 despite its CDT1 name.
+
+core_functions:
+- molecular_function:
+    id: GO:0140487
+    label: metal ion sequestering activity
+  directly_involved_in:
+  - id: GO:0071585
+    label: detoxification of cadmium ion
+  - id: GO:0010273
+    label: detoxification of copper ion
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0009505
+    label: plant-type cell wall
+  description: &gt;-
+    CDT1 functions as a heavy metal chelator via its highly cysteine-rich C-terminal region
+    (15/55 residues = 27.3% Cys). The protein localizes to the plasma membrane and cell wall,
+    where it sequesters heavy metal ions (primarily Cd2+ and Cu2+), preventing their entry into
+    root cells and reducing intracellular accumulation. This is the core evolved function of the
+    CYSTM1 family.
+  supported_by:
+  - reference_id: PMID:19017626
+    supporting_text: &gt;-
+      DcCDT1 and OsCDT1 function to prevent entry of Cd into yeast and plant cells and thereby
+      enhance their Cd tolerance.
+  - reference_id: file:9POAL/CDT1/CDT1-uniprot.txt
+    supporting_text: &gt;-
+      Confers resistance to heavy metal ions by chelating them at the plasma membrane of root cells.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

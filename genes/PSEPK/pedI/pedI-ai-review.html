@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pedI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pedI</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88JG9" target="_blank" class="term-link">
+                        Q88JG9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_2680</span>
+                    
+                    <span class="badge">aldB-II</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pedI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88JG9" data-a="DESCRIPTION: PedI is the KT2440 Ped-pathway aldehyde dehydrogen..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PedI is the KT2440 Ped-pathway aldehyde dehydrogenase encoded by PP_2680 (UniProt Q88JG9), currently labeled aldB-II in UniProt. Comparative analysis of the KT2440 alcohol-oxidation region showed that PP_2680 is 97% identical to PedI from Pseudomonas putida U and 88% identical to Pseudomonas aeruginosa ExaC, and the KT2440 authors explicitly adopted Ped nomenclature for the homologous PP_2664-PP_2680 cluster. PedI is therefore best interpreted as the aldehyde dehydrogenase step of the Ped alcohol oxidation system, likely oxidizing phenylacetaldehyde in 2-phenylethanol catabolism and participating more broadly in aldehyde oxidation during alcohol-derived carbon metabolism, including the ethylene glycol response described in KT2440.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004029" target="_blank" class="term-link">
+                                    GO:0004029
+                                </a>
+                            </span>
+                            <span class="term-label">aldehyde dehydrogenase (NAD+) activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JG9" data-a="GO:0004029" data-r="GO_REF:0000003" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The generic NAD+-dependent aldehyde dehydrogenase annotation is directionally correct, but the KT2440 literature supports a more specific PedI/ExaC-like function. PP_2680 was explicitly renamed PedI in KT2440 because it is nearly identical to P. putida U PedI and strongly similar to P. aeruginosa ExaC, both pathway aldehyde dehydrogenases downstream of alcohol oxidation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The broad EC-derived term underspecifies the likely physiological substrate. KT2440 PP_2680 is 97% identical to PedI from P. putida U, whose Ped pathway oxidizes 2-phenylethanol to phenylacetic acid via phenylacetaldehyde, and 88% identical to ExaC from the homologous ethanol oxidation pathway in P. aeruginosa. A more specific MF term better matches the conserved pathway role.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008957" target="_blank" class="term-link">
+                                    phenylacetaldehyde dehydrogenase (NAD+) activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pedI/pedI-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the KT2440 ethylene glycol study explicitly maps this locus to PedI</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pedI/pedI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">pedI (PP_2680) encodes the aldehyde dehydrogenase AldB‑II (UniProt Q88JG9) in *P. putida* KT2440.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18177365" target="_blank" class="term-link">
+                                        PMID:18177365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">for its oxidation to phenylacetic acid via phenylacetaldehyde.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" target="_blank" class="term-link">
+                                        PMID:23023748
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In addition to the upregulation of proteins involved in the degradation of glyoxylic acid, our proteome analysis of ethylene glycol-induced cells of KT2440 and JM37 revealed the upregulation of the two PQQ-dependent ADHs PedE and PedH, as well as that of the NADH-dependent ALDHs PedI and PP_0545.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004030" target="_blank" class="term-link">
+                                    GO:0004030
+                                </a>
+                            </span>
+                            <span class="term-label">aldehyde dehydrogenase [NAD(P)+] activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JG9" data-a="GO:0004030" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is broadly compatible with PedI biochemistry, but it is less informative than either the NAD+-specific parent GO:0004029 or the pathway-specific phenylacetaldehyde dehydrogenase activity supported by conserved PedI/ExaC orthology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is too broad for the available evidence. The curated view is that PP_2680 is a PedI ortholog with a specific role in aldehyde oxidation downstream of alcohol oxidation pathways, not just any NAD(P)-dependent aldehyde dehydrogenase.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pedI/pedI-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the KT2440 ethylene glycol study explicitly maps this locus to PedI</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JG9" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This high-level parent term is technically true but adds no useful biological information once aldehyde dehydrogenase activity is already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic redox activity is redundant here and obscures the more informative substrate-level aldehyde dehydrogenase function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046185" target="_blank" class="term-link">
+                                    GO:0046185
+                                </a>
+                            </span>
+                            <span class="term-label">aldehyde catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88JG9" data-a="GO:0046185" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PedI is part of conserved aldehyde oxidation modules linked to alcohol catabolism. In P. putida U, the Ped pathway uses an aldehyde dehydrogenase to oxidize phenylacetaldehyde on the route from 2-phenylethanol to phenylacetic acid, and in KT2440 PedI is induced in the ethylene glycol response where PedI and PP_0545 are proposed to oxidize aldehyde intermediates toward glyoxylate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A process-level term should capture PedI&#39;s likely biological role in catabolism of aldehyde intermediates generated by the Ped alcohol oxidation system. This is broader and safer than asserting every proposed aldehyde substrate as a direct, experimentally demonstrated PedI substrate in KT2440.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18177365" target="_blank" class="term-link">
+                                        PMID:18177365
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">for its oxidation to phenylacetic acid via phenylacetaldehyde.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" target="_blank" class="term-link">
+                                        PMID:23023748
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, this pathway is initiated by the PQQ-dependent ADHs PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the intermediates glycolaldehyde and glycolic acid</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Conserved Ped-cluster aldehyde dehydrogenase that most likely oxidizes phenylacetaldehyde to phenylacetate in the 2-phenylethanol pathway and more broadly supports catabolism of alcohol-derived aldehydes in KT2440.</h3>
+                <span class="vote-buttons" data-g="Q88JG9" data-a="FUNCTION: Conserved Ped-cluster aldehyde dehydrogenase that ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008957" target="_blank" class="term-link">
+                            phenylacetaldehyde dehydrogenase (NAD+) activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046185" target="_blank" class="term-link">
+                                aldehyde catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pedI/pedI-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the KT2440 ethylene glycol study explicitly maps this locus to PedI</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18177365" target="_blank" class="term-link">
+                                PMID:18177365
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">for its oxidation to phenylacetic acid via phenylacetaldehyde.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" target="_blank" class="term-link">
+                                PMID:23023748
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440, this pathway is initiated by the PQQ-dependent ADHs PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the intermediates glycolaldehyde and glycolic acid</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18177365" target="_blank" class="term-link">
+                            PMID:18177365
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic analyses and molecular characterization of the pathways involved in the conversion of 2-phenylethylamine and 2-phenylethanol into phenylacetic acid in Pseudomonas putida U</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Ped pathway includes an aldehyde dehydrogenase step downstream of 2-phenylethanol oxidation</div>
+                        
+                        <div class="finding-text">"for its oxidation to phenylacetic acid via phenylacetaldehyde."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" target="_blank" class="term-link">
+                            PMID:23023748
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ethylene glycol metabolism by Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedI is induced with the Ped alcohol oxidation system during ethylene glycol conditions</div>
+                        
+                        <div class="finding-text">"In addition to the upregulation of proteins involved in the degradation of glyoxylic acid, our proteome analysis of ethylene glycol-induced cells of KT2440 and JM37 revealed the upregulation of the two PQQ-dependent ADHs PedE and PedH, as well as that of the NADH-dependent ALDHs PedI and PP_0545."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedI and PP_0545 are proposed to oxidize aldehyde intermediates toward glyoxylate in KT2440</div>
+                        
+                        <div class="finding-text">"In KT2440, this pathway is initiated by the PQQ-dependent ADHs PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the intermediates glycolaldehyde and glycolic acid"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pedI/pedI-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt text entry for PP_2680 aldB-II aldehyde dehydrogenase</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88JG9 is the PP_2680 aldehyde dehydrogenase family protein currently named aldB-II in UniProt</div>
+                        
+                        <div class="finding-text">"Name=aldB-II"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pedI/pedI-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">pedI curation notes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Summary notes for PedI curation</div>
+                        
+                        <div class="finding-text">"PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the KT2440 ethylene glycol study explicitly maps this locus to PedI"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pedI/pedI-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research on pedI function and pathway context</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PedI is Q88JG9/PP_2680 AldB-II in KT2440</div>
+                        
+                        <div class="finding-text">"pedI (PP_2680) encodes the aldehyde dehydrogenase AldB‑II (UniProt Q88JG9) in *P. putida* KT2440."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is phenylacetaldehyde the dominant in vivo substrate of PedI in KT2440, or is PedI physiologically broader and shared with the ethylene glycol response?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JG9" data-a="Q: Is phenylacetaldehyde the dominant in vivo substra..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is substrate partitioning between PedI and the second induced aldehyde dehydrogenase PP_0545 controlled during ethylene glycol oxidation?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JG9" data-a="Q: How is substrate partitioning between PedI and the..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify PedI and determine steady-state kinetics with phenylacetaldehyde, glycolaldehyde, acetaldehyde, and related Ped-pathway aldehydes using NAD+ and NADP+.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JG9" data-a="EXPERIMENT: Purify PedI and determine steady-state kinetics wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare wild type, delta-pedI, delta-PP_0545, and double-mutant strains in growth or resting-cell bioconversions on 2-phenylethanol and ethylene glycol to separate substrate-specific roles.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88JG9" data-a="EXPERIMENT: Compare wild type, delta-pedI, delta-PP_0545, and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pedI-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JG9" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:40:24.128582'<br />
+end_time: '2026-03-21T13:52:44.744077'<br />
+duration_seconds: 740.72<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: Q88JG9<br />
+  gene_symbol: pedI<br />
+  uniprot_accession: Q88JG9<br />
+  protein_description: 'SubName: Full=Aldehyde dehydrogenase {ECO:0000313|EMBL:AAN68288.1};<br />
+    EC=1.2.1.3 {ECO:0000313|EMBL:AAN68288.1};'<br />
+  gene_info: Name=aldB-II {ECO:0000313|EMBL:AAN68288.1}; OrderedLocusNames=PP_2680<br />
+    {ECO:0000313|EMBL:AAN68288.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the aldehyde dehydrogenase family.<br />
+  protein_domains: Ald_DH/histidinol_DH. (IPR016161); Ald_DH_C. (IPR016163); Ald_DH_CS_CYS.<br />
+    (IPR016160); Ald_DH_CS_GLU. (IPR029510); Ald_DH_N. (IPR016162)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88JG9</li>
+<li><strong>Protein Description:</strong> SubName: Full=Aldehyde dehydrogenase {ECO:0000313|EMBL:AAN68288.1}; EC=1.2.1.3 {ECO:0000313|EMBL:AAN68288.1};</li>
+<li><strong>Gene Information:</strong> Name=aldB-II {ECO:0000313|EMBL:AAN68288.1}; OrderedLocusNames=PP_2680 {ECO:0000313|EMBL:AAN68288.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the aldehyde dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> Ald_DH/histidinol_DH. (IPR016161); Ald_DH_C. (IPR016163); Ald_DH_CS_CYS. (IPR016160); Ald_DH_CS_GLU. (IPR029510); Ald_DH_N. (IPR016162)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pedI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pedI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pedI</strong> (gene ID: Q88JG9, UniProt: Q88JG9) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88JG9</li>
+<li><strong>Protein Description:</strong> SubName: Full=Aldehyde dehydrogenase {ECO:0000313|EMBL:AAN68288.1}; EC=1.2.1.3 {ECO:0000313|EMBL:AAN68288.1};</li>
+<li><strong>Gene Information:</strong> Name=aldB-II {ECO:0000313|EMBL:AAN68288.1}; OrderedLocusNames=PP_2680 {ECO:0000313|EMBL:AAN68288.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the aldehyde dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> Ald_DH/histidinol_DH. (IPR016161); Ald_DH_C. (IPR016163); Ald_DH_CS_CYS. (IPR016160); Ald_DH_CS_GLU. (IPR029510); Ald_DH_N. (IPR016162)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pedI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pedI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pedI</strong> (gene ID: Q88JG9, UniProt: Q88JG9) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pedi-aldb-ii-uniprot-q88jg9-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>pedI / aldB-II</strong> (UniProt <strong>Q88JG9</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-identity-verification-critical-disambiguation">0) Identity verification (critical disambiguation)</h3>
+<p>The symbol <strong>pedI</strong> is used in <em>Pseudomonas putida</em> KT2440 to denote an <strong>aldehyde dehydrogenase</strong> encoded by <strong>PP_2680</strong>, and recent work explicitly equates this gene with <strong>aldB-II</strong> (“aldB-II (also annotated pedI; locus PP_2680)”). (muckschel2012ethyleneglycolmetabolism pages 5-6, turlin2023coreandauxiliary pages 12-15, thompson2020fattyacidand pages 9-12)</p>
+<p>Visual evidence from the ethylene glycol metabolism study includes tables and schematics that list <strong>PedI = PP_2680</strong> within the <strong>ped gene cluster</strong> and annotate it as an aldehyde dehydrogenase. (muckschel2012ethyleneglycolmetabolism media debe4b15, muckschel2012ethyleneglycolmetabolism media 95c30952)</p>
+<p>Accordingly, this report focuses strictly on <strong>UniProt Q88JG9 (AldB-II; PP_2680; pedI)</strong> in <em>P. putida</em> KT2440; no conflicting “pedI” identity in this organism is supported by the retrieved evidence. (turlin2023coreandauxiliary pages 12-15, muckschel2012ethyleneglycolmetabolism pages 5-6)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-aldehyde-dehydrogenases-aldhs">1.1 Aldehyde dehydrogenases (ALDHs)</h4>
+<p>Aldehyde dehydrogenases catalyze oxidation of aldehydes to the corresponding carboxylic acids (general ALDH function), typically using pyridine nucleotides as redox cofactors. In <em>P. putida</em> KT2440, aldehyde oxidation is biologically important both for <strong>catabolism</strong> (channeling carbon) and for <strong>detoxification</strong> (aldehydes such as formaldehyde and glycolaldehyde are reactive/toxic intermediates). (muckschel2012ethyleneglycolmetabolism pages 7-8, turlin2023coreandauxiliary pages 17-19)</p>
+<h4 id="12-the-ped-pqq-dependent-ethanoldiol-oxidation-system">1.2 The <em>ped</em> (PQQ-dependent ethanol/diol) oxidation system</h4>
+<p>In <em>P. putida</em> KT2440, the <strong>ped gene cluster</strong> encodes periplasmic <strong>PQQ-dependent alcohol dehydrogenases</strong> (notably PedE/PedH) plus an associated aldehyde dehydrogenase (PedI) and regulatory components, supporting oxidation of a broad range of volatile alcohols/diols and downstream aldehyde processing. (muckschel2012ethyleneglycolmetabolism pages 7-8, li2020unraveling14butanediolmetabolism pages 1-2, muckschel2012ethyleneglycolmetabolism pages 5-6)</p>
+<h3 id="2-geneprotein-summary-for-pedi-uniprot-q88jg9">2) Gene/protein summary for pedI (UniProt Q88JG9)</h3>
+<h4 id="21-names-and-identifiers">2.1 Names and identifiers</h4>
+<ul>
+<li><strong>Protein/gene:</strong> Aldehyde dehydrogenase <strong>AldB-II</strong> / <strong>PedI</strong></li>
+<li><strong>Locus tag:</strong> <strong>PP_2680</strong></li>
+<li><strong>UniProt:</strong> <strong>Q88JG9</strong></li>
+<li><strong>Enzyme class:</strong> aldehyde dehydrogenase family; UniProt annotates <strong>EC 1.2.1.3</strong> (aldehyde dehydrogenase [NAD+]). (turlin2023coreandauxiliary pages 12-15, muckschel2012ethyleneglycolmetabolism pages 5-6)</li>
+</ul>
+<h4 id="22-genomic-context-and-regulation">2.2 Genomic context and regulation</h4>
+<p>PedI (PP_2680) is part of the <strong>ped region</strong>, co-induced and co-regulated with PedE/PedH and the response regulator/sensor components <strong>PedR1/PedS1</strong> in ethylene glycol-grown cells, consistent with a coordinated alcohol/aldehyde oxidation module. (muckschel2012ethyleneglycolmetabolism pages 5-6, muckschel2012ethyleneglycolmetabolism pages 4-5)</p>
+<p>A schematic of the <em>ped</em> cluster organization (including pedI/PP_2680) is provided in the 2012 ethylene glycol study figures/tables. (muckschel2012ethyleneglycolmetabolism media 95c30952)</p>
+<h3 id="3-primary-biochemical-function-reaction-and-substrate-scope">3) Primary biochemical function: reaction and substrate scope</h3>
+<h4 id="31-best-supported-physiological-reactions-in-vivo">3.1 Best-supported physiological reactions (in vivo)</h4>
+<p><strong>(A) Ethylene glycol pathway (C2 diol oxidation):</strong><br />
+In KT2440, ethylene glycol metabolism is described as initiation by <strong>PQQ-dependent ADHs PedE/PedH</strong>, followed by oxidation steps involving <strong>two ALDHs (PedI and PP_0545)</strong>, producing <strong>glyoxylic acid</strong> via intermediates <strong>glycolaldehyde</strong> and <strong>glycolic acid</strong>. (muckschel2012ethyleneglycolmetabolism pages 7-8)</p>
+<p>A pathway schematic in that work depicts the flow from ethylene glycol toward glyoxylic acid and highlights roles for PedE/PedH and the ALDH steps, consistent with PedI acting on aldehyde intermediates in this pathway. (muckschel2012ethyleneglycolmetabolism media 63acbe28)</p>
+<p><strong>(B) Methanol/formaldehyde detoxification (C1 stress response):</strong><br />
+A systems-level analysis of C1 exposure identified <strong>aldB-II (pedI; PP_2680)</strong> as highly methanol-inducible and proposed it as part of a <strong>thiol-independent formaldehyde oxidation</strong> route that oxidizes <strong>formaldehyde → formate</strong>, contributing to methanol tolerance when aldehyde concentrations are high. (turlin2023coreandauxiliary pages 12-15, turlin2023coreandauxiliary pages 17-19)</p>
+<h4 id="32-substrate-specificity-what-is-known-vs-what-remains-uncertain">3.2 Substrate specificity: what is known vs. what remains uncertain</h4>
+<p>Across multiple studies, ped-cluster dehydrogenases (PedE/PedH/PedI) are described as having <strong>broad/relaxed substrate scope</strong>, supporting oxidation of several alcohols and aldehyde intermediates (e.g., in 1,4-butanediol metabolism). (li2020unraveling14butanediolmetabolism pages 1-2, turlin2023coreandauxiliary pages 19-22)</p>
+<p>However, within the retrieved evidence, <strong>direct purified-enzyme kinetics or a substrate panel specifically for PedI/Q88JG9</strong> are not reported; consequently, detailed substrate ranking (kcat/KM across aldehydes) cannot be stated here without additional primary biochemistry papers. (li2020unraveling14butanediolmetabolism pages 1-2, thompson2020fattyacidand pages 9-12)</p>
+<h3 id="4-cellular-localization-where-pedi-likely-functions">4) Cellular localization: where PedI likely functions</h3>
+<p>The ethylene glycol engineering literature explicitly describes <strong>PedI and PP_0545 as cytoplasmic aldehyde dehydrogenases</strong>, acting downstream of periplasmic quinoprotein dehydrogenases in the oxidation chain toward glyoxylic acid. (franden2018engineeringpseudomonasputida pages 1-4)</p>
+<p>In parallel, RB‑TnSeq interpretation emphasizes a model where PQQ-dependent oxidation occurs in the <strong>periplasm</strong>, while downstream processing (including aldehyde dehydrogenases) proceeds with transport and intracellular metabolism; PedI is treated as the “genomically proximal aldehyde dehydrogenase” in this context rather than as the periplasmic PQQ-ADH itself. (thompson2020fattyacidand pages 12-14, incha2023excavatingthegenome pages 28-32)</p>
+<h3 id="5-evidence-base-and-quantitative-data-statistics-from-recent-studies">5) Evidence base and quantitative data (statistics from recent studies)</h3>
+<h4 id="51-transcriptomic-induction-and-physiological-data-under-methanol-2023">5.1 Transcriptomic induction and physiological data under methanol (2023)</h4>
+<p>In <em>P. putida</em> KT2440 exposed to <strong>1 M methanol</strong>, <strong>aldB-II/pedI (PP_2680)</strong> was reported as the <strong>most highly upregulated gene</strong>, with <strong>log2 fold-change = 9.6</strong>. (Publication: 2023-06; URL https://doi.org/10.1128/msystems.00004-23) (turlin2023coreandauxiliary pages 12-15)</p>
+<p>In the same study, methanol exposure was associated with:<br />
+* increased glucose uptake (<strong>qG = 6.2 ± 0.1 mmol gCDW−1 h−1</strong>) and<br />
+* formate secretion (<strong>qF = 0.57 ± 0.03 mmol gCDW−1 h−1</strong>),<br />
+* and an overall growth-rate reduction on methanol stress (~40% decrease). (turlin2023coreandauxiliary pages 12-15)</p>
+<h4 id="52-mutant-phenotypes-supporting-a-detoxification-role-2023">5.2 Mutant phenotypes supporting a detoxification role (2023)</h4>
+<p>Deletion genetics in the 2023 study support functional contribution of AldB-II/PedI to methanol/formaldehyde tolerance: combined loss of <strong>aldB-II</strong> with other formaldehyde/formate-processing functions (e.g., ∆∆fdhAB in relevant combinations) produced approximately <strong>40% reduction in growth rate (μ)</strong> at <strong>250 mM methanol</strong> relative to parental strain background, supporting <strong>redundant but meaningful</strong> detoxification capacity rather than unique essentiality. (turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 17-19)</p>
+<h4 id="53-fitness-rbtnseq-evidence-for-redundancy-in-alcohol-metabolism-2020">5.3 Fitness (RB‑TnSeq) evidence for redundancy in alcohol metabolism (2020)</h4>
+<p>Genome-wide RB‑TnSeq profiling shows <strong>pedI (PP_2680)</strong> disruption yields only <strong>minor fitness defects</strong> on <strong>ethanol</strong> and several other alcohols, and <strong>no fitness defect</strong> on <strong>butanol</strong> or <strong>pentanol</strong>, consistent with PedI functioning in a <strong>redundant network</strong> of aldehyde oxidation rather than being the single indispensable enzyme for short-chain alcohol catabolism. (Publication: 2020-10; URL https://doi.org/10.1128/aem.01665-20) (thompson2020fattyacidand pages 12-14, thompson2020fattyacidand pages 9-12)</p>
+<h3 id="6-pathways-and-biological-processes-integrated-view">6) Pathways and biological processes: integrated view</h3>
+<h4 id="61-ethylene-glycol-oxidation-to-glyoxylate">6.1 Ethylene glycol oxidation to glyoxylate</h4>
+<p>A widely cited model for KT2440 ethylene glycol processing is: <strong>ethylene glycol → glycolaldehyde → glycolate → glyoxylate</strong>, initiated by periplasmic <strong>PedE/PedH</strong>, with subsequent steps involving cytoplasmic ALDHs <strong>PedI</strong> and <strong>PP_0545</strong>, producing glyoxylic acid that is then assimilated or further metabolized. (muckschel2012ethyleneglycolmetabolism pages 7-8, franden2018engineeringpseudomonasputida pages 1-4)</p>
+<p>The ethylene glycol pathway schematic figure provides a consolidated depiction of this sequence and the implicated enzymes. (muckschel2012ethyleneglycolmetabolism media 63acbe28)</p>
+<h4 id="62-c1-stress-handling-methanol-and-formaldehyde-detoxification">6.2 C1 stress handling: methanol and formaldehyde detoxification</h4>
+<p>Although KT2440 lacks full methylotrophic assimilation, it possesses oxidative “detoxification-like” responses to C1 compounds. Under methanol exposure, PedEH and other broad-substrate dehydrogenases can generate formaldehyde; formaldehyde is then processed by multiple partially redundant routes, including a glutathione-dependent <strong>frmAC</strong> system and <strong>thiol-independent dehydrogenase activities</strong> (including <strong>AldB‑II/PedI</strong> and FdhAB) that contribute under high aldehyde load. (turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 17-19)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-plastic-monomer-and-waste-stream-valorization">7.1 Plastic-monomer and waste-stream valorization</h4>
+<p>PedI’s relevance is practical in engineering <em>P. putida</em> for <strong>plastic monomer utilization</strong> and <strong>bio-upcycling</strong>, because ethylene glycol and diols generate toxic aldehyde intermediates (e.g., glycolaldehyde) whose detoxification/catabolism can limit growth and productivity. The ethylene glycol engineering literature explicitly includes PedI among cytoplasmic ALDHs implicated in EG conversion toward glyoxylic acid. (franden2018engineeringpseudomonasputida pages 1-4)</p>
+<h4 id="72-c1-feedstocks-methanolformate-and-tolerance-engineering">7.2 C1 feedstocks (methanol/formate) and tolerance engineering</h4>
+<p>The 2023 systems-level study frames KT2440 C1 oxidation/detoxification capacity (including AldB-II/PedI) as a foundation for engineering toward <strong>synthetic formatotrophy/methylotrophy</strong>, where managing formaldehyde toxicity is central. (turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 12-15)</p>
+<h3 id="8-expert-interpretation-and-synthesis-authoritative-analysis">8) Expert interpretation and synthesis (authoritative analysis)</h3>
+<ol>
+<li>
+<p><strong>PedI/AldB‑II is best viewed as a “high-capacity, stress-responsive aldehyde-oxidation node” rather than a narrowly specialized catabolic enzyme.</strong> This interpretation is supported by strong methanol induction (log2FC 9.6) and growth defects only when combined with other formaldehyde-processing deletions, indicating functional redundancy but clear physiological relevance under aldehyde stress. (turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 12-15, turlin2023coreandauxiliary pages 17-19)</p>
+</li>
+<li>
+<p><strong>For many alcohol substrates, PQQ-dependent PedE/PedH and multiple ALDHs likely share or compete for aldehyde oxidation</strong>, consistent with the weak single-gene fitness phenotype for pedI in pooled mutant assays. This reduces confidence in assigning a single dominant aldehyde substrate under standard conditions without purified-enzyme characterization. (thompson2020fattyacidand pages 12-14, incha2023excavatingthegenome pages 28-32)</p>
+</li>
+<li>
+<p><strong>Genomic colocation with PedE/PedH and PedR1/PedS1 supports coordinated regulation and ecological function</strong> in environments containing volatile alcohols/diols and reactive aldehydes, consistent with observed induction under ethylene glycol and methanol challenges. (muckschel2012ethyleneglycolmetabolism pages 5-6, turlin2023coreandauxiliary pages 12-15)</p>
+</li>
+</ol>
+<h3 id="9-latest-research-directions-2024-and-beyond-functional-annotation-at-scale">9) Latest research directions (2024 and beyond): functional annotation at scale</h3>
+<p>While not pedI-specific, a 2024 mSystems paper demonstrates how <strong>independent component analysis (ICA)</strong> applied to RB‑TnSeq fitness compendia can accelerate functional annotation in KT2440: the authors analyzed <strong>332 samples / 179 unique conditions</strong>, covering <strong>4,732 genes</strong>, and derived <strong>84 functional modules</strong> explaining <strong>~83%</strong> of variance. (Publication: 2024-03; URL https://doi.org/10.1128/msystems.00942-23) (borchert2024machinelearninganalysis pages 2-4)</p>
+<p>This direction is relevant because aldehyde dehydrogenases in KT2440 are numerous and functionally redundant; systematic fitness-based module inference can help prioritize which ALDHs are conditionally important (e.g., pedI under specific aldehyde stresses) for targeted biochemical follow-up. (borchert2024machinelearninganalysis pages 2-4, thompson2020fattyacidand pages 12-14)</p>
+<h3 id="10-key-limitations-and-what-is-still-needed">10) Key limitations and what is still needed</h3>
+<p>Within the retrieved sources, PedI/Q88JG9 is well supported as an aldehyde dehydrogenase in multiple pathways, but <strong>direct purified-enzyme biochemical characterization for PedI itself (substrate panel, kinetics, cofactor specificity NAD+ vs NADP+, oligomeric state)</strong> is not present in the excerpts. As a result, substrate specificity can be described only at the pathway/physiology level (formaldehyde/glycolaldehyde-linked roles) rather than as a definitive enzyme kinetic profile. (li2020unraveling14butanediolmetabolism pages 1-2, thompson2020fattyacidand pages 12-14)</p>
+<h3 id="summary">Summary</h3>
+<p>pedI (PP_2680) encodes the aldehyde dehydrogenase AldB‑II (UniProt Q88JG9) in <em>P. putida</em> KT2440. The strongest recent evidence (2023) places AldB‑II/PedI as a highly methanol-induced, thiol-independent formaldehyde-oxidizing activity contributing to tolerance under aldehyde stress, while foundational pathway studies (2012 onward) place it in oxidation chains for ethylene glycol and other diols/alcohols. Across conditions, pedI shows redundancy with other oxidoreductases, consistent with modest single-gene fitness effects but clear induction and combinatorial mutant phenotypes under C1 stress.</p>
+<table>
+<thead>
+<tr>
+<th>Identifier (name, locus, UniProt)</th>
+<th>Enzyme class/EC</th>
+<th>Reaction (general)</th>
+<th>Proposed physiological role(s)</th>
+<th>Evidence type</th>
+<th>Key quantitative data</th>
+<th>Genomic context</th>
+<th>Localization</th>
+<th>Key citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pedI = aldB-II = PP_2680 = UniProt Q88JG9</strong>; repeatedly identified in <em>P. putida</em> KT2440 as the ped-cluster aldehyde dehydrogenase</td>
+<td>Aldehyde dehydrogenase family protein; UniProt annotation: aldehyde dehydrogenase, <strong>EC 1.2.1.3</strong>; literature supports ALDH annotation but not a fully resolved substrate profile for every condition</td>
+<td>General ALDH reaction: oxidation of an aldehyde to the corresponding carboxylate/acid; in KT2440 literature this is placed in oxidation of alcohol-derived aldehydes and, in 2023 work, specifically in <strong>formaldehyde → formate</strong> detoxification under methanol stress</td>
+<td>Broad-role aldehyde oxidation in volatile alcohol metabolism; implicated in <strong>ethylene glycol</strong> pathway (oxidation of glycolaldehyde to glyoxylate in pathway models), <strong>1,4-butanediol</strong> metabolism, and <strong>methanol/formaldehyde detoxification</strong> at high aldehyde concentrations; likely functionally redundant with other ALDHs and with PQQ-dependent oxidation activities</td>
+<td>Gene naming/mapping tables, pathway schematic, transcriptomics, deletion genetics, RB-TnSeq fitness profiling</td>
+<td><strong>log2FC = 9.6</strong> for aldB-II/pedI after growth with <strong>1 M methanol</strong>; methanol caused ~<strong>40%</strong> growth-rate reduction in parental cultures; combined FDH/ALDH loss involving <strong>aldB-II</strong> caused ~<strong>40%</strong> growth-rate reduction at <strong>250 mM methanol</strong>; RB-TnSeq showed only <strong>minor fitness defects</strong> on ethanol and several other alcohols, and <strong>no fitness defect</strong> on butanol or pentanol</td>
+<td>Located in/adjacent to the <strong>ped cluster</strong>; pathway and cluster depictions place it at the end of the <strong>PP_2674–PP_2680</strong> segment with neighboring <strong>pedE (PP_2674)</strong>, <strong>pedF (PP_2675)</strong>, <strong>pedH (PP_2679)</strong>; broader ped region reported as <strong>PP_2662–PP_2683</strong>; regulatory context includes <strong>PedR1/PedS1</strong>-type control in ethylene glycol study</td>
+<td>Best supported as a <strong>cytoplasmic ALDH</strong> acting downstream of the well-characterized <strong>periplasmic PQQ-ADH</strong> oxidation system (PedE/PedH). The surrounding alcohol oxidation network includes periplasmic oxidation, but pedI itself is treated as the genomically proximal aldehyde dehydrogenase rather than a PQQ-ADH</td>
+<td>(muckschel2012ethyleneglycolmetabolism pages 5-6, thompson2020fattyacidand pages 12-14, li2020unraveling14butanediolmetabolism pages 1-2, turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 12-15, turlin2023coreandauxiliary pages 17-19, muckschel2012ethyleneglycolmetabolism media debe4b15)</td>
+</tr>
+<tr>
+<td><strong>Identity verification summary</strong></td>
+<td>Literature explicitly maps <strong>pedI</strong> to <strong>PP_2680</strong> in KT2440; this aligns with the user-provided UniProt record <strong>Q88JG9</strong> for <strong>AldB-II</strong></td>
+<td>No conflicting evidence in the cited KT2440 sources that pedI refers to a different gene in this organism; therefore pedI is not treated here as an ambiguous off-target symbol</td>
+<td>Confirms the report should focus on the <strong>KT2440 ped-cluster aldehyde dehydrogenase</strong> rather than unrelated pedI-like names in other organisms</td>
+<td>Explicit gene mapping in text plus figure/table support</td>
+<td>Table/figure support identifies <strong>PedI as PP_2680</strong> and as an aldehyde dehydrogenase in the ped cluster</td>
+<td>PedI appears in the same cluster/pathway models as PedE/PedH and associated regulatory genes</td>
+<td>Not directly tested by localization experiments in the cited excerpts; inference comes from enzyme class and pathway organization</td>
+<td>(muckschel2012ethyleneglycolmetabolism pages 5-6, thompson2020fattyacidand pages 12-14, thompson2020functionalanalysisof pages 18-23, muckschel2012ethyleneglycolmetabolism media debe4b15)</td>
+</tr>
+<tr>
+<td><strong>Substrate specificity status</strong></td>
+<td>Broad-substrate aldehyde dehydrogenase annotation is well supported; exact in vitro substrate ranking for Q88JG9/pedI is not fully resolved in the cited excerpts</td>
+<td>Literature for KT2440 attributes relaxed substrate scope to the ped-cluster dehydrogenase system overall, including oxidation of compounds linked to <strong>ethanol, phenylethanol, butanol/butanal, ethylene glycol intermediates, 1,4-butanediol intermediates, and formaldehyde stress</strong></td>
+<td>Best current interpretation: pedI contributes to detoxification/catabolism of multiple aldehydes rather than serving as a highly substrate-specific ALDH; strongest recent evidence is for a role under <strong>methanol/formaldehyde stress</strong></td>
+<td>Pathway inference, transcript induction, mutant phenotypes, pooled fitness data</td>
+<td>Strong methanol induction but only weak single-gene fitness defects on several alcohols supports <strong>redundancy</strong> rather than sole responsibility for one substrate</td>
+<td>Operates within a redundant oxidoreductase network containing multiple alcohol and aldehyde dehydrogenases</td>
+<td>Cytoplasmic role is inferred; upstream aldehyde generation often occurs via periplasmic PedE/PedH</td>
+<td>(li2020unraveling14butanediolmetabolism pages 1-2, turlin2023coreandauxiliary pages 15-17, turlin2023coreandauxiliary pages 19-22, thompson2020fattyacidand pages 9-12, turlin2023coreandauxiliary pages 17-19)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, proposed function, pathway role, and evidence base for </em>Pseudomonas putida<em> KT2440 pedI/AldB-II (PP_2680; UniProt Q88JG9). It is useful for distinguishing strong evidence from inference, especially around substrate scope, redundancy, and cellular context.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism pages 5-6): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turlin2023coreandauxiliary pages 12-15): Justine Turlin, Òscar Puiggené, Stefano Donati, Nicolas T. Wirth, and Pablo I. Nikel. Core and auxiliary functions of one-carbon metabolism in <i>pseudomonas putida</i> exposed by a systems-level analysis of transcriptional and physiological responses. Jun 2023. URL: https://doi.org/10.1128/msystems.00004-23, doi:10.1128/msystems.00004-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020fattyacidand pages 9-12): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 108 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism media debe4b15): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism media 95c30952): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism pages 7-8): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turlin2023coreandauxiliary pages 17-19): Justine Turlin, Òscar Puiggené, Stefano Donati, Nicolas T. Wirth, and Pablo I. Nikel. Core and auxiliary functions of one-carbon metabolism in <i>pseudomonas putida</i> exposed by a systems-level analysis of transcriptional and physiological responses. Jun 2023. URL: https://doi.org/10.1128/msystems.00004-23, doi:10.1128/msystems.00004-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2020unraveling14butanediolmetabolism pages 1-2): Wing-Jin Li, Tanja Narancic, Shane T. Kenny, Paul-Joachim Niehoff, Kevin O’Connor, Lars M. Blank, and Nick Wierckx. Unraveling 1,4-butanediol metabolism in pseudomonas putida kt2440. Frontiers in Microbiology, Mar 2020. URL: https://doi.org/10.3389/fmicb.2020.00382, doi:10.3389/fmicb.2020.00382. This article has 106 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism pages 4-5): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(muckschel2012ethyleneglycolmetabolism media 63acbe28): Björn Mückschel, Oliver Simon, Janosch Klebensberger, Nadja Graf, Bettina Rosche, Josef Altenbuchner, Jens Pfannstiel, Armin Huber, and Bernhard Hauer. Ethylene glycol metabolism by pseudomonas putida. Applied and Environmental Microbiology, 78:8531-8539, Dec 2012. URL: https://doi.org/10.1128/aem.02062-12, doi:10.1128/aem.02062-12. This article has 172 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(turlin2023coreandauxiliary pages 19-22): Justine Turlin, Òscar Puiggené, Stefano Donati, Nicolas T. Wirth, and Pablo I. Nikel. Core and auxiliary functions of one-carbon metabolism in <i>pseudomonas putida</i> exposed by a systems-level analysis of transcriptional and physiological responses. Jun 2023. URL: https://doi.org/10.1128/msystems.00004-23, doi:10.1128/msystems.00004-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(franden2018engineeringpseudomonasputida pages 1-4): Mary Ann Franden, Lahiru N. Jayakody, Wing-Jin Li, Neil J. Wagner, Nicholas S. Cleveland, William E. Michener, Bernhard Hauer, Lars M. Blank, Nick Wierckx, Janosch Klebensberger, and Gregg T. Beckham. Engineering pseudomonas putida kt2440 for efficient ethylene glycol utilization. Jul 2018. URL: https://doi.org/10.1016/j.ymben.2018.06.003, doi:10.1016/j.ymben.2018.06.003. This article has 245 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020fattyacidand pages 12-14): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Fatty acid and alcohol metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Oct 2020. URL: https://doi.org/10.1128/aem.01665-20, doi:10.1128/aem.01665-20. This article has 108 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(incha2023excavatingthegenome pages 28-32): MR Incha. Excavating the genome mine of pseudomonas putida kt2440. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(turlin2023coreandauxiliary pages 15-17): Justine Turlin, Òscar Puiggené, Stefano Donati, Nicolas T. Wirth, and Pablo I. Nikel. Core and auxiliary functions of one-carbon metabolism in <i>pseudomonas putida</i> exposed by a systems-level analysis of transcriptional and physiological responses. Jun 2023. URL: https://doi.org/10.1128/msystems.00004-23, doi:10.1128/msystems.00004-23. This article has 27 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 2-4): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2020functionalanalysisof pages 18-23): Mitchell G. Thompson, Matthew R. Incha, Allison N. Pearson, Matthias Schmidt, William A. Sharpless, Christopher B. Eiben, Pablo Cruz-Morales, Jacquelyn M. Blake-Hedges, Yuzhong Liu, Catharine A. Adams, Robert W. Haushalter, Rohith N. Krishna, Patrick Lichtner, Lars M. Blank, Aindrila Mukhopadhyay, Adam M. Deutschbauer, Patrick M. Shih, and Jay D. Keasling. Functional analysis of the fatty acid and alcohol metabolism of pseudomonas putida using rb-tnseq. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.07.04.188060, doi:10.1101/2020.07.04.188060. This article has 3 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>muckschel2012ethyleneglycolmetabolism pages 7-8</li>
+<li>franden2018engineeringpseudomonasputida pages 1-4</li>
+<li>turlin2023coreandauxiliary pages 12-15</li>
+<li>borchert2024machinelearninganalysis pages 2-4</li>
+<li>muckschel2012ethyleneglycolmetabolism pages 5-6</li>
+<li>thompson2020fattyacidand pages 9-12</li>
+<li>turlin2023coreandauxiliary pages 17-19</li>
+<li>muckschel2012ethyleneglycolmetabolism pages 4-5</li>
+<li>turlin2023coreandauxiliary pages 19-22</li>
+<li>thompson2020fattyacidand pages 12-14</li>
+<li>incha2023excavatingthegenome pages 28-32</li>
+<li>turlin2023coreandauxiliary pages 15-17</li>
+<li>thompson2020functionalanalysisof pages 18-23</li>
+<li>NAD+</li>
+<li>https://doi.org/10.1128/msystems.00004-23</li>
+<li>https://doi.org/10.1128/aem.01665-20</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1128/aem.02062-12,</li>
+<li>https://doi.org/10.1128/msystems.00004-23,</li>
+<li>https://doi.org/10.1128/aem.01665-20,</li>
+<li>https://doi.org/10.3389/fmicb.2020.00382,</li>
+<li>https://doi.org/10.1016/j.ymben.2018.06.003,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+<li>https://doi.org/10.1101/2020.07.04.188060,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pedI-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88JG9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pedi-notes">pedI notes</h1>
+<ul>
+<li>PP_2680/Q88JG9 is annotated in UniProt as <code>aldB-II</code>, but the KT2440 ethylene glycol study explicitly maps this locus to PedI based on conserved sequence and neighborhood with the Ped cluster <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" title="PedI (PP_2680) 97 (PedI) 88 (ExaC)">PMID:23023748</a> <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" title="Due to this homology, we will use the Ped nomenclature of P. putida U for the corresponding genes PP_2664 to PP_2680 in P. putida KT2440">PMID:23023748</a>.</li>
+<li>In <em>P. putida</em> U, the Ped pathway requires an aldehyde dehydrogenase step for oxidation of 2-phenylethanol-derived phenylacetaldehyde to phenylacetic acid <a href="https://pubmed.ncbi.nlm.nih.gov/18177365" title="Another catabolic route (PedS(1)R(1)ABCS(2)R(2)DEFGHI) is needed for the uptake of 2-phenylethanol and for its oxidation to phenylacetic acid via phenylacetaldehyde">PMID:18177365</a>.</li>
+<li>In KT2440, PedI is induced together with PedE/PedH under ethylene glycol conditions, and the pathway model proposes PedI plus PP_0545 oxidize aldehyde intermediates toward glyoxylic acid <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" title="the expression of PedE, PedH, and PedI was coregulated with that of the ErbR homologue PedR1">PMID:23023748</a> <a href="https://pubmed.ncbi.nlm.nih.gov/23023748" title="In KT2440, this pathway is initiated by the PQQ-dependent ADHs PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the intermediates glycolaldehyde and glycolic acid">PMID:23023748</a>.</li>
+<li>Current GOA is minimal and fully electronic: <code>GO:0004029</code>, <code>GO:0004030</code>, and the very broad parent <code>GO:0016491</code>. The literature supports a more specific interpretation than generic aldehyde dehydrogenase.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88JG9
+gene_symbol: pedI
+aliases:
+- PP_2680
+- aldB-II
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: PedI is the KT2440 Ped-pathway aldehyde dehydrogenase encoded by PP_2680
+  (UniProt Q88JG9), currently labeled aldB-II in UniProt. Comparative analysis of
+  the KT2440 alcohol-oxidation region showed that PP_2680 is 97% identical to PedI
+  from Pseudomonas putida U and 88% identical to Pseudomonas aeruginosa ExaC, and
+  the KT2440 authors explicitly adopted Ped nomenclature for the homologous PP_2664-PP_2680
+  cluster. PedI is therefore best interpreted as the aldehyde dehydrogenase step of
+  the Ped alcohol oxidation system, likely oxidizing phenylacetaldehyde in 2-phenylethanol
+  catabolism and participating more broadly in aldehyde oxidation during alcohol-derived
+  carbon metabolism, including the ethylene glycol response described in KT2440.
+existing_annotations:
+- term:
+    id: GO:0004029
+    label: aldehyde dehydrogenase (NAD+) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: The generic NAD+-dependent aldehyde dehydrogenase annotation is directionally
+      correct, but the KT2440 literature supports a more specific PedI/ExaC-like function.
+      PP_2680 was explicitly renamed PedI in KT2440 because it is nearly identical
+      to P. putida U PedI and strongly similar to P. aeruginosa ExaC, both pathway
+      aldehyde dehydrogenases downstream of alcohol oxidation.
+    action: MODIFY
+    reason: The broad EC-derived term underspecifies the likely physiological substrate.
+      KT2440 PP_2680 is 97% identical to PedI from P. putida U, whose Ped pathway
+      oxidizes 2-phenylethanol to phenylacetic acid via phenylacetaldehyde, and 88%
+      identical to ExaC from the homologous ethanol oxidation pathway in P. aeruginosa.
+      A more specific MF term better matches the conserved pathway role.
+    proposed_replacement_terms:
+    - id: GO:0008957
+      label: phenylacetaldehyde dehydrogenase (NAD+) activity
+    supported_by:
+    - reference_id: file:PSEPK/pedI/pedI-notes.md
+      supporting_text: PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the
+        KT2440 ethylene glycol study explicitly maps this locus to PedI
+      reference_section_type: LITERATURE_REVIEW
+    - reference_id: file:PSEPK/pedI/pedI-deep-research-falcon.md
+      supporting_text: pedI (PP_2680) encodes the aldehyde dehydrogenase AldB‑II
+        (UniProt Q88JG9) in *P. putida* KT2440.
+      reference_section_type: LITERATURE_REVIEW
+    - reference_id: PMID:18177365
+      supporting_text: for its oxidation to phenylacetic acid via phenylacetaldehyde.
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:23023748
+      supporting_text: In addition to the upregulation of proteins involved in the
+        degradation of glyoxylic acid, our proteome analysis of ethylene glycol-induced
+        cells of KT2440 and JM37 revealed the upregulation of the two PQQ-dependent
+        ADHs PedE and PedH, as well as that of the NADH-dependent ALDHs PedI and
+        PP_0545.
+      reference_section_type: DISCUSSION
+- term:
+    id: GO:0004030
+    label: aldehyde dehydrogenase [NAD(P)+] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: This term is broadly compatible with PedI biochemistry, but it is less
+      informative than either the NAD+-specific parent GO:0004029 or the pathway-specific
+      phenylacetaldehyde dehydrogenase activity supported by conserved PedI/ExaC orthology.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The annotation is too broad for the available evidence. The curated view
+      is that PP_2680 is a PedI ortholog with a specific role in aldehyde oxidation
+      downstream of alcohol oxidation pathways, not just any NAD(P)-dependent aldehyde
+      dehydrogenase.
+    supported_by:
+    - reference_id: file:PSEPK/pedI/pedI-notes.md
+      supporting_text: PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the
+        KT2440 ethylene glycol study explicitly maps this locus to PedI
+      reference_section_type: LITERATURE_REVIEW
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This high-level parent term is technically true but adds no useful biological
+      information once aldehyde dehydrogenase activity is already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Generic redox activity is redundant here and obscures the more informative
+      substrate-level aldehyde dehydrogenase function.
+- term:
+    id: GO:0046185
+    label: aldehyde catabolic process
+  evidence_type: ISS
+  review:
+    summary: PedI is part of conserved aldehyde oxidation modules linked to alcohol
+      catabolism. In P. putida U, the Ped pathway uses an aldehyde dehydrogenase to
+      oxidize phenylacetaldehyde on the route from 2-phenylethanol to phenylacetic
+      acid, and in KT2440 PedI is induced in the ethylene glycol response where PedI
+      and PP_0545 are proposed to oxidize aldehyde intermediates toward glyoxylate.
+    action: NEW
+    reason: A process-level term should capture PedI&#39;s likely biological role in catabolism
+      of aldehyde intermediates generated by the Ped alcohol oxidation system. This
+      is broader and safer than asserting every proposed aldehyde substrate as a direct,
+      experimentally demonstrated PedI substrate in KT2440.
+    supported_by:
+    - reference_id: PMID:18177365
+      supporting_text: for its oxidation to phenylacetic acid via phenylacetaldehyde.
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:23023748
+      supporting_text: In KT2440, this pathway is initiated by the PQQ-dependent ADHs
+        PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via
+        the intermediates glycolaldehyde and glycolic acid
+      reference_section_type: DISCUSSION
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:18177365
+  title: Genetic analyses and molecular characterization of the pathways involved
+    in the conversion of 2-phenylethylamine and 2-phenylethanol into phenylacetic
+    acid in Pseudomonas putida U
+  full_text_unavailable: true
+  findings:
+  - statement: The Ped pathway includes an aldehyde dehydrogenase step downstream
+      of 2-phenylethanol oxidation
+    supporting_text: for its oxidation to phenylacetic acid via phenylacetaldehyde.
+    reference_section_type: ABSTRACT
+- id: PMID:23023748
+  title: Ethylene glycol metabolism by Pseudomonas putida
+  full_text_unavailable: false
+  findings:
+  - statement: PedI is induced with the Ped alcohol oxidation system during ethylene
+      glycol conditions
+    supporting_text: In addition to the upregulation of proteins involved in the
+      degradation of glyoxylic acid, our proteome analysis of ethylene glycol-induced
+      cells of KT2440 and JM37 revealed the upregulation of the two PQQ-dependent
+      ADHs PedE and PedH, as well as that of the NADH-dependent ALDHs PedI and PP_0545.
+    reference_section_type: DISCUSSION
+  - statement: PedI and PP_0545 are proposed to oxidize aldehyde intermediates toward
+      glyoxylate in KT2440
+    supporting_text: In KT2440, this pathway is initiated by the PQQ-dependent ADHs
+      PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the
+      intermediates glycolaldehyde and glycolic acid
+    reference_section_type: DISCUSSION
+- id: file:PSEPK/pedI/pedI-uniprot.txt
+  title: UniProt text entry for PP_2680 aldB-II aldehyde dehydrogenase
+  full_text_unavailable: false
+  findings:
+  - statement: Q88JG9 is the PP_2680 aldehyde dehydrogenase family protein currently
+      named aldB-II in UniProt
+    supporting_text: Name=aldB-II
+    reference_section_type: DATABASE_ENTRY
+- id: file:PSEPK/pedI/pedI-notes.md
+  title: pedI curation notes
+  full_text_unavailable: false
+  findings:
+  - statement: Summary notes for PedI curation
+    supporting_text: PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the
+      KT2440 ethylene glycol study explicitly maps this locus to PedI
+    reference_section_type: LITERATURE_REVIEW
+- id: file:PSEPK/pedI/pedI-deep-research-falcon.md
+  title: Falcon deep research on pedI function and pathway context
+  full_text_unavailable: false
+  findings:
+  - statement: PedI is Q88JG9/PP_2680 AldB-II in KT2440
+    supporting_text: pedI (PP_2680) encodes the aldehyde dehydrogenase AldB‑II
+      (UniProt Q88JG9) in *P. putida* KT2440.
+    reference_section_type: LITERATURE_REVIEW
+core_functions:
+- description: Conserved Ped-cluster aldehyde dehydrogenase that most likely oxidizes
+    phenylacetaldehyde to phenylacetate in the 2-phenylethanol pathway and more broadly
+    supports catabolism of alcohol-derived aldehydes in KT2440.
+  molecular_function:
+    id: GO:0008957
+    label: phenylacetaldehyde dehydrogenase (NAD+) activity
+  directly_involved_in:
+  - id: GO:0046185
+    label: aldehyde catabolic process
+  supported_by:
+  - reference_id: file:PSEPK/pedI/pedI-notes.md
+    supporting_text: PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the
+      KT2440 ethylene glycol study explicitly maps this locus to PedI
+    reference_section_type: LITERATURE_REVIEW
+  - reference_id: PMID:18177365
+    supporting_text: for its oxidation to phenylacetic acid via phenylacetaldehyde.
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:23023748
+    supporting_text: In KT2440, this pathway is initiated by the PQQ-dependent ADHs
+      PedE and PedH and the ALDHs PedI and PP_0545 producing glyoxylic acid via the
+      intermediates glycolaldehyde and glycolic acid
+    reference_section_type: DISCUSSION
+suggested_questions:
+- question: Is phenylacetaldehyde the dominant in vivo substrate of PedI in KT2440,
+    or is PedI physiologically broader and shared with the ethylene glycol response?
+- question: How is substrate partitioning between PedI and the second induced aldehyde
+    dehydrogenase PP_0545 controlled during ethylene glycol oxidation?
+suggested_experiments:
+- description: Purify PedI and determine steady-state kinetics with phenylacetaldehyde,
+    glycolaldehyde, acetaldehyde, and related Ped-pathway aldehydes using NAD+ and
+    NADP+.
+- description: Compare wild type, delta-pedI, delta-PP_0545, and double-mutant strains
+    in growth or resting-cell bioconversions on 2-phenylethanol and ethylene glycol
+    to separate substrate-specific roles.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

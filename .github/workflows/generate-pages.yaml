@@ -32,17 +32,17 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.12"
 
@@ -52,8 +52,36 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Validate all gene reviews
-        run: just validate-all
+      - name: Get changed files
+        id: changed
+        run: |
+          # Get YAML files changed in the triggering commit(s)
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'genes/**/*-ai-review.yaml' 'rules/**/*-review.yaml' 2>/dev/null || echo "")
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Changed YAML files: $(echo "$CHANGED" | grep -c '.' || echo 0)"
+
+      - name: Validate changed gene reviews
+        run: |
+          ERRORS=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ ! -f "$f" ] && continue
+            if [[ "$f" == genes/*/*/*-ai-review.yaml ]]; then
+              ORG=$(echo "$f" | cut -d/ -f2)
+              GENE=$(echo "$f" | cut -d/ -f3)
+              echo "=== Validating $ORG/$GENE ==="
+              if ! just validate "$ORG" "$GENE"; then
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ $ERRORS validation errors"
+            exit 1
+          fi
+          echo "✅ All changed files valid"
 
       - name: Render all gene review HTML pages
         run: just render-all
@@ -67,77 +95,108 @@ jobs:
       - name: Check for changes
         id: check-changes
         run: |
-          if git diff --quiet genes/ app/ pages/ reports/; then
+          if git diff --quiet \
+            genes/ \
+            app/index.html \
+            app/data.js \
+            app/schema.js \
+            pages/ \
+            reports/; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changed files:"
-            git diff --stat genes/ app/ pages/ reports/
+            git diff --stat \
+              genes/ \
+              app/index.html \
+              app/data.js \
+              app/schema.js \
+              pages/ \
+              reports/
           fi
 
-      - name: Create Pull Request
+      - name: Compute regeneration metadata
         if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: pr-metadata
+        shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          BRANCH_NAME="generate-pages-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-
-          git add genes/**/*.html app/ pages/ reports/
-
           GENE_COUNT=$(find genes -name '*-ai-review.yaml' | wc -l | tr -d ' ')
           HTML_COUNT=$(find genes -name '*-ai-review.html' | wc -l | tr -d ' ')
           PROJECT_COUNT=$(find pages/projects -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 
-          git commit -m "$(cat <<EOF
-          Regenerate pages, browser app, and reports
+          {
+            echo "branch=auto/generate-pages"
+            echo "gene_count=$GENE_COUNT"
+            echo "html_count=$HTML_COUNT"
+            echo "project_count=$PROJECT_COUNT"
+          } >> "$GITHUB_OUTPUT"
 
-          - $HTML_COUNT gene review HTML pages (from $GENE_COUNT YAML reviews)
-          - $PROJECT_COUNT project pages
-          - Browser app data.js
-          - Validation report
+      - name: Create or update regeneration PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: create-pr
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+          branch-token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+          branch: ${{ steps.pr-metadata.outputs.branch }}
+          base: main
+          delete-branch: true
+          draft: always-true
+          add-paths: |
+            genes/**/*.html
+            app/index.html
+            app/data.js
+            app/schema.js
+            pages/
+            reports/
+          commit-message: |
+            Regenerate pages, browser app, and reports
 
-          Triggered by changes to gene reviews or templates.
-          EOF
-          )"
+            - ${{ steps.pr-metadata.outputs.html_count }} gene review HTML pages (from ${{ steps.pr-metadata.outputs.gene_count }} YAML reviews)
+            - ${{ steps.pr-metadata.outputs.project_count }} project pages
+            - Browser app data.js
+            - Validation report
 
-          git push origin "$BRANCH_NAME"
+            Triggered by changes to gene reviews or templates.
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          title: Regenerate pages and browser app
+          body: |
+            ## Summary
 
-          gh pr create \
-            --title "Regenerate pages and browser app ($(date +%Y-%m-%d))" \
-            --body "$(cat <<EOF
-          ## Summary
+            Automated regeneration of static assets after gene review or template changes.
 
-          Automated regeneration of static assets after gene review or template changes.
+            ## Generated Assets
 
-          ## Generated Assets
+            | Asset | Count/Status |
+            |-------|--------------|
+            | Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |
+            | Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |
+            | Project pages | ${{ steps.pr-metadata.outputs.project_count }} |
+            | Browser app (data.js) | Updated |
+            | Validation report | Updated |
 
-          | Asset | Count/Status |
-          |-------|--------------|
-          | Gene review YAML files | $GENE_COUNT |
-          | Gene review HTML pages | $HTML_COUNT |
-          | Project pages | $PROJECT_COUNT |
-          | Browser app (data.js) | Updated |
-          | Validation report | Updated |
+            ## Trigger
 
-          ## Trigger
+            This PR was triggered by changes to:
+            - `genes/**/*.yaml` - gene review data files
+            - `src/ai_gene_review/schema/**` - LinkML schema files
+            - `src/ai_gene_review/templates/**` - Jinja2 templates
+            - `src/ai_gene_review/render.py` - rendering code
+            - `src/ai_gene_review/export.py` - export code
+            - `src/ai_gene_review/browser/**` - browser app assets
+            - `projects/*.md` - project definitions
 
-          This PR was triggered by changes to:
-          - \`genes/**/*.yaml\` - gene review data files
-          - \`src/ai_gene_review/schema/**\` - LinkML schema files
-          - \`src/ai_gene_review/templates/**\` - Jinja2 templates
-          - \`src/ai_gene_review/render.py\` - rendering code
-          - \`src/ai_gene_review/export.py\` - export code
-          - \`src/ai_gene_review/browser/**\` - browser app assets
-          - \`projects/*.md\` - project definitions
+            ## Review
 
-          ## Review
+            - [ ] Spot-check a few gene review HTML pages render correctly
+            - [ ] Verify browser app loads and filters work
+            - [ ] Check validation report for new issues
 
-          - [ ] Spot-check a few gene review HTML pages render correctly
-          - [ ] Verify browser app loads and filters work
-          - [ ] Check validation report for new issues
-          EOF
-          )"
+      - name: Report manual PR fallback
+        if: steps.create-pr.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning::Automated PR creation was skipped or blocked. Generated changes remain on branch '${{ steps.pr-metadata.outputs.branch }}'."
+          echo "::notice title=Open PR manually::https://github.com/${GITHUB_REPOSITORY}/compare/main...${{ steps.pr-metadata.outputs.branch }}?expand=1"

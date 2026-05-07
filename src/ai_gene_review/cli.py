@@ -11,12 +11,15 @@ from linkml_data_qc.analyzer import ComplianceAnalyzer
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
+    convert_doi_publication,
+    doi_to_pmid,
     extract_pmids_from_yaml,
 )
 from ai_gene_review.etl.publication_refresh import (
     find_pmc_candidates,
     refetch_publications,
     get_refresh_summary,
+    find_active_review_pmids,
 )
 from ai_gene_review.validation import (
     validate_gene_review,
@@ -1127,7 +1130,7 @@ def mark_invalid_pmids(
         ai-gene-review mark-invalid-pmids genes/human/JAK1/JAK1-ai-review.yaml PMID:34521819
         ai-gene-review mark-invalid-pmids test.yaml 34521819 12345 --output updated.yaml
     """
-    from ai_gene_review.validation.publication_validator import mark_invalid_pmids
+    from ai_gene_review.utils.pmid_utils import mark_invalid_pmids
 
     yaml_file = Path(yaml_file)
 
@@ -1290,6 +1293,146 @@ def refresh_publications(
 
 
 @app.command()
+def convert_doi_publications(
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be converted without making changes")
+    ] = False,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between DOI lookups in seconds")
+    ] = 0.5,
+):
+    """Convert DOI-keyed publication files to PMID-keyed format.
+
+    Finds all DOI_*.md files in the publications directory, resolves each DOI
+    to a PMID via NCBI Entrez, and creates standard PMID-keyed files. The
+    original DOI files are removed after successful conversion.
+
+    Examples:
+        ai-gene-review convert-doi-publications
+        ai-gene-review convert-doi-publications --dry-run
+        ai-gene-review convert-doi-publications --dir ./publications --delay 1.0
+    """
+    import time
+    import yaml
+
+    doi_files = sorted(publications_dir.glob("DOI_*.md"))
+
+    if not doi_files:
+        typer.echo("No DOI-keyed publication files found.")
+        return
+
+    typer.echo(f"Found {len(doi_files)} DOI-keyed publication files.")
+
+    if dry_run:
+        for f in doi_files:
+            typer.echo(f"  Would convert: {f.name}")
+        return
+
+    converted = 0
+    failed = 0
+    skipped = 0
+
+    for i, doi_file in enumerate(doi_files):
+        if i > 0:
+            time.sleep(delay)
+
+        typer.echo(f"[{i + 1}/{len(doi_files)}] {doi_file.name}...")
+        result = convert_doi_publication(doi_file, publications_dir)
+
+        if result:
+            converted += 1
+        elif not doi_file.exists():
+            # File was removed by conversion
+            converted += 1
+        else:
+            # Check if it was skipped (PMID file exists) vs failed (no PMID found)
+            content = doi_file.read_text()
+            parts = content.split("---", 2)
+            if len(parts) >= 3:
+                fm = yaml.safe_load(parts[1])
+                doi = fm.get("doi", "")
+                resolved = doi_to_pmid(doi)
+                if resolved and (publications_dir / f"PMID_{resolved}.md").exists():
+                    skipped += 1
+                else:
+                    failed += 1
+            else:
+                failed += 1
+
+    typer.echo(f"\nConversion complete: {converted} converted, {skipped} skipped (PMID exists), {failed} failed")
+
+
+@app.command()
+def refresh_publications_active(
+    genes_dir: Annotated[
+        Path, typer.Option("--genes-dir", help="Genes directory")
+    ] = Path("genes"),
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    force: Annotated[
+        bool, typer.Option("--force", "-f", help="Force re-download even if cached")
+    ] = False,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between requests")
+    ] = 0.5,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Show what would be refreshed without fetching")
+    ] = False,
+):
+    """Refresh publication stubs for genes under active review.
+
+    Finds gene reviews with status IN_PROGRESS or DRAFT, collects all
+    referenced PMIDs, and refreshes any that are missing or lack full text.
+
+    Examples:
+        ai-gene-review refresh-publications-active
+        ai-gene-review refresh-publications-active --dry-run
+        ai-gene-review refresh-publications-active --force --delay 1.0
+    """
+    typer.echo("Scanning for active gene reviews (IN_PROGRESS, DRAFT)...")
+
+    result = find_active_review_pmids(genes_dir)
+
+    if not result["reviews"]:
+        typer.echo("No active reviews found.")
+        return
+
+    typer.echo(f"Found {len(result['reviews'])} active reviews with {len(result['pmids'])} unique PMIDs")
+
+    for r in result["reviews"]:
+        typer.echo(f"  {r['organism']}/{r['gene']} ({r['status']}) - {r['pmid_count']} PMIDs")
+
+    if dry_run:
+        missing = []
+        stubs = []
+        cached = []
+        for pmid in result["pmids"]:
+            pub_file = publications_dir / f"PMID_{pmid}.md"
+            if not pub_file.exists():
+                missing.append(pmid)
+            elif force:
+                stubs.append(pmid)
+            else:
+                content = pub_file.read_text()
+                if "full_text_available: false" in content or "full_text_available: true" not in content:
+                    stubs.append(pmid)
+                else:
+                    cached.append(pmid)
+
+        typer.echo(f"\n  Missing (need fetch): {len(missing)}")
+        typer.echo(f"  Stubs (need refresh): {len(stubs)}")
+        typer.echo(f"  Cached (have full text): {len(cached)}")
+        return
+
+    success_count = cache_publications(result["pmids"], publications_dir, force, delay)
+    typer.echo(f"\nRefreshed {success_count}/{len(result['pmids'])} publications for active reviews")
+
+
+@app.command()
 def expand_organism(
     organisms: Annotated[
         List[str], typer.Argument(help="Organism codes, names, or taxon IDs to expand")
@@ -1386,11 +1529,11 @@ def visualize(
         
         # Show statistics if requested
         if show_stats:
-            import yaml
+            import yaml as pyyaml
+            from ai_gene_review.export.annotation_export import _dict_to_obj
             with open(yaml_file) as f:
-                data = yaml.safe_load(f)
-            from ai_gene_review.datamodel.gene_review_model import GeneReview
-            gene_review = GeneReview.model_validate(data)
+                data = pyyaml.safe_load(f)
+            gene_review = _dict_to_obj(data)
             stats = visualizer.get_summary_stats(gene_review)
             
             typer.echo("\nSummary Statistics:")

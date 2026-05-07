@@ -180,6 +180,13 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
   - PEX14: 81 annotations (56 ACCEPT, 17 OVER, 4 NON_CORE, 3 MODIFY, 1 REMOVE)
   - PEX26: 36 annotations (24 ACCEPT, 8 OVER, 3 NON_CORE, 1 REMOVE)
 
+## 2026-05-01
+
+- Tracking upstream obsoletion of GO:0005052/GO:0005053/GO:0033328 (peroxisome
+  matrix/membrane targeting signal binding) → merged into renamed parent
+  "peroxisome signal sequence receptor activity". Affects PEX5, PEX7, PEX19
+  reviews. See [PEROXISOME_TARGETING_SIGNAL_OBSOLETION.md](PEROXISOME_TARGETING_SIGNAL_OBSOLETION.md).
+
 ## 2026-03-05 (initial)
 
 - Project created, focusing on human peroxisome biogenesis (PEX) genes

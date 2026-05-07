@@ -110,6 +110,8 @@ just deep-research SPECIES GENE --provider perplexity
 
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
+NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
+
 Be aware that many GO terms are over-annotations. You should also not take existing annotations as gospel, whether experimental or bioinformatic.
 always use a holistic synthesized picture of the gene function that you have obtained from your research.
 
@@ -242,6 +244,36 @@ other computational method that produces GO or EC predictions.
 - `TRAINING_DATA_CONTAMINATION` - Prediction already in training data
 - See schema for full list
 
+## Page rendering and deployment
+
+The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
+
+### Gene review HTML
+```bash
+just render <organism> <gene>    # render one gene
+just render-all                  # render all genes (~1200 files)
+```
+Output: `genes/<org>/<gene>/<gene>-ai-review.html`
+
+### Project pages
+Project docs live in `projects/*.md`. Render with:
+```bash
+just render-projects                          # render all
+ai-gene-review render-projects projects/FOO.md -o pages/projects  # render one
+```
+Output: `pages/projects/<NAME>.html`
+
+**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+
+### Browser app
+```bash
+just deploy-browser    # update data.js + index.html for the interactive browser
+```
+Output: `app/`
+
+### CI automation
+The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
@@ -251,5 +283,4 @@ other computational method that produces GO or EC predictions.
 
 There is also support code in `src/ai_gene_review`, see the CLAUDE.md file in that directory for more details
 on best practices for working with the code.
-
 

@@ -1,0 +1,4 @@
+# NaBBL_candidate_FOX2_2 Notes
+
+- The full preprint places a BBL-family enzyme directly in the nicotine synthase cascade as **NicGS**, with structural support and clear effects on stereoselective product formation. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "BBLa = NicGS, an (S)-nicotine glucoside synthase that drives pathway stereoselectivity"; "BBLa/NicGS was solved with FAD and with (S)-nicotine glucoside product"]
+- FOX2_2 therefore remains a plausible BBL-family paralog to evaluate, but the paper still leaves the exact NICAT paralog mapping unresolved. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]

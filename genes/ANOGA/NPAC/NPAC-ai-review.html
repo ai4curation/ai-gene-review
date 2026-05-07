@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPAC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NPAC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7Q161" target="_blank" class="term-link">
+                        Q7Q161
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Anopheles gambiae</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NPAC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7Q161" data-a="DESCRIPTION: NPAC (Cytokine-like nuclear factor N-PAC, also kno..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NPAC (Cytokine-like nuclear factor N-PAC, also known as GLYR1/NDF/NP60) is a chromatin-associated nuclear protein in Anopheles gambiae that functions as a nucleosome-destabilizing factor facilitating RNA polymerase II transcription elongation through chromatin. The protein contains an N-terminal PWWP domain that reads histone H3K36me3 marks and binds DNA, and a C-terminal dehydrogenase-like Rossmann fold domain that is catalytically inert but mediates oligomerization. In orthologous species (Drosophila, human, mouse), NPAC is recruited to gene bodies of actively transcribed genes, destabilizes nucleosomes in an ATP-independent manner to facilitate Pol II passage, stimulates H3K56 acetylation by p300, and serves as a cofactor of the histone demethylase LSD2/KDM1B promoting H3K4me1/me2 demethylation. In Drosophila, it also interacts with the MSL histone acetyltransferase complex involved in dosage compensation. All functional annotations for the Anopheles protein are inferred by homology; no direct experimental studies exist for this organism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0003677" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is based on phylogenetic inference from the Drosophila ortholog CG4747 (Q8T079) and human GLYR1 (Q49A26). The PWWP domain of NPAC is known to strongly bind DNA in addition to reading histone marks.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DNA binding via the PWWP domain is well-established for this protein family. UniProt CC states &#34;The PWWP domain is a H3 reader and strongly binds DNA&#34; (by similarity to Q49A26). The annotation is correct but somewhat generic; nucleosome binding (GO:0031491) is a more informative descriptor of the primary chromatin interaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NDF has a PWWP motif, interacts with nucleosomes near the dyad</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/NPAC/NPAC-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The PWWP domain is a H3 reader and strongly binds DNA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0003682" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is from ARBA rule ARBA00027831. Chromatin binding is appropriate for this protein which localizes to and interacts with chromatin through the PWWP domain, but is less specific than the nucleosome binding annotation already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chromatin binding is correct. NPAC/NDF localizes to chromatin in a H3K36me3-dependent manner and directly interacts with nucleosomes. This is a broad but accurate annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                                        PMID:33676077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/NPAC/NPAC-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a chromatin-reading module that recognizes nucleosomal features</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031491" target="_blank" class="term-link">
+                                    GO:0031491
+                                </a>
+                            </span>
+                            <span class="term-label">nucleosome binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0031491" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is based on phylogenetic inference from Drosophila CG4747 and human GLYR1. Nucleosome binding is a core molecular function of this protein established in multiple studies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nucleosome binding is one of the best-characterized functions of the NP60 subfamily. UniProt CC states &#34;Binds to mononucleosomes&#34; (by similarity to Q8T079). NDF interacts with nucleosomes near the dyad and destabilizes them to facilitate transcription.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23260659" target="_blank" class="term-link">
+                                        PMID:23260659
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NPAC directly interacts with LSD2 and positively regulates its H3K4 demethylation activity both in vitro and in vivo</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0050661" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro2GO annotation derives from IPR006115 (6-phosphogluconate dehydrogenase, NADP-binding domain). The Rossmann fold in NPAC does contain conserved NAD(P)H-binding sites structurally, but the protein lacks a conserved active site and the dehydrogenase domain is catalytically inert.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The structural capacity to bind NADP is plausible given the Rossmann fold architecture, but the dehydrogenase domain is catalytically inert. Fang et al. (2013) reported &#34;attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase were unsuccessful.&#34; The binding may be structural or regulatory rather than catalytic, and the functional significance of NADP binding is unclear. This is not a core function of the protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23260659" target="_blank" class="term-link">
+                                        PMID:23260659
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/NPAC/NPAC-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the active site is not conserved, the dehydrogenase domain seems to serve as a catalytically inert oligomerization module</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This InterPro2GO annotation derives from IPR029154 (3-hydroxyisobutyrate dehydrogenase-like, NAD-binding domain). Same reasoning as for NADP binding -- the Rossmann fold is structurally present but catalytically inert.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The structural NAD binding capacity is plausible given the conserved Rossmann fold, but the domain serves as &#34;a catalytically inert oligomerization module&#34; rather than performing redox chemistry. NAD binding is not a core function of this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23260659" target="_blank" class="term-link">
+                                        PMID:23260659
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140673" target="_blank" class="term-link">
+                                    GO:0140673
+                                </a>
+                            </span>
+                            <span class="term-label">transcription elongation-coupled chromatin remodeling</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0140673" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation is based on phylogenetic inference from Drosophila CG4747 and human GLYR1. This is one of the most precisely characterized functions of the protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Transcription elongation-coupled chromatin remodeling is the central biological process of NPAC/NDF. The protein destabilizes nucleosomes to facilitate Pol II transcription through chromatin, interacts with p-TEFb and phosphorylated Pol II, and is recruited to gene bodies upon transcriptional induction. This is a core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NDF, a nucleosome-destabilizing factor that facilitates transcription through nucleosomes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                                        PMID:33676077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Npac is essential for the transcriptional elongation of pluripotency genes by recruiting p-TEFb and interacting with RNA Pol II Ser2P and Ser5P</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0000785" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA annotation places NPAC as active in chromatin, based on the Drosophila and human orthologs which localize to chromatin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NPAC localizes to chromatin in a H3K36me3-dependent manner. In Drosophila, it localizes to polytene chromosome interbands (open chromatin). The protein is active at chromatin where it destabilizes nucleosomes and facilitates transcription.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                                        PMID:33676077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Upon transcriptional induction, NDF is recruited to the transcribed regions of thousands of genes and colocalizes with a subset of H3K36me3-enriched regions</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005694" target="_blank" class="term-link">
+                                    GO:0005694
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0005694" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IEA annotation is derived from UniProt subcellular location &#34;Chromosome&#34; (by similarity to Q8T079). NPAC localizes to chromosomes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chromosome localization is correct and consistent with the protein&#39;s chromatin association. This is a broad but accurate annotation; the more specific &#34;chromatin&#34; (GO:0000785) annotation is also present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ANOGA/NPAC/NPAC-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Localization to open chromatin depends on H3K36 trimethylation by Set2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140003" target="_blank" class="term-link">
+                                    GO:0140003
+                                </a>
+                            </span>
+                            <span class="term-label">histone H3K36me3 reader activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29759984
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NDF, a nucleosome-destabilizing factor that facilitates tran...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Q161" data-a="GO:0140003" data-r="PMID:29759984" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NPAC reads H3K36me3 marks via its PWWP domain, which is the primary mechanism for its recruitment to actively transcribed gene bodies. This is a more specific and informative annotation than general chromatin binding.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> H3K36me3 reader activity via the PWWP domain is a core molecular function that drives the chromatin localization and biological activity of the protein. This is well-established in both Drosophila and mammalian orthologs and should be annotated for the Anopheles ortholog by sequence similarity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                        PMID:29759984
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">NDF has a PWWP motif...colocalizes with a subset of H3K36me3-enriched regions</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                                        PMID:33676077
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Npac, a &#34;reader&#34; of histone H3 lysine 36 trimethylation (H3K36me3), is required to maintain mouse ESC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NPAC functions as a nucleosome-destabilizing factor (NDF) that binds nucleosomes near the dyad via its PWWP domain and destabilizes them in an ATP-independent manner, facilitating RNA polymerase II passage through chromatin during transcription elongation. It reads H3K36me3 marks for recruitment to actively transcribed gene bodies.</h3>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="FUNCTION: NPAC functions as a nucleosome-destabilizing facto..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031491" target="_blank" class="term-link">
+                            nucleosome binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140673" target="_blank" class="term-link">
+                                transcription elongation-coupled chromatin remodeling
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                chromatin
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                                PMID:29759984
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner, and facilitates transcription by Pol II through nucleosomes</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                                PMID:33676077
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Npac is essential for the transcriptional elongation of pluripotency genes by recruiting p-TEFb and interacting with RNA Pol II Ser2P and Ser5P</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferred from sequence similarity using PAINT</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on ARBA rules</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12364791" target="_blank" class="term-link">
+                            PMID:12364791
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The genome sequence of the malaria mosquito Anopheles gambiae.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Source of the AGAP009949 gene model</div>
+                        
+                        <div class="finding-text">"Tenfold shotgun sequence coverage was obtained from the PEST strain of A. gambiae and assembled into scaffolds that span 278 million base pairs"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29759984" target="_blank" class="term-link">
+                            PMID:29759984
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NDF, a nucleosome-destabilizing factor that facilitates transcription through nucleosomes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NDF/GLYR1 destabilizes nucleosomes and facilitates Pol II transcription</div>
+                        
+                        <div class="finding-text">"NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner, and facilitates transcription by Pol II through nucleosomes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NDF stimulates H3K56 acetylation by p300 on nucleosomal substrates</div>
+                        
+                        <div class="finding-text">"purified recombinant dNDF and hNDF can mediate the stimulation of nucleosomal H3K56 acetylation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NDF is recruited to gene bodies upon transcriptional induction</div>
+                        
+                        <div class="finding-text">"Upon transcriptional induction, NDF is recruited to the transcribed regions of thousands of genes and colocalizes with a subset of H3K36me3-enriched regions"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23260659" target="_blank" class="term-link">
+                            PMID:23260659
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">LSD2/KDM1B and its cofactor NPAC/GLYR1 endow a structural and molecular model for regulation of H3K4 demethylation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NPAC is a cofactor of LSD2 that stimulates H3K4 demethylation</div>
+                        
+                        <div class="finding-text">"NPAC directly interacts with LSD2 and positively regulates its H3K4 demethylation activity both in vitro and in vivo"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The dehydrogenase domain is catalytically inert</div>
+                        
+                        <div class="finding-text">"attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33676077" target="_blank" class="term-link">
+                            PMID:33676077
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Npac Is A Co-factor of Histone H3K36me3 and Regulates Transcriptional Elongation in Mouse Embryonic Stem Cells.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Npac co-localizes with H3K36me3 in actively transcribed gene bodies</div>
+                        
+                        <div class="finding-text">"Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Npac interacts with p-TEFb and phosphorylated Pol II for elongation</div>
+                        
+                        <div class="finding-text">"Npac interacts with positive transcription elongation factor b (p-TEFb), Ser2-phosphorylated RNA Pol II"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the Anopheles NPAC ortholog interact with the MSL dosage compensation complex in vivo, as predicted by homology to the Drosophila ortholog?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="Q: Does the Anopheles NPAC ortholog interact with the..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the Anopheles NPAC dehydrogenase domain retain any capacity for NAD(P) binding, and if so, does this have a regulatory role?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="Q: Does the Anopheles NPAC dehydrogenase domain retai..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is NPAC involved in any mosquito-specific chromatin regulation processes related to malaria vector biology (e.g., during blood feeding or parasite infection)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="Q: Is NPAC involved in any mosquito-specific chromati..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> ChIP-seq of NPAC in Anopheles gambiae cell lines to determine whether it co-localizes with H3K36me3 marks as in orthologs, confirming the conserved chromatin targeting mechanism.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NPAC localizes to H3K36me3-enriched gene bodies of actively transcribed genes in Anopheles, consistent with its ortholog function.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="EXPERIMENT: ChIP-seq of NPAC in Anopheles gambiae cell lines t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation of NPAC with components of the Anopheles MSL complex (MOF) to validate the predicted interaction.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NPAC interacts with the MSL complex in Anopheles as it does in Drosophila.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q7Q161" data-a="EXPERIMENT: Co-immunoprecipitation of NPAC with components of ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NPAC-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7Q161" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nl">provider:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="nl">model:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="nl">source:</span><span class="w"> </span><span class="n">huggingface</span><span class="p">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="nl">date:</span><span class="w"> </span><span class="p">&#39;</span><span class="mh">2026</span><span class="o">-</span><span class="mh">04</span><span class="o">-</span><span class="mh">04</span><span class="p">&#39;</span>
+<span class="nl">uniprot_id:</span><span class="w"> </span><span class="n">Q7Q161</span>
+<span class="nl">gene:</span><span class="w"> </span><span class="n">NPAC</span>
+<span class="nl">organism:</span><span class="w"> </span><span class="n">Anopheles</span><span class="w"> </span><span class="n">gambiae</span><span class="w"> </span><span class="p">(</span><span class="n">African</span><span class="w"> </span><span class="n">malaria</span><span class="w"> </span><span class="n">mosquito</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="p">##</span><span class="w"> </span><span class="n">Thinking</span><span class="w"> </span><span class="n">Trace</span>
+
+<span class="n">The</span><span class="w"> </span><span class="n">architecture</span><span class="w"> </span><span class="n">begins</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">compact</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="k">module</span><span class="o">:</span><span class="w"> </span><span class="n">IPR000313</span><span class="w"> </span><span class="p">(</span><span class="n">PWWP</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">7</span><span class="err">–</span><span class="mh">68</span><span class="p">)</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">present</span><span class="w"> </span><span class="n">alongside</span><span class="w"> </span><span class="n">overlapping</span><span class="p">,</span><span class="w"> </span><span class="n">family</span><span class="o">-</span><span class="n">specific</span><span class="w"> </span><span class="n">refinements</span><span class="w"> </span><span class="n">IPR035501</span><span class="w"> </span><span class="p">(</span><span class="n">Cytokine</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">nuclear</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">PAC</span><span class="p">,</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">7</span><span class="err">–</span><span class="mh">93</span><span class="p">),</span><span class="w"> </span><span class="n">IPR000313</span><span class="w"> </span><span class="p">(</span><span class="n">PWWP</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">9</span><span class="err">–</span><span class="mh">70</span><span class="p">),</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">IPR000313</span><span class="w"> </span><span class="p">(</span><span class="n">PWWP</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">10</span><span class="err">–</span><span class="mh">92</span><span class="p">).</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">cluster</span><span class="w"> </span><span class="n">defines</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">chromatin</span><span class="o">-</span><span class="n">reading</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">recognizes</span><span class="w"> </span><span class="n">nucleosomal</span><span class="w"> </span><span class="n">features</span><span class="err">—</span><span class="n">classically</span><span class="w"> </span><span class="n">DNA</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">methylated</span><span class="w"> </span><span class="n">histone</span><span class="w"> </span><span class="n">marks</span><span class="err">—</span><span class="n">thereby</span><span class="w"> </span><span class="n">causing</span><span class="w"> </span><span class="n">nucleosome</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">direct</span><span class="w"> </span><span class="n">DNA</span><span class="w"> </span><span class="n">engagement</span><span class="p">.</span><span class="w"> </span><span class="n">Downstream</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">polypeptide</span><span class="w"> </span><span class="n">transitions</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="k">large</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="nl">core:</span><span class="w"> </span><span class="n">IPR051265</span><span class="w"> </span><span class="p">(</span><span class="n">HIBADH</span><span class="o">-</span><span class="n">related</span><span class="w"> </span><span class="n">NP60</span><span class="w"> </span><span class="n">subfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">167</span><span class="err">–</span><span class="mh">562</span><span class="p">)</span><span class="w"> </span><span class="n">encompasses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">fold</span><span class="p">,</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">IPR036291</span><span class="w"> </span><span class="p">(</span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">281</span><span class="err">–</span><span class="mh">443</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">IPR006115</span><span class="w"> </span><span class="p">(</span><span class="mh">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">NADP</span><span class="o">-</span><span class="n">binding</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">282</span><span class="err">–</span><span class="mh">441</span><span class="p">)</span><span class="w"> </span><span class="n">specifying</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="n">dinucleotide</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">site</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">region</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">further</span><span class="w"> </span><span class="n">defined</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR008927</span><span class="w"> </span><span class="p">(</span><span class="mh">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">442</span><span class="err">–</span><span class="mh">561</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">IPR013328</span><span class="w"> </span><span class="p">(</span><span class="mh">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="mh">2</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">444</span><span class="err">–</span><span class="mh">563</span><span class="p">),</span><span class="w"> </span><span class="n">culminating</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">IPR029154</span><span class="w"> </span><span class="p">(</span><span class="mh">3</span><span class="o">-</span><span class="n">hydroxyisobutyrate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="n">like</span><span class="p">,</span><span class="w"> </span><span class="n">NAD</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">444</span><span class="err">–</span><span class="mh">561</span><span class="p">).</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="n">layout</span><span class="err">—</span><span class="n">reader</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">followed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="w"> </span><span class="n">site</span><span class="err">—</span><span class="n">creates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">bifunctional</span><span class="w"> </span><span class="nl">protein:</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">chromatin</span><span class="o">-</span><span class="n">tethered</span><span class="w"> </span><span class="n">scaffold</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">can</span><span class="w"> </span><span class="n">bind</span><span class="w"> </span><span class="n">nucleosomes</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">DNA</span><span class="p">,</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">metabolite</span><span class="o">-</span><span class="n">sensing</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="k">module</span><span class="p">.</span>
+</code></pre></div>
+
+<p>The PWWP cluster confers molecular functions of nucleosome binding (GO:0031491) and DNA binding (GO:0003677). These reader interactions position the protein on chromatin, where the dehydrogenase-like core can act as a regulatory sensor: binding of NAD(H)/NADP(H) within the Rossmann pocket alters the conformation and interaction surface of the C-terminal lobe, thereby modulating recruitment of chromatin-modifying enzymes. Such a mechanism naturally promotes positive regulation of histone acetylation (GO:0035066), because a chromatin-tethered, metabolite-responsive scaffold enhances acetyltransferase access to nucleosomes. The resulting increase in histone acetylation loosens chromatin and facilitates assembly of the transcriptional machinery, driving positive regulation of transcription by RNA polymerase II (GO:0045944).</p>
+<p>The presence of a chromatin reader and the absence of transmembrane segments or secretion signals place the protein in the nuclear compartment, consistent with a chromatin-associated nuclear factor and aligning with the cellular component nucleus (GO:0005634). Within the nucleus, the PWWP domain anchors the protein to specific nucleosomal contexts, while the dehydrogenase-like lobe senses cellular redox or metabolite status via NAD(P) binding, translating metabolic cues into chromatin acetylation and transcriptional outputs.</p>
+<p>This mechanistic model suggests interaction partners that either bridge to chromatin-modifying enzymes or reflect metabolic coupling. The chromatin-tethered scaffold is poised to engage acetyltransferase complexes and nucleosome components. The observed associations with enzymes of branched-chain and aldehyde metabolism—3-hydroxyisobutyrate dehydrogenase, 3-hydroxyisobutyryl-CoA hydrolase, probable methylmalonate-semialdehyde dehydrogenase (acylating), aldehyde dehydrogenases (NAD+-dependent), and 4-aminobutyrate aminotransferase—can arise from metabolite-channeling or redox-state signaling: the dehydrogenase-like domain may sense NAD(H) availability and transiently bind metabolic enzymes to coordinate acetylation with metabolic flux. Alanine–glyoxylate aminotransferase 2 and aldehyde dehydrogenase family 7 member A1 fit this theme, potentially linking amino acid and aldehyde metabolism to chromatin regulation. The V-type proton ATPase catalytic subunit A and AGAP009944-PA may represent regulatory or scaffolding contacts that couple cellular energy status to chromatin engagement, indirectly influencing nuclear metabolite pools. Overall, the protein likely functions as a nuclear chromatin reader fused to a redox-sensing dehydrogenase-like module that promotes histone acetylation and transcriptional activation in response to metabolic cues.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">nuclear</span><span class="w"> </span><span class="n">chromatin</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">anchors</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">nucleosomes</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">DNA</span><span class="w"> </span><span class="n">through</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">reader</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">Rossmann</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">sense</span><span class="w"> </span><span class="n">cellular</span><span class="w"> </span><span class="n">redox</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">metabolite</span><span class="w"> </span><span class="n">levels</span><span class="p">.</span><span class="w"> </span><span class="k">By</span><span class="w"> </span><span class="n">coupling</span><span class="w"> </span><span class="n">nucleosome</span><span class="w"> </span><span class="n">binding</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="n">dinucleotide</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">conformational</span><span class="w"> </span><span class="n">control</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">promotes</span><span class="w"> </span><span class="n">histone</span><span class="w"> </span><span class="n">acetylation</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">activates</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">polymerase</span><span class="w"> </span><span class="n">II</span><span class="err">–</span><span class="n">driven</span><span class="w"> </span><span class="n">transcription</span><span class="p">,</span><span class="w"> </span><span class="n">thereby</span><span class="w"> </span><span class="n">translating</span><span class="w"> </span><span class="n">metabolic</span><span class="w"> </span><span class="k">state</span><span class="w"> </span><span class="k">into</span><span class="w"> </span><span class="n">chromatin</span><span class="w"> </span><span class="n">remodeling</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">gene</span><span class="w"> </span><span class="n">expression</span><span class="w"> </span><span class="n">changes</span><span class="w"> </span><span class="k">within</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">nucleus</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Nuclear</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">DNA</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">nucleosomes</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR000313</span><span class="p">:</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">7-68</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR035501</span><span class="p">:</span><span class="w"> </span><span class="n">Cytokine</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">nuclear</span><span class="w"> </span><span class="n">factor</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">PAC</span><span class="p">,</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">7-93</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR000313</span><span class="p">:</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">9-70</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR000313</span><span class="p">:</span><span class="w"> </span><span class="n">PWWP</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">10-92</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR051265</span><span class="p">:</span><span class="w"> </span><span class="n">HIBADH</span><span class="o">-</span><span class="n">related</span><span class="w"> </span><span class="n">NP60</span><span class="w"> </span><span class="n">subfamily</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">167-562</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR036291</span><span class="p">:</span><span class="w"> </span><span class="n">NAD</span><span class="p">(</span><span class="n">P</span><span class="p">)</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">281-443</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR006115</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="n">NADP</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">282-441</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR008927</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="ow">like</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">442-561</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR013328</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="o">-</span><span class="n">phosphogluconate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="p">,</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">444-563</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR029154</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="o">-</span><span class="n">hydroxyisobutyrate</span><span class="w"> </span><span class="n">dehydrogenase</span><span class="o">-</span><span class="ow">like</span><span class="p">,</span><span class="w"> </span><span class="n">NAD</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="k">domain</span><span class="w"> </span><span class="p">(</span><span class="k">domain</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">444-561</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NPAC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7Q161" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="npac-anoga-research-notes">NPAC (ANOGA) - Research Notes</h1>
+<h2 id="gene-identity">Gene identity</h2>
+<ul>
+<li>UniProt: Q7Q161 (GLYR1_ANOGA), Reviewed (Swiss-Prot)</li>
+<li>Gene: AGAP009949</li>
+<li>Organism: Anopheles gambiae (African malaria mosquito), NCBITaxon:7165</li>
+<li>Names: Cytokine-like nuclear factor N-PAC; Glyoxylate reductase 1 homolog; Nuclear protein NP60 homolog; Putative oxidoreductase GLYR1 homolog</li>
+<li>566 amino acids</li>
+<li>Belongs to the HIBADH-related family, NP60 subfamily</li>
+</ul>
+<h2 id="orthologs">Orthologs</h2>
+<ul>
+<li>Human: Q49A26 (GLYR1/NP60/NPAC/NDF/HIBDL)</li>
+<li>Drosophila melanogaster: Q8T079 (CG4747)</li>
+<li>The UniProt Q7Q161 entry is annotated entirely by homology transfer (ISS/IBA), with no direct experimental evidence in Anopheles gambiae itself.</li>
+</ul>
+<h2 id="domain-architecture">Domain architecture</h2>
+<ul>
+<li>N-terminal PWWP domain (residues 9-70): chromatin reader that recognizes H3K36me3 and binds DNA</li>
+<li>Linker region (disordered, ~residues 127-274): includes the LSD2-interacting dodecapeptide in human ortholog</li>
+<li>C-terminal dehydrogenase domain (residues 274-566): Rossmann-fold NAD(P)-binding domain, structurally related to 6-phosphogluconate dehydrogenase/3-hydroxyisobutyrate dehydrogenase</li>
+</ul>
+<h2 id="key-functional-insights-from-ortholog-studies">Key functional insights from ortholog studies</h2>
+<h3 id="1-nucleosome-destabilizing-factor-ndf">1. Nucleosome-destabilizing factor (NDF)</h3>
+<p>Fei et al. (2018) <a href="https://pubmed.ncbi.nlm.nih.gov/29759984">PMID:29759984</a> identified the Drosophila ortholog CG4747 and human GLYR1 as NDF, "a nucleosome-destabilizing factor that facilitates transcription through nucleosomes." Key findings:<br />
+- NDF interacts with nucleosomes near the dyad<br />
+- Destabilizes nucleosomes in an ATP-independent manner<br />
+- Facilitates Pol II transcription through nucleosomes<br />
+- Stimulates H3K56 acetylation by p300 on nucleosomal substrates<br />
+- Recruited to transcribed regions of thousands of genes upon transcriptional induction<br />
+- Colocalizes with H3K36me3-enriched regions<br />
+- The PWWP domain recognizes H3K36me3, but H3K36me3 is "necessary but not sufficient" for localization<br />
+- Essential in human stem cells<br />
+- Overexpressed in ~21% of breast cancers</p>
+<h3 id="2-cofactor-of-lsd2kdm1b-histone-demethylase">2. Cofactor of LSD2/KDM1B histone demethylase</h3>
+<p>Fang et al. (2013) <a href="https://pubmed.ncbi.nlm.nih.gov/23260659">PMID:23260659</a> showed NPAC/GLYR1 is a cofactor of LSD2/KDM1B:<br />
+- Stimulates H3K4me1 and H3K4me2 demethylation<br />
+- The minimal functional segment is a dodecapeptide (residues 214-225)<br />
+- Residue F217 stabilizes enzyme-substrate interaction<br />
+- Crystal structures of LSD2 alone and LSD2-NPAC complex were determined</p>
+<h3 id="3-co-factor-of-h3k36me3-in-transcriptional-elongation">3. Co-factor of H3K36me3 in transcriptional elongation</h3>
+<p>Yu et al. (2021) <a href="https://pubmed.ncbi.nlm.nih.gov/33676077">PMID:33676077</a> showed in mouse ESCs:<br />
+- Npac co-localizes with H3K36me3 in gene bodies of actively transcribed genes<br />
+- Interacts with p-TEFb (positive transcription elongation factor b)<br />
+- Interacts with Ser2-phosphorylated and Ser5-phosphorylated RNA Pol II<br />
+- Depletion disrupts transcriptional elongation of pluripotency genes (Nanog, Rif1)<br />
+- Required for mESC pluripotency maintenance</p>
+<h3 id="4-interaction-with-msl-complex-from-drosophila-ortholog-transferred-to-anopheles">4. Interaction with MSL complex (from Drosophila ortholog, transferred to Anopheles)</h3>
+<p>UniProt CC for Q7Q161 states (by similarity to Q8T079):<br />
+- "Binds to mononucleosomes"<br />
+- "Interacts with male-specific lethal (MSL) histone acetyltransferase complex at least composed of mof, msl-1, msl-2 and msl-3"<br />
+The MSL complex in Drosophila acetylates H4K16 for dosage compensation on the male X chromosome.</p>
+<h3 id="5-dehydrogenase-domain-is-catalytically-inert">5. Dehydrogenase domain is catalytically inert</h3>
+<p>Fang et al. (2013) <a href="https://pubmed.ncbi.nlm.nih.gov/23260659">PMID:23260659</a>: "attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase...were unsuccessful." The dehydrogenase domain instead serves as "a catalytically inert oligomerization module" that forms a stable tetramer.</p>
+<p>UniProt CC for Q7Q161: "the active site is not conserved, the dehydrogenase domain seems to serve as a catalytically inert oligomerization module"</p>
+<h3 id="6-chromatin-localization-depends-on-h3k36me3">6. Chromatin localization depends on H3K36me3</h3>
+<p>UniProt CC (by similarity to Drosophila Q8T079): "Localization to open chromatin depends on H3K36 trimethylation by Set2."</p>
+<h2 id="go-annotations-in-goa-8-annotations">GO annotations in GOA (8 annotations)</h2>
+<table>
+<thead>
+<tr>
+<th>GO ID</th>
+<th>Term</th>
+<th>Qualifier</th>
+<th>Evidence</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0003677</td>
+<td>DNA binding</td>
+<td>enables</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+</tr>
+<tr>
+<td>GO:0003682</td>
+<td>chromatin binding</td>
+<td>enables</td>
+<td>IEA</td>
+<td>GO_REF:0000117 (ARBA)</td>
+</tr>
+<tr>
+<td>GO:0031491</td>
+<td>nucleosome binding</td>
+<td>enables</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+</tr>
+<tr>
+<td>GO:0050661</td>
+<td>NADP binding</td>
+<td>enables</td>
+<td>IEA</td>
+<td>GO_REF:0000002 (InterPro:IPR006115)</td>
+</tr>
+<tr>
+<td>GO:0051287</td>
+<td>NAD binding</td>
+<td>enables</td>
+<td>IEA</td>
+<td>GO_REF:0000002 (InterPro:IPR029154)</td>
+</tr>
+<tr>
+<td>GO:0140673</td>
+<td>transcription elongation-coupled chromatin remodeling</td>
+<td>involved_in</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+</tr>
+<tr>
+<td>GO:0000785</td>
+<td>chromatin</td>
+<td>is_active_in</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+</tr>
+<tr>
+<td>GO:0005694</td>
+<td>chromosome</td>
+<td>located_in</td>
+<td>IEA</td>
+<td>GO_REF:0000044</td>
+</tr>
+</tbody>
+</table>
+<h2 id="interpro2go-annotations-go_ref0000002">InterPro2GO annotations (GO_REF:0000002)</h2>
+<p>Two InterPro2GO annotations:<br />
+- IPR006115 -&gt; GO:0050661 (NADP binding): Based on the 6-phosphogluconate dehydrogenase NADP-binding domain<br />
+- IPR029154 -&gt; GO:0051287 (NAD binding): Based on the 3-hydroxyisobutyrate dehydrogenase-like NAD-binding domain</p>
+<p>These are technically correct structurally (the Rossmann fold does bind NAD(P)), but the dehydrogenase domain is catalytically inert. The NAD(P) binding may be structural/regulatory rather than enzymatic.</p>
+<h2 id="key-references">Key references</h2>
+<ol>
+<li>PMID:12364791 - Holt et al. (2002) "The genome sequence of the malaria mosquito Anopheles gambiae." Science 298:129-149. [Genome sequencing, source of the gene model]</li>
+<li>PMID:29759984 - Fei et al. (2018) "NDF, a nucleosome-destabilizing factor that facilitates transcription through nucleosomes." Genes Dev 32:682-694. [Key functional characterization in Drosophila and human]</li>
+<li>PMID:23260659 - Fang et al. (2013) "LSD2/KDM1B and its cofactor NPAC/GLYR1 endow a structural and molecular model for regulation of H3K4 demethylation." Mol Cell 49:558-70. [LSD2 cofactor function, crystal structures]</li>
+<li>PMID:33676077 - Yu et al. (2021) "Npac Is A Co-factor of Histone H3K36me3 and Regulates Transcriptional Elongation in Mouse Embryonic Stem Cells." Genomics Proteomics Bioinformatics 20:110-128. [H3K36me3 reader, p-TEFb interaction, elongation function]</li>
+</ol>
+<h2 id="summary-assessment">Summary assessment</h2>
+<p>NPAC/GLYR1/NDF is a multifunctional chromatin-associated protein whose core biology is well-characterized in human and Drosophila but entirely inferred by homology for the Anopheles ortholog. The protein reads H3K36me3 marks via its PWWP domain, destabilizes nucleosomes to facilitate RNA Pol II transcription elongation, cofactors LSD2-mediated H3K4 demethylation, and stimulates H3K56 acetylation by p300. The dehydrogenase-like C-terminal domain is catalytically inert but serves as an oligomerization platform. In Drosophila, it also interacts with the MSL dosage compensation complex.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NPAC-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7Q161" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-npac-anoga">BioReason-Pro SFT Review: NPAC (ANOGA)</h1>
+<p>Source: NPAC-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason SFT functional summary states:</p>
+<blockquote>
+<p>A nuclear chromatin reader that anchors to nucleosomes and DNA through an N-terminal reader module and uses a C-terminal dehydrogenase-like Rossmann fold to sense cellular redox or metabolite levels. By coupling nucleosome binding with dinucleotide-dependent conformational control, it promotes histone acetylation and activates RNA polymerase II-driven transcription, thereby translating metabolic state into chromatin remodeling and gene expression changes within the nucleus.</p>
+</blockquote>
+<p>The identification of NPAC as a chromatin reader with a PWWP domain and a dehydrogenase-like C-terminal domain is correct. The identification of nucleosome binding and DNA binding as molecular functions, and the association with transcription and histone acetylation as biological processes, are broadly supported.</p>
+<p><strong>Significant errors</strong>:</p>
+<ol>
+<li>
+<p><strong>"Redox/metabolite sensing" is speculative and unsupported</strong>: The summary claims the dehydrogenase-like domain "senses cellular redox or metabolite levels" and enables "dinucleotide-dependent conformational control." This is the central interpretive error. Fang et al. (2013, PMID:23260659) explicitly showed that "attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase were unsuccessful." The dehydrogenase domain is catalytically inert and functions as an oligomerization module. There is no evidence that it senses redox state or metabolite levels.</p>
+</li>
+<li>
+<p><strong>"Promotes histone acetylation" is imprecise</strong>: The summary claims NPAC "promotes histone acetylation" as a core function. While Fei et al. (2018, PMID:29759984) showed that NDF stimulates H3K56 acetylation by p300 on nucleosomal substrates, this is a consequence of nucleosome destabilization (making the H3K56 site accessible) rather than an independent acetylation-promoting function. The BioReason thinking trace goes further and claims "positive regulation of histone acetylation (GO:0035066)" as a primary GO prediction, which overstates the evidence. The primary function is nucleosome destabilization, not histone acetylation regulation.</p>
+</li>
+<li>
+<p><strong>Core function as nucleosome-destabilizing factor omitted</strong>: The most important finding from Fei et al. (2018, PMID:29759984) is that NPAC/GLYR1 is NDF -- a nucleosome-destabilizing factor that facilitates Pol II transcription through nucleosomes in an ATP-independent manner. The BioReason summary captures "nucleosome binding" but completely misses the destabilization mechanism, instead attributing transcription facilitation to a speculative "metabolite-sensing" mechanism.</p>
+</li>
+<li>
+<p><strong>LSD2/KDM1B cofactor role omitted</strong>: Fang et al. (2013, PMID:23260659) showed NPAC is a specific cofactor of the histone demethylase LSD2/KDM1B, stimulating H3K4me1/me2 demethylation. This is a well-characterized function with crystal structures available, but is not mentioned in the functional summary.</p>
+</li>
+<li>
+<p><strong>H3K36me3 reader specificity understated</strong>: The summary refers to a generic "reader module" but does not specify that the PWWP domain specifically reads H3K36me3 marks, which is the chromatin mark that recruits the protein to actively transcribed gene bodies (PMID:33676077).</p>
+</li>
+<li>
+<p><strong>MSL complex interaction absent</strong>: The Drosophila ortholog interacts with the MSL histone acetyltransferase complex (mof, msl-1, msl-2, msl-3), which is relevant for dosage compensation. This is absent from the summary.</p>
+</li>
+<li>
+<p><strong>p-TEFb interaction absent</strong>: Yu et al. (2021, PMID:33676077) showed NPAC interacts with the positive transcription elongation factor b (p-TEFb) and phosphorylated RNA Pol II to regulate transcription elongation. This mechanistic detail is absent.</p>
+</li>
+</ol>
+<p><strong>What is correct</strong>:<br />
+- The domain architecture description (PWWP + dehydrogenase-like Rossmann fold) is accurate<br />
+- Nucleosome binding and DNA binding as molecular functions<br />
+- Nuclear/chromatin localization<br />
+- Association with RNA Pol II transcription</p>
+<p>Comparison with interpro2go:</p>
+<p>The two InterPro2GO annotations (GO_REF:0000002) are:<br />
+- GO:0050661 (NADP binding) from IPR006115<br />
+- GO:0051287 (NAD binding) from IPR029154</p>
+<p>BioReason's summary essentially elaborates on these same InterPro domain hits, constructing a narrative around NAD(P) binding as a "metabolite/redox sensing" function. This is a direct extrapolation from the InterPro2GO signals but takes them in the wrong direction. The interpro2go annotations are structurally defensible (the Rossmann fold does have NAD(P)-binding capacity), but BioReason inflates their functional significance by building a speculative "redox sensor" model. In contrast, the actual biology shows the dehydrogenase domain is catalytically inert and serves for oligomerization.</p>
+<p>The IBA annotations (nucleosome binding, DNA binding, chromatin, transcription elongation-coupled chromatin remodeling) provide a much better picture of the protein's actual function than either the InterPro2GO annotations or BioReason's extrapolation from them. BioReason does not add insight beyond what InterPro2GO provides and in fact leads to an incorrect functional narrative.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace correctly identifies all InterPro domains and describes the PWWP-dehydrogenase architecture. However, it makes an unsupported inferential leap from "NAD(P)-binding Rossmann fold" to "metabolite-sensing redox module." The trace states the dehydrogenase core "can act as a regulatory sensor: binding of NAD(H)/NADP(H) within the Rossmann pocket alters the conformation and interaction surface of the C-terminal lobe, thereby modulating recruitment of chromatin-modifying enzymes." There is no experimental evidence for this mechanism. The actual literature shows the dehydrogenase domain is catalytically inert and functions as an oligomerization scaffold.</p>
+<p>The trace also lists interaction partners including "3-hydroxyisobutyrate dehydrogenase, 3-hydroxyisobutyryl-CoA hydrolase, probable methylmalonate-semialdehyde dehydrogenase" -- these appear to be STRING database neighbors based on domain homology rather than experimentally validated interactions for this protein. The actual known interaction partners are LSD2/KDM1B, the MSL complex, p-TEFb, and RNA Pol II.</p>
+<p>The BioReason trace does not cite any PMIDs or literature references, making it impossible to trace the provenance of its claims. All functional inferences appear to be derived from InterPro domain annotations and the UniProt summary, with speculative extrapolation.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7Q161
+gene_symbol: NPAC
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7165
+  label: Anopheles gambiae
+description: &gt;-
+  NPAC (Cytokine-like nuclear factor N-PAC, also known as GLYR1/NDF/NP60) is a
+  chromatin-associated nuclear protein in Anopheles gambiae that functions as a
+  nucleosome-destabilizing factor facilitating RNA polymerase II transcription
+  elongation through chromatin. The protein contains an N-terminal PWWP domain that
+  reads histone H3K36me3 marks and binds DNA, and a C-terminal dehydrogenase-like
+  Rossmann fold domain that is catalytically inert but mediates oligomerization. In
+  orthologous species (Drosophila, human, mouse), NPAC is recruited to gene bodies
+  of actively transcribed genes, destabilizes nucleosomes in an ATP-independent
+  manner to facilitate Pol II passage, stimulates H3K56 acetylation by p300, and
+  serves as a cofactor of the histone demethylase LSD2/KDM1B promoting H3K4me1/me2
+  demethylation. In Drosophila, it also interacts with the MSL histone acetyltransferase
+  complex involved in dosage compensation. All functional annotations for the Anopheles
+  protein are inferred by homology; no direct experimental studies exist for this
+  organism.
+
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  qualifier: enables
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation is based on phylogenetic inference from the Drosophila
+      ortholog CG4747 (Q8T079) and human GLYR1 (Q49A26). The PWWP domain of NPAC
+      is known to strongly bind DNA in addition to reading histone marks.
+    action: ACCEPT
+    reason: &gt;-
+      DNA binding via the PWWP domain is well-established for this protein family.
+      UniProt CC states &#34;The PWWP domain is a H3 reader and strongly binds DNA&#34;
+      (by similarity to Q49A26). The annotation is correct but somewhat generic;
+      nucleosome binding (GO:0031491) is a more informative descriptor of the
+      primary chromatin interaction.
+    supported_by:
+      - reference_id: PMID:29759984
+        supporting_text: &#34;NDF has a PWWP motif, interacts with nucleosomes near the dyad&#34;
+      - reference_id: file:ANOGA/NPAC/NPAC-notes.md
+        supporting_text: &#34;The PWWP domain is a H3 reader and strongly binds DNA&#34;
+
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      This IEA annotation is from ARBA rule ARBA00027831. Chromatin binding is
+      appropriate for this protein which localizes to and interacts with chromatin
+      through the PWWP domain, but is less specific than the nucleosome binding
+      annotation already present.
+    action: ACCEPT
+    reason: &gt;-
+      Chromatin binding is correct. NPAC/NDF localizes to chromatin in a
+      H3K36me3-dependent manner and directly interacts with nucleosomes.
+      This is a broad but accurate annotation.
+    supported_by:
+      - reference_id: PMID:29759984
+        supporting_text: &#34;NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner&#34;
+      - reference_id: PMID:33676077
+        supporting_text: &#34;Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes&#34;
+      - reference_id: file:ANOGA/NPAC/NPAC-deep-research-bioreason-sft.md
+        supporting_text: &#34;a chromatin-reading module that recognizes nucleosomal features&#34;
+
+- term:
+    id: GO:0031491
+    label: nucleosome binding
+  qualifier: enables
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation is based on phylogenetic inference from Drosophila CG4747
+      and human GLYR1. Nucleosome binding is a core molecular function of this
+      protein established in multiple studies.
+    action: ACCEPT
+    reason: &gt;-
+      Nucleosome binding is one of the best-characterized functions of the NP60
+      subfamily. UniProt CC states &#34;Binds to mononucleosomes&#34; (by similarity to
+      Q8T079). NDF interacts with nucleosomes near the dyad and destabilizes them
+      to facilitate transcription.
+    supported_by:
+      - reference_id: PMID:29759984
+        supporting_text: &#34;NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner&#34;
+      - reference_id: PMID:23260659
+        supporting_text: &#34;NPAC directly interacts with LSD2 and positively regulates its H3K4 demethylation activity both in vitro and in vivo&#34;
+
+- term:
+    id: GO:0050661
+    label: NADP binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This InterPro2GO annotation derives from IPR006115 (6-phosphogluconate
+      dehydrogenase, NADP-binding domain). The Rossmann fold in NPAC does contain
+      conserved NAD(P)H-binding sites structurally, but the protein lacks a conserved
+      active site and the dehydrogenase domain is catalytically inert.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The structural capacity to bind NADP is plausible given the Rossmann fold
+      architecture, but the dehydrogenase domain is catalytically inert. Fang et al.
+      (2013) reported &#34;attempts to identify the intrinsic enzymatic activity of NPAC
+      as a potential dehydrogenase were unsuccessful.&#34; The binding may be structural
+      or regulatory rather than catalytic, and the functional significance of NADP
+      binding is unclear. This is not a core function of the protein.
+    supported_by:
+      - reference_id: PMID:23260659
+        supporting_text: &#34;attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase&#34;
+      - reference_id: file:ANOGA/NPAC/NPAC-deep-research-bioreason-sft.md
+        supporting_text: &#34;the active site is not conserved, the dehydrogenase domain seems to serve as a catalytically inert oligomerization module&#34;
+
+- term:
+    id: GO:0051287
+    label: NAD binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This InterPro2GO annotation derives from IPR029154 (3-hydroxyisobutyrate
+      dehydrogenase-like, NAD-binding domain). Same reasoning as for NADP binding
+      -- the Rossmann fold is structurally present but catalytically inert.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The structural NAD binding capacity is plausible given the conserved Rossmann
+      fold, but the domain serves as &#34;a catalytically inert oligomerization module&#34;
+      rather than performing redox chemistry. NAD binding is not a core function
+      of this protein.
+    supported_by:
+      - reference_id: PMID:23260659
+        supporting_text: &#34;attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase&#34;
+
+- term:
+    id: GO:0140673
+    label: transcription elongation-coupled chromatin remodeling
+  qualifier: involved_in
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation is based on phylogenetic inference from Drosophila CG4747
+      and human GLYR1. This is one of the most precisely characterized functions
+      of the protein.
+    action: ACCEPT
+    reason: &gt;-
+      Transcription elongation-coupled chromatin remodeling is the central biological
+      process of NPAC/NDF. The protein destabilizes nucleosomes to facilitate Pol II
+      transcription through chromatin, interacts with p-TEFb and phosphorylated Pol II,
+      and is recruited to gene bodies upon transcriptional induction. This is a core
+      function.
+    supported_by:
+      - reference_id: PMID:29759984
+        supporting_text: &#34;NDF, a nucleosome-destabilizing factor that facilitates transcription through nucleosomes&#34;
+      - reference_id: PMID:33676077
+        supporting_text: &#34;Npac is essential for the transcriptional elongation of pluripotency genes by recruiting p-TEFb and interacting with RNA Pol II Ser2P and Ser5P&#34;
+
+- term:
+    id: GO:0000785
+    label: chromatin
+  qualifier: is_active_in
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This IBA annotation places NPAC as active in chromatin, based on the Drosophila
+      and human orthologs which localize to chromatin.
+    action: ACCEPT
+    reason: &gt;-
+      NPAC localizes to chromatin in a H3K36me3-dependent manner. In Drosophila,
+      it localizes to polytene chromosome interbands (open chromatin). The protein
+      is active at chromatin where it destabilizes nucleosomes and facilitates
+      transcription.
+    supported_by:
+      - reference_id: PMID:33676077
+        supporting_text: &#34;Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes&#34;
+      - reference_id: PMID:29759984
+        supporting_text: &#34;Upon transcriptional induction, NDF is recruited to the transcribed regions of thousands of genes and colocalizes with a subset of H3K36me3-enriched regions&#34;
+
+- term:
+    id: GO:0005694
+    label: chromosome
+  qualifier: located_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      This IEA annotation is derived from UniProt subcellular location &#34;Chromosome&#34;
+      (by similarity to Q8T079). NPAC localizes to chromosomes.
+    action: ACCEPT
+    reason: &gt;-
+      Chromosome localization is correct and consistent with the protein&#39;s chromatin
+      association. This is a broad but accurate annotation; the more specific
+      &#34;chromatin&#34; (GO:0000785) annotation is also present.
+    supported_by:
+      - reference_id: file:ANOGA/NPAC/NPAC-notes.md
+        supporting_text: &#34;Localization to open chromatin depends on H3K36 trimethylation by Set2&#34;
+
+# New annotations suggested based on ortholog evidence
+- term:
+    id: GO:0140003
+    label: histone H3K36me3 reader activity
+  qualifier: enables
+  evidence_type: ISS
+  original_reference_id: PMID:29759984
+  review:
+    summary: &gt;-
+      NPAC reads H3K36me3 marks via its PWWP domain, which is the primary mechanism
+      for its recruitment to actively transcribed gene bodies. This is a more
+      specific and informative annotation than general chromatin binding.
+    action: NEW
+    reason: &gt;-
+      H3K36me3 reader activity via the PWWP domain is a core molecular function
+      that drives the chromatin localization and biological activity of the protein.
+      This is well-established in both Drosophila and mammalian orthologs and should
+      be annotated for the Anopheles ortholog by sequence similarity.
+    supported_by:
+      - reference_id: PMID:29759984
+        supporting_text: &#34;NDF has a PWWP motif...colocalizes with a subset of H3K36me3-enriched regions&#34;
+      - reference_id: PMID:33676077
+        supporting_text: &#34;Npac, a \&#34;reader\&#34; of histone H3 lysine 36 trimethylation (H3K36me3), is required to maintain mouse ESC&#34;
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferred from sequence similarity using PAINT
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+  findings: []
+- id: GO_REF:0000117
+  title: Gene Ontology annotation based on ARBA rules
+  findings: []
+- id: PMID:12364791
+  title: The genome sequence of the malaria mosquito Anopheles gambiae.
+  findings:
+    - statement: Source of the AGAP009949 gene model
+      supporting_text: &#34;Tenfold shotgun sequence coverage was obtained from the PEST strain of A. gambiae and assembled into scaffolds that span 278 million base pairs&#34;
+- id: PMID:29759984
+  title: NDF, a nucleosome-destabilizing factor that facilitates transcription through nucleosomes.
+  findings:
+    - statement: NDF/GLYR1 destabilizes nucleosomes and facilitates Pol II transcription
+      supporting_text: &#34;NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner, and facilitates transcription by Pol II through nucleosomes&#34;
+    - statement: NDF stimulates H3K56 acetylation by p300 on nucleosomal substrates
+      supporting_text: &#34;purified recombinant dNDF and hNDF can mediate the stimulation of nucleosomal H3K56 acetylation&#34;
+    - statement: NDF is recruited to gene bodies upon transcriptional induction
+      supporting_text: &#34;Upon transcriptional induction, NDF is recruited to the transcribed regions of thousands of genes and colocalizes with a subset of H3K36me3-enriched regions&#34;
+- id: PMID:23260659
+  title: LSD2/KDM1B and its cofactor NPAC/GLYR1 endow a structural and molecular model for regulation of H3K4 demethylation.
+  findings:
+    - statement: NPAC is a cofactor of LSD2 that stimulates H3K4 demethylation
+      supporting_text: &#34;NPAC directly interacts with LSD2 and positively regulates its H3K4 demethylation activity both in vitro and in vivo&#34;
+    - statement: The dehydrogenase domain is catalytically inert
+      supporting_text: &#34;attempts to identify the intrinsic enzymatic activity of NPAC as a potential dehydrogenase&#34;
+- id: PMID:33676077
+  title: Npac Is A Co-factor of Histone H3K36me3 and Regulates Transcriptional Elongation in Mouse Embryonic Stem Cells.
+  findings:
+    - statement: Npac co-localizes with H3K36me3 in actively transcribed gene bodies
+      supporting_text: &#34;Npac co-localizes with histone H3K36me3 in gene bodies of actively transcribed genes&#34;
+    - statement: Npac interacts with p-TEFb and phosphorylated Pol II for elongation
+      supporting_text: &#34;Npac interacts with positive transcription elongation factor b (p-TEFb), Ser2-phosphorylated RNA Pol II&#34;
+
+core_functions:
+- molecular_function:
+    id: GO:0031491
+    label: nucleosome binding
+  description: &gt;-
+    NPAC functions as a nucleosome-destabilizing factor (NDF) that binds
+    nucleosomes near the dyad via its PWWP domain and destabilizes them in an
+    ATP-independent manner, facilitating RNA polymerase II passage through
+    chromatin during transcription elongation. It reads H3K36me3 marks for
+    recruitment to actively transcribed gene bodies.
+  directly_involved_in:
+    - id: GO:0140673
+      label: transcription elongation-coupled chromatin remodeling
+  locations:
+    - id: GO:0000785
+      label: chromatin
+  supported_by:
+    - reference_id: PMID:29759984
+      supporting_text: &#34;NDF has a PWWP motif, interacts with nucleosomes near the dyad, destabilizes nucleosomes in an ATP-independent manner, and facilitates transcription by Pol II through nucleosomes&#34;
+    - reference_id: PMID:33676077
+      supporting_text: &#34;Npac is essential for the transcriptional elongation of pluripotency genes by recruiting p-TEFb and interacting with RNA Pol II Ser2P and Ser5P&#34;
+
+proposed_new_terms: []
+
+suggested_questions:
+- question: &gt;-
+    Does the Anopheles NPAC ortholog interact with the MSL dosage compensation
+    complex in vivo, as predicted by homology to the Drosophila ortholog?
+- question: &gt;-
+    Does the Anopheles NPAC dehydrogenase domain retain any capacity for NAD(P)
+    binding, and if so, does this have a regulatory role?
+- question: &gt;-
+    Is NPAC involved in any mosquito-specific chromatin regulation processes
+    related to malaria vector biology (e.g., during blood feeding or parasite
+    infection)?
+
+suggested_experiments:
+- description: &gt;-
+    ChIP-seq of NPAC in Anopheles gambiae cell lines to determine whether it
+    co-localizes with H3K36me3 marks as in orthologs, confirming the
+    conserved chromatin targeting mechanism.
+  hypothesis: &gt;-
+    NPAC localizes to H3K36me3-enriched gene bodies of actively transcribed
+    genes in Anopheles, consistent with its ortholog function.
+- description: &gt;-
+    Co-immunoprecipitation of NPAC with components of the Anopheles MSL
+    complex (MOF) to validate the predicted interaction.
+  hypothesis: &gt;-
+    NPAC interacts with the MSL complex in Anopheles as it does in Drosophila.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

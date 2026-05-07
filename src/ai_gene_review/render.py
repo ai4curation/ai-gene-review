@@ -353,8 +353,16 @@ def render_gene_review(
 
     data['markdown_sections'] = markdown_sections
 
-    # Check for pathway HTML file
+    # Load predictions review if it exists
     gene_symbol = data.get('gene_symbol', yaml_path.stem.replace('-ai-review', ''))
+    predictions_path = gene_dir / f"{gene_symbol}-predictions-review.yaml"
+    if predictions_path.exists():
+        predictions_data = load_gene_review(predictions_path)
+        data['predictions'] = predictions_data
+    else:
+        data['predictions'] = None
+
+    # Check for pathway HTML file
     pathway_html = gene_dir / f"{gene_symbol}-pathway.html"
     if pathway_html.exists():
         data['pathway_html_file'] = pathway_html.name

@@ -1,0 +1,210 @@
+id: https://ai4curation.io/ai-gene-review/schema/ext_mapping
+name: ext_mapping
+title: External Mapping Schema
+description: >-
+  Sidecar LinkML schema for curated mappings from external source strings
+  (such as Proteostasis Network path codes) to GO terms.
+
+  This schema is intentionally lightweight. Source-side values remain plain
+  strings so they can track project-specific codes or serialized path strings,
+  while the GO target is modeled as an id/label tuple so linkml-term-validator can
+  validate the GO identifier and label.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  extmap: https://ai4curation.io/ai-gene-review/ext_mapping/
+  GO: http://purl.obolibrary.org/obo/GO_
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: extmap
+default_range: string
+
+slots:
+  id:
+    identifier: true
+  label:
+    required: true
+    slot_uri: rdfs:label
+    description: Human-readable label for the mapping record.
+  subject_code:
+    range: string
+    required: true
+    description: >-
+      Source-side mapping string. This may be a project-specific code or a
+      serialized path string.
+  subject_level:
+    range: SourceHierarchyLevelEnum
+    required: true
+    description: Level of the mapped source-side term within its source hierarchy.
+  target_term:
+    range: GOTerm
+    inlined: true
+    description: GO target term, represented as an id/label tuple.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  mapping_scope:
+    range: MappingScopeEnum
+    description: >-
+      Scope of the mapping. `exact` is a direct semantic match.
+      `ok_for_propagation_to_go` is acceptable for GO propagation even if not
+      strictly exact. `too_broad_to_propagate` records a real PN-to-GO
+      relationship that is useful contextually but unsafe to project as a
+      candidate GO annotation.
+  curation_status:
+    range: CurationStatusEnum
+    required: true
+    description: >-
+      Curator-facing state for this source node. `pending_review` means the
+      node is accounted for in YAML but has not yet been analyzed in depth.
+      `mapped` means a GO mapping is complete. `context_only` means a GO
+      relationship is recorded for context but is unsafe to propagate.
+      `no_mapping` means the node was reviewed and no GO mapping should be
+      made. `deferred` means review started but is blocked by evidence,
+      taxonomy ambiguity, or a missing/better GO term.
+  conditions:
+    range: MappingCondition
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Optional source-side context requirements. A mapping can be constrained to
+      cases where an ancestor or surrounding code is also present.
+  excluded_subjects:
+    range: MappingCondition
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Optional source-side subjects that should not inherit this mapping even
+      though they match the mapped subject and conditions. Use this to block a
+      broad ancestor mapping from specific descendants after manual review.
+  rationale:
+    range: string
+    required: true
+    description: Human-authored explanation for why the mapping is appropriate.
+  notes:
+    range: string
+    description: Supplementary notes or caveats.
+  references:
+    range: string
+    multivalued: true
+    description: Supporting manuscript IDs, PMIDs, workbook IDs, or local file refs.
+  representative_genes:
+    range: string
+    multivalued: true
+    description: >-
+      Representative source genes that illustrate what the external bucket
+      means in practice. These are explanatory examples, not an exhaustive
+      membership list.
+  subject_curations:
+    range: SubjectCuration
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      One curation record per source-side subject. The PN coverage report
+      should report zero `missing_from_yaml` records when every taxonomy node
+      has an explicit subject curation.
+  condition_level:
+    range: SourceHierarchyLevelEnum
+    required: true
+    description: Hierarchy level of the required context code.
+  condition_code:
+    range: string
+    required: true
+    description: Required context string at the specified hierarchy level.
+
+classes:
+  GOTerm:
+    description: A GO term represented as an id/label pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      id:
+        description: GO CURIE for the mapped target term.
+      label:
+        description: GO label for the mapped target term.
+        required: true
+
+  MappingCondition:
+    description: >-
+      Optional condition that must be true on the source side for the mapping to
+      apply.
+    slots:
+      - condition_level
+      - condition_code
+
+  ExternalMappingSet:
+    tree_root: true
+    description: >-
+      A grouped set of curated external mappings, typically organized by branch,
+      topic, or review batch.
+    slots:
+      - id
+      - label
+      - references
+      - notes
+      - subject_curations
+
+  SubjectCuration:
+    description: >-
+      Curator-facing record for one external source string. Mapping fields are
+      filled only when `curation_status` is `mapped` or `context_only`.
+    slots:
+      - subject_code
+      - subject_level
+      - curation_status
+      - target_term
+      - mapping_scope
+      - representative_genes
+      - conditions
+      - excluded_subjects
+      - rationale
+      - references
+      - notes
+
+enums:
+  SourceHierarchyLevelEnum:
+    description: Supported source hierarchy levels.
+    permissible_values:
+      branch: {}
+      class: {}
+      group: {}
+      type: {}
+      subtype: {}
+
+  MappingScopeEnum:
+    description: Curated mapping scope.
+    permissible_values:
+      exact: {}
+      ok_for_propagation_to_go: {}
+      too_broad_to_propagate: {}
+
+  CurationStatusEnum:
+    description: Curator-facing status for source nodes.
+    permissible_values:
+      pending_review:
+        description: Accounted for in YAML, but not yet manually analyzed in depth.
+      mapped:
+        description: Reviewed and mapped to a GO term.
+      context_only:
+        description: Reviewed and related to a GO term, but unsafe for gene-level propagation.
+      no_mapping:
+        description: Reviewed and concluded that no GO mapping is appropriate.
+      deferred:
+        description: Reviewed, but blocked by evidence, taxonomy ambiguity, or a missing/better GO term.
+
+  GOTermEnum:
+    description: A term in the GO ontology.
+    reachable_from:
+      source_nodes:
+        - GO:0003674
+        - GO:0008150
+        - GO:0005575
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf

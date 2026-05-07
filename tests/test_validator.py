@@ -1,5 +1,10 @@
-"""Tests for the gene review validator with updated API."""
+"""Tests for the gene review validator.
 
+Schema validation is handled by ``linkml-validate`` CLI (tested via subprocess).
+Best-practices checks are tested via ``validate_gene_review()`` Python API.
+"""
+
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -11,11 +16,79 @@ from ai_gene_review.validation import (
     validate_multiple_files,
     ValidationSeverity,
 )
+from ai_gene_review.validation.validator import get_schema_path
 
+
+# ---------------------------------------------------------------------------
+# Schema validation (linkml-validate CLI)
+# ---------------------------------------------------------------------------
+
+def test_schema_valid_file():
+    """Test that a valid file passes schema validation via CLI."""
+    yaml_file = Path("tests/input/CFAP300-ai-review.yaml")
+    if not yaml_file.exists():
+        pytest.skip("CFAP300 test input not found")
+
+    result = subprocess.run(
+        ["uv", "run", "linkml-validate",
+         "--schema", str(get_schema_path()),
+         "--target-class", "GeneReview",
+         str(yaml_file)],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, f"Valid file should pass: {result.stdout + result.stderr}"
+
+
+def test_schema_invalid_file():
+    """Test that missing required fields are caught by schema validation CLI."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump({"id": "TEST123"}, f)  # Missing gene_symbol
+        temp_file = Path(f.name)
+
+    try:
+        result = subprocess.run(
+            ["uv", "run", "linkml-validate",
+             "--schema", str(get_schema_path()),
+             "--target-class", "GeneReview",
+             str(temp_file)],
+            capture_output=True, text=True,
+        )
+        assert result.returncode != 0, "Missing gene_symbol should fail schema validation"
+    finally:
+        temp_file.unlink()
+
+
+def test_schema_invalid_taxon_id():
+    """Test that numeric taxon ID (should be string) is caught by schema validation CLI."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump({
+            "id": "Q456",
+            "gene_symbol": "GENE2",
+            "description": "Test gene",
+            "taxon": {"id": 9606, "label": "Homo sapiens"},
+        }, f)
+        temp_file = Path(f.name)
+
+    try:
+        result = subprocess.run(
+            ["uv", "run", "linkml-validate",
+             "--schema", str(get_schema_path()),
+             "--target-class", "GeneReview",
+             str(temp_file)],
+            capture_output=True, text=True,
+        )
+        assert result.returncode != 0, "Numeric taxon ID should fail schema validation"
+        assert "not of type 'string'" in result.stdout + result.stderr
+    finally:
+        temp_file.unlink()
+
+
+# ---------------------------------------------------------------------------
+# Best-practices validation (Python API)
+# ---------------------------------------------------------------------------
 
 def test_validate_valid_file():
-    """Test validation of a valid gene review file."""
-    # This uses the example file we copied to tests/input
+    """Test best-practices validation of a valid gene review file."""
     yaml_file = Path("tests/input/CFAP300-ai-review.yaml")
 
     if yaml_file.exists():
@@ -26,25 +99,6 @@ def test_validate_valid_file():
         assert report.error_count == 0
 
 
-def test_validate_invalid_file():
-    """Test validation of an invalid gene review file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        # Write invalid YAML (missing required fields)
-        invalid_data = {
-            "id": "TEST123",
-            # Missing required fields: gene_symbol
-        }
-        yaml.dump(invalid_data, f)
-        temp_file = Path(f.name)
-
-    try:
-        report = validate_gene_review(temp_file)
-        assert not report.is_valid, "Invalid file should fail validation"
-        assert report.error_count > 0, "Should have validation errors"
-    finally:
-        temp_file.unlink()
-
-
 def test_validate_nonexistent_file():
     """Test validation of a non-existent file."""
     report = validate_gene_review("nonexistent.yaml")
@@ -52,67 +106,24 @@ def test_validate_nonexistent_file():
     assert any("not found" in issue.message.lower() for issue in report.issues)
 
 
-def test_validate_invalid_taxon_id():
-    """Test validation with invalid taxon ID (should be string)."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        invalid_data = {
-            "id": "Q456",
-            "gene_symbol": "GENE2",
-            "description": "Test gene",
-            "taxon": {
-                "id": 9606,  # Should be string like "NCBITaxon:9606"
-                "label": "Homo sapiens",
-            },
-        }
-        yaml.dump(invalid_data, f)
-        temp_file = Path(f.name)
-
-    try:
-        report = validate_gene_review(temp_file)
-        assert not report.is_valid, "Should fail with numeric taxon ID"
-        assert any("not of type 'string'" in issue.message for issue in report.issues)
-    finally:
-        temp_file.unlink()
-
-
 def test_validate_multiple_files():
     """Test batch validation of multiple files."""
-    # Create some test files
     test_files = []
 
-    # Create a valid file
-    with tempfile.NamedTemporaryFile(mode="w", suffix="_valid.yaml", delete=False) as f:
-        valid_data = {
-            "id": "Q123",
-            "gene_symbol": "GENE1",
-            "description": "Test gene 1",
-            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
-        }
-        yaml.dump(valid_data, f)
-        test_files.append(Path(f.name))
-
-    # Create an invalid file
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix="_invalid.yaml", delete=False
-    ) as f:
-        invalid_data = {
-            "id": "Q456",
-            # Missing gene_symbol
-            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
-        }
-        yaml.dump(invalid_data, f)
-        test_files.append(Path(f.name))
+    for i in range(2):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump({
+                "id": f"Q{i}",
+                "gene_symbol": f"GENE{i}",
+                "description": f"Test gene {i}",
+                "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            }, f)
+            test_files.append(Path(f.name))
 
     try:
         batch_report = validate_multiple_files(test_files)
-
-        # Check that we got results for both files
         assert len(batch_report.reports) == 2
-
-        # One should be valid, one invalid
-        assert batch_report.valid_files == 1, "Should have one valid file"
-        assert batch_report.invalid_files == 1, "Should have one invalid file"
-
+        assert batch_report.valid_files == 2
     finally:
         for f in test_files:
             f.unlink()
@@ -120,16 +131,13 @@ def test_validate_multiple_files():
 
 def test_validation_summary():
     """Test the validation summary function."""
-    # Create a batch report
     from ai_gene_review.validation import BatchValidationReport, ValidationReport
 
     batch = BatchValidationReport()
 
-    # Add valid reports
     batch.reports.append(ValidationReport(file_path=Path("file1.yaml"), is_valid=True))
     batch.reports.append(ValidationReport(file_path=Path("file3.yaml"), is_valid=True))
 
-    # Add invalid report
     invalid_report = ValidationReport(file_path=Path("file2.yaml"), is_valid=False)
     invalid_report.add_issue(
         ValidationSeverity.ERROR,
@@ -140,10 +148,9 @@ def test_validation_summary():
 
     summary = batch.summary()
 
-    # Check that summary contains expected information
-    assert "3" in summary  # 3 total files
-    assert "Valid: 2" in summary  # 2 valid files
-    assert "Invalid: 1" in summary  # 1 invalid file
+    assert "3" in summary
+    assert "Valid: 2" in summary
+    assert "Invalid: 1" in summary
 
 
 @pytest.mark.parametrize(
@@ -154,16 +161,6 @@ def test_validation_summary():
             {
                 "id": "Q123",
                 "gene_symbol": "GENE1",
-                "description": "Test gene",
-                "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
-            },
-            True,
-        ),
-        # Valid with taxon
-        (
-            {
-                "id": "Q456",
-                "gene_symbol": "GENE2",
                 "description": "Test gene",
                 "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
             },
@@ -180,20 +177,15 @@ def test_validation_summary():
             },
             True,
         ),
-        # Invalid - missing gene_symbol
-        ({"id": "Q111", "description": "Test gene"}, False),
-        # Invalid - missing id
-        ({"gene_symbol": "GENE1", "description": "Test gene"}, False),
     ],
 )
 def test_various_gene_review_structures(gene_data, should_be_valid):
-    """Test validation of various gene review structures."""
+    """Test best-practices validation of various gene review structures."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(gene_data, f)
         temp_file = Path(f.name)
 
     try:
-        # Disable best practices to avoid issues with term/publication validation
         report = validate_gene_review(temp_file, check_best_practices=False)
         if should_be_valid:
             assert report.is_valid, f"Should be valid but got errors: {report.issues}"

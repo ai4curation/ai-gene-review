@@ -1,0 +1,3596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDO - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DDO</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A7E6FSU6" target="_blank" class="term-link">
+                        A0A7E6FSU6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Octopus vulgaris</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DDO";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="DESCRIPTION: D-aspartate oxidase (EC 1.4.3.1) is a FAD-dependen..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>D-aspartate oxidase (EC 1.4.3.1) is a FAD-dependent flavoenzyme that selectively catalyzes the oxidative deamination of acidic D-amino acids, primarily D-aspartate and D-glutamate. It is a 37 kDa monomer containing one FAD per molecule, purified from O. vulgaris hepatopancreas. DDO protects the organism from D-amino acid toxicity and regulates D-aspartate levels in the CNS, where D-Asp acts as an NMDA receptor agonist. Expression increases postnatally in liver and kidney. Localized to the peroxisomal matrix by similarity.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003884" target="_blank" class="term-link">
+                                    GO:0003884
+                                </a>
+                            </span>
+                            <span class="term-label">D-amino-acid oxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0003884" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0003884 (D-amino-acid oxidase activity) describes oxidative deamination of neutral/basic D-amino acids (D-Ala, D-Met, D-Pro, etc.). DDO is specifically a D-aspartate oxidase (EC 1.4.3.1), which is functionally distinct from D-amino acid oxidase (EC 1.4.3.3). DDO acts on acidic D-amino acids (D-Asp, D-Glu) and has negligible activity on neutral D-amino acids [PMID:8103425]. The IEA mapping from InterPro/PANTHER assigns the broader parent family activity, but GO:0008445 (D-aspartate oxidase activity) is the correct specific term for this enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DDO is a D-aspartate oxidase, not a D-amino acid oxidase. D-AspO specifically oxidizes D-Asp, D-Glu, and their derivatives, whereas D-AAO oxidizes neutral D-amino acids [PMID:8103425]. DDO oxidizes D-Pro, D-Leu, D-Ala, D-Met at only 0.2-0.6% of the D-Asp rate [PMID:8103425]. The correct term is GO:0008445 (D-aspartate oxidase activity), which is already annotated with IDA evidence.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008445" target="_blank" class="term-link">
+                                    D-aspartate oxidase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8103425" target="_blank" class="term-link">
+                                        PMID:8103425
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln, D-Asp-dimethyl-ester and N-methyl-D-Asp</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                        PMID:7915543
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been investigated</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-derived annotation placing DDO in the cytoplasm. UniProt annotates DDO to the peroxisome matrix by similarity to human DDO (Q99489), which has a C-terminal peroxisomal targeting signal (SKL motif at residues 334-336). The cytoplasm annotation is not wrong per se (peroxisomes are in the cytoplasm), but it is too general. The more specific peroxisomal matrix annotation is preferred and already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DDO has a C-terminal SKL microbody targeting signal (residues 334-336) and is annotated to peroxisomal matrix (GO:0005782) by ISS to human and bovine orthologs. Cytoplasm is too general and adds no information beyond the more specific peroxisomal matrix annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0005782" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from UniProt subcellular location mapping. DDO has a C-terminal SKL microbody targeting signal (residues 334-336 in the O. vulgaris sequence) consistent with peroxisomal matrix localization. This is further supported by ISS annotations to human DDO (Q99489) and bovine DDO (P31228).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Peroxisomal matrix localization is well-supported by the conserved SKL peroxisomal targeting signal at the C-terminus and by sequence similarity to mammalian orthologs known to localize to the peroxisome matrix.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008445" target="_blank" class="term-link">
+                                    GO:0008445
+                                </a>
+                            </span>
+                            <span class="term-label">D-aspartate oxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0008445" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from EC number mapping (EC 1.4.3.1). This is the correct molecular function for DDO, directly supported by experimental characterization in PMID:7915543. The EC-to-GO mapping is accurate here.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> D-aspartate oxidase activity (EC 1.4.3.1) is the experimentally verified catalytic function of this enzyme [PMID:7915543]. This IEA annotation is consistent with the IDA annotation from the same GO term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019478" target="_blank" class="term-link">
+                                    GO:0019478
+                                </a>
+                            </span>
+                            <span class="term-label">D-amino acid catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0019478" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TreeGrafter-derived annotation for involvement in D-amino acid catabolism. DDO catalyzes the oxidative deamination of D-Asp and D-Glu, producing the corresponding keto acids (oxaloacetate and 2-oxoglutarate), H2O2, and NH4+. This is a bona fide catabolic process for D-amino acids [PMID:7903300].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DDO directly participates in D-amino acid catabolism by oxidatively deaminating D-aspartate and D-glutamate. The biological role as a D-amino acid detoxifying enzyme is well-established [PMID:7903300, PMID:8103425].
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046416" target="_blank" class="term-link">
+                                    GO:0046416
+                                </a>
+                            </span>
+                            <span class="term-label">D-amino acid metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0046416" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived annotation for D-amino acid metabolic process. This is a parent term of GO:0019478 (D-amino acid catabolic process), which is already annotated with both IEA and IDA evidence. The metabolic process term is not incorrect but is less specific than the catabolic process term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a valid but more general parent of GO:0019478 (D-amino acid catabolic process). Since the more specific catabolic term is already annotated with IDA evidence, this broader term adds minimal information but is not wrong. Kept as non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived annotation for FAD binding. DDO contains one mol FAD per mol protein, with multiple FAD-binding residues identified by similarity (positions 34, 35, 41, 42, 304, 308, 309). FAD is the essential cofactor for catalytic activity [PMID:7915543].
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FAD binding is experimentally established. DDO is a flavoenzyme containing stoichiometric FAD as cofactor [PMID:7915543]. This IEA is consistent with the IDA annotation for the same term.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0005782" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from human DDO (Q99489). DDO has a conserved C-terminal SKL peroxisomal targeting signal (microbody targeting signal at residues 334-336). The subcellular location annotation in UniProt also specifies peroxisome matrix by similarity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Peroxisomal matrix localization is well-supported by the conserved SKL targeting signal at the C-terminus and orthology to human DDO (Q99489), which is experimentally localized to peroxisomes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                    GO:0005782
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisomal matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0005782" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second ISS annotation for peroxisomal matrix, transferred from bovine DDO (P31228). This provides additional orthologous support for peroxisomal localization. PMID:7915543 notes structural similarities between Octopus DDO and bovine D-aspartate oxidase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Redundant with the other ISS annotation but from a different ortholog (bovine P31228 vs human Q99489). Both support peroxisomal matrix localization consistently.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                        PMID:7915543
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Structural investigations show similarities in both the amino-acid composition and the N-terminal amino-acid sequence to bovine D-aspartate oxidase and porcine D-amino-acid oxidase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047821" target="_blank" class="term-link">
+                                    GO:0047821
+                                </a>
+                            </span>
+                            <span class="term-label">D-glutamate oxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7915543
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of the flavoenzyme D-aspartate oxidase from Octop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0047821" data-r="PMID:7915543" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation for D-glutamate oxidase activity. PMID:7915543 reports kinetic characterization of DDO with D-glutamate as substrate: KM 9.7 mM, kcat 11 s-1. PMID:8103425 confirms DDO oxidizes D-Glu, D-Gln, and derivatives. D-glutamate is a legitimate substrate with catalytic efficiency comparable to D-aspartate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> D-glutamate oxidase activity is directly demonstrated with kinetic parameters (KM 9.7 mM, kcat 11 s-1) [PMID:7915543]. D-Glu is among the primary substrates of DDO [PMID:8103425].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                        PMID:7915543
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">kinetic analyses suggest that two active-site residues with pKa of 7.1 and 9.1 are critical for catalysis, and that the ionization of such residues has different effects on the catalytic activity depending whether mono- or dicarboxylic D-amino acids are used as substrate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8103425" target="_blank" class="term-link">
+                                        PMID:8103425
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln, D-Asp-dimethyl-ester and N-methyl-D-Asp</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008445" target="_blank" class="term-link">
+                                    GO:0008445
+                                </a>
+                            </span>
+                            <span class="term-label">D-aspartate oxidase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7915543
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of the flavoenzyme D-aspartate oxidase from Octop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0008445" data-r="PMID:7915543" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for D-aspartate oxidase activity, the primary catalytic function of DDO. PMID:7915543 reports comprehensive biochemical characterization: the enzyme is a 37 kDa FAD-dependent monomer with KM 4.3 mM for D-Asp, kcat 6.8 s-1. It selectively oxidizes acidic D-amino acids and is classified as EC 1.4.3.1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of the enzyme, directly demonstrated by enzyme purification and kinetic characterization [PMID:7915543, PMID:8103425].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                        PMID:7915543
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been investigated. The protein is a monomer of M(r) 37,000 containing one mol flavin/mol protein</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8103425" target="_blank" class="term-link">
+                                        PMID:8103425
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln, D-Asp-dimethyl-ester and N-methyl-D-Asp</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15491279" target="_blank" class="term-link">
+                                        PMID:15491279
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a D - A sp O ( D -aspartate oxidase; EC 1.4.3.1), the enzyme which specifically oxidizes D -Asp into oxaloacetate has been found in various animals, and has been purified from O. vulgaris</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019478" target="_blank" class="term-link">
+                                    GO:0019478
+                                </a>
+                            </span>
+                            <span class="term-label">D-amino acid catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7915543
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of the flavoenzyme D-aspartate oxidase from Octop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0019478" data-r="PMID:7915543" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for involvement in D-amino acid catabolic process. PMID:7915543 demonstrates that DDO catalyzes the oxidative deamination of D-Asp to oxaloacetate and D-Glu to 2-oxoglutarate, with release of NH4+ and H2O2. PMID:7903300 establishes the biological role as detoxification of D-amino acids that accumulate during aging.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> DDO directly catabolizes D-amino acids. The enzyme&#39;s catalytic products (keto acids, H2O2, NH4+) confirm this is a catabolic/degradative process [PMID:7915543]. The detoxification role is well-established in vivo [PMID:7903300].
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7903300" target="_blank" class="term-link">
+                                        PMID:7903300
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">D-Amino acids administered to animals are absorbed by the intestine and transported through the blood-stream to solid tissues where they are oxidized in vivo by D-amino acid oxidase and D-aspartate oxidase to produce the same compounds they do in vitro; i.e. NH3, H2O2, and the keto acid corresponding to the amino acid ingested</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7903300" target="_blank" class="term-link">
+                                        PMID:7903300
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the in vivo biological role of these oxidases in animals is to act as detoxifying agents to metabolize D-amino acids which may have accumulated during aging</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7915543
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of the flavoenzyme D-aspartate oxidase from Octop...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="GO:0071949" data-r="PMID:7915543" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation for FAD binding. PMID:7915543 demonstrates that DDO contains stoichiometric FAD (one mol FAD per mol protein) and that the enzyme exists in active (FAD-bound) and inactive (6-OH-FAD-bound, purification artifact) forms. The spectrophotometric properties conform to the oxidase class of flavoproteins.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FAD binding is directly demonstrated by spectrophotometric characterization and cofactor stoichiometry [PMID:7915543]. FAD is essential for catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                        PMID:7915543
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The protein is a monomer of M(r) 37,000 containing one mol flavin/mol protein. The enzyme as isolated exists at least in two forms, one containing FAD and the other, which is catalytically inactive, probably containing 6-OH-FAD</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DDO is a D-aspartate oxidase (EC 1.4.3.1) that catalyzes the FAD-dependent oxidative deamination of D-aspartate to oxaloacetate + H2O2 + NH4+, with KM 4.3 mM and kcat 6.8 s-1. It also oxidizes D-glutamate (KM 9.7 mM, kcat 11 s-1) and other acidic D-amino acid derivatives (D-Asn, D-Gln, NMDA). This is the primary catalytic function of the enzyme.</h3>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="FUNCTION: DDO is a D-aspartate oxidase (EC 1.4.3.1) that cat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008445" target="_blank" class="term-link">
+                            D-aspartate oxidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019478" target="_blank" class="term-link">
+                                D-amino acid catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005782" target="_blank" class="term-link">
+                                peroxisomal matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                                PMID:7915543
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been investigated. The protein is a monomer of M(r) 37,000 containing one mol flavin/mol protein</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7903300" target="_blank" class="term-link">
+                                PMID:7903300
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the in vivo biological role of these oxidases in animals is to act as detoxifying agents to metabolize D-amino acids which may have accumulated during aging</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15491279" target="_blank" class="term-link">
+                                PMID:15491279
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">S. officinalis contains the highest quantity of D -Asp (2.60±0.30 μmol/g of tissue) followed by O. vulgaris and L. vulgaris , with concentrations of 2.30±0.25 and 1.60±0.20 μmol/g of tissue respectively</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In the cephalopod visual system, free D-aspartate is present at high concentrations in retina (2.30 +/- 0.25 umol/g in O. vulgaris) and optic lobes. Radiotracer experiments show D-Asp is synthesized in optic lobes and transported to retina. DDO is implicated in regulating the D-Asp pool that may serve as a neuromodulator or signaling molecule in visual circuitry, though direct DDO localization in retina has not been demonstrated. DDO was purified from hepatopancreas, where it shows substantial activity consistent with metabolic clearance of dietary D-amino acids.</h3>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="FUNCTION: In the cephalopod visual system, free D-aspartate ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008445" target="_blank" class="term-link">
+                            D-aspartate oxidase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019478" target="_blank" class="term-link">
+                                D-amino acid catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15491279" target="_blank" class="term-link">
+                                PMID:15491279
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">D -Asp is synthesized in the optic lobes and is then transported actively into the retina</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15491279" target="_blank" class="term-link">
+                                PMID:15491279
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a D - A sp O ( D -aspartate oxidase; EC 1.4.3.1), the enzyme which specifically oxidizes D -Asp into oxaloacetate has been found in various animals, and has been purified from O. vulgaris</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7915543" target="_blank" class="term-link">
+                            PMID:7915543
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Properties of the flavoenzyme D-aspartate oxidase from Octopus vulgaris.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DDO is a 37 kDa FAD-dependent monomer with KM 4.3 mM for D-Asp and 9.7 mM for D-Glu. Two active-site residues with pKa 7.1 and 9.1 are critical for catalysis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The enzyme exists in active (FAD-bound) and inactive (6-OH-FAD-bound) forms; the inactive form is a purification artifact.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural similarities to bovine D-aspartate oxidase and porcine D-amino acid oxidase in amino-acid composition and N-terminal sequence.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7903300" target="_blank" class="term-link">
+                            PMID:7903300
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Biological role of D-amino acid oxidase and D-aspartate oxidase. Effects of D-amino acids.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-amino acids administered to animals are oxidized in vivo by D-amino acid oxidase and D-aspartate oxidase in tissues, producing NH3, H2O2, and the corresponding keto acid.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Inverse relationship between oxidase levels and D-amino acid concentrations: younger animals have lower oxidase and higher D-amino acids.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Biological role is detoxification of D-amino acids that accumulate during aging.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DDO expression in liver and kidney increases progressively during postnatal development.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8103425" target="_blank" class="term-link">
+                            PMID:8103425
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Further study on the specificity of D-amino acid oxidase and D-aspartate oxidase and time course for complete oxidation of D-amino acids.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-AspO from Octopus and beef kidney specifically oxidizes D-Asp, D-Glu, D-Asn, D-Gln, D-Asp-dimethyl-ester, and N-methyl-D-Asp.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-Pro, D-Leu, D-Ala, D-Met oxidized at very low rates (0.2-0.6% of D-Asp rate).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All L-amino acids are not oxidized, confirming strict D-stereoselectivity.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-AspO is clearly distinct from D-amino acid oxidase (D-AAO) in substrate specificity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8446003" target="_blank" class="term-link">
+                            PMID:8446003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Occurrence of free D-aspartic acid in the circumsoesophageal ganglia of Aplysia fasciata.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Free D-Asp found at high concentrations in CNS of cephalopods (O. vulgaris, L. vulgaris, S. officinalis) and Aplysia, constituting 8.3% of total aspartate in ganglia.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-Asp may have a specific neurological function in molluscan CNS.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Octopus D-AspO was used as analytical tool to measure D-Asp levels.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18703100" target="_blank" class="term-link">
+                            PMID:18703100
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Control of GnRH expression in the olfactory lobe of Octopus vulgaris.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NMDA receptors are present in Octopus olfactory lobes and NMDA enhances GnRH mRNA expression in a dose-response manner.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">L-glutamate/NMDA/NO pathway controls reproductive maturation in O. vulgaris.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">D-aspartate acts as NMDA receptor agonist, implicating DDO in neuromodulation through regulation of D-Asp levels.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15491279" target="_blank" class="term-link">
+                            PMID:15491279
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cephalopod vision involves dicarboxylic amino acids - D-aspartate, L-aspartate and L-glutamate.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High concentrations of free D-aspartate in cephalopod retina: O. vulgaris 2.30 +/- 0.25 umol/g, S. officinalis 2.60 +/- 0.30 umol/g, L. vulgaris 1.60 +/- 0.20 umol/g tissue.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified octopus D-AspO degrades D-Asp in retinal extracts, abolishing the D-Asp HPLC peak, confirming enzyme activity against the retinal D-Asp pool.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Radiotracer experiments indicate D-Asp is synthesized in optic lobes and transported to the retina, establishing dynamic D-Asp handling in cephalopod visual circuitry.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DDO also oxidizes NMDA (N-methyl-D-aspartate), in addition to D-Asp and D-Glu.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34250021" target="_blank" class="term-link">
+                            PMID:34250021
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human D-aspartate oxidase - a key player in D-aspartate metabolism.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DDO/DASPO is a peroxisomal enzyme in mammals; D-Asp and DDO are localized in neurons within peroxisomes, emphasizing compartmentalization and H2O2 handling.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DDO inhibition could raise endogenous D-Asp to modulate NMDA-receptor-related physiology as a potential therapeutic strategy for neuropsychiatric disorders.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Human DASPO operates by a ternary-complex mechanism where oxygen reacts with the reduced flavin-imino acid complex before product release, with hydride transfer from substrate alpha-carbon to flavin N5.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DDO play a direct role in modulating NMDA receptor-mediated signaling in octopus CNS by controlling D-aspartate levels? D-Asp is present at high concentrations in cephalopod CNS [PMID:8446003] and NMDA receptors are functional in octopus brain [PMID:18703100].</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="Q: Does DDO play a direct role in modulating NMDA rec..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is DDO expressed in octopus CNS tissue, or only in peripheral organs (liver, kidney)? The developmental expression data from PMID:7903300 focuses on liver and kidney; CNS expression would support a direct neuromodulatory role.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="Q: Is DDO expressed in octopus CNS tissue, or only in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Immunohistochemistry or in situ hybridization for DDO expression in O. vulgaris brain tissue (specifically olfactory and optic lobes) to determine whether DDO is expressed in the CNS where D-Asp is present at high levels.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DDO is expressed in octopus CNS and directly regulates D-Asp levels for NMDA receptor-mediated neuromodulation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="EXPERIMENT: Immunohistochemistry or in situ hybridization for ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> CRISPR/Cas9 or morpholino knockdown of DDO in O. vulgaris to assess the effect on D-Asp levels in CNS and on NMDA receptor-dependent behaviors.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DDO knockdown leads to elevated D-Asp in CNS, altering NMDA receptor signaling and downstream GnRH-mediated reproductive maturation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="A0A7E6FSU6" data-a="EXPERIMENT: CRISPR/Cas9 or morpholino knockdown of DDO in O. v..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DDO-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A7E6FSU6" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-01T09:03:49.025128'<br />
+end_time: '2026-05-01T09:19:38.583567'<br />
+duration_seconds: 949.56<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: OCTVU<br />
+  gene_id: DDO<br />
+  gene_symbol: DDO<br />
+  uniprot_accession: A0A7E6FSU6<br />
+  protein_description: 'RecName: Full=D-aspartate oxidase; Short=DASOX {ECO:0000305};<br />
+    Short=DASPO {ECO:0000250|UniProtKB:Q99489}; Short=DDO {ECO:0000305}; EC=1.4.3.1<br />
+    {ECO:0000269|PubMed:7915543};'<br />
+  gene_info: Name=DDO {ECO:0000305}; Synonyms=LOC115226122;<br />
+  organism_full: Octopus vulgaris (Common octopus).<br />
+  protein_family: Belongs to the DAMOX/DASOX family. .<br />
+  protein_domains: D-amino_acid_oxidase_CS. (IPR006181); DAO. (IPR023209); FAD-dep_OxRdtase.<br />
+    (IPR006076); DAO (PF01266)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 41</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A7E6FSU6</li>
+<li><strong>Protein Description:</strong> RecName: Full=D-aspartate oxidase; Short=DASOX {ECO:0000305}; Short=DASPO {ECO:0000250|UniProtKB:Q99489}; Short=DDO {ECO:0000305}; EC=1.4.3.1 {ECO:0000269|PubMed:7915543};</li>
+<li><strong>Gene Information:</strong> Name=DDO {ECO:0000305}; Synonyms=LOC115226122;</li>
+<li><strong>Organism (full):</strong> Octopus vulgaris (Common octopus).</li>
+<li><strong>Protein Family:</strong> Belongs to the DAMOX/DASOX family. .</li>
+<li><strong>Key Domains:</strong> D-amino_acid_oxidase_CS. (IPR006181); DAO. (IPR023209); FAD-dep_OxRdtase. (IPR006076); DAO (PF01266)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "DDO" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Octopus vulgaris (Common octopus).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'DDO' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>DDO</strong> (gene ID: DDO, UniProt: A0A7E6FSU6) in OCTVU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A7E6FSU6</li>
+<li><strong>Protein Description:</strong> RecName: Full=D-aspartate oxidase; Short=DASOX {ECO:0000305}; Short=DASPO {ECO:0000250|UniProtKB:Q99489}; Short=DDO {ECO:0000305}; EC=1.4.3.1 {ECO:0000269|PubMed:7915543};</li>
+<li><strong>Gene Information:</strong> Name=DDO {ECO:0000305}; Synonyms=LOC115226122;</li>
+<li><strong>Organism (full):</strong> Octopus vulgaris (Common octopus).</li>
+<li><strong>Protein Family:</strong> Belongs to the DAMOX/DASOX family. .</li>
+<li><strong>Key Domains:</strong> D-amino_acid_oxidase_CS. (IPR006181); DAO. (IPR023209); FAD-dep_OxRdtase. (IPR006076); DAO (PF01266)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "DDO" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Octopus vulgaris (Common octopus).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'DDO' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>DDO</strong> (gene ID: DDO, UniProt: A0A7E6FSU6) in OCTVU.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-ddo-d-aspartate-oxidase-in-octopus-vulgaris-uniprot-a0a7e6fsu6">Research Report: Functional Annotation of <strong>DDO / D-aspartate oxidase</strong> in <em>Octopus vulgaris</em> (UniProt <strong>A0A7E6FSU6</strong>)</h2>
+<h3 id="0-target-verification-critical-identity-check">0. Target verification (critical identity check)</h3>
+<p>The UniProt entry <strong>A0A7E6FSU6</strong> is annotated as <strong>D-aspartate oxidase</strong> (synonyms: DASOX/DASPO/DDO; <strong>EC 1.4.3.1</strong>) from <em>Octopus vulgaris</em>, belonging to the DAO-like (DAMOX/DASOX) FAD-dependent oxidoreductase family. Primary biochemical literature in <em>O. vulgaris</em> directly characterizes a <strong>D-aspartate oxidase (EC 1.4.3.1)</strong> purified from <em>O. vulgaris</em> hepatopancreas and documents its flavin dependence and catalytic behavior, matching the UniProt identity and avoiding symbol ambiguity (tedeschi1994propertiesofthe pages 1-2, d’aniello2005cephalopodvisioninvolves pages 2-3).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h3>
+<h4 id="11-enzyme-definition-and-core-reaction">1.1 Enzyme definition and core reaction</h4>
+<p><strong>D-aspartate oxidase (DDO; also called DASPO)</strong> is an FAD-dependent oxidase that catalyzes <strong>oxidative deamination</strong> of acidic D-amino acids. In mammalian systems, the canonical reaction is described as oxidation of <strong>D-aspartate to oxaloacetate</strong>, with production of <strong>NH3</strong> and <strong>H2O2</strong> through reoxidation of reduced FAD by molecular oxygen (molla2020structureandkinetic pages 1-5, puggioni2020biochemicalcharacterizationof pages 1-2, usiello2020newevidenceon pages 1-3). Mechanistically, human DASPO is described as operating by a ternary-complex mechanism (oxygen reacts with the reduced flavin–imino acid complex before product release) with hydride transfer from the substrate α-carbon to flavin N5 (pollegioni2021humandaspartateoxidase pages 4-5).</p>
+<p><strong>Cephalopod-specific confirmation:</strong> In <em>O. vulgaris</em>, D-aspartate oxidase has been purified and characterized as a flavoprotein enzyme consistent with this oxidase class (tedeschi1994propertiesofthe pages 1-2).</p>
+<h4 id="12-substrate-specificity">1.2 Substrate specificity</h4>
+<p>Across taxa, DDO/DASPO is distinguished from D-amino acid oxidase (DAAO) by <strong>preference for acidic D-amino acids</strong>. Human DASPO is described as selective for acidic D-amino acids (e.g., D-Asp) that are not substrates for DAAO (pollegioni2021humandaspartateoxidase pages 2-4). </p>
+<p><strong>Cephalopods:</strong> The <em>O. vulgaris</em> D-aspartate oxidase oxidizes <strong>D-Asp and D-Glu</strong>, and <strong>to a lesser extent NMDA</strong> (N-methyl-D-aspartate) (d’aniello2005cephalopodvisioninvolves pages 2-3). A marine invertebrate enzyme survey reports that, for <strong>octopus liver</strong> DDO, substrate preference included <strong>Asp &gt; D-glutamate &gt; NMDA &gt; D-asparagine</strong> (sarower2004distributionandsubstrate pages 4-5). In squid liver DDO (used as comparative cephalopod evidence), best substrates were reported as <strong>meso-2,3-diaminosuccinate</strong> and acidic derivatives (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2).</p>
+<h4 id="13-cofactor-usage-enzyme-state-and-structural-class">1.3 Cofactor usage, enzyme state, and structural class</h4>
+<p><strong>FAD dependence</strong> is a defining feature. In <em>O. vulgaris</em>, purified DDO is a <strong>monomer (~37 kDa)</strong> containing <strong>1 mol flavin per mol protein</strong>, and was found in at least two cofactor forms: an active <strong>FAD</strong> form and a catalytically inactive form likely containing <strong>6-OH-FAD</strong>, based on absorption spectra (tedeschi1994propertiesofthe pages 1-2). </p>
+<p>For human DASPO, full-length enzyme binds one noncovalent FAD per ~39–40 kDa monomer and displays tight FAD binding (Kd in the tens of nM range), supporting the concept that holoenzyme predominates in vivo (molla2020structureandkinetic pages 11-13, pollegioni2021humandaspartateoxidase pages 4-5).</p>
+<h4 id="14-cellularsubcellular-localization-what-is-known-vs-inferred">1.4 Cellular/subcellular localization (what is known vs inferred)</h4>
+<p>In mammals, DDO/DASPO is repeatedly described as a <strong>peroxisomal enzyme</strong> (pollegioni2021humandaspartateoxidase pages 2-4, usiello2020newevidenceon pages 1-3). Reviews further describe D-Asp and DDO as localized in neurons within peroxisomes, emphasizing compartmentalization and H2O2 handling (pollegioni2021humandaspartateoxidase pages 1-2).</p>
+<p><strong>For <em>Octopus vulgaris</em> specifically, the retrieved primary cephalopod papers characterize the enzyme biochemically but do not directly demonstrate subcellular localization.</strong> Therefore, peroxisomal localization for <em>O. vulgaris</em> DDO should be treated as <strong>high-confidence inference by orthology/family function</strong>, rather than a directly demonstrated localization in octopus tissues in the retrieved corpus.</p>
+<h3 id="2-functional-annotation-of-o-vulgaris-ddo-a0a7e6fsu6">2. Functional annotation of <em>O. vulgaris</em> DDO (A0A7E6FSU6)</h3>
+<h4 id="21-primary-molecular-function-enzyme-activity">2.1 Primary molecular function (enzyme activity)</h4>
+<p><strong>Best-supported function:</strong> <em>O. vulgaris</em> DDO is an FAD-dependent oxidase catalyzing oxidative deamination of <strong>D-aspartate-class substrates</strong> (notably D-Asp, D-Glu; partial activity on NMDA) (d’aniello2005cephalopodvisioninvolves pages 2-3, tedeschi1994propertiesofthe pages 1-2).</p>
+<p>The 1994 biochemical characterization reports features consistent with a DAO-like oxidase family enzyme, including flavin stoichiometry and catalytic group ionizations (two functional groups with apparent pKa ~7.1 and ~9.1 affecting catalysis differently for mono- vs dicarboxylic D-amino acids) (tedeschi1994propertiesofthe pages 1-2). This supports that the octopus enzyme is not only present but mechanistically specialized for acidic D-amino acid oxidation.</p>
+<h4 id="22-tissue-context-in-cephalopods-direct-evidence">2.2 Tissue context in cephalopods (direct evidence)</h4>
+<p><strong>Digestive gland/hepatopancreas (high-confidence):</strong> Cephalopod DDO activity is substantial in hepatopancreas/liver tissues (octopus; squid comparisons), supporting a role in metabolizing endogenous/exogenous acidic D-amino acids in these organs (sarower2004distributionandsubstrate pages 1-2, sarower2004distributionandsubstrate pages 3-4). <em>O. vulgaris</em> enzyme purification is reported from hepatopancreas (tedeschi1994propertiesofthe pages 1-2, d’aniello2005cephalopodvisioninvolves pages 2-3).</p>
+<p><strong>Visual system context (substrate pool evidence):</strong> High concentrations of <strong>free D-aspartate</strong> occur in cephalopod retina, including <em>O. vulgaris</em> (2.30 ± 0.25 µmol/g tissue), indicating a substantial physiological substrate pool for DDO-mediated catabolism in neural/visual tissues, though direct DDO localization/activity in retina is not explicitly quantified in the retrieved excerpts (d’aniello2005cephalopodvisioninvolves pages 7-8, d’aniello2005cephalopodvisioninvolves media d49ab66e).</p>
+<table>
+<thead>
+<tr>
+<th>Species/Source</th>
+<th>Tissue/cell context</th>
+<th>Subcellular localization</th>
+<th>Reaction &amp; cofactors</th>
+<th>Substrate specificity/inhibitors</th>
+<th>Quantitative data</th>
+<th>Key takeaways/notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Octopus vulgaris</strong> (purified enzyme)</td>
+<td>Hepatopancreas/liver-derived enzyme preparation</td>
+<td>Not directly shown in octopus primary studies retrieved; by family/orthology, expected to be a flavin oxidase of the DAO-like/DASPO family</td>
+<td>Oxidative deamination of D-aspartate-class substrates; flavoprotein with <strong>1 mol flavin per mol protein</strong>, active <strong>FAD</strong> form and inactive form likely containing <strong>6-OH-FAD</strong> (tedeschi1994propertiesofthe pages 1-2)</td>
+<td>Oxidizes <strong>D-Asp</strong> and <strong>D-Glu</strong>, and to a lesser extent <strong>NMDA</strong>; older marine invertebrate survey also reports octopus liver DDO uses <strong>Asp &gt; D-Glu &gt; NMDA &gt; D-asparagine</strong> (d’aniello2005cephalopodvisioninvolves pages 2-3, sarower2004distributionandsubstrate pages 4-5)</td>
+<td><strong>Monomer ~37 kDa</strong>; <strong>1 flavin/enzyme</strong>; at least <strong>two flavin forms</strong>; catalytic groups with apparent <strong>pKa ~7.1 and ~9.1</strong> (tedeschi1994propertiesofthe pages 1-2)</td>
+<td>Strongest species-specific evidence that UniProt A0A7E6FSU6 corresponds to bona fide <strong>D-aspartate oxidase/DDO</strong> in <em>O. vulgaris</em>; biochemical characterization is direct, but octopus-specific subcellular localization was not retrieved (tedeschi1994propertiesofthe pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Octopus vulgaris</strong> (tissue distribution/activity)</td>
+<td>Octopus organs, especially hepatopancreas/liver</td>
+<td>Not reported in retrieved octopus tissue survey</td>
+<td>Same DDO oxidative deamination activity assayed with D-Asp substrate; enzyme described as acidic D-amino-acid-specific flavoenzyme (sarower2004distributionandsubstrate pages 1-2)</td>
+<td>DDO activity substantial in octopus; liver enzyme activity reported; survey notes restricted preference for acidic D-amino acids and derivatives (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2, sarower2004distributionandsubstrate pages 4-5)</td>
+<td>Qualitative evidence of <strong>substantial DDO activity</strong> in octopus liver/hepatopancreas; muscle tissues reported to contain only <strong>trace D-amino acids</strong> in octopus/squid comparison (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2)</td>
+<td>Supports metabolic role in handling endogenous/exogenous acidic D-amino acids in cephalopod digestive tissues; helps anchor functional annotation to organ context rather than neural tissue alone (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Cephalopod retina/optic system</strong> (<em>O. vulgaris</em>, <em>S. officinalis</em>, <em>L. vulgaris</em>)</td>
+<td>Retina and optic lobes</td>
+<td>D-AspO used analytically on tissue extracts; localization of the enzyme itself not shown</td>
+<td>Purified octopus D-AspO degrades D-Asp in extracts, confirming enzyme activity against retinal D-Asp signal (d’aniello2005cephalopodvisioninvolves pages 4-5)</td>
+<td>D-Asp present at high levels in retina; D-AspO abolishes the D-Asp HPLC peak; radiotracing suggests D-Asp synthesis in optic lobes and movement to retina (d’aniello2005cephalopodvisioninvolves pages 4-5, d’aniello2005cephalopodvisioninvolves pages 7-8)</td>
+<td>Retinal <strong>D-Asp</strong>: <em>S. officinalis</em> <strong>2.60 ± 0.30 µmol/g</strong>, <em>O. vulgaris</em> <strong>2.30 ± 0.25 µmol/g</strong>, <em>L. vulgaris</em> <strong>1.60 ± 0.20 µmol/g</strong> (d’aniello2005cephalopodvisioninvolves media d49ab66e)</td>
+<td>Indicates the physiological substrate pool for octopus DDO is abundant in visual tissue, but direct evidence that octopus DDO itself acts in retina or optic lobes remains indirect in retrieved literature (d’aniello2005cephalopodvisioninvolves pages 4-5, d’aniello2005cephalopodvisioninvolves pages 7-8, d’aniello2005cephalopodvisioninvolves media d49ab66e)</td>
+</tr>
+<tr>
+<td><strong>Squid / marine invertebrate comparative survey</strong></td>
+<td>Liver/hepatopancreas; multi-organ comparison across marine invertebrates</td>
+<td>Not reported</td>
+<td>DDO assayed as an FAD-containing oxidase acting on acidic D-amino acids (sarower2004distributionandsubstrate pages 1-2)</td>
+<td>Best squid DDO substrates ranked <strong>meso-2,3-diaminosuccinate &gt; N-acetyl-DL-aspartate &gt; D-glutamate &gt; D-amino adipate &gt; D-homocysteic acid</strong>; consistent with acidic-substrate preference of cephalopod DDO (sarower2004distributionandsubstrate pages 1-2, sarower2004distributionandsubstrate pages 3-4)</td>
+<td>Relative substrate ranking only; no full kinetic constants in retrieved excerpt (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2)</td>
+<td>Comparative cephalopod evidence supports family-level annotation of octopus DDO as an <strong>acidic D-amino-acid oxidase</strong>, broader than D-Asp alone but narrower than classic DAAO (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Human DASPO/DDO</strong></td>
+<td>Brain and other tissues; recombinant enzyme studies</td>
+<td><strong>Peroxisomal</strong> enzyme in mammals (pollegioni2021humandaspartateoxidase pages 2-4, molla2020structureandkinetic pages 21-24, usiello2020newevidenceon pages 1-3)</td>
+<td>Oxidative deamination of <strong>D-Asp → oxaloacetate + NH3 + H2O2</strong>; <strong>FAD-dependent</strong> flavoenzyme; ternary-complex mechanism with O2 reacting before imino-acid release (pollegioni2021humandaspartateoxidase pages 4-5, molla2020structureandkinetic pages 1-5, pollegioni2021humandaspartateoxidase pages 2-4, usiello2020newevidenceon pages 1-3)</td>
+<td>Highest activity on <strong>D-Asp</strong> and <strong>NMDA</strong> in human work; inhibitor <strong>5-aminonicotinic acid</strong> characterized (molla2020structureandkinetic pages 1-5, molla2020structureandkinetic pages 11-13)</td>
+<td><strong>FAD Kd ~33 nM</strong>; <strong>Km(D-Asp) ~1.05 mM</strong>; <strong>kcat ~81.3 s⁻¹</strong>; <strong>kcat/Km ~77.4 s⁻¹ mM⁻¹</strong>; <strong>5-An Ki ~3.8 µM</strong>; monomeric holoenzyme ~<strong>40 kDa</strong> (pollegioni2021humandaspartateoxidase pages 4-5, molla2020structureandkinetic pages 1-5, molla2020structureandkinetic pages 11-13)</td>
+<td>Conserved mammalian data strongly support inference that octopus DDO is also an FAD-dependent acidic D-amino-acid oxidase, but <strong>peroxisomal localization is inferred cross-species</strong>, not directly shown for octopus in retrieved sources (pollegioni2021humandaspartateoxidase pages 4-5, molla2020structureandkinetic pages 1-5, pollegioni2021humandaspartateoxidase pages 2-4, usiello2020newevidenceon pages 1-3)</td>
+</tr>
+<tr>
+<td><strong>Mouse DASPO/DDO</strong></td>
+<td>Brain; recombinant protein and knockout/knock-in models</td>
+<td><strong>Peroxisomal</strong> in mammals (puggioni2020biochemicalcharacterizationof pages 1-2, usiello2020newevidenceon pages 1-3)</td>
+<td>Same D-Asp catabolic reaction yielding oxaloacetate, NH3, H2O2; FAD oxidase (puggioni2020biochemicalcharacterizationof pages 1-2, usiello2020newevidenceon pages 1-3)</td>
+<td>Controls endogenous D-Asp levels that modulate NMDA-receptor signaling; ligand binding stabilizes enzyme (puggioni2020biochemicalcharacterizationof pages 1-2, usiello2020newevidenceon pages 1-3)</td>
+<td>Mouse enzyme shows weaker FAD affinity than human; persistent Ddo suppression elevates extracellular D-Asp and causes early neurodegenerative changes; age-related Ddo promoter methylation regulates expression (pollegioni2021humandaspartateoxidase pages 4-5, usiello2020newevidenceon pages 1-3)</td>
+<td>Cross-species physiological evidence places DDO in the <strong>D-Asp/NMDAR homeostasis pathway</strong>; useful for pathway inference in octopus where direct pathway studies are lacking (usiello2020newevidenceon pages 1-3, usiello2020newevidenceon pages 10-12)</td>
+</tr>
+<tr>
+<td><strong>Schizophrenia serum biomarker study (human, 2024)</strong></td>
+<td>Human blood serum</td>
+<td>Not applicable to localization</td>
+<td>Not an enzyme assay; evaluates D-Asp as systems-level readout of DDO-regulated metabolism</td>
+<td>Discussion links reduced D-Asp to prior evidence of increased <strong>DDO activity/expression</strong> in schizophrenia cortex (garofalo2024decreasedfreedaspartate pages 2-3)</td>
+<td>Cohort: <strong>26 SCZ</strong> vs <strong>13 controls</strong>; serum D-Asp group effect <strong>F(2,35)=8.397, p=0.001, ηp²=0.324</strong>; control vs nTRS <strong>p=0.0104</strong>; control vs TRS <strong>p=0.0177</strong> (garofalo2024decreasedfreedaspartate pages 4-6)</td>
+<td>Recent translational evidence: D-Asp/DDO axis is clinically relevant as biomarker biology, though not specific to octopus annotation (garofalo2024decreasedfreedaspartate pages 4-6, garofalo2024decreasedfreedaspartate pages 2-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest functional-annotation evidence for D-aspartate oxidase with emphasis on Octopus vulgaris and key conserved features from mammalian DASPO/DDO studies. It organizes what is directly demonstrated in cephalopods versus what is inferred from better-characterized orthologs.</em></p>
+<h3 id="3-pathways-and-biological-roles-with-species-aware-interpretation">3. Pathways and biological roles (with species-aware interpretation)</h3>
+<h4 id="31-d-aspartate-metabolism-pathway">3.1 D-aspartate metabolism pathway</h4>
+<p>In mammals, DDO is described as the key catabolic control point for free D-Asp levels in brain and endocrine tissues, converting D-Asp to oxaloacetate and producing H2O2 as a byproduct (usiello2020newevidenceon pages 1-3). Postnatal onset of DDO expression is highlighted as a driver of the steep decline in brain D-Asp after birth (usiello2020newevidenceon pages 1-3, errico2015daspartateanendogenous pages 2-2). </p>
+<p><strong>In cephalopods, direct pathway modeling is limited in the retrieved corpus</strong>, but the combination of (i) substantial DDO activity in octopus digestive tissues and (ii) high D-Asp in optic/retinal tissues supports an annotation that <em>O. vulgaris</em> DDO participates in D-Asp clearance/homeostasis in tissues where D-Asp is present and potentially bioactive (sarower2004distributionandsubstrate pages 1-2, d’aniello2005cephalopodvisioninvolves pages 7-8).</p>
+<h4 id="32-potential-signaling-relevance-cross-species-inference">3.2 Potential signaling relevance (cross-species inference)</h4>
+<p>D-Asp is described in mammalian literature as an endogenous agonist at NMDA receptors (binding the glutamate site), influencing glutamatergic signaling and synaptic plasticity; dysregulated D-Asp metabolism (including DDO expression/activity changes) is discussed in relation to neuropsychiatric phenotypes (pollegioni2021humandaspartateoxidase pages 1-2, errico2018theemergingrole pages 1-2). These mammalian roles motivate the hypothesis that DDO acts as a gatekeeper controlling D-Asp signaling capacity via catabolism.</p>
+<p><strong>Cephalopod-specific evidence relevant to the visual system:</strong> D-Asp is abundant in retina and optic lobes; radiotracer experiments indicate D-Asp can be produced in optic lobes and transported to the retina (d’aniello2005cephalopodvisioninvolves pages 7-8). While this does not directly assign a role to DDO, it establishes the substrate is dynamically handled in cephalopod visual circuitry.</p>
+<h3 id="4-recent-developments-prioritizing-20232024-sources">4. Recent developments (prioritizing 2023–2024 sources)</h3>
+<h4 id="41-2024-peripheral-biomarker-evidence-tied-to-the-d-aspddo-axis-human">4.1 2024: Peripheral biomarker evidence tied to the D-Asp/DDO axis (human)</h4>
+<p>A 2024 bicentric study measured fasting morning serum amino acids and reported <strong>reduced serum D-aspartate in schizophrenia</strong> compared with controls, with statistical evidence: <strong>F(2,35) = 8.397, p = 0.001, partial ηp² = 0.324</strong>; both non-treatment-resistant and treatment-resistant groups differed from controls (p = 0.0104 and p = 0.0177, respectively) (Garofalo et al., 2024; https://doi.org/10.3389/fpsyt.2024.1408175; published Jul 2024) (garofalo2024decreasedfreedaspartate pages 4-6).</p>
+<p>Although this is not <em>Octopus</em>-specific, it represents a recent (2024) example of real-world clinical measurement of the D-Asp axis that is mechanistically linked in the schizophrenia literature to altered DDO expression/activity in brain (garofalo2024decreasedfreedaspartate pages 2-3).</p>
+<h4 id="42-2024-updated-expert-synthesisd-asp-signaling-in-reproduction-with-ddo-genetic-evidence">4.2 2024: Updated expert synthesis—D-Asp signaling in reproduction with DDO genetic evidence</h4>
+<p>A 2024 review summarizes D-Asp signaling in testicular physiology and highlights that manipulating DDO (via <strong>Ddo knock-in</strong> models with lower testicular D-Asp) links DDO-regulated D-Asp availability to reduced steroidogenic readouts (including testosterone), placing DDO as a regulator of endocrine D-Asp signaling (Falvo et al., 2024; https://doi.org/10.3390/cells13161400; published Aug 2024) (falvo2024newinsightsinto pages 1-2, falvo2024newinsightsinto pages 2-3).</p>
+<p>Again, not cephalopod-specific, but important for “current understanding” of how DDO controls D-Asp physiology beyond the nervous system.</p>
+<h3 id="5-current-applications-and-real-world-implementations">5. Current applications and real-world implementations</h3>
+<h4 id="51-analyticalbiochemical-applications-directly-relevant-to-cephalopod-work">5.1 Analytical/biochemical applications (directly relevant to cephalopod work)</h4>
+<p>Cephalopod studies use purified <em>O. vulgaris</em> D-aspartate oxidase as an <strong>analytical tool</strong>: treating tissue extracts with D-AspO abolishes the D-Asp peak in HPLC profiles, confirming analyte identity and enabling D-Asp quantification (d’aniello2005cephalopodvisioninvolves pages 4-5). More generally, DDO incubation is recommended as a control to confirm D-Asp peak identity in chromatographic assays (errico2015daspartateanendogenous pages 2-2).</p>
+<h4 id="52-therapeutic-strategy-concept-expert-opinion-supported-by-structurechemistry">5.2 Therapeutic strategy concept (expert opinion, supported by structure/chemistry)</h4>
+<p>Multiple authoritative sources argue that <strong>DDO inhibition</strong> could be used to <strong>raise endogenous D-Asp</strong> (thereby modulating NMDA-receptor-related physiology) as a potential therapeutic strategy for neuropsychiatric disorders (pollegioni2021humandaspartateoxidase pages 1-2, molla2020structureandkinetic pages 1-5). Structure/kinetic work positions DASPO structure as a platform for rational inhibitor discovery (molla2020structureandkinetic pages 1-5, molla2020structureandkinetic pages 16-18).</p>
+<h4 id="53-inhibitor-discovery-and-lead-compounds-medicinal-chemistry">5.3 Inhibitor discovery and lead compounds (medicinal chemistry)</h4>
+<p>A medicinal chemistry study identified and characterized DDO inhibitors through in silico screening and in vitro functional assays, reporting <strong>5-aminonicotinic acid</strong> inhibition of human DDO with <strong>Ki = 3.80 µM</strong> (Katane et al., 2015; https://doi.org/10.1021/acs.jmedchem.5b00871; published Sep 2015) (katane2015identificationofnovel pages 1-3). A human structural/kinetic study likewise reports 5-An as the best tested inhibitor with <strong>Ki ~3.8 µM</strong> and explicitly notes that “efficient inhibitors” remain to be identified, framing an unmet need for translation (molla2020structureandkinetic pages 1-5).</p>
+<h3 id="6-quantitative-data-highlights-selected">6. Quantitative data highlights (selected)</h3>
+<ol>
+<li><strong>Retinal D-Asp concentrations (cephalopods):</strong> <em>O. vulgaris</em> retina contains <strong>2.30 ± 0.25 µmol/g</strong> D-Asp (with higher values in <em>Sepia officinalis</em>), demonstrating a strong substrate pool in the visual system (D’Aniello et al., 2005; https://doi.org/10.1042/bj20041070; published Mar 2005) (d’aniello2005cephalopodvisioninvolves media d49ab66e).</li>
+<li><strong>Octopus DDO biochemical properties:</strong> monomer <strong>~37 kDa</strong>, <strong>1 flavin per enzyme</strong>, active FAD form and inactive 6-OH-FAD–like form (Tedeschi et al., 1994; https://doi.org/10.1016/0167-4838(94)00071-9; published Aug 1994) (tedeschi1994propertiesofthe pages 1-2).</li>
+<li><strong>Human DASPO kinetics/cofactor binding (cross-species inference):</strong> <strong>Km(D-Asp) ~1.05 mM</strong>, <strong>kcat ~81.3 s−1</strong>, <strong>FAD Kd ~33 nM</strong>, and tight FAD binding consistent with holoenzyme predominance (Pollegioni et al., 2021; https://doi.org/10.3389/fmolb.2021.689719; published Jun 2021) (pollegioni2021humandaspartateoxidase pages 4-5).</li>
+<li><strong>2024 schizophrenia serum statistics:</strong> <strong>F(2,35)=8.397, p=0.001, ηp²=0.324</strong> for serum D-Asp group differences (Garofalo et al., 2024; https://doi.org/10.3389/fpsyt.2024.1408175; published Jul 2024) (garofalo2024decreasedfreedaspartate pages 4-6).</li>
+</ol>
+<h3 id="7-practical-functional-annotation-summary-for-o-vulgaris-ddo-a0a7e6fsu6">7. Practical functional-annotation summary for <em>O. vulgaris</em> DDO (A0A7E6FSU6)</h3>
+<p><strong>Molecular function:</strong> FAD-dependent oxidoreductase (EC 1.4.3.1) catalyzing oxidative deamination of acidic D-amino acids, especially <strong>D-aspartate</strong> and <strong>D-glutamate</strong>, producing the corresponding α-ketoacid (oxaloacetate for D-Asp), ammonia, and H2O2 (direct cephalopod activity: D-Asp/D-Glu oxidation; mammalian reaction equation used as conserved mechanism) (d’aniello2005cephalopodvisioninvolves pages 2-3, tedeschi1994propertiesofthe pages 1-2, molla2020structureandkinetic pages 1-5, usiello2020newevidenceon pages 1-3).</p>
+<p><strong>Substrate specificity:</strong> Cephalopod DDO has preference for D-Asp-class substrates; NMDA can be oxidized but typically with lower activity (d’aniello2005cephalopodvisioninvolves pages 2-3, sarower2004distributionandsubstrate pages 4-5).</p>
+<p><strong>Tissue context:</strong> Strongest direct evidence is digestive gland/hepatopancreas/liver (enzyme purification and activity surveys) (tedeschi1994propertiesofthe pages 1-2, sarower2004distributionandsubstrate pages 1-2). High D-Asp in retina/optic tissues suggests a potential (but not yet directly proven) role in neural/visual D-Asp homeostasis (d’aniello2005cephalopodvisioninvolves pages 7-8, d’aniello2005cephalopodvisioninvolves media d49ab66e).</p>
+<p><strong>Subcellular localization:</strong> Not experimentally localized in octopus in the retrieved sources; by strong orthology to mammalian DASPO, DDO is expected to be peroxisomal (mammalian direct evidence) (pollegioni2021humandaspartateoxidase pages 2-4, usiello2020newevidenceon pages 1-3).</p>
+<h3 id="8-limitations-and-evidence-gaps-important-for-correct-annotation">8. Limitations and evidence gaps (important for correct annotation)</h3>
+<ol>
+<li><strong>Octopus-specific subcellular localization</strong> (peroxisome vs other compartments) was not directly established in the retrieved cephalopod primary literature; any peroxisomal assignment is an inference based on well-characterized mammalian orthologs (pollegioni2021humandaspartateoxidase pages 2-4, usiello2020newevidenceon pages 1-3).</li>
+<li><strong>2023–2024 octopus-specific DDO research</strong> was not identified in the retrieved corpus; the most direct cephalopod enzymology evidence remains from 1994–2005, with recent work primarily in mammals/humans.</li>
+</ol>
+<h3 id="key-references-urls-and-publication-dates">Key references (URLs and publication dates)</h3>
+<ul>
+<li>Tedeschi et al. “Properties of the flavoenzyme D-aspartate oxidase from <em>Octopus vulgaris</em>.” <em>Biochim Biophys Acta</em> (Aug 1994). https://doi.org/10.1016/0167-4838(94)00071-9 (tedeschi1994propertiesofthe pages 1-2)</li>
+<li>D’Aniello et al. “Cephalopod vision involves dicarboxylic amino acids: D-aspartate, L-aspartate and L-glutamate.” <em>Biochem J</em> (Mar 2005). https://doi.org/10.1042/bj20041070 (d’aniello2005cephalopodvisioninvolves pages 4-5, d’aniello2005cephalopodvisioninvolves media d49ab66e)</li>
+<li>Sarower et al. “Distribution and substrate specificity of D-amino acid and D-aspartate oxidases in marine invertebrates.” (2004; journal not captured in retrieved metadata) (sarower2004distributionandsubstrate pages 3-4, sarower2004distributionandsubstrate pages 1-2, sarower2004distributionandsubstrate pages 4-5)</li>
+<li>Pollegioni et al. “Human D-aspartate Oxidase: A Key Player in D-aspartate Metabolism.” <em>Front Mol Biosci</em> (Jun 2021). https://doi.org/10.3389/fmolb.2021.689719 (pollegioni2021humandaspartateoxidase pages 4-5, pollegioni2021humandaspartateoxidase pages 2-4)</li>
+<li>Garofalo et al. “Decreased free D-aspartate levels in the blood serum of patients with schizophrenia.” <em>Front Psychiatry</em> (Jul 2024). https://doi.org/10.3389/fpsyt.2024.1408175 (garofalo2024decreasedfreedaspartate pages 4-6, garofalo2024decreasedfreedaspartate pages 2-3)</li>
+<li>Falvo et al. “New Insights into D-Aspartate Signaling in Testicular Activity.” <em>Cells</em> (Aug 2024). https://doi.org/10.3390/cells13161400 (falvo2024newinsightsinto pages 1-2)</li>
+<li>Katane et al. “Identification of Novel D-Aspartate Oxidase Inhibitors…” <em>J Med Chem</em> (Sep 2015). https://doi.org/10.1021/acs.jmedchem.5b00871 (katane2015identificationofnovel pages 1-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(tedeschi1994propertiesofthe pages 1-2): Gabriella Tedeschi, Armando Negri, Fabrizio Ceciliani, Severino Ronchi, Amedeo Vetere, Gemma D'Aniello, and Antimo D'Aniello. Properties of the flavoenzyme d-aspartate oxidase from octopus vulgaris. Biochimica et biophysica acta, 1207 2:217-22, Aug 1994. URL: https://doi.org/10.1016/0167-4838(94)00071-9, doi:10.1016/0167-4838(94)00071-9. This article has 52 citations.</p>
+</li>
+<li>
+<p>(d’aniello2005cephalopodvisioninvolves pages 2-3): S. D’Aniello, P. Spinelli, G. Ferrandino, K. Peterson, Mara Tsesarskia, G. Fisher, and A. D’Aniello. Cephalopod vision involves dicarboxylic amino acids: d-aspartate, l-aspartate and l-glutamate. The Biochemical journal, 386 Pt 2:331-40, Mar 2005. URL: https://doi.org/10.1042/bj20041070, doi:10.1042/bj20041070. This article has 52 citations.</p>
+</li>
+<li>
+<p>(molla2020structureandkinetic pages 1-5): G Molla, A Chaves-Sanjuan, A Savinelli, and M Nardini. Structure and kinetic properties of human d-aspartate oxidase, the enzyme-controlling d-aspartate levels in brain. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(puggioni2020biochemicalcharacterizationof pages 1-2): Vincenzo Puggioni, Antonio Savinelli, Matteo Miceli, Gianluca Molla, Loredano Pollegioni, and Silvia Sacchi. Biochemical characterization of mouse d-aspartate oxidase. Biochimica et Biophysica Acta (BBA) - Proteins and Proteomics, 1868:140472, Oct 2020. URL: https://doi.org/10.1016/j.bbapap.2020.140472, doi:10.1016/j.bbapap.2020.140472. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(usiello2020newevidenceon pages 1-3): Alessandro Usiello, Maria Maddalena Di Fiore, Arianna De Rosa, Sara Falvo, Francesco Errico, Alessandra Santillo, Tommaso Nuzzo, and Gabriella Chieffi Baccari. New evidence on the role of d-aspartate metabolism in regulating brain and endocrine system physiology: from preclinical observations to clinical applications. International Journal of Molecular Sciences, 21:8718, Nov 2020. URL: https://doi.org/10.3390/ijms21228718, doi:10.3390/ijms21228718. This article has 55 citations.</p>
+</li>
+<li>
+<p>(pollegioni2021humandaspartateoxidase pages 4-5): Loredano Pollegioni, Gianluca Molla, Silvia Sacchi, and Giulia Murtas. Human d-aspartate oxidase: a key player in d-aspartate metabolism. Frontiers in Molecular Biosciences, Jun 2021. URL: https://doi.org/10.3389/fmolb.2021.689719, doi:10.3389/fmolb.2021.689719. This article has 31 citations.</p>
+</li>
+<li>
+<p>(pollegioni2021humandaspartateoxidase pages 2-4): Loredano Pollegioni, Gianluca Molla, Silvia Sacchi, and Giulia Murtas. Human d-aspartate oxidase: a key player in d-aspartate metabolism. Frontiers in Molecular Biosciences, Jun 2021. URL: https://doi.org/10.3389/fmolb.2021.689719, doi:10.3389/fmolb.2021.689719. This article has 31 citations.</p>
+</li>
+<li>
+<p>(sarower2004distributionandsubstrate pages 4-5): MG Sarower, T Matsui, and H Abe. Distribution and substrate specificity of d-amino acid and d-aspartate oxidases in marine invertebrates. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(sarower2004distributionandsubstrate pages 3-4): MG Sarower, T Matsui, and H Abe. Distribution and substrate specificity of d-amino acid and d-aspartate oxidases in marine invertebrates. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(sarower2004distributionandsubstrate pages 1-2): MG Sarower, T Matsui, and H Abe. Distribution and substrate specificity of d-amino acid and d-aspartate oxidases in marine invertebrates. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(molla2020structureandkinetic pages 11-13): G Molla, A Chaves-Sanjuan, A Savinelli, and M Nardini. Structure and kinetic properties of human d-aspartate oxidase, the enzyme-controlling d-aspartate levels in brain. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(pollegioni2021humandaspartateoxidase pages 1-2): Loredano Pollegioni, Gianluca Molla, Silvia Sacchi, and Giulia Murtas. Human d-aspartate oxidase: a key player in d-aspartate metabolism. Frontiers in Molecular Biosciences, Jun 2021. URL: https://doi.org/10.3389/fmolb.2021.689719, doi:10.3389/fmolb.2021.689719. This article has 31 citations.</p>
+</li>
+<li>
+<p>(d’aniello2005cephalopodvisioninvolves pages 7-8): S. D’Aniello, P. Spinelli, G. Ferrandino, K. Peterson, Mara Tsesarskia, G. Fisher, and A. D’Aniello. Cephalopod vision involves dicarboxylic amino acids: d-aspartate, l-aspartate and l-glutamate. The Biochemical journal, 386 Pt 2:331-40, Mar 2005. URL: https://doi.org/10.1042/bj20041070, doi:10.1042/bj20041070. This article has 52 citations.</p>
+</li>
+<li>
+<p>(d’aniello2005cephalopodvisioninvolves media d49ab66e): S. D’Aniello, P. Spinelli, G. Ferrandino, K. Peterson, Mara Tsesarskia, G. Fisher, and A. D’Aniello. Cephalopod vision involves dicarboxylic amino acids: d-aspartate, l-aspartate and l-glutamate. The Biochemical journal, 386 Pt 2:331-40, Mar 2005. URL: https://doi.org/10.1042/bj20041070, doi:10.1042/bj20041070. This article has 52 citations.</p>
+</li>
+<li>
+<p>(d’aniello2005cephalopodvisioninvolves pages 4-5): S. D’Aniello, P. Spinelli, G. Ferrandino, K. Peterson, Mara Tsesarskia, G. Fisher, and A. D’Aniello. Cephalopod vision involves dicarboxylic amino acids: d-aspartate, l-aspartate and l-glutamate. The Biochemical journal, 386 Pt 2:331-40, Mar 2005. URL: https://doi.org/10.1042/bj20041070, doi:10.1042/bj20041070. This article has 52 citations.</p>
+</li>
+<li>
+<p>(molla2020structureandkinetic pages 21-24): G Molla, A Chaves-Sanjuan, A Savinelli, and M Nardini. Structure and kinetic properties of human d-aspartate oxidase, the enzyme-controlling d-aspartate levels in brain. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(usiello2020newevidenceon pages 10-12): Alessandro Usiello, Maria Maddalena Di Fiore, Arianna De Rosa, Sara Falvo, Francesco Errico, Alessandra Santillo, Tommaso Nuzzo, and Gabriella Chieffi Baccari. New evidence on the role of d-aspartate metabolism in regulating brain and endocrine system physiology: from preclinical observations to clinical applications. International Journal of Molecular Sciences, 21:8718, Nov 2020. URL: https://doi.org/10.3390/ijms21228718, doi:10.3390/ijms21228718. This article has 55 citations.</p>
+</li>
+<li>
+<p>(garofalo2024decreasedfreedaspartate pages 2-3): Martina Garofalo, Giuseppe De Simone, Zoraide Motta, Tommaso Nuzzo, Elisa De Grandis, Claudio Bruno, Silvia Boeri, Maria Pia Riccio, Lucio Pastore, Carmela Bravaccio, Felice Iasevoli, Francesco Salvatore, Loredano Pollegioni, Francesco Errico, Andrea de Bartolomeis, and Alessandro Usiello. Decreased free d-aspartate levels in the blood serum of patients with schizophrenia. Frontiers in Psychiatry, Jul 2024. URL: https://doi.org/10.3389/fpsyt.2024.1408175, doi:10.3389/fpsyt.2024.1408175. This article has 16 citations.</p>
+</li>
+<li>
+<p>(garofalo2024decreasedfreedaspartate pages 4-6): Martina Garofalo, Giuseppe De Simone, Zoraide Motta, Tommaso Nuzzo, Elisa De Grandis, Claudio Bruno, Silvia Boeri, Maria Pia Riccio, Lucio Pastore, Carmela Bravaccio, Felice Iasevoli, Francesco Salvatore, Loredano Pollegioni, Francesco Errico, Andrea de Bartolomeis, and Alessandro Usiello. Decreased free d-aspartate levels in the blood serum of patients with schizophrenia. Frontiers in Psychiatry, Jul 2024. URL: https://doi.org/10.3389/fpsyt.2024.1408175, doi:10.3389/fpsyt.2024.1408175. This article has 16 citations.</p>
+</li>
+<li>
+<p>(errico2015daspartateanendogenous pages 2-2): Francesco Errico, Jean-Pierre Mothet, and Alessandro Usiello. D-aspartate: an endogenous nmda receptor agonist enriched in the developing brain with potential involvement in schizophrenia. Journal of pharmaceutical and biomedical analysis, 116:7-17, Dec 2015. URL: https://doi.org/10.1016/j.jpba.2015.03.024, doi:10.1016/j.jpba.2015.03.024. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(errico2018theemergingrole pages 1-2): Francesco Errico, Tommaso Nuzzo, Massimo Carella, Alessandro Bertolino, and Alessandro Usiello. The emerging role of altered d-aspartate metabolism in schizophrenia: new insights from preclinical models and human studies. Frontiers in Psychiatry, Nov 2018. URL: https://doi.org/10.3389/fpsyt.2018.00559, doi:10.3389/fpsyt.2018.00559. This article has 51 citations.</p>
+</li>
+<li>
+<p>(falvo2024newinsightsinto pages 1-2): Sara Falvo, Alessandra Santillo, Maria Maddalena Di Fiore, Massimo Venditti, Giulia Grillo, Debora Latino, Isabella Baccari, Giuseppe Petito, and Gabriella Chieffi Baccari. New insights into d-aspartate signaling in testicular activity. Cells, 13:1400, Aug 2024. URL: https://doi.org/10.3390/cells13161400, doi:10.3390/cells13161400. This article has 7 citations.</p>
+</li>
+<li>
+<p>(falvo2024newinsightsinto pages 2-3): Sara Falvo, Alessandra Santillo, Maria Maddalena Di Fiore, Massimo Venditti, Giulia Grillo, Debora Latino, Isabella Baccari, Giuseppe Petito, and Gabriella Chieffi Baccari. New insights into d-aspartate signaling in testicular activity. Cells, 13:1400, Aug 2024. URL: https://doi.org/10.3390/cells13161400, doi:10.3390/cells13161400. This article has 7 citations.</p>
+</li>
+<li>
+<p>(molla2020structureandkinetic pages 16-18): G Molla, A Chaves-Sanjuan, A Savinelli, and M Nardini. Structure and kinetic properties of human d-aspartate oxidase, the enzyme-controlling d-aspartate levels in brain. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(katane2015identificationofnovel pages 1-3): Masumi Katane, Shota Yamada, Go Kawaguchi, Mana Chinen, Maya Matsumura, Takemi Ando, Issei Doi, Kazuki Nakayama, Yuusuke Kaneko, Satsuki Matsuda, Yasuaki Saitoh, Tetsuya Miyamoto, Masae Sekine, Noriyuki Yamaotsu, Shuichi Hirono, and Hiroshi Homma. Identification of novel d-aspartate oxidase inhibitors by in silico screening and their functional and structural characterization in vitro. Journal of medicinal chemistry, 58 18:7328-40, Sep 2015. URL: https://doi.org/10.1021/acs.jmedchem.5b00871, doi:10.1021/acs.jmedchem.5b00871. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pollegioni2021humandaspartateoxidase pages 4-5</li>
+<li>tedeschi1994propertiesofthe pages 1-2</li>
+<li>pollegioni2021humandaspartateoxidase pages 2-4</li>
+<li>sarower2004distributionandsubstrate pages 4-5</li>
+<li>pollegioni2021humandaspartateoxidase pages 1-2</li>
+<li>sarower2004distributionandsubstrate pages 1-2</li>
+<li>garofalo2024decreasedfreedaspartate pages 2-3</li>
+<li>garofalo2024decreasedfreedaspartate pages 4-6</li>
+<li>usiello2020newevidenceon pages 1-3</li>
+<li>errico2015daspartateanendogenous pages 2-2</li>
+<li>katane2015identificationofnovel pages 1-3</li>
+<li>molla2020structureandkinetic pages 1-5</li>
+<li>falvo2024newinsightsinto pages 1-2</li>
+<li>puggioni2020biochemicalcharacterizationof pages 1-2</li>
+<li>sarower2004distributionandsubstrate pages 3-4</li>
+<li>molla2020structureandkinetic pages 11-13</li>
+<li>molla2020structureandkinetic pages 21-24</li>
+<li>usiello2020newevidenceon pages 10-12</li>
+<li>errico2018theemergingrole pages 1-2</li>
+<li>falvo2024newinsightsinto pages 2-3</li>
+<li>molla2020structureandkinetic pages 16-18</li>
+<li>https://doi.org/10.3389/fpsyt.2024.1408175;</li>
+<li>https://doi.org/10.3390/cells13161400;</li>
+<li>https://doi.org/10.1021/acs.jmedchem.5b00871;</li>
+<li>https://doi.org/10.1042/bj20041070;</li>
+<li>https://doi.org/10.1016/0167-4838(94</li>
+<li>https://doi.org/10.3389/fmolb.2021.689719;</li>
+<li>https://doi.org/10.1042/bj20041070</li>
+<li>https://doi.org/10.3389/fmolb.2021.689719</li>
+<li>https://doi.org/10.3389/fpsyt.2024.1408175</li>
+<li>https://doi.org/10.3390/cells13161400</li>
+<li>https://doi.org/10.1021/acs.jmedchem.5b00871</li>
+<li>https://doi.org/10.1042/bj20041070,</li>
+<li>https://doi.org/10.1016/j.bbapap.2020.140472,</li>
+<li>https://doi.org/10.3390/ijms21228718,</li>
+<li>https://doi.org/10.3389/fmolb.2021.689719,</li>
+<li>https://doi.org/10.3389/fpsyt.2024.1408175,</li>
+<li>https://doi.org/10.1016/j.jpba.2015.03.024,</li>
+<li>https://doi.org/10.3389/fpsyt.2018.00559,</li>
+<li>https://doi.org/10.3390/cells13161400,</li>
+<li>https://doi.org/10.1021/acs.jmedchem.5b00871,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DDO-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A7E6FSU6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ddo-d-aspartate-oxidase-octopus-vulgaris-research-notes">DDO (D-aspartate oxidase) — Octopus vulgaris — Research Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>DDO (D-aspartate oxidase, EC 1.4.3.1) is a FAD-dependent flavoenzyme that selectively catalyzes<br />
+the oxidative deamination of acidic D-amino acids, primarily D-aspartate and D-glutamate. It is<br />
+one of the best biochemically characterized cephalopod enzymes, thanks to extensive work by the<br />
+D'Aniello lab at Stazione Zoologica A. Dohrn, Naples.</p>
+<p>UniProt: A0A7E6FSU6 (Swiss-Prot reviewed), 336 AA, monomer, MW ~37 kDa.</p>
+<h2 id="key-findings-from-literature">Key Findings from Literature</h2>
+<h3 id="enzyme-properties-pmid7915543">Enzyme Properties (PMID:7915543)</h3>
+<ul>
+<li>Purified from O. vulgaris hepatopancreas</li>
+<li>Monomer of Mr 37,000 containing 1 mol FAD per mol protein</li>
+<li>Two enzyme forms: active (FAD-bound) and inactive (6-OH-FAD-bound, artifact of purification)</li>
+<li>N-terminal sequence shows similarity to bovine D-aspartate oxidase and porcine D-amino acid oxidase</li>
+<li>Kinetic parameters: KM 4.3 mM for D-Asp, 9.7 mM for D-Glu, 47.7 mM for NMDA</li>
+<li>Two active-site residues with pKa 7.1 and 9.1 critical for catalysis</li>
+<li>kcat 6.8 s-1 with D-Asp, 11 s-1 with D-Glu</li>
+</ul>
+<h3 id="substrate-specificity-pmid8103425">Substrate Specificity (PMID:8103425)</h3>
+<ul>
+<li>D-AspO specifically oxidizes: D-Asp, D-Glu, D-Asn, D-Gln, D-Asp-dimethylester, N-methyl-D-Asp</li>
+<li>D-Pro, D-Leu, D-Ala, D-Met oxidized at very low rate (0.2-0.6% of D-Asp rate)</li>
+<li>All L-amino acids NOT oxidized — strict D-stereoselectivity</li>
+<li>Clearly distinct from D-amino acid oxidase (DAO) which handles neutral/hydrophobic D-amino acids</li>
+</ul>
+<h3 id="biological-role-d-amino-acid-detoxification-pmid7903300">Biological Role — D-amino acid detoxification (PMID:7903300)</h3>
+<ul>
+<li>D-amino acids administered to animals are absorbed and oxidized by D-AspO and DAO in tissues</li>
+<li>Inverse relationship: younger animals have less oxidase → more free D-amino acids</li>
+<li>If not metabolized, D-amino acids accumulate and cause toxicity (suppress enzyme synthesis, inhibit growth)</li>
+<li>Enzyme is induced in young rats when mothers ingest D-Asp during pregnancy/suckling</li>
+<li>Biological role: <strong>detoxification of D-amino acids</strong> that accumulate during aging</li>
+</ul>
+<h3 id="d-aspartate-in-cephalopod-nervous-tissue-pmid8446003">D-Aspartate in Cephalopod Nervous Tissue (PMID:8446003)</h3>
+<ul>
+<li>Free D-Asp found at high concentrations in CNS of cephalopods (O. vulgaris, L. vulgaris, S. officinalis) and Aplysia</li>
+<li>D-Asp was 8.3% of total aspartate in Aplysia ganglia</li>
+<li>No other free D-amino acids detected in nervous tissue</li>
+<li>Suggests D-Asp may have a specific <strong>neurological function</strong> in molluscan CNS</li>
+<li>D-AspO from Octopus was used as analytical tool to measure D-Asp levels</li>
+</ul>
+<h3 id="nmda-receptor-context-pmid18703100">NMDA Receptor Context (PMID:18703100)</h3>
+<ul>
+<li>NMDA receptors are present in Octopus olfactory lobes</li>
+<li>NMDA enhances GnRH mRNA expression in dose-response manner</li>
+<li>L-glutamate/NMDA/NO pathway controls reproductive maturation in O. vulgaris</li>
+<li>D-aspartate (the DDO substrate) can act as NMDA receptor agonist</li>
+<li>DDO therefore plays a role in modulating NMDA receptor-mediated signaling by regulating D-Asp levels</li>
+</ul>
+<h3 id="use-as-analytical-tool-pmid2306473">Use as Analytical Tool (PMID:2306473)</h3>
+<ul>
+<li>Octopus D-AspO widely used as analytical reagent for measuring D-amino acids</li>
+<li>Can detect 0.05 nmol D-amino acid in presence of 20 µmol L-amino acids (ratio 0.00025%)</li>
+</ul>
+<h2 id="summary-of-core-functions">Summary of Core Functions</h2>
+<ol>
+<li><strong>Catalytic function</strong>: FAD-dependent oxidative deamination of D-Asp and D-Glu (EC 1.4.3.1)</li>
+<li><strong>Detoxification</strong>: Protection against toxicity of D-amino acids</li>
+<li><strong>Neuromodulation</strong>: Regulation of D-Asp levels in CNS, thereby modulating NMDA receptor signaling</li>
+<li><strong>Subcellular location</strong>: Peroxisome matrix (by similarity to mammalian orthologs)</li>
+<li><strong>Developmental regulation</strong>: Expression increases postnatally in liver/kidney</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A7E6FSU6
+gene_symbol: DDO
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:6645
+  label: Octopus vulgaris
+description: &gt;-
+  D-aspartate oxidase (EC 1.4.3.1) is a FAD-dependent flavoenzyme that selectively catalyzes
+  the oxidative deamination of acidic D-amino acids, primarily D-aspartate and D-glutamate.
+  It is a 37 kDa monomer containing one FAD per molecule, purified from O. vulgaris
+  hepatopancreas. DDO protects the organism from D-amino acid toxicity and regulates
+  D-aspartate levels in the CNS, where D-Asp acts as an NMDA receptor agonist. Expression
+  increases postnatally in liver and kidney. Localized to the peroxisomal matrix by similarity.
+existing_annotations:
+# --- IEA annotations ---
+- term:
+    id: GO:0003884
+    label: D-amino-acid oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      GO:0003884 (D-amino-acid oxidase activity) describes oxidative deamination of neutral/basic
+      D-amino acids (D-Ala, D-Met, D-Pro, etc.). DDO is specifically a D-aspartate oxidase
+      (EC 1.4.3.1), which is functionally distinct from D-amino acid oxidase (EC 1.4.3.3).
+      DDO acts on acidic D-amino acids (D-Asp, D-Glu) and has negligible activity on neutral
+      D-amino acids [PMID:8103425]. The IEA mapping from InterPro/PANTHER assigns the broader
+      parent family activity, but GO:0008445 (D-aspartate oxidase activity) is the correct
+      specific term for this enzyme.
+    action: MODIFY
+    reason: &gt;-
+      DDO is a D-aspartate oxidase, not a D-amino acid oxidase. D-AspO specifically oxidizes
+      D-Asp, D-Glu, and their derivatives, whereas D-AAO oxidizes neutral D-amino acids
+      [PMID:8103425]. DDO oxidizes D-Pro, D-Leu, D-Ala, D-Met at only 0.2-0.6% of the D-Asp
+      rate [PMID:8103425]. The correct term is GO:0008445 (D-aspartate oxidase activity),
+      which is already annotated with IDA evidence.
+    proposed_replacement_terms:
+    - id: GO:0008445
+      label: D-aspartate oxidase activity
+    supported_by:
+    - reference_id: PMID:8103425
+      supporting_text: &gt;-
+        D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney
+        oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln,
+        D-Asp-dimethyl-ester and N-methyl-D-Asp
+    - reference_id: PMID:7915543
+      supporting_text: &gt;-
+        The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been
+        investigated
+
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-derived annotation placing DDO in the cytoplasm. UniProt annotates DDO
+      to the peroxisome matrix by similarity to human DDO (Q99489), which has a C-terminal
+      peroxisomal targeting signal (SKL motif at residues 334-336). The cytoplasm annotation
+      is not wrong per se (peroxisomes are in the cytoplasm), but it is too general. The
+      more specific peroxisomal matrix annotation is preferred and already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      DDO has a C-terminal SKL microbody targeting signal (residues 334-336) and is annotated
+      to peroxisomal matrix (GO:0005782) by ISS to human and bovine orthologs. Cytoplasm is
+      too general and adds no information beyond the more specific peroxisomal matrix annotation.
+
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation from UniProt subcellular location mapping. DDO has a C-terminal SKL
+      microbody targeting signal (residues 334-336 in the O. vulgaris sequence) consistent
+      with peroxisomal matrix localization. This is further supported by ISS annotations
+      to human DDO (Q99489) and bovine DDO (P31228).
+    action: ACCEPT
+    reason: &gt;-
+      Peroxisomal matrix localization is well-supported by the conserved SKL peroxisomal
+      targeting signal at the C-terminus and by sequence similarity to mammalian orthologs
+      known to localize to the peroxisome matrix.
+
+- term:
+    id: GO:0008445
+    label: D-aspartate oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      IEA annotation from EC number mapping (EC 1.4.3.1). This is the correct molecular
+      function for DDO, directly supported by experimental characterization in PMID:7915543.
+      The EC-to-GO mapping is accurate here.
+    action: ACCEPT
+    reason: &gt;-
+      D-aspartate oxidase activity (EC 1.4.3.1) is the experimentally verified catalytic
+      function of this enzyme [PMID:7915543]. This IEA annotation is consistent with the
+      IDA annotation from the same GO term.
+
+- term:
+    id: GO:0019478
+    label: D-amino acid catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: &gt;-
+      TreeGrafter-derived annotation for involvement in D-amino acid catabolism. DDO catalyzes
+      the oxidative deamination of D-Asp and D-Glu, producing the corresponding keto acids
+      (oxaloacetate and 2-oxoglutarate), H2O2, and NH4+. This is a bona fide catabolic
+      process for D-amino acids [PMID:7903300].
+    action: ACCEPT
+    reason: &gt;-
+      DDO directly participates in D-amino acid catabolism by oxidatively deaminating
+      D-aspartate and D-glutamate. The biological role as a D-amino acid detoxifying
+      enzyme is well-established [PMID:7903300, PMID:8103425].
+
+- term:
+    id: GO:0046416
+    label: D-amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro-derived annotation for D-amino acid metabolic process. This is a parent term
+      of GO:0019478 (D-amino acid catabolic process), which is already annotated with both
+      IEA and IDA evidence. The metabolic process term is not incorrect but is less specific
+      than the catabolic process term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a valid but more general parent of GO:0019478 (D-amino acid catabolic process).
+      Since the more specific catabolic term is already annotated with IDA evidence, this
+      broader term adds minimal information but is not wrong. Kept as non-core.
+
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro-derived annotation for FAD binding. DDO contains one mol FAD per mol protein,
+      with multiple FAD-binding residues identified by similarity (positions 34, 35, 41, 42,
+      304, 308, 309). FAD is the essential cofactor for catalytic activity [PMID:7915543].
+    action: ACCEPT
+    reason: &gt;-
+      FAD binding is experimentally established. DDO is a flavoenzyme containing stoichiometric
+      FAD as cofactor [PMID:7915543]. This IEA is consistent with the IDA annotation for the
+      same term.
+
+# --- ISS annotations ---
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      ISS annotation transferred from human DDO (Q99489). DDO has a conserved C-terminal
+      SKL peroxisomal targeting signal (microbody targeting signal at residues 334-336).
+      The subcellular location annotation in UniProt also specifies peroxisome matrix
+      by similarity.
+    action: ACCEPT
+    reason: &gt;-
+      Peroxisomal matrix localization is well-supported by the conserved SKL targeting
+      signal at the C-terminus and orthology to human DDO (Q99489), which is experimentally
+      localized to peroxisomes.
+
+# Second ISS annotation for peroxisomal matrix (from bovine DDO P31228)
+- term:
+    id: GO:0005782
+    label: peroxisomal matrix
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: &gt;-
+      Second ISS annotation for peroxisomal matrix, transferred from bovine DDO (P31228).
+      This provides additional orthologous support for peroxisomal localization. PMID:7915543
+      notes structural similarities between Octopus DDO and bovine D-aspartate oxidase.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the other ISS annotation but from a different ortholog (bovine P31228
+      vs human Q99489). Both support peroxisomal matrix localization consistently.
+    supported_by:
+    - reference_id: PMID:7915543
+      supporting_text: &gt;-
+        Structural investigations show similarities in both the amino-acid composition and the
+        N-terminal amino-acid sequence to bovine D-aspartate oxidase and porcine D-amino-acid
+        oxidase
+
+# --- Experimental annotations ---
+- term:
+    id: GO:0047821
+    label: D-glutamate oxidase activity
+  evidence_type: EXP
+  original_reference_id: PMID:7915543
+  review:
+    summary: &gt;-
+      Experimental annotation for D-glutamate oxidase activity. PMID:7915543 reports
+      kinetic characterization of DDO with D-glutamate as substrate: KM 9.7 mM, kcat 11 s-1.
+      PMID:8103425 confirms DDO oxidizes D-Glu, D-Gln, and derivatives. D-glutamate is a
+      legitimate substrate with catalytic efficiency comparable to D-aspartate.
+    action: ACCEPT
+    reason: &gt;-
+      D-glutamate oxidase activity is directly demonstrated with kinetic parameters
+      (KM 9.7 mM, kcat 11 s-1) [PMID:7915543]. D-Glu is among the primary substrates
+      of DDO [PMID:8103425].
+    supported_by:
+    - reference_id: PMID:7915543
+      supporting_text: &gt;-
+        kinetic analyses suggest that two active-site residues with pKa of 7.1 and 9.1 are
+        critical for catalysis, and that the ionization of such residues has different effects
+        on the catalytic activity depending whether mono- or dicarboxylic D-amino acids are
+        used as substrate
+    - reference_id: PMID:8103425
+      supporting_text: &gt;-
+        D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney
+        oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln,
+        D-Asp-dimethyl-ester and N-methyl-D-Asp
+
+- term:
+    id: GO:0008445
+    label: D-aspartate oxidase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7915543
+  review:
+    summary: &gt;-
+      IDA annotation for D-aspartate oxidase activity, the primary catalytic function of DDO.
+      PMID:7915543 reports comprehensive biochemical characterization: the enzyme is a 37 kDa
+      FAD-dependent monomer with KM 4.3 mM for D-Asp, kcat 6.8 s-1. It selectively oxidizes
+      acidic D-amino acids and is classified as EC 1.4.3.1.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function of the enzyme, directly demonstrated by enzyme
+      purification and kinetic characterization [PMID:7915543, PMID:8103425].
+    supported_by:
+    - reference_id: PMID:7915543
+      supporting_text: &gt;-
+        The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been
+        investigated. The protein is a monomer of M(r) 37,000 containing one mol flavin/mol
+        protein
+    - reference_id: PMID:8103425
+      supporting_text: &gt;-
+        D-Aspartate oxidase (D-Aspo) either purified from Octopus vulgaris or from beef kidney
+        oxidizes only D-Asp, D-Glu and their following derivatives: D-Asn, D-Gln,
+        D-Asp-dimethyl-ester and N-methyl-D-Asp
+    - reference_id: PMID:15491279
+      supporting_text: &gt;-
+        a D - A sp O ( D -aspartate oxidase; EC 1.4.3.1), the enzyme which specifically
+        oxidizes D -Asp into oxaloacetate has been found in various animals, and has been
+        purified from O. vulgaris
+
+- term:
+    id: GO:0019478
+    label: D-amino acid catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:7915543
+  review:
+    summary: &gt;-
+      IDA annotation for involvement in D-amino acid catabolic process. PMID:7915543
+      demonstrates that DDO catalyzes the oxidative deamination of D-Asp to oxaloacetate
+      and D-Glu to 2-oxoglutarate, with release of NH4+ and H2O2. PMID:7903300 establishes
+      the biological role as detoxification of D-amino acids that accumulate during aging.
+    action: ACCEPT
+    reason: &gt;-
+      DDO directly catabolizes D-amino acids. The enzyme&#39;s catalytic products (keto acids,
+      H2O2, NH4+) confirm this is a catabolic/degradative process [PMID:7915543]. The
+      detoxification role is well-established in vivo [PMID:7903300].
+    supported_by:
+    - reference_id: PMID:7903300
+      supporting_text: &gt;-
+        D-Amino acids administered to animals are absorbed by the intestine and transported
+        through the blood-stream to solid tissues where they are oxidized in vivo by D-amino
+        acid oxidase and D-aspartate oxidase to produce the same compounds they do in vitro;
+        i.e. NH3, H2O2, and the keto acid corresponding to the amino acid ingested
+    - reference_id: PMID:7903300
+      supporting_text: &gt;-
+        the in vivo biological role of these oxidases in animals is to act as detoxifying
+        agents to metabolize D-amino acids which may have accumulated during aging
+
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IDA
+  original_reference_id: PMID:7915543
+  review:
+    summary: &gt;-
+      IDA annotation for FAD binding. PMID:7915543 demonstrates that DDO contains
+      stoichiometric FAD (one mol FAD per mol protein) and that the enzyme exists in
+      active (FAD-bound) and inactive (6-OH-FAD-bound, purification artifact) forms.
+      The spectrophotometric properties conform to the oxidase class of flavoproteins.
+    action: ACCEPT
+    reason: &gt;-
+      FAD binding is directly demonstrated by spectrophotometric characterization and
+      cofactor stoichiometry [PMID:7915543]. FAD is essential for catalytic activity.
+    supported_by:
+    - reference_id: PMID:7915543
+      supporting_text: &gt;-
+        The protein is a monomer of M(r) 37,000 containing one mol flavin/mol protein.
+        The enzyme as isolated exists at least in two forms, one containing FAD and the other,
+        which is catalytically inactive, probably containing 6-OH-FAD
+
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:7915543
+  title: Properties of the flavoenzyme D-aspartate oxidase from Octopus vulgaris.
+  findings:
+  - statement: &gt;-
+      DDO is a 37 kDa FAD-dependent monomer with KM 4.3 mM for D-Asp and 9.7 mM for D-Glu.
+      Two active-site residues with pKa 7.1 and 9.1 are critical for catalysis.
+  - statement: &gt;-
+      The enzyme exists in active (FAD-bound) and inactive (6-OH-FAD-bound) forms; the
+      inactive form is a purification artifact.
+  - statement: &gt;-
+      Structural similarities to bovine D-aspartate oxidase and porcine D-amino acid oxidase
+      in amino-acid composition and N-terminal sequence.
+- id: PMID:7903300
+  title: Biological role of D-amino acid oxidase and D-aspartate oxidase. Effects of D-amino acids.
+  findings:
+  - statement: &gt;-
+      D-amino acids administered to animals are oxidized in vivo by D-amino acid oxidase
+      and D-aspartate oxidase in tissues, producing NH3, H2O2, and the corresponding keto acid.
+  - statement: &gt;-
+      Inverse relationship between oxidase levels and D-amino acid concentrations: younger
+      animals have lower oxidase and higher D-amino acids.
+  - statement: &gt;-
+      Biological role is detoxification of D-amino acids that accumulate during aging.
+  - statement: &gt;-
+      DDO expression in liver and kidney increases progressively during postnatal development.
+- id: PMID:8103425
+  title: Further study on the specificity of D-amino acid oxidase and D-aspartate oxidase
+    and time course for complete oxidation of D-amino acids.
+  findings:
+  - statement: &gt;-
+      D-AspO from Octopus and beef kidney specifically oxidizes D-Asp, D-Glu, D-Asn, D-Gln,
+      D-Asp-dimethyl-ester, and N-methyl-D-Asp.
+  - statement: &gt;-
+      D-Pro, D-Leu, D-Ala, D-Met oxidized at very low rates (0.2-0.6% of D-Asp rate).
+  - statement: &gt;-
+      All L-amino acids are not oxidized, confirming strict D-stereoselectivity.
+  - statement: &gt;-
+      D-AspO is clearly distinct from D-amino acid oxidase (D-AAO) in substrate specificity.
+- id: PMID:8446003
+  title: Occurrence of free D-aspartic acid in the circumsoesophageal ganglia of Aplysia fasciata.
+  findings:
+  - statement: &gt;-
+      Free D-Asp found at high concentrations in CNS of cephalopods (O. vulgaris, L. vulgaris,
+      S. officinalis) and Aplysia, constituting 8.3% of total aspartate in ganglia.
+  - statement: &gt;-
+      D-Asp may have a specific neurological function in molluscan CNS.
+  - statement: &gt;-
+      Octopus D-AspO was used as analytical tool to measure D-Asp levels.
+- id: PMID:18703100
+  title: Control of GnRH expression in the olfactory lobe of Octopus vulgaris.
+  findings:
+  - statement: &gt;-
+      NMDA receptors are present in Octopus olfactory lobes and NMDA enhances GnRH mRNA
+      expression in a dose-response manner.
+  - statement: &gt;-
+      L-glutamate/NMDA/NO pathway controls reproductive maturation in O. vulgaris.
+  - statement: &gt;-
+      D-aspartate acts as NMDA receptor agonist, implicating DDO in neuromodulation
+      through regulation of D-Asp levels.
+- id: PMID:15491279
+  title: Cephalopod vision involves dicarboxylic amino acids - D-aspartate, L-aspartate
+    and L-glutamate.
+  findings:
+  - statement: &gt;-
+      High concentrations of free D-aspartate in cephalopod retina: O. vulgaris 2.30 +/- 0.25
+      umol/g, S. officinalis 2.60 +/- 0.30 umol/g, L. vulgaris 1.60 +/- 0.20 umol/g tissue.
+  - statement: &gt;-
+      Purified octopus D-AspO degrades D-Asp in retinal extracts, abolishing the D-Asp HPLC
+      peak, confirming enzyme activity against the retinal D-Asp pool.
+  - statement: &gt;-
+      Radiotracer experiments indicate D-Asp is synthesized in optic lobes and transported
+      to the retina, establishing dynamic D-Asp handling in cephalopod visual circuitry.
+  - statement: &gt;-
+      DDO also oxidizes NMDA (N-methyl-D-aspartate), in addition to D-Asp and D-Glu.
+- id: PMID:34250021
+  title: Human D-aspartate oxidase - a key player in D-aspartate metabolism.
+  findings:
+  - statement: &gt;-
+      DDO/DASPO is a peroxisomal enzyme in mammals; D-Asp and DDO are localized in
+      neurons within peroxisomes, emphasizing compartmentalization and H2O2 handling.
+  - statement: &gt;-
+      DDO inhibition could raise endogenous D-Asp to modulate NMDA-receptor-related
+      physiology as a potential therapeutic strategy for neuropsychiatric disorders.
+  - statement: &gt;-
+      Human DASPO operates by a ternary-complex mechanism where oxygen reacts with the
+      reduced flavin-imino acid complex before product release, with hydride transfer from
+      substrate alpha-carbon to flavin N5.
+
+core_functions:
+- description: &gt;-
+    DDO is a D-aspartate oxidase (EC 1.4.3.1) that catalyzes the FAD-dependent oxidative
+    deamination of D-aspartate to oxaloacetate + H2O2 + NH4+, with KM 4.3 mM and kcat
+    6.8 s-1. It also oxidizes D-glutamate (KM 9.7 mM, kcat 11 s-1) and other acidic
+    D-amino acid derivatives (D-Asn, D-Gln, NMDA). This is the primary catalytic function
+    of the enzyme.
+  molecular_function:
+    id: GO:0008445
+    label: D-aspartate oxidase activity
+  directly_involved_in:
+  - id: GO:0019478
+    label: D-amino acid catabolic process
+  locations:
+  - id: GO:0005782
+    label: peroxisomal matrix
+  supported_by:
+  - reference_id: PMID:7915543
+    supporting_text: &gt;-
+      The properties of D-aspartate oxidase from Octopus vulgaris (EC 1.4.3.1) have been
+      investigated. The protein is a monomer of M(r) 37,000 containing one mol flavin/mol
+      protein
+  - reference_id: PMID:7903300
+    supporting_text: &gt;-
+      the in vivo biological role of these oxidases in animals is to act as detoxifying
+      agents to metabolize D-amino acids which may have accumulated during aging
+  - reference_id: PMID:15491279
+    supporting_text: &gt;-
+      S. officinalis contains the highest quantity of D -Asp (2.60±0.30 μmol/g of tissue)
+      followed by O. vulgaris and L. vulgaris , with concentrations of 2.30±0.25 and
+      1.60±0.20 μmol/g of tissue respectively
+- description: &gt;-
+    In the cephalopod visual system, free D-aspartate is present at high concentrations
+    in retina (2.30 +/- 0.25 umol/g in O. vulgaris) and optic lobes. Radiotracer
+    experiments show D-Asp is synthesized in optic lobes and transported to retina.
+    DDO is implicated in regulating the D-Asp pool that may serve as a neuromodulator
+    or signaling molecule in visual circuitry, though direct DDO localization in retina
+    has not been demonstrated. DDO was purified from hepatopancreas, where it shows
+    substantial activity consistent with metabolic clearance of dietary D-amino acids.
+  molecular_function:
+    id: GO:0008445
+    label: D-aspartate oxidase activity
+  directly_involved_in:
+  - id: GO:0019478
+    label: D-amino acid catabolic process
+  supported_by:
+  - reference_id: PMID:15491279
+    supporting_text: &gt;-
+      D -Asp is synthesized in the optic lobes and is then transported actively into the
+      retina
+  - reference_id: PMID:15491279
+    supporting_text: &gt;-
+      a D - A sp O ( D -aspartate oxidase; EC 1.4.3.1), the enzyme which specifically
+      oxidizes D -Asp into oxaloacetate has been found in various animals, and has been
+      purified from O. vulgaris
+
+suggested_questions:
+- question: &gt;-
+    Does DDO play a direct role in modulating NMDA receptor-mediated signaling in octopus
+    CNS by controlling D-aspartate levels? D-Asp is present at high concentrations in
+    cephalopod CNS [PMID:8446003] and NMDA receptors are functional in octopus brain
+    [PMID:18703100].
+- question: &gt;-
+    Is DDO expressed in octopus CNS tissue, or only in peripheral organs (liver, kidney)?
+    The developmental expression data from PMID:7903300 focuses on liver and kidney;
+    CNS expression would support a direct neuromodulatory role.
+
+suggested_experiments:
+- description: &gt;-
+    Immunohistochemistry or in situ hybridization for DDO expression in O. vulgaris
+    brain tissue (specifically olfactory and optic lobes) to determine whether DDO
+    is expressed in the CNS where D-Asp is present at high levels.
+  hypothesis: &gt;-
+    DDO is expressed in octopus CNS and directly regulates D-Asp levels for NMDA
+    receptor-mediated neuromodulation.
+- description: &gt;-
+    CRISPR/Cas9 or morpholino knockdown of DDO in O. vulgaris to assess the effect
+    on D-Asp levels in CNS and on NMDA receptor-dependent behaviors.
+  hypothesis: &gt;-
+    DDO knockdown leads to elevated D-Asp in CNS, altering NMDA receptor signaling
+    and downstream GnRH-mediated reproductive maturation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

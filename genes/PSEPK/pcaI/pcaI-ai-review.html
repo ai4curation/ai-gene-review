@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pcaI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pcaI</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FX5" target="_blank" class="term-link">
+                        Q88FX5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_3951</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pcaI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FX5" data-a="DESCRIPTION: pcaI encodes the PcaI subunit of the heteromeric 3..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pcaI encodes the PcaI subunit of the heteromeric 3-oxoadipate CoA-transferase (EC 2.8.3.6) in Pseudomonas putida KT2440. Together with PcaJ, it catalyzes transfer of CoA from succinyl-CoA to 3-oxoadipate to form 3-oxoadipyl-CoA and succinate, a late step in the protocatechuate branch of the beta-ketoadipate pathway that channels aromatic-carbon intermediates into central metabolism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008410" target="_blank" class="term-link">
+                                    GO:0008410
+                                </a>
+                            </span>
+                            <span class="term-label">CoA-transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FX5" data-a="GO:0008410" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent molecular-function term is broadly correct but substantially less informative than the specific 3-oxoadipate CoA-transferase activity annotation already present for pcaI.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> pcaI has a well-defined catalytic assignment within the beta-ketoadipate pathway. Retaining the generic parent term adds little information once GO:0047569 is present. The main curator-relevant nuance is not the term identity but that pcaI acts as one subunit of the heteromeric PcaI/PcaJ transferase complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88FX5
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=3-oxoadipate CoA-transferase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1128/jb.174.14.4657-4666.1992
+                                    
+                                </span>
+                                
+                                <div class="support-text">Parales and Harwood characterized pcaI and pcaJ as the genes for the beta-ketoadipate:succinyl-CoA transferase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047569" target="_blank" class="term-link">
+                                    GO:0047569
+                                </a>
+                            </span>
+                            <span class="term-label">3-oxoadipate CoA-transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FX5" data-a="GO:0047569" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct specific molecular function for pcaI. The gene was originally characterized as part of the two-subunit beta-ketoadipate:succinyl-CoA transferase that catalyzes the 3-oxoadipate to 3-oxoadipyl-CoA conversion.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The reaction and EC assignment match both the KT2440 UniProt record and the original genetic characterization of pcaI/pcaJ. Strict GO semantics would arguably prefer a contributes_to qualifier because PcaI functions with PcaJ in a heteromeric enzyme, but the GO term itself accurately captures the core catalytic role and should be retained.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1128/jb.174.14.4657-4666.1992
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cloned fragment complemented transferase-defective mutants and encoded one of the two nonidentical subunits of the enzyme.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88FX5
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=3-oxoadipate + succinyl-CoA = 3-oxoadipyl-CoA + succinate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase** (EC **2.8.3.6**)</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042952" target="_blank" class="term-link">
+                                    GO:0042952
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ketoadipate pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FX5" data-a="GO:0042952" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This pathway annotation is appropriate and represents a core biological process assignment for pcaI in KT2440 because the enzyme performs a late, committed CoA-transfer step in the protocatechuate branch.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The beta-ketoadipate pathway is the central aromatic-compound funneling pathway in Pseudomonas, and pca genes specifically comprise the protocatechuate branch in KT2440. UniProt places pcaI at step 1 of 2 for conversion of 3-oxoadipate to acetyl-CoA and succinyl-CoA, which is fully consistent with the pathway-level GO term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    DOI:10.1046/j.1462-2920.2002.00370.x
+                                    
+                                </span>
+                                
+                                <div class="support-text">The aromatic-catabolism analysis identified pca genes as the protocatechuate branch of the beta-ketoadipate pathway in KT2440.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88FX5
+                                    
+                                </span>
+                                
+                                <div class="support-text">beta-ketoadipate pathway; acetyl-CoA and succinyl-CoA from 3-oxoadipate: step 1/2.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a key activation step in the lower β-ketoadipate pathway.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Heteromeric 3-oxoadipate CoA-transferase subunit that functions with PcaJ to transfer CoA from succinyl-CoA to 3-oxoadipate, producing 3-oxoadipyl-CoA and succinate during aromatic-compound assimilation through the beta-ketoadipate pathway.</h3>
+                <span class="vote-buttons" data-g="Q88FX5" data-a="FUNCTION: Heteromeric 3-oxoadipate CoA-transferase subunit t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047569" target="_blank" class="term-link">
+                            3-oxoadipate CoA-transferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042952" target="_blank" class="term-link">
+                                beta-ketoadipate pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1128/jb.174.14.4657-4666.1992
+                            
+                        </span>
+                        
+                        <div class="finding-text">The characterized pcaI/pcaJ genes encode the beta-ketoadipate:succinyl-CoA transferase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88FX5
+                            
+                        </span>
+                        
+                        <div class="finding-text">UniProt records the EC 2.8.3.6 reaction converting 3-oxoadipate and succinyl-CoA to 3-oxoadipyl-CoA and succinate.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            DOI:10.1046/j.1462-2920.2002.00370.x
+                            
+                        </span>
+                        
+                        <div class="finding-text">The pca cluster belongs to the protocatechuate branch of the beta-ketoadipate pathway in KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase** (EC **2.8.3.6**)</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88FX5
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB Q88FX5 pcaI Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns pcaI to 3-oxoadipate CoA-transferase activity with EC 2.8.3.6.</div>
+                        
+                        <div class="finding-text">"RecName: Full=3-oxoadipate CoA-transferase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records the catalytic reaction converting 3-oxoadipate and succinyl-CoA to 3-oxoadipyl-CoA and succinate.</div>
+                        
+                        <div class="finding-text">"Reaction=3-oxoadipate + succinyl-CoA = 3-oxoadipyl-CoA + succinate"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt maps pcaI to the beta-ketoadipate pathway, step 1 of 2 in the conversion of 3-oxoadipate to central metabolites.</div>
+                        
+                        <div class="finding-text">"beta-ketoadipate pathway; acetyl-CoA and succinyl-CoA from 3-oxoadipate: step 1/2."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1128/jb.174.14.4657-4666.1992
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the genes encoding beta-ketoadipate succinyl-coenzyme A transferase in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The pcaI/pcaJ locus encodes the beta-ketoadipate:succinyl-CoA transferase required for aromatic-compound catabolism through the beta-ketoadipate route.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The study showed that the enzyme is composed of two nonidentical subunits, establishing that pcaI functions in a heteromeric transferase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1046/j.1462-2920.2002.00370.x
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genomic analysis of the aromatic catabolic pathways from Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In KT2440, the pca genes were assigned to the protocatechuate branch of the beta-ketoadipate pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research summary for pcaI in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Falcon synthesis supports assignment of pcaI as the A subunit of the heteromeric 3-oxoadipate:succinyl-CoA transferase.</div>
+                        
+                        <div class="finding-text">"**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase** (EC **2.8.3.6**)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Falcon synthesis places the PcaI/PcaJ reaction in the lower beta-ketoadipate pathway of KT2440 aromatic catabolism.</div>
+                        
+                        <div class="finding-text">"a key activation step in the lower β-ketoadipate pathway."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which catalytic and substrate-binding contributions are partitioned between PcaI and PcaJ in the KT2440 CoA-transferase active site?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Enzyme mechanism researchers, Structural biologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FX5" data-a="Q: Which catalytic and substrate-binding contribution..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which aromatic substrates and regulatory conditions is pcaI most strongly induced in KT2440?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pseudomonas regulatory-network specialists, Systems microbiologists</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FX5" data-a="Q: Under which aromatic substrates and regulatory con..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Delete pcaI and test growth on protocatechuate, 4-hydroxybenzoate, quinate, and benzoate to quantify its contribution to aromatic-carbon assimilation.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Gene knockout and growth profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FX5" data-a="EXPERIMENT: Delete pcaI and test growth on protocatechuate, 4-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify PcaI and PcaJ separately and together to test whether measurable 3-oxoadipate CoA-transferase activity requires the heteromeric complex and to resolve the enables versus contributes_to qualifier nuance.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Enzyme reconstitution</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FX5" data-a="EXPERIMENT: Purify PcaI and PcaJ separately and together to te..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pcaI-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FX5" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T11:12:30.020892'<br />
+end_time: '2026-03-21T11:25:52.979740'<br />
+duration_seconds: 802.96<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: pcaI<br />
+  gene_symbol: pcaI<br />
+  uniprot_accession: Q88FX5<br />
+  protein_description: 'RecName: Full=3-oxoadipate CoA-transferase {ECO:0000256|ARBA:ARBA00012492};<br />
+    EC=2.8.3.6 {ECO:0000256|ARBA:ARBA00012492};'<br />
+  gene_info: Name=pcaI {ECO:0000313|EMBL:AAN69545.1}; OrderedLocusNames=PP_3951 {ECO:0000313|EMBL:AAN69545.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the 3-oxoacid CoA-transferase subunit A family.<br />
+  protein_domains: 3-oxoacid_CoA-transf_A. (IPR012792); CoA_trans_fam_I. (IPR004165);<br />
+    CoA_transf_BS. (IPR004163); NagB/RpiA_transferase-like. (IPR037171); CoA_trans<br />
+    (PF01144)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 30</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88FX5</li>
+<li><strong>Protein Description:</strong> RecName: Full=3-oxoadipate CoA-transferase {ECO:0000256|ARBA:ARBA00012492}; EC=2.8.3.6 {ECO:0000256|ARBA:ARBA00012492};</li>
+<li><strong>Gene Information:</strong> Name=pcaI {ECO:0000313|EMBL:AAN69545.1}; OrderedLocusNames=PP_3951 {ECO:0000313|EMBL:AAN69545.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the 3-oxoacid CoA-transferase subunit A family.</li>
+<li><strong>Key Domains:</strong> 3-oxoacid_CoA-transf_A. (IPR012792); CoA_trans_fam_I. (IPR004165); CoA_transf_BS. (IPR004163); NagB/RpiA_transferase-like. (IPR037171); CoA_trans (PF01144)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pcaI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pcaI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pcaI</strong> (gene ID: pcaI, UniProt: Q88FX5) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88FX5</li>
+<li><strong>Protein Description:</strong> RecName: Full=3-oxoadipate CoA-transferase {ECO:0000256|ARBA:ARBA00012492}; EC=2.8.3.6 {ECO:0000256|ARBA:ARBA00012492};</li>
+<li><strong>Gene Information:</strong> Name=pcaI {ECO:0000313|EMBL:AAN69545.1}; OrderedLocusNames=PP_3951 {ECO:0000313|EMBL:AAN69545.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the 3-oxoacid CoA-transferase subunit A family.</li>
+<li><strong>Key Domains:</strong> 3-oxoacid_CoA-transf_A. (IPR012792); CoA_trans_fam_I. (IPR004165); CoA_transf_BS. (IPR004163); NagB/RpiA_transferase-like. (IPR037171); CoA_trans (PF01144)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pcaI" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pcaI' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pcaI</strong> (gene ID: pcaI, UniProt: Q88FX5) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-pcai-uniprot-q88fx5-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>pcaI</strong> (UniProt: Q88FX5) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-identity-verification-critical-disambiguation">0) Identity verification (critical disambiguation)</h2>
+<p>The gene symbol <strong>pcaI</strong> in <em>Pseudomonas putida</em> has a well-established meaning in the aromatic-catabolic literature: <strong>pcaI</strong> and <strong>pcaJ</strong> are two adjacent genes encoding the two nonidentical subunits of <strong>β-ketoadipate (3-oxoadipate):succinyl-CoA transferase</strong> (EC <strong>2.8.3.6</strong>) in the <strong>β-ketoadipate pathway</strong>. This was demonstrated by complementation of CoA-transferase-deficient mutants, expression of the cloned region in <em>E. coli</em>, and DNA sequencing showing two ORFs separated by 8 bp (operon-like organization). (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5, parales1993characterizationofthe pages 5-5)</p>
+<p><strong>Scope note (PP_3951 / UniProt mapping):</strong> The primary papers retrieved here (focused on biochemical function) predate the KT2440 locus-tag system and therefore do <strong>not</strong> directly mention <strong>PP_3951</strong> or <strong>UniProt Q88FX5</strong>. The enzymatic function and gene symbol usage (pcaI) are strongly supported by primary literature, but the specific mapping from <strong>pcaI → PP_3951 → Q88FX5</strong> should be regarded as a database cross-reference supplied by UniProt/GenBank rather than something explicitly stated in the retrieved primary articles. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-the-ketoadipate-pathway-ketoadipate-3-oxoadipate-pathway">1.1 The β-ketoadipate pathway (“β-ketoadipate / 3-oxoadipate pathway”)</h3>
+<p>The <strong>β-ketoadipate pathway</strong> is a central bacterial funnel for aerobic catabolism of many aromatic compounds, including compounds entering via <strong>benzoate</strong> and <strong>4-hydroxybenzoate</strong>, ultimately producing tricarboxylic acid (TCA) cycle-relevant intermediates. In <em>P. putida</em>, <strong>β-ketoadipate:succinyl-CoA transferase</strong> is described as the <strong>penultimate step</strong> in converting benzoate and 4-hydroxybenzoate to central metabolism intermediates. (parales1993characterizationofthe pages 1-1)</p>
+<h3 id="12-definition-of-pcaipcaj-enzyme-function">1.2 Definition of PcaI/PcaJ enzyme function</h3>
+<p>The enzyme encoded by <strong>pcaI + pcaJ</strong> catalyzes a reversible <strong>CoA-transfer</strong> reaction that “activates” the dicarboxylate <strong>β-ketoadipate (3-oxoadipate)</strong> by transferring CoA from <strong>succinyl-CoA</strong> to form <strong>3-oxoadipyl-CoA (β-ketoadipyl-CoA)</strong>. (parales1993characterizationofthe pages 1-1)</p>
+<p>This CoA-thioester product is then cleaved by a thiolase in the pathway (classically PcaF in <em>Pseudomonas</em> nomenclature) to yield central metabolites (acetyl-CoA and succinyl-CoA in canonical descriptions/ortholog systems). (kaschabek2002degradationofaromatics pages 1-2)</p>
+<h2 id="2-geneprotein-organization-and-mechanistic-implications">2) Gene/protein organization and mechanistic implications</h2>
+<h3 id="21-operon-structure-and-subunits">2.1 Operon structure and subunits</h3>
+<p>In <em>P. putida</em>, <strong>pcaI and pcaJ</strong> are separated by <strong>8 bp</strong>, suggesting operon organization, and expression experiments produced two proteins consistent with nonidentical subunits of the transferase. (parales1993characterizationofthe pages 5-5, parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5)</p>
+<h3 id="22-enzyme-architecture-biochemical-evidence-from-pseudomonas-ortholog">2.2 Enzyme architecture (biochemical evidence from <em>Pseudomonas</em> ortholog)</h3>
+<p>Purification/characterization of the analogous <strong>3-oxoadipate:succinyl-CoA transferase</strong> from <em>Pseudomonas</em> sp. strain B13 found a native enzyme mass ~115–120 kDa with subunits of ~32.9 kDa (A) and ~27 kDa (B), consistent with an <strong>A2B2 heterotetramer</strong>. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 4-5)</p>
+<h3 id="23-kinetics-and-substrate-specificity-best-available-enzymology-in-retrieved-sources">2.3 Kinetics and substrate specificity (best-available enzymology in retrieved sources)</h3>
+<p>In <em>Pseudomonas</em> sp. B13, reported kinetic and specificity features included:<br />
+- <strong>pH optimum ~8.4</strong>. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5)<br />
+- <strong>Km ≈ 0.4 mM</strong> for <strong>3-oxoadipate</strong> and <strong>Km ≈ 0.2 mM</strong> for <strong>succinyl-CoA</strong>. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5)<br />
+- <strong>Donor specificity:</strong> acetyl-CoA could not replace succinyl-CoA as the CoA donor. (kaschabek2002degradationofaromatics pages 5-5)<br />
+- <strong>Acceptor specificity:</strong> no activity with <strong>2-chloro-</strong> or <strong>2-methyl-3-oxoadipate</strong>; some activity with <strong>4-methyl-3-oxoadipate</strong>; poor activity with <strong>2-oxoadipate</strong> and <strong>3-oxoglutarate</strong>. (kaschabek2002degradationofaromatics pages 1-2)<br />
+- <strong>Metal ion requirement:</strong> chelators (EDTA, o-phenanthroline) did not inhibit activity and the authors concluded no significant requirement for common divalent metals, although Mg2+ was used in some spectrophotometric assay formats due to a detectable 3-oxoadipyl-CoA–Mg2+ complex. (kaschabek2002degradationofaromatics pages 5-5, kaschabek2002degradationofaromatics pages 2-2)</p>
+<h3 id="24-mechanistic-notes-from-sequence-comparisons">2.4 Mechanistic notes from sequence comparisons</h3>
+<p>The original <em>P. putida</em> gene characterization used cross-species sequence comparisons and reported that <strong>conserved functional groups important to catalytic activity of CoA transferases</strong> could be identified, and discussed evolutionary relationships between bacterial heteromeric enzymes and mammalian homodimeric CoA-transferases. (parales1993characterizationofthe pages 1-1)</p>
+<h2 id="3-cellular-localization-where-the-protein-acts">3) Cellular localization (where the protein acts)</h2>
+<p>No KT2440-specific localization experiment for PcaI was found in the retrieved evidence. However, the enzyme is a soluble metabolic catalyst in the lower β-ketoadipate pathway and is consistently treated as part of intracellular aromatic-catabolic metabolism rather than a membrane-associated or extracellular activity in the sources examined. Thus, the most evidence-consistent annotation is <strong>cytosolic</strong> localization, with the caveat that this is an inference from pathway role rather than direct microscopy/fractionation in KT2440. (parales1993characterizationofthe pages 1-1, lund2025metabolicengineeringofa pages 32-37)</p>
+<h2 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-2023-engineering-p-putida-kt2440-to-accumulate-ketoadipate-by-blocking-pcaij">4.1 2023: Engineering <em>P. putida</em> KT2440 to accumulate β-ketoadipate by blocking pcaIJ</h3>
+<p>A 2023 <strong>Science Advances</strong> study engineered <em>P. putida</em> KT2440 for conversion of lignin-related aromatic compounds (LRCs) to <strong>β-ketoadipate</strong> and explicitly used <strong>deletion of pcaIJ</strong> (creating strain CJ263) as a key strategy to <strong>prevent downstream consumption</strong> and enable accumulation of β-ketoadipate. (werner2023ligninconversionto pages 2-4)</p>
+<p><strong>Bioprocess performance / statistics (2023):</strong><br />
+- From model LRCs: β-ketoadipate titer <strong>44.5 g/L</strong> and productivity values reported up to <strong>~1.15 g/L/h</strong> in the study’s summary metrics. (werner2023ligninconversionto pages 1-2)<br />
+- From corn stover–derived LRCs: β-ketoadipate titer <strong>25 g/L</strong> and productivity <strong>0.66 g/L/h</strong>, with overall yield <strong>0.10 g product per g corn stover–derived lignin</strong>. (werner2023ligninconversionto pages 1-2, werner2023ligninconversionto pages 2-4)<br />
+- The study’s technoeconomic analysis estimated a <strong>minimum selling price (MSP) of $2.01/kg</strong> for β-ketoadipate. (werner2023ligninconversionto pages 1-2, werner2023ligninconversionto pages 2-4)</p>
+<p>These results demonstrate that the pcaIJ step (and by implication pcaI/PcaI) is a critical control point for whether carbon is <strong>mineralized</strong> vs <strong>accumulated</strong> as a product/intermediate in KT2440-based lignin valorization. (werner2023ligninconversionto pages 2-4)</p>
+<p><strong>URL / publication date:</strong> Werner et al., <em>Science Advances</em>, Sep 2023. https://doi.org/10.1126/sciadv.adj0053 (werner2023ligninconversionto pages 1-2)</p>
+<h3 id="42-2024-review-synthesis-connecting-lignin-depolymerization-to-ketoadipate-funneling">4.2 2024: Review synthesis connecting lignin depolymerization to β-ketoadipate funneling</h3>
+<p>A 2024 review in <em>Chemical Communications</em> highlights <em>P. putida</em> KT2440 as a frequently used bacterial host for lignin-related aromatic metabolism and metabolic engineering, and emphasizes that protocatechuate (PCA) and related aromatics are typically routed into the <strong>β-ketoadipate pathway</strong> for downstream metabolism. (sodre2024sustainableproductionof pages 3-4)</p>
+<p>The review also describes a process concept where lignin-derived streams are processed to increase catechol content and then fed to engineered <em>P. putida</em> to produce <strong>cis,cis-muconic acid</strong> (a β-ketoadipate-pathway-related intermediate), which can then be converted to adipic acid. (sodre2024sustainableproductionof pages 13-14)</p>
+<p><strong>URL / publication date:</strong> Sodré &amp; Bugg, <em>Chem. Commun.</em>, Nov 2024. https://doi.org/10.1039/d4cc05064a (sodre2024sustainableproductionof pages 3-4)</p>
+<h3 id="43-2024-functional-genomics-systems-biology-rb-tnseq-machine-learning">4.3 2024: Functional genomics / systems biology (RB-TnSeq + machine learning)</h3>
+<p>A 2024 <em>mSystems</em> paper analyzed a compendium of <em>P. putida</em> KT2440 RB-TnSeq fitness data (reported as <strong>332 samples</strong> spanning <strong>179 unique conditions</strong>) and used independent component analysis to identify “functional modules” that recapitulate aromatic-catabolic groupings, including modules and iModulon links that cover genes for aromatic funneling to <strong>β-ketoadipate</strong> (including protocatechuate- and benzoate-to-β-ketoadipate segments). (borchert2024machinelearninganalysis pages 2-4, borchert2024machinelearninganalysis pages 13-15)</p>
+<p>This provides recent, data-driven support that β-ketoadipate-pathway genes constitute coherent functional groupings under diverse growth conditions—useful for annotation, metabolic modeling, and strain design. (borchert2024machinelearninganalysis pages 13-15, borchert2024machinelearninganalysis pages 2-4)</p>
+<p><strong>URL / publication date:</strong> Borchert et al., <em>mSystems</em>, Mar 2024. https://doi.org/10.1128/msystems.00942-23 (borchert2024machinelearninganalysis pages 13-15)</p>
+<h2 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h2>
+<h3 id="51-biomanufacturing-from-lignin-derived-aromatics">5.1 Biomanufacturing from lignin-derived aromatics</h3>
+<p>The 2023 <em>Science Advances</em> work demonstrates a scalable bioprocess concept: using engineered <em>P. putida</em> KT2440 to funnel heterogeneous lignin-related aromatics to a single product, <strong>β-ketoadipate</strong>, with reported titers up to <strong>44.5 g/L</strong> and TEA-derived MSP estimate <strong>$2.01/kg</strong>—metrics positioned as economically relevant for bio-based polymer precursors. (werner2023ligninconversionto pages 1-2, werner2023ligninconversionto pages 2-4)</p>
+<h3 id="52-platform-chemical-routes-muconate-adipic-acid">5.2 Platform chemical routes (muconate → adipic acid)</h3>
+<p>The 2024 review literature frames engineered <em>P. putida</em> routes producing <strong>cis,cis-muconic acid</strong> from processed lignin streams as a platform route that can feed chemical upgrading (hydrogenation) to <strong>adipic acid</strong>, linking aromatic-catabolic pathway modules (including β-ketoadipate pathway segments) to industrial monomer supply chains. (sodre2024sustainableproductionof pages 13-14)</p>
+<h3 id="53-functional-module-approaches-for-faster-annotation-and-engineering">5.3 Functional-module approaches for faster annotation and engineering</h3>
+<p>The 2024 RB-TnSeq + ICA approach provides a methodology and resource to connect gene sets with specific aromatic catabolic functions (e.g., benzoate/protocatechuate to β-ketoadipate), which can accelerate identifying which genes (including downstream pathway steps) most constrain growth or production under particular aromatic feedstocks. (borchert2024machinelearninganalysis pages 13-15, borchert2024machinelearninganalysis pages 2-4)</p>
+<h2 id="6-expert-opinions-and-analysis-authoritative-interpretations">6) Expert opinions and analysis (authoritative interpretations)</h2>
+<h3 id="61-why-pcaipcaj-matter-as-engineering-levers">6.1 Why pcaI/pcaJ matter as engineering levers</h3>
+<p>The 2023 study’s explicit <strong>pcaIJ deletion</strong> to enable product accumulation indicates that, in KT2440, the pcaIJ-encoded CoA-transferase is not just a “housekeeping catabolic enzyme” but a <strong>key metabolic valve</strong> that determines whether β-ketoadipate is catabolized to central metabolism or retained as a product. (werner2023ligninconversionto pages 2-4)</p>
+<h3 id="62-systems-level-support-for-ketoadipate-pathway-coherence">6.2 Systems-level support for β-ketoadipate pathway coherence</h3>
+<p>The 2024 functional module analysis supports the view that aromatic pathways feeding β-ketoadipate are strongly structured in genotype–phenotype space, and that regulatory/functional decompositions can recover known aromatic-catabolic partitions (e.g., benzoate module genes distributed across regulatory clusters). This is consistent with decades of biochemical genetics but provides a modern, scalable framework for annotation and design. (borchert2024machinelearninganalysis pages 13-15)</p>
+<h2 id="7-summary-table-for-annotation-evidence-linked">7) Summary table for annotation (evidence-linked)</h2>
+<p>The following table consolidates the most actionable functional-annotation facts for <strong>pcaI/Q88FX5</strong> and its partner <strong>pcaJ</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>pcaI (subunit A) evidence</th>
+<th>pcaJ (subunit B) evidence</th>
+<th>Key sources (with year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>UniProt target Q88FX5 is annotated as <strong>3-oxoadipate CoA-transferase subunit A</strong> from <em>Pseudomonas putida</em> KT2440; primary <em>P. putida</em> literature establishes <strong>pcaI</strong> as one of the two genes encoding β-ketoadipate:succinyl-CoA transferase (EC 2.8.3.6), matching the UniProt name and pathway role. Direct peer-reviewed text linking <strong>PP_3951</strong> to pcaI was limited in retrieved sources, but KT2440 engineering literature consistently refers to <strong>pcaIJ</strong> as the downstream β-ketoadipate-consumption step. (parales1993characterizationofthe pages 1-1, werner2023ligninconversionto pages 2-4)</td>
+<td>Primary <em>P. putida</em> literature establishes <strong>pcaJ</strong> as the adjacent partner gene encoding the second, nonidentical subunit of the same transferase. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5)</td>
+<td>Parales &amp; Harwood 1993; Werner et al. 2023</td>
+</tr>
+<tr>
+<td>Enzyme name / EC</td>
+<td>β-ketoadipate:succinyl-CoA transferase / 3-oxoadipate:succinyl-CoA transferase, <strong>EC 2.8.3.6</strong>; pcaI encodes subunit A. (parales1993characterizationofthe pages 1-1)</td>
+<td>Same enzyme; pcaJ encodes subunit B. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5)</td>
+<td>Parales &amp; Harwood 1993</td>
+</tr>
+<tr>
+<td>Reaction (words)</td>
+<td>Catalyzes transfer of CoA from <strong>succinyl-CoA</strong> to <strong>3-oxoadipate (β-ketoadipate)</strong> to form <strong>3-oxoadipyl-CoA</strong>; this is the penultimate step before thiolase cleavage to central metabolites. (parales1993characterizationofthe pages 1-1, kaschabek2002degradationofaromatics pages 1-2)</td>
+<td>Participates as the partner subunit in the same CoA-transfer reaction. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5, gobel2002degradationofaromatics pages 1-2)</td>
+<td>Parales &amp; Harwood 1993; Kaschabek et al. 2002; Göbel et al. 2002</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>Functions in the <strong>β-ketoadipate pathway</strong>, which funnels aromatic compounds such as benzoate- and 4-hydroxybenzoate-derived intermediates to TCA-cycle precursors. In KT2440 engineering work, <strong>pcaIJ</strong> is the native consumption step for β-ketoadipate. (parales1993characterizationofthe pages 1-1, werner2023ligninconversionto pages 1-2, lund2025metabolicengineeringofa pages 32-37)</td>
+<td>Same pathway position; part of the lower β-ketoadipate pathway immediately upstream of PcaF thiolase. (parales1993characterizationofthe pages 4-5, gobel2002degradationofaromatics pages 1-2, lund2025metabolicengineeringofa pages 32-37)</td>
+<td>Parales &amp; Harwood 1993; Werner et al. 2023; Lund 2025</td>
+</tr>
+<tr>
+<td>Operon organization</td>
+<td><strong>pcaI</strong> and <strong>pcaJ</strong> are adjacent ORFs separated by <strong>8 bp</strong>, oriented in the same direction, consistent with an operon. (parales1993characterizationofthe pages 5-5, parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 5-7)</td>
+<td>Same evidence; pcaJ is the downstream ORF in the <strong>pcaIJ</strong> operon. (parales1993characterizationofthe pages 5-5, parales1993characterizationofthe pages 4-5, parales1993characterizationofthe pages 5-7)</td>
+<td>Parales &amp; Harwood 1993</td>
+</tr>
+<tr>
+<td>Subunit architecture</td>
+<td>Expression in <em>E. coli</em> yielded two proteins of sizes appropriate for the two nonidentical subunits; ortholog biochemical work in <em>Pseudomonas</em> B13 supports a native <strong>A2B2 heterotetramer</strong>. (parales1993characterizationofthe pages 1-1, kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 4-5)</td>
+<td>Partner nonidentical subunit of the same <strong>A2B2 heterotetramer</strong>. In B13, subunit B was ~27 kDa versus subunit A ~32.9 kDa; PcaI/PcaJ-type organization is conserved in <em>Pseudomonas</em>. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 6-7)</td>
+<td>Parales &amp; Harwood 1993; Kaschabek et al. 2002</td>
+</tr>
+<tr>
+<td>Biochemical / kinetic notes</td>
+<td>Orthologous <em>Pseudomonas</em> enzyme characterization showed <strong>Km ~0.4 mM for 3-oxoadipate</strong> and <strong>~0.2 mM for succinyl-CoA</strong>, pH optimum ~8.4; no major requirement for common divalent metals was evident because EDTA/o-phenanthroline did not inhibit activity. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5)</td>
+<td>Same enzyme complex; catalytic performance depends on the intact heteromer rather than on pcaJ alone. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5)</td>
+<td>Kaschabek et al. 2002</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Strong preference for <strong>3-oxoadipate + succinyl-CoA</strong>; <strong>acetyl-CoA</strong> does not substitute as donor, and activity is poor or absent with several related dicarboxylates/substituted analogs (no activity with 2-chloro- or 2-methyl-3-oxoadipate; poor activity with 2-oxoadipate and 3-oxoglutarate; some activity with 4-methyl-3-oxoadipate). (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5, kaschabek2002degradationofaromatics pages 6-7)</td>
+<td>Same substrate profile because pcaJ is part of the holoenzyme responsible for this specificity. (kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 6-7)</td>
+<td>Kaschabek et al. 2002</td>
+</tr>
+<tr>
+<td>Mechanistic / sequence notes</td>
+<td>Sequence comparisons identified <strong>conserved functional groups important to catalytic activity</strong> of CoA transferases and supported assignment of pcaI as the A subunit; exact catalytic residues were not resolved in the retrieved <em>P. putida</em> excerpts. (parales1993characterizationofthe pages 1-1)</td>
+<td>Same caveat; pcaJ is the second conserved subunit, but explicit catalytic-residue assignment was not available in the retrieved excerpts. (parales1993characterizationofthe pages 1-1)</td>
+<td>Parales &amp; Harwood 1993</td>
+</tr>
+<tr>
+<td>Engineering relevance</td>
+<td>In KT2440 lignin-valorization engineering, <strong>deletion of pcaIJ</strong> was used to accumulate <strong>β-ketoadipate</strong> rather than allow its further catabolism; partial <strong>CRISPRi knockdown of pcaIJ</strong> also redirected carbon to β-ketoadipate, achieving reported accumulation (e.g., 4.4 g/L, 0.76 mol/mol in cited downstream summary). (werner2023ligninconversionto pages 2-4, lund2025metabolicengineeringof pages 50-57, lund2025metabolicengineeringofa pages 50-57)</td>
+<td>Same engineering target because pcaJ is co-targeted with pcaI as <strong>pcaIJ</strong> to block/attenuate β-ketoadipate consumption. (werner2023ligninconversionto pages 2-4, lund2025metabolicengineeringof pages 50-57, lund2025metabolicengineeringofa pages 50-57)</td>
+<td>Werner et al. 2023; Lund 2025</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No direct localization experiment for KT2440 PcaI was retrieved; because it is a soluble metabolic enzyme of the central aromatic-catabolic pathway with no membrane/export features discussed in the literature excerpts, its function is best inferred as <strong>cytosolic</strong>. (parales1993characterizationofthe pages 1-1, lund2025metabolicengineeringofa pages 32-37)</td>
+<td>Same <strong>cytosolic inference</strong> for the partner subunit. (parales1993characterizationofthe pages 1-1, lund2025metabolicengineeringofa pages 32-37)</td>
+<td>Parales &amp; Harwood 1993; Lund 2025</td>
+</tr>
+<tr>
+<td>Expression / systems evidence</td>
+<td>Proteomics and systems studies detect/associate <strong>PcaI</strong> with aromatic catabolism and β-ketoadipate-related modules in <em>Pseudomonas</em>; recent RB-TnSeq/ICA work in KT2440 recovered β-ketoadipate/protocatechuate-associated modules, consistent with pca pathway function. (borchert2024machinelearninganalysis pages 6-7, borchert2024machinelearninganalysis pages 13-15)</td>
+<td>Less direct subunit-specific systems evidence was retrieved for pcaJ, but it is part of the same genetically and functionally linked module. (borchert2024machinelearninganalysis pages 13-15)</td>
+<td>Borchert et al. 2024; Cao et al. 2008</td>
+</tr>
+<tr>
+<td>Notes / limitations on PP_3951 mapping</td>
+<td>The <strong>gene symbol is not ambiguous in the retrieved <em>P. putida</em> context</strong>: pcaI consistently denotes transferase subunit A. However, <strong>direct primary-literature mapping from KT2440 locus tag PP_3951 to pcaI was sparse</strong> in retrieved peer-reviewed texts; the assignment therefore relies on the provided UniProt record plus concordant pathway/gene-pair evidence and one non-peer-reviewed snippet mentioning “pcaI (PP_3951)”. (parales1993characterizationofthe pages 1-1, werner2023ligninconversionto pages 2-4, seo2024valorisationofrenewable pages 1-7)</td>
+<td>No separate ambiguity noted for the partner symbol <strong>pcaJ</strong>; it is consistently the adjacent subunit-B gene in <em>Pseudomonas</em> transferase loci. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 4-5)</td>
+<td>Parales &amp; Harwood 1993; Werner et al. 2023; Seo 2024</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the functional annotation of Pseudomonas putida KT2440 pcaI (UniProt Q88FX5; PP_3951) and its partner pcaJ, including enzyme identity, pathway role, biochemical evidence, and engineering relevance. It is useful for checking that gene identity, reaction chemistry, and literature support all align with the requested annotation target.</em></p>
+<h2 id="8-concise-functional-annotation-statement-for-genome-annotation-use">8) Concise functional annotation statement (for genome annotation use)</h2>
+<p><strong>pcaI (Q88FX5)</strong> in <em>Pseudomonas putida</em> KT2440 encodes the <strong>A (α) subunit</strong> of <strong>β-ketoadipate (3-oxoadipate):succinyl-CoA transferase</strong> (EC <strong>2.8.3.6</strong>), which forms a heteromeric complex with <strong>PcaJ (B/β subunit)</strong>. The enzyme catalyzes CoA transfer from <strong>succinyl-CoA</strong> to <strong>β-ketoadipate (3-oxoadipate)</strong> to generate <strong>3-oxoadipyl-CoA</strong>, a key activation step in the lower β-ketoadipate pathway. The pcaI and pcaJ genes are adjacent (8 bp spacing) and behave like an operon. Substrate specificity includes succinyl-CoA as the required donor and selectivity against several substituted dicarboxylates based on <em>Pseudomonas</em> ortholog enzymology. The most consistent localization is <strong>cytosolic</strong>, with explicit caveat that KT2440-specific localization experiments were not retrieved. (parales1993characterizationofthe pages 1-1, parales1993characterizationofthe pages 5-5, kaschabek2002degradationofaromatics pages 1-2, kaschabek2002degradationofaromatics pages 5-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(parales1993characterizationofthe pages 1-1): R E Parales and C S Harwood. Characterization of the genes encoding beta-ketoadipate: succinyl-coenzyme a transferase in pseudomonas putida. Journal of Bacteriology, 174(14):4657-4666, Jul 1993. URL: https://doi.org/10.1128/jb.174.14.4657-4666.1992, doi:10.1128/jb.174.14.4657-4666.1992. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(parales1993characterizationofthe pages 4-5): R E Parales and C S Harwood. Characterization of the genes encoding beta-ketoadipate: succinyl-coenzyme a transferase in pseudomonas putida. Journal of Bacteriology, 174(14):4657-4666, Jul 1993. URL: https://doi.org/10.1128/jb.174.14.4657-4666.1992, doi:10.1128/jb.174.14.4657-4666.1992. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(parales1993characterizationofthe pages 5-5): R E Parales and C S Harwood. Characterization of the genes encoding beta-ketoadipate: succinyl-coenzyme a transferase in pseudomonas putida. Journal of Bacteriology, 174(14):4657-4666, Jul 1993. URL: https://doi.org/10.1128/jb.174.14.4657-4666.1992, doi:10.1128/jb.174.14.4657-4666.1992. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaschabek2002degradationofaromatics pages 1-2): Stefan R. Kaschabek, Bernd Kuhn, Dagmar Müller, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: purification and characterization of 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:207-215, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.207-215.2002, doi:10.1128/jb.184.1.207-215.2002. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaschabek2002degradationofaromatics pages 4-5): Stefan R. Kaschabek, Bernd Kuhn, Dagmar Müller, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: purification and characterization of 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:207-215, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.207-215.2002, doi:10.1128/jb.184.1.207-215.2002. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaschabek2002degradationofaromatics pages 5-5): Stefan R. Kaschabek, Bernd Kuhn, Dagmar Müller, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: purification and characterization of 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:207-215, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.207-215.2002, doi:10.1128/jb.184.1.207-215.2002. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaschabek2002degradationofaromatics pages 2-2): Stefan R. Kaschabek, Bernd Kuhn, Dagmar Müller, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: purification and characterization of 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:207-215, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.207-215.2002, doi:10.1128/jb.184.1.207-215.2002. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lund2025metabolicengineeringofa pages 32-37): F Lund. Metabolic engineering of pseudomonas putida for production of nylon precursors from paper and pulp waste. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(werner2023ligninconversionto pages 2-4): Allison Z. Werner, William T. Cordell, Ciaran W. Lahive, Bruno C. Klein, Christine A. Singer, Eric C. D. Tan, Morgan A. Ingraham, Kelsey J. Ramirez, Dong Hyun Kim, Jacob Nedergaard Pedersen, Christopher W. Johnson, Brian F. Pfleger, Gregg T. Beckham, and Davinia Salvachúa. Lignin conversion to β-ketoadipic acid by <i>pseudomonas putida</i> via metabolic engineering and bioprocess development. Science Advances, Sep 2023. URL: https://doi.org/10.1126/sciadv.adj0053, doi:10.1126/sciadv.adj0053. This article has 81 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner2023ligninconversionto pages 1-2): Allison Z. Werner, William T. Cordell, Ciaran W. Lahive, Bruno C. Klein, Christine A. Singer, Eric C. D. Tan, Morgan A. Ingraham, Kelsey J. Ramirez, Dong Hyun Kim, Jacob Nedergaard Pedersen, Christopher W. Johnson, Brian F. Pfleger, Gregg T. Beckham, and Davinia Salvachúa. Lignin conversion to β-ketoadipic acid by <i>pseudomonas putida</i> via metabolic engineering and bioprocess development. Science Advances, Sep 2023. URL: https://doi.org/10.1126/sciadv.adj0053, doi:10.1126/sciadv.adj0053. This article has 81 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sodre2024sustainableproductionof pages 3-4): Victoria Sodré and Timothy D. H. Bugg. Sustainable production of aromatic chemicals from lignin using enzymes and engineered microbes. Chemical Communications (Cambridge, England), 60:14360-14375, Nov 2024. URL: https://doi.org/10.1039/d4cc05064a, doi:10.1039/d4cc05064a. This article has 11 citations.</p>
+</li>
+<li>
+<p>(sodre2024sustainableproductionof pages 13-14): Victoria Sodré and Timothy D. H. Bugg. Sustainable production of aromatic chemicals from lignin using enzymes and engineered microbes. Chemical Communications (Cambridge, England), 60:14360-14375, Nov 2024. URL: https://doi.org/10.1039/d4cc05064a, doi:10.1039/d4cc05064a. This article has 11 citations.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 2-4): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 13-15): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gobel2002degradationofaromatics pages 1-2): Markus Göbel, Kerstin Kassel-Cati, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: cloning, characterization, and analysis of sequences encoding 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:216-223, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.216-223.2002, doi:10.1128/jb.184.1.216-223.2002. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(parales1993characterizationofthe pages 5-7): R E Parales and C S Harwood. Characterization of the genes encoding beta-ketoadipate: succinyl-coenzyme a transferase in pseudomonas putida. Journal of Bacteriology, 174(14):4657-4666, Jul 1993. URL: https://doi.org/10.1128/jb.174.14.4657-4666.1992, doi:10.1128/jb.174.14.4657-4666.1992. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaschabek2002degradationofaromatics pages 6-7): Stefan R. Kaschabek, Bernd Kuhn, Dagmar Müller, Eberhard Schmidt, and Walter Reineke. Degradation of aromatics and chloroaromatics by pseudomonas sp. strain b13: purification and characterization of 3-oxoadipate:succinyl-coenzyme a (coa) transferase and 3-oxoadipyl-coa thiolase. Journal of Bacteriology, 184:207-215, Jan 2002. URL: https://doi.org/10.1128/jb.184.1.207-215.2002, doi:10.1128/jb.184.1.207-215.2002. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lund2025metabolicengineeringof pages 50-57): F Lund. Metabolic engineering of pseudomonas putida for production of nylon precursors from paper and pulp waste. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(lund2025metabolicengineeringofa pages 50-57): F Lund. Metabolic engineering of pseudomonas putida for production of nylon precursors from paper and pulp waste. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(borchert2024machinelearninganalysis pages 6-7): Andrew J. Borchert, Alissa C. Bleem, Hyun Gyu Lim, Kevin Rychel, Keven D. Dooley, Zoe A. Kellermyer, Tracy L. Hodges, Bernhard O. Palsson, and Gregg T. Beckham. Machine learning analysis of rb-tnseq fitness data predicts functional gene modules in <i>pseudomonas putida</i> kt2440. Mar 2024. URL: https://doi.org/10.1128/msystems.00942-23, doi:10.1128/msystems.00942-23. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seo2024valorisationofrenewable pages 1-7): K Seo. Valorisation of renewable feedstocks by metabolically engineered actinomycetes. Unknown journal, 2024.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>parales1993characterizationofthe pages 1-1</li>
+<li>kaschabek2002degradationofaromatics pages 1-2</li>
+<li>kaschabek2002degradationofaromatics pages 5-5</li>
+<li>werner2023ligninconversionto pages 2-4</li>
+<li>werner2023ligninconversionto pages 1-2</li>
+<li>sodre2024sustainableproductionof pages 3-4</li>
+<li>sodre2024sustainableproductionof pages 13-14</li>
+<li>borchert2024machinelearninganalysis pages 13-15</li>
+<li>parales1993characterizationofthe pages 4-5</li>
+<li>parales1993characterizationofthe pages 5-5</li>
+<li>kaschabek2002degradationofaromatics pages 4-5</li>
+<li>kaschabek2002degradationofaromatics pages 2-2</li>
+<li>lund2025metabolicengineeringofa pages 32-37</li>
+<li>borchert2024machinelearninganalysis pages 2-4</li>
+<li>gobel2002degradationofaromatics pages 1-2</li>
+<li>parales1993characterizationofthe pages 5-7</li>
+<li>kaschabek2002degradationofaromatics pages 6-7</li>
+<li>lund2025metabolicengineeringof pages 50-57</li>
+<li>lund2025metabolicengineeringofa pages 50-57</li>
+<li>borchert2024machinelearninganalysis pages 6-7</li>
+<li>seo2024valorisationofrenewable pages 1-7</li>
+<li>https://doi.org/10.1126/sciadv.adj0053</li>
+<li>https://doi.org/10.1039/d4cc05064a</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1128/jb.174.14.4657-4666.1992,</li>
+<li>https://doi.org/10.1128/jb.184.1.207-215.2002,</li>
+<li>https://doi.org/10.1126/sciadv.adj0053,</li>
+<li>https://doi.org/10.1039/d4cc05064a,</li>
+<li>https://doi.org/10.1128/msystems.00942-23,</li>
+<li>https://doi.org/10.1128/jb.184.1.216-223.2002,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FX5
+gene_symbol: pcaI
+product_type: PROTEIN
+aliases:
+- PP_3951
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 
+    11950 / KT2440)
+description: &gt;-
+  pcaI encodes the PcaI subunit of the heteromeric 3-oxoadipate CoA-transferase
+  (EC 2.8.3.6) in Pseudomonas putida KT2440. Together with PcaJ, it catalyzes
+  transfer of CoA from succinyl-CoA to 3-oxoadipate to form 3-oxoadipyl-CoA and
+  succinate, a late step in the protocatechuate branch of the beta-ketoadipate
+  pathway that channels aromatic-carbon intermediates into central metabolism.
+existing_annotations:
+- term:
+    id: GO:0008410
+    label: CoA-transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This parent molecular-function term is broadly correct but substantially
+      less informative than the specific 3-oxoadipate CoA-transferase activity
+      annotation already present for pcaI.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      pcaI has a well-defined catalytic assignment within the beta-ketoadipate
+      pathway. Retaining the generic parent term adds little information once
+      GO:0047569 is present. The main curator-relevant nuance is not the term
+      identity but that pcaI acts as one subunit of the heteromeric PcaI/PcaJ
+      transferase complex.
+    supported_by:
+    - reference_id: UniProt:Q88FX5
+      supporting_text: &#34;RecName: Full=3-oxoadipate CoA-transferase&#34;
+    - reference_id: DOI:10.1128/jb.174.14.4657-4666.1992
+      supporting_text: &gt;-
+        Parales and Harwood characterized pcaI and pcaJ as the genes for the
+        beta-ketoadipate:succinyl-CoA transferase.
+
+      full_text_unavailable: true
+- term:
+    id: GO:0047569
+    label: 3-oxoadipate CoA-transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the correct specific molecular function for pcaI. The gene was
+      originally characterized as part of the two-subunit beta-ketoadipate:succinyl-CoA
+      transferase that catalyzes the 3-oxoadipate to 3-oxoadipyl-CoA conversion.
+    action: ACCEPT
+    reason: &gt;-
+      The reaction and EC assignment match both the KT2440 UniProt record and
+      the original genetic characterization of pcaI/pcaJ. Strict GO semantics
+      would arguably prefer a contributes_to qualifier because PcaI functions
+      with PcaJ in a heteromeric enzyme, but the GO term itself accurately
+      captures the core catalytic role and should be retained.
+    supported_by:
+    - reference_id: DOI:10.1128/jb.174.14.4657-4666.1992
+      supporting_text: &gt;-
+        The cloned fragment complemented transferase-defective mutants and
+        encoded one of the two nonidentical subunits of the enzyme.
+      full_text_unavailable: true
+    - reference_id: UniProt:Q88FX5
+      supporting_text: &#34;Reaction=3-oxoadipate + succinyl-CoA = 3-oxoadipyl-CoA + succinate&#34;
+    - reference_id: file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+      supporting_text: &#34;**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the
+        **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase**
+        (EC **2.8.3.6**)&#34;
+
+- term:
+    id: GO:0042952
+    label: beta-ketoadipate pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: &gt;-
+      This pathway annotation is appropriate and represents a core biological
+      process assignment for pcaI in KT2440 because the enzyme performs a late,
+      committed CoA-transfer step in the protocatechuate branch.
+    action: ACCEPT
+    reason: &gt;-
+      The beta-ketoadipate pathway is the central aromatic-compound funneling
+      pathway in Pseudomonas, and pca genes specifically comprise the protocatechuate
+      branch in KT2440. UniProt places pcaI at step 1 of 2 for conversion of
+      3-oxoadipate to acetyl-CoA and succinyl-CoA, which is fully consistent
+      with the pathway-level GO term.
+    supported_by:
+    - reference_id: DOI:10.1046/j.1462-2920.2002.00370.x
+      supporting_text: &gt;-
+        The aromatic-catabolism analysis identified pca genes as the
+        protocatechuate branch of the beta-ketoadipate pathway in KT2440.
+      full_text_unavailable: true
+    - reference_id: UniProt:Q88FX5
+      supporting_text: &#34;beta-ketoadipate pathway; acetyl-CoA and succinyl-CoA from
+        3-oxoadipate: step 1/2.&#34;
+    - reference_id: file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+      supporting_text: &#34;a key activation step in the lower β-ketoadipate pathway.&#34;
+
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: UniProt:Q88FX5
+  title: UniProtKB Q88FX5 pcaI Pseudomonas putida KT2440
+  findings:
+  - statement: &gt;-
+      UniProt assigns pcaI to 3-oxoadipate CoA-transferase activity with EC
+      2.8.3.6.
+    supporting_text: &#34;RecName: Full=3-oxoadipate CoA-transferase&#34;
+  - statement: &gt;-
+      UniProt records the catalytic reaction converting 3-oxoadipate and
+      succinyl-CoA to 3-oxoadipyl-CoA and succinate.
+    supporting_text: &#34;Reaction=3-oxoadipate + succinyl-CoA = 3-oxoadipyl-CoA + succinate&#34;
+  - statement: &gt;-
+      UniProt maps pcaI to the beta-ketoadipate pathway, step 1 of 2 in the
+      conversion of 3-oxoadipate to central metabolites.
+    supporting_text: &#34;beta-ketoadipate pathway; acetyl-CoA and succinyl-CoA from 3-oxoadipate:
+      step 1/2.&#34;
+- id: DOI:10.1128/jb.174.14.4657-4666.1992
+  title: Characterization of the genes encoding beta-ketoadipate 
+    succinyl-coenzyme A transferase in Pseudomonas putida
+  findings:
+  - statement: &gt;-
+      The pcaI/pcaJ locus encodes the beta-ketoadipate:succinyl-CoA
+      transferase required for aromatic-compound catabolism through the
+      beta-ketoadipate route.
+  - statement: &gt;-
+      The study showed that the enzyme is composed of two nonidentical
+      subunits, establishing that pcaI functions in a heteromeric transferase.
+- id: DOI:10.1046/j.1462-2920.2002.00370.x
+  title: Genomic analysis of the aromatic catabolic pathways from Pseudomonas 
+    putida KT2440
+  findings:
+  - statement: &gt;-
+      In KT2440, the pca genes were assigned to the protocatechuate branch of
+      the beta-ketoadipate pathway.
+- id: file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+  title: Falcon deep research summary for pcaI in Pseudomonas putida KT2440
+  findings:
+  - statement: &gt;-
+      The Falcon synthesis supports assignment of pcaI as the A subunit of the
+      heteromeric 3-oxoadipate:succinyl-CoA transferase.
+    supporting_text: &#34;**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the
+      **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase**
+      (EC **2.8.3.6**)&#34;
+  - statement: &gt;-
+      The Falcon synthesis places the PcaI/PcaJ reaction in the lower
+      beta-ketoadipate pathway of KT2440 aromatic catabolism.
+    supporting_text: &#34;a key activation step in the lower β-ketoadipate pathway.&#34;
+
+core_functions:
+- description: &gt;-
+    Heteromeric 3-oxoadipate CoA-transferase subunit that functions with PcaJ
+    to transfer CoA from succinyl-CoA to 3-oxoadipate, producing 3-oxoadipyl-CoA
+    and succinate during aromatic-compound assimilation through the beta-ketoadipate
+    pathway.
+  molecular_function:
+    id: GO:0047569
+    label: 3-oxoadipate CoA-transferase activity
+  directly_involved_in:
+  - id: GO:0042952
+    label: beta-ketoadipate pathway
+  supported_by:
+  - reference_id: DOI:10.1128/jb.174.14.4657-4666.1992
+    supporting_text: &gt;-
+      The characterized pcaI/pcaJ genes encode the beta-ketoadipate:succinyl-CoA
+      transferase.
+    full_text_unavailable: true
+  - reference_id: UniProt:Q88FX5
+    supporting_text: &gt;-
+      UniProt records the EC 2.8.3.6 reaction converting 3-oxoadipate and
+      succinyl-CoA to 3-oxoadipyl-CoA and succinate.
+  - reference_id: DOI:10.1046/j.1462-2920.2002.00370.x
+    supporting_text: &gt;-
+      The pca cluster belongs to the protocatechuate branch of the
+      beta-ketoadipate pathway in KT2440.
+    full_text_unavailable: true
+  - reference_id: file:PSEPK/pcaI/pcaI-deep-research-falcon.md
+    supporting_text: &#34;**pcaI (Q88FX5)** in *Pseudomonas putida* KT2440 encodes the
+      **A (α) subunit** of **β-ketoadipate (3-oxoadipate):succinyl-CoA transferase**
+      (EC **2.8.3.6**)&#34;
+
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which catalytic and substrate-binding contributions are partitioned between
+    PcaI and PcaJ in the KT2440 CoA-transferase active site?
+  experts:
+  - Enzyme mechanism researchers
+  - Structural biologists
+- question: &gt;-
+    Under which aromatic substrates and regulatory conditions is pcaI most
+    strongly induced in KT2440?
+  experts:
+  - Pseudomonas regulatory-network specialists
+  - Systems microbiologists
+
+suggested_experiments:
+- experiment_type: Gene knockout and growth profiling
+  description: &gt;-
+    Delete pcaI and test growth on protocatechuate, 4-hydroxybenzoate, quinate,
+    and benzoate to quantify its contribution to aromatic-carbon assimilation.
+- experiment_type: Enzyme reconstitution
+  description: &gt;-
+    Purify PcaI and PcaJ separately and together to test whether measurable
+    3-oxoadipate CoA-transferase activity requires the heteromeric complex and
+    to resolve the enables versus contributes_to qualifier nuance.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

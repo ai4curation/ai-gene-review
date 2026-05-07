@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xylR - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>xylR</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P06519" target="_blank" class="term-link">
+                        P06519
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">67 kDa protein</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "xylR";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P06519" data-a="DESCRIPTION: xylR encodes the plasmid-borne TOL transcriptional..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>xylR encodes the plasmid-borne TOL transcriptional regulator XylR, a 566 aa NtrC-like enhancer-binding activator that senses aromatic effectors and uses ATP-dependent multimerization plus sequence-specific DNA binding to activate the sigma54-dependent Pu and Ps promoters of the xyl upper-pathway system and the downstream xylS regulator. The curated reviewed accession (P06519) belongs to the pWW0 system in the Pseudomonas putida mt-2 lineage (taxon 303), not the native KT2440 chromosome; this PSEPK folder should therefore be interpreted as a KT2440/pWW0-context review rather than a chromosomal KT2440 gene review.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is mechanistically credible for XylR because the protein contains the canonical AAA+/sigma54 activator core and UniProt annotates explicit ATP-binding residues. The 1998 promoter-switch paper further shows that ATP enhances active XylR multimerization at the UAS. However, ATP binding is a generic mechanistic property rather than the most informative description of the evolved role of this regulator.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/xylR/xylR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT   BINDING         263..270</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/xylR/xylR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT                   /ligand=&#34;ATP&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                        PMID:9489676
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The addition of ATP, known to trigger multimerization of the regulator at the UAS, enhanced the repression of Pr by XylR</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures the right general process class but is too broad. XylR is primarily a positive activator of the sigma54-dependent Pu and Ps promoters of the TOL system, although activated XylR also contributes to repression of the divergent Pr promoter. The more specific child term positive regulation of DNA-templated transcription better reflects the main curatable biology.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    positive regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link">
+                                        PMID:2993247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                        PMID:9489676
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The mechanism by which XylR, the toluene-responsive activator of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid pWW0, downregulates its own sigma70 promoter Prhas been examined.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core XylR function. The C-terminal region carries the DNA-binding structure/HTH motif, and activated XylR binds upstream activating sequences that overlap the divergent Pr/Ps control region to regulate transcriptional switching.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3169574" target="_blank" class="term-link">
+                                        PMID:3169574
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The C-terminal region (aa 515-558) has a putative DNA-binding structure.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/xylR/xylR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FT   DNA_BIND        534..553</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                        PMID:9489676
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The addition of ATP, known to trigger multimerization of the regulator at the UAS, enhanced the repression of Pr by XylR</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141097" target="_blank" class="term-link">
+                                    GO:0141097
+                                </a>
+                            </span>
+                            <span class="term-label">ligand-modulated transcription activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9489676
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Activation of the toluene-responsive regulator XylR causes a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0141097" data-r="PMID:9489676" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> XylR is not merely a generic DNA-binding protein; it is an aromatic-effector-responsive transcriptional activator. Aromatic induction triggers ATP-dependent multimerization and activation of sigma54-dependent target promoters, which matches ligand-modulated transcription activator activity better than the seeded GOA set.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                        PMID:9489676
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The mechanism by which XylR, the toluene-responsive activator of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid pWW0, downregulates its own sigma70 promoter Prhas been examined.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/xylR/xylR-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">In the CC       presence of m-xylene or m-methylbenzyl alcohol XylR activates both the</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042203" target="_blank" class="term-link">
+                                    GO:0042203
+                                </a>
+                            </span>
+                            <span class="term-label">toluene catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2993247
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determination of the transcription initiation site and ident...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0042203" data-r="PMID:2993247" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> xylR is required for expression of the TOL xyl operons that drive toluene assimilation/catabolism. This is the appropriate specific biological-process context for the regulatory role of XylR.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link">
+                                        PMID:2993247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16085802" target="_blank" class="term-link">
+                                        PMID:16085802
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Toluene degradation in Pseudomonas putida KT2440 pWW0 plasmid is subjected to catabolite repression.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/xylR/xylR-deep-research-openai.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">XylR is the master regulator of the TOL plasmid *pWW0* upper pathway, which governs the initial **oxidative catabolism of toluene and xylenes**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042184" target="_blank" class="term-link">
+                                    GO:0042184
+                                </a>
+                            </span>
+                            <span class="term-label">xylene catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2993247
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Determination of the transcription initiation site and ident...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P06519" data-a="GO:0042184" data-r="PMID:2993247" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The same regulatory logic applies to xylene degradation, since the xylR-controlled TOL operons mediate degradation/assimilation of xylenes as well as toluene. This process term is specific and well supported by the foundational xylR literature.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link">
+                                        PMID:2993247
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20529863" target="_blank" class="term-link">
+                                        PMID:20529863
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">In Pseudomonas putida, the expression of the pWW0 plasmid genes for the toluene/xylene assimilation pathway (the TOL pathway) is subject to complex regulation in response to environmental and physiological signals.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XylR is an aromatic-effector-responsive enhancer-binding transcription activator on TOL plasmid pWW0. In response to aromatic inducers and ATP, it multimerizes at upstream activating sequences and activates the sigma54-dependent Pu and Ps promoters, initiating expression of the upper xyl operon and xylS for toluene and xylene catabolism.</h3>
+                <span class="vote-buttons" data-g="P06519" data-a="FUNCTION: XylR is an aromatic-effector-responsive enhancer-b..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141097" target="_blank" class="term-link">
+                            ligand-modulated transcription activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042203" target="_blank" class="term-link">
+                                toluene catabolic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042184" target="_blank" class="term-link">
+                                xylene catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link">
+                                PMID:2993247
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                PMID:9489676
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The mechanism by which XylR, the toluene-responsive activator of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid pWW0, downregulates its own sigma70 promoter Prhas been examined.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>XylR uses a C-terminal DNA-binding region to recognize promoter-proximal upstream activating sequences and to implement the Pr/Ps transcriptional switch that controls TOL pathway output.</h3>
+                <span class="vote-buttons" data-g="P06519" data-a="FUNCTION: XylR uses a C-terminal DNA-binding region to recog..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                            sequence-specific DNA binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                positive regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3169574" target="_blank" class="term-link">
+                                PMID:3169574
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The C-terminal region (aa 515-558) has a putative DNA-binding structure.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                                PMID:9489676
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The addition of ATP, known to trigger multimerization of the regulator at the UAS, enhanced the repression of Pr by XylR</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro captures the sigma54 activator and DNA-binding domains of XylR but only yields broad seed annotations.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2993247" target="_blank" class="term-link">
+                            PMID:2993247
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Determination of the transcription initiation site and identification of the protein product of the regulatory gene xylR for xyl operons on the TOL plasmid.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">xylR acts positively on xyl operons for degradation of toluene and xylenes.</div>
+                        
+                        <div class="finding-text">"The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">xylR transcription has two mapped start sites and is inducer-independent at the promoter level.</div>
+                        
+                        <div class="finding-text">"Two initiation sites were detected which were identical in both P. putida and E. coli. The amounts of mRNA synthesized in both bacterial cells were almost the same and independent of the inducers for xyl operons."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The xylR product is an approximately 67 kDa protein.</div>
+                        
+                        <div class="finding-text">"The product of the xylR gene was identified by the maxicell system as a protein with an approximate molecular weight of 67,000."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3169574" target="_blank" class="term-link">
+                            PMID:3169574
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas putida.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">xylR encodes a 566 aa transcriptional activator for the aromatic-hydrocarbon degradative pathway.</div>
+                        
+                        <div class="finding-text">"The 1698-bp sequence for a 566-amino acid (aa) protein (Mr 63741) was identified as the XylR-encoding sequence."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The central region corresponds to the sigma-factor interaction region.</div>
+                        
+                        <div class="finding-text">"The central region of XylR (aa 234-473) corresponds to the region that was proposed to interact with RNA polymerase having a sigma factor, NtrA"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminal region contains a putative DNA-binding structure.</div>
+                        
+                        <div class="finding-text">"The C-terminal region (aa 515-558) has a putative DNA-binding structure."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2430049" target="_blank" class="term-link">
+                            PMID:2430049
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic, functional and sequence analysis of the xylR and xylS regulatory genes of the TOL plasmid pWW0.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">xylR is one of the core regulatory genes of the TOL plasmid pWW0 system.</div>
+                        
+                        <div class="finding-text">"Insertion mutations of the xylR and xylS regulatory genes of the catabolic pathway have been isolated and characterized"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Tn5 mutagenesis and functional analysis linked xylR to catechol 2,3-oxygenase induction.</div>
+                        
+                        <div class="finding-text">"their ability to induce catechol 2,3-oxygenase activity determined."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9489676" target="_blank" class="term-link">
+                            PMID:9489676
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Activation of the toluene-responsive regulator XylR causes a transcriptional switch between sigma54 and sigma70 promoters at the divergent Pr/Ps region of the TOL plasmid.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Activated XylR is a toluene-responsive regulator of the sigma54-dependent Pu and Ps promoters.</div>
+                        
+                        <div class="finding-text">"The mechanism by which XylR, the toluene-responsive activator of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid pWW0, downregulates its own sigma70 promoter Prhas been examined."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ATP promotes multimerization at the UAS and contributes to the Pr/Ps transcriptional switch.</div>
+                        
+                        <div class="finding-text">"The addition of ATP, known to trigger multimerization of the regulator at the UAS, enhanced the repression of Pr by XylR"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20529863" target="_blank" class="term-link">
+                            PMID:20529863
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Crc global regulator inhibits the Pseudomonas putida pWW0 toluene/xylene assimilation pathway by repressing the translation of regulatory and structural genes.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crc represses the TOL pathway partly by binding the translation-initiation regions of xylR and xylS mRNAs.</div>
+                        
+                        <div class="finding-text">"This study reports that Crc binds to sites located at the translation initiation regions of the mRNAs coding for XylR and XylS"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">XylR sits within a larger catabolite-repression hierarchy rather than acting alone.</div>
+                        
+                        <div class="finding-text">"First, Crc inhibits the translation of the XylR and XylS regulators, thereby reducing the transcription of all TOL pathway genes."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16085802" target="_blank" class="term-link">
+                            PMID:16085802
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Integration of signals through Crc and PtsN in catabolite repression of Pseudomonas putida TOL plasmid pWW0.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The pWW0 system has been studied in a KT2440 host background.</div>
+                        
+                        <div class="finding-text">"Toluene degradation in Pseudomonas putida KT2440 pWW0 plasmid is subjected to catabolite repression."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Global regulation through Crc and PtsN modulates XylR-dependent promoter output.</div>
+                        
+                        <div class="finding-text">"Pu and P(S1) promoters of the pWW0 TOL plasmid are down-regulated in vivo during exponential growth in rich medium."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/xylR/xylR-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry P06519</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The reviewed accession is plasmid-borne on TOL pWW0 and mapped to taxon 303 rather than the native KT2440 chromosome.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records ATP-binding residues, a DNA-binding motif, and activation of xylCMABN/xylS in response to aromatic effectors.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/xylR/xylR-deep-research-openai.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenAI deep research report for xylR</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The deep research report converges on XylR as a sigma54-dependent aromatic-effector-responsive transcriptional activator for the TOL network.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/xylR/xylR-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">xylR curation notes</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">This review treats the requested PSEPK folder as a KT2440/pWW0 context while correcting the actual curated accession to the plasmid-borne xylR protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should this review remain in the PSEPK project bucket even though the reviewed accession is the plasmid-borne taxon 303 xylR protein rather than a native KT2440 chromosomal gene?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06519" data-a="Q: Should this review remain in the PSEPK project buc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do GO curators want a separate annotation strategy for XylR-mediated autorepression of Pr, or is capturing the dominant positive activation of Pu/Ps sufficient?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06519" data-a="Q: Do GO curators want a separate annotation strategy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare WT XylR and ATP-site mutants in KT2440(pWW0) or mini-TOL reporter strains across toluene, m-xylene, benzyl alcohol, and m-methylbenzyl alcohol and measure Pu, Ps, and Pr outputs.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Aromatic effector binding and ATP-dependent multimerization jointly determine XylR promoter selectivity and output strength.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reporter assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06519" data-a="EXPERIMENT: Compare WT XylR and ATP-site mutants in KT2440(pWW..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform ChIP-qPCR or DAP-seq for XylR with and without aromatic inducer and test occupancy at Pu/Ps/Pr plus additional candidate TOL control regions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: XylR directly occupies the known UAS elements at the divergent Pr/Ps control region in an effector-dependent manner.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: DNA binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06519" data-a="EXPERIMENT: Perform ChIP-qPCR or DAP-seq for XylR with and wit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure TOL promoter activity and XylR protein levels in WT, crc, ptsN, and crc ptsN backgrounds carrying pWW0 during growth on preferred versus non-preferred carbon sources.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Global catabolite repression acts both upstream and downstream of XylR.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic perturbation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P06519" data-a="EXPERIMENT: Measure TOL promoter activity and XylR protein lev..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(xylR-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P06519" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2026-03-20T23:55:24.180282'<br />
+end_time: '2026-03-21T00:01:37.574511'<br />
+duration_seconds: 373.39<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: P06519<br />
+  gene_symbol: xylR<br />
+  uniprot_accession: P06519<br />
+  protein_description: 'RecName: Full=Transcriptional regulatory protein XylR; AltName:<br />
+    Full=67 kDa protein;'<br />
+  gene_info: Name=xylR;<br />
+  organism_full: Pseudomonas putida (Arthrobacter siderocapsulatus).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: AAA+_ATPase. (IPR003593); AAA_lid_NorR. (IPR058031); Homeodomain-like_sf.<br />
+    (IPR009057); HTH_Fis. (IPR002197); NO_sig/Golgi_transp_ligand-bd. (IPR024096)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    top_p: 1.0<br />
+citation_count: 71</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P06519</li>
+<li><strong>Protein Description:</strong> RecName: Full=Transcriptional regulatory protein XylR; AltName: Full=67 kDa protein;</li>
+<li><strong>Gene Information:</strong> Name=xylR;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (Arthrobacter siderocapsulatus).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); AAA_lid_NorR. (IPR058031); Homeodomain-like_sf. (IPR009057); HTH_Fis. (IPR002197); NO_sig/Golgi_transp_ligand-bd. (IPR024096)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "xylR" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (Arthrobacter siderocapsulatus).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'xylR' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>xylR</strong> (gene ID: P06519, UniProt: P06519) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="overview-and-key-functions-of-xylr">Overview and Key Functions of XylR</h1>
+<p><strong>XylR</strong> (UniProt P06519) is a 67-kDa transcriptional regulatory protein in <em>Pseudomonas putida</em> that controls the breakdown of aromatic hydrocarbons. It belongs to the NtrC family of σ^54-dependent enhancer-binding proteins (EBPs), meaning it uses an ATP-driven mechanism to activate transcription from specific promoters (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain">pmc.ncbi.nlm.nih.gov</a>). XylR is the master regulator of the TOL plasmid <em>pWW0</em> upper pathway, which governs the initial <strong>oxidative catabolism of toluene and xylenes</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162">pmc.ncbi.nlm.nih.gov</a>). In the presence of its effector molecules (toluene, <em>m</em>-xylene, <em>p</em>-xylene, or related aromatic analogues), XylR binds the target promoter (called <strong>Pu</strong>) and triggers expression of enzymes that convert those aromatics into benzoate derivatives (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=substrate%20is%20available%20,This%20factor%20has%20the">pmc.ncbi.nlm.nih.gov</a>). This allows <em>P. putida</em> to <strong>grow on toluene and xylenes as carbon sources</strong>, making XylR a pivotal factor in the bacterium’s ability to degrade environmental pollutants (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons">pmc.ncbi.nlm.nih.gov</a>). Notably, XylR requires <strong>both the protein and the inducer</strong> to be present for activation – effectively implementing an <em>AND-gate</em> logic for pathway induction (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second">pmc.ncbi.nlm.nih.gov</a>). This tight control prevents unnecessary expression of catabolic genes in the absence of substrate. XylR also positively regulates the <em>xylS</em> gene (from the Pu-related promoter Ps1) when aromatics are present, linking the “upper” pathway to the “meta” pathway for complete mineralization of the compounds (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=two%20series%20of%20biotransformations,or%20in%20combination">pmc.ncbi.nlm.nih.gov</a>). In summary, XylR’s primary biological role is to sense aromatic solvents and activate a transcriptional program for their metabolism, a function central to <em>P. putida</em>’s <strong>biodegradation and environmental adaptability</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<h1 id="mechanism-and-structure-of-xylr">Mechanism and Structure of XylR</h1>
+<p><strong>Domain Architecture:</strong> XylR is a multi-domain protein with a modular design common to σ^54 EBPs. It contains: (1) an <strong>N-terminal regulatory domain</strong> (also called the A domain) that serves as an effector-binding sensor, (2) a central <strong>AAA<sup>+</sup> ATPase domain</strong> responsible for oligomerization and energy coupling, and (3) a <strong>C-terminal DNA-binding domain</strong> with a helix-turn-helix motif for binding upstream activation sequences on DNA (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%2C%20161%2C%20162">pmc.ncbi.nlm.nih.gov</a>). The N-terminal sensor of XylR belongs to the “V4R” (vinyl-4-reductase) family of ligand-binding domains and specifically recognizes small aromatic compounds (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Other%20%CF%83,XylR%20and%20DmpR%20proteins%20confirm">pmc.ncbi.nlm.nih.gov</a>). Binding of toluene or <em>m</em>-/p<em>-xylene at this domain induces a conformational change that </em><em>relieves an intramolecular repression</em>* on the central ATPase domain (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=in%20a%20hybrid%20protein%20still,located%20at%20the%20central%20domain">pubmed.ncbi.nlm.nih.gov</a>). In the absence of effectors, the A-domain maintains XylR in an inactive state by contacting and occluding surfaces of the catalytic domain (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=the%20signal,located%20at%20the%20central%20domain">pubmed.ncbi.nlm.nih.gov</a>). Once an aromatic effector is bound, the N-terminal domain releases its “brake” on the central domain (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=in%20a%20hybrid%20protein%20still,located%20at%20the%20central%20domain">pubmed.ncbi.nlm.nih.gov</a>), allowing XylR subunits to assemble into an active oligomer.</p>
+<p><strong>Activator Complex and σ^54 Interaction:</strong> Active XylR functions as a hexameric ring (typical of AAA<sup>+</sup> EBPs) that binds to enhancer sites on the DNA and stimulates transcription initiation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain">pmc.ncbi.nlm.nih.gov</a>). XylR binds specific <strong>upstream activation sequences (UAS)</strong> located ~150 bp upstream of the σ^54-dependent Pu promoter (<a href="https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=The%20binding%20of%20the%20transcriptional,vivo%20genomic%20footprinting%20procedure%20that">pubmed.ncbi.nlm.nih.gov</a>). There are two such UAS sites (proximal and distal), and XylR often binds as dimers to these sites. Upon effector activation, multiple DNA-bound XylR dimers oligomerize into a hexamer, forming a DNA-looped complex (often facilitated by the DNA-bending protein IHF in <em>P. putida</em>) (<a href="https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only">pubmed.ncbi.nlm.nih.gov</a>). The XylR hexamer then uses energy from ATP hydrolysis to interact with the σ^54–RNA polymerase holoenzyme positioned at the Pu promoter (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain">pmc.ncbi.nlm.nih.gov</a>). A conserved amino acid motif (e.g. <strong>GAFTGA loop</strong> in the AAA<sup>+</sup> domain) makes contact with σ^54, helping to remodel the closed promoter complex into an open transcriptionally active complex (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=activators%20that%20assemble%20as%20hexameric,54%7D%20for%20remodeling">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons">pmc.ncbi.nlm.nih.gov</a>). Through this ATP-dependent mechanism, XylR effectively <strong>unlocks</strong> the promoter, enabling RNA polymerase to initiate transcription of the downstream catabolic genes.</p>
+<p><strong>Experimental evidence:</strong> Mutational studies strongly support this mechanism. For example, deletion of XylR’s N-terminal domain produces a constitutively active protein that can activate Pu even without any aromatic inducer (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=inducers,the%20release%20of%20the%20repression">pubmed.ncbi.nlm.nih.gov</a>). Point mutations in the inter-domain linker (e.g. introducing a proline kink) also yield “semi-constitutive” XylR variants, mimicking the effect of inducer binding by destabilizing the repressive interaction between domains (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=regulatory%20protein%20XylR%2C%20of%20the,of%20the%20protein%20stimulated%20the">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=between%20the%20N,extent%20in%20vivo%20as%20XylR">pubmed.ncbi.nlm.nih.gov</a>). Conversely, mutations in the ATP-binding motifs of the AAA<sup>+</sup> domain (e.g. Walker motifs) abolish XylR’s ability to hydrolyze ATP and activate transcription (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=match%20at%20L473%20XylR%2C%20the,mutagenesis%20of%20the%20key%20aspartate">pmc.ncbi.nlm.nih.gov</a>). These findings confirm that (1) the N-terminal domain normally imposes autoinhibition, and (2) ATP-driven hexamerization is essential for XylR’s transcriptional activation function.</p>
+<p><strong>Subcellular localization:</strong> XylR carries out its function in the bacterial <strong>cytoplasm</strong>, specifically associated with the nucleoid DNA where its target promoters reside. As a DNA-binding transcription factor, XylR is not membrane-bound or secreted; it diffuses in the cytosol and binds to the TOL plasmid’s Pu promoter region when activated. Recent single-cell studies of <em>P. putida</em> revealed that after XylR activates transcription, the resulting <strong>xyl mRNAs form distinct foci in the cytoplasm</strong>, co-localizing with ribosome-rich regions away from the nucleoid (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=signals%20stemming%20from%20xylUW%20or,were%20separately%20recorded%20with%20the">pmc.ncbi.nlm.nih.gov</a>). This suggests that transcription of XylR-regulated genes occurs at the nucleoid, but the transcripts quickly relocate to translation zones in the cell. Such spatial organization may enhance efficient translation of the catabolic enzymes, although XylR itself remains DNA-bound only transiently during activation cycles (<a href="https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only">pubmed.ncbi.nlm.nih.gov</a>). In sum, XylR operates within the cell’s interior, bridging the genomic DNA (plasmid promoter) and the transcriptional machinery in an ATP-dependent manner, with tightly controlled timing and localization.</p>
+<h1 id="regulation-of-xylr-expression-and-activity">Regulation of XylR Expression and Activity</h1>
+<p><strong>Autoregulation:</strong> The <em>xylR</em> gene is part of a divergently transcribed regulatory region together with <em>xylS</em>. XylR regulates its own expression by <strong>negative feedback</strong>. It binds to its own promoter region to repress transcription of <em>xylR</em>, maintaining relatively constant XylR protein levels whether inducer is present or not (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene">pmc.ncbi.nlm.nih.gov</a>). This autoregulatory loop prevents excessive accumulation of XylR. Interestingly, studies have shown that XylR levels change very little upon addition of m-xylene (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20XylR%20auto,xylene">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene">pmc.ncbi.nlm.nih.gov</a>). By keeping itself at a steady concentration, XylR ensures a swift and proportionate response to inducers without runaway expression. At the same time, XylR’s divergent neighbor <em>xylS</em> has a σ^54-dependent promoter (Ps1) that XylR activates in the presence of aromatic effectors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=inputs%20are%20strictly%20necessary%20to,XylS%20bound%20to%203%20MBz">pmc.ncbi.nlm.nih.gov</a>). Thus, when XylR is induced by toluene/xylenes, it not only turns on the catabolic enzymes but also boosts <em>xylS</em> output (which in turn will activate the downstream meta-cleavage enzymes). This forms a <strong>feed-forward cascade</strong>: XylR → <em>xylS</em> → meta-operon, tightly coordinating the two stages of toluene/xylene degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=two%20series%20of%20biotransformations,or%20in%20combination">pmc.ncbi.nlm.nih.gov</a>). Notably, XylR’s binding sites for self-repression and for <em>xylS</em> activation overlap in the intergenic region, and XylR can simultaneously repress its own promoter while activating <em>xylS</em> under inducing conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene">pmc.ncbi.nlm.nih.gov</a>). This elegant arrangement guarantees that XylR is present in sufficient amount but not overproduced, and that <em>xylS</em> (and thus the lower pathway) is induced only when the upper pathway has been triggered.</p>
+<p><strong>Global and physiological regulation:</strong> Beyond its own promoter, XylR activity is modulated by global carbon availability and other host factors. <em>P. putida</em> employs a catabolite repression-like mechanism involving the <strong>Crc protein</strong>, which post-transcriptionally inhibits XylR production when preferred carbon sources are abundant (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=global%20regulators%20,27%20%2C%2036">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28">pmc.ncbi.nlm.nih.gov</a>). Specifically, Crc (together with a small RNA) can bind the <em>xylR</em> mRNA, blocking its translation under nutrient-rich conditions (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28">pmc.ncbi.nlm.nih.gov</a>). This means that if easily metabolizable substrates (e.g. succinate or glucose) are present, the cell suppresses XylR synthesis, thereby preventing unwarranted expression of toluene/xylene degradation genes. Once the preferred carbon is depleted and an aromatic pollutant is the main carbon source, Crc-mediated repression lifts and XylR protein accumulates to activate the Pu pathway. In addition to Crc, several other global regulators and environmental signals feed into the XylR/Pu system. For example, the DNA-bending protein <strong>IHF (Integration Host Factor)</strong> binds near the Pu promoter and can affect XylR’s ability to initiate transcription, especially in stationary phase cells (<a href="https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only">pubmed.ncbi.nlm.nih.gov</a>). Alternative sigma factors (σ^70, σ^38 for stationary phase, etc.) and alarmone signaling (ppGpp) also indirectly influence the Pu promoter’s responsiveness (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=,acids%20and%20other%20repressive%20substrates">pmc.ncbi.nlm.nih.gov</a>). However, under standard inducing conditions (e.g. minimal media with m-xylene as sole carbon), these host factors are tuned such that XylR-Pu operates at optimal capacity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28">pmc.ncbi.nlm.nih.gov</a>). Experimental evidence underscores some of these controls: for instance, by growing cells in defined medium without amino acids (removing catabolite repression), one can derepress <em>xylR</em> translation and observe a stronger Pu induction response (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28">pmc.ncbi.nlm.nih.gov</a>). In summary, <em>P. putida</em> tightly regulates XylR at multiple levels – DNA (autogenous repression), RNA (Crc-mediated translational control), and protein activity (effector binding requirement and possibly protein–protein interactions) – to integrate the presence of aromatic compounds with the cell’s nutritional status and stress conditions.</p>
+<h1 id="biotechnological-applications-and-recent-developments">Biotechnological Applications and Recent Developments</h1>
+<p><strong>Biodegradation and environmental impact:</strong> XylR plays a crucial role in bioremediation of toxic aromatic pollutants. The TOL plasmid systems endowed with XylR allow <em>Pseudomonas putida</em> to consume compounds like toluene, xylenes, and benzene (collectively part of BTEX contaminants) in soil and water environments (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect">pmc.ncbi.nlm.nih.gov</a>). Because XylR ensures that catabolic enzymes are produced only in the presence of the target pollutants, it makes <em>P. putida</em> an efficient and safe biodegradation agent – energy is not wasted expressing these pathways unless the pollutant is present. The significance of XylR is highlighted by the fact that it has become a <strong>model system for aromatic hydrocarbon sensing</strong> in bacteria (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect">pmc.ncbi.nlm.nih.gov</a>). Assinder and Williams (1990) noted that mutants lacking functional XylR cannot grow on toluene or <em>m</em>-xylene, underscoring that XylR is essential for activating the upstream pathways that funnel these compounds into central metabolism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=by%20this%20bacterium%20as%20a,This%20factor%20has%20the">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons">pmc.ncbi.nlm.nih.gov</a>). In natural settings, XylR-regulated pathways contribute to the natural attenuation of oil-derived pollutants. </p>
+<p><strong>Synthetic biology and biosensors:</strong> The highly specific yet inducible nature of XylR has been leveraged to create <strong>biosensors for environmental monitoring</strong>. Researchers have used XylR and the Pu promoter as a basis for detecting aromatic compounds (the presence of an analyte triggers reporter gene expression via XylR). Notably, XylR’s innate ligand range is quite broad – it responds not only to toluene and xylenes but also to a “surprising variety of structural analogs,” including other alkylbenzenes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect">pmc.ncbi.nlm.nih.gov</a>). This versatility was exploited to construct biosensors for <strong>BTEX compounds</strong> (benzene, toluene, ethylbenzene, xylene), which are common groundwater contaminants from petroleum (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a">pmc.ncbi.nlm.nih.gov</a>). Biosensor strains or devices using XylR can thus light up (for example, produce fluorescence) in the presence of these pollutants, enabling detection of contamination in situ (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a">pmc.ncbi.nlm.nih.gov</a>). Moreover, <em>P. putida</em> harboring the XylR circuit has been tested in field settings to report on soil pollutant levels (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a">pmc.ncbi.nlm.nih.gov</a>).  </p>
+<p>Researchers have also <strong>engineered XylR for expanded or altered specificity</strong>. For instance, de Lorenzo’s group created XylR mutants that can sense nitroaromatic compounds (such as 2,4-dinitrotoluene, a component of TNT) which are not natural effectors of wild-type XylR (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,the%20implementation%20of%20simple%20Boolean">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development">pmc.ncbi.nlm.nih.gov</a>). One exciting application of this was the development of bacterial sensors for landmines: an XylR variant was designed to detect trace nitrotoluene leaching from buried explosives, triggering a visible reporter as a “landmine detector” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=oil%20industry,turned%20XylR%20into%20a%20most">pmc.ncbi.nlm.nih.gov</a>). This showcases the adaptability of XylR’s sensing domain – a few amino acid changes can retarget it to new chemicals. Additionally, <strong>synthetic circuit design</strong> has combined XylR with logic gates to create more complex regulatory behaviors. By rewiring XylR production or coupling it with other signals, researchers achieved <strong>Boolean logic operations</strong> in Pseudomonas: for example, XylR-based circuits that require two conditions to be met (multi-input AND gates) or that display <strong>enhanced specificity</strong> to one aromatic over similar compounds (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development">pmc.ncbi.nlm.nih.gov</a>). One study generated XylR mutants with reduced promiscuity, so that the sensor would respond to a specific pollutant without cross-reacting to others, thereby “overcoming the natural promiscuity of XylR” (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=%28Garmendia%20et%20al,attractive%20TF%20for%20biosensor%20development">pmc.ncbi.nlm.nih.gov</a>). These advances, including rational protein engineering and domain shuffling, have made XylR a <strong>versatile platform for biosensor development</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development">pmc.ncbi.nlm.nih.gov</a>). As of 2023, XylR remains of interest not only for its classic role in biodegradation but also as a template for designing custom microbial regulators in <strong>environmental biotechnology</strong>.</p>
+<p><strong>Current research directions:</strong> The XylR/Pu regulatory module continues to be studied as a paradigm of complex gene regulation. Modern systems biology approaches have modeled the TOL network as a <strong>metabolic amplifier</strong> circuit, describing how XylR and XylS create a robust two-tier response that optimizes m-xylene degradation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=metabolic%20amplifier%20motif%20%28MAM%29,xylene">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,low%20amount%20of%20XylS%20protein">pmc.ncbi.nlm.nih.gov</a>). Advanced microscopy has provided new insight into the spatial dynamics of XylR-regulated gene expression, revealing that transcripts from XylR-activated operons are not randomly distributed but rather concentrate at specific cytoplasmic foci for efficient translation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=signals%20stemming%20from%20xylUW%20or,were%20separately%20recorded%20with%20the">pmc.ncbi.nlm.nih.gov</a>). There is also interest in <strong>structural biology</strong> of XylR: while no full crystal structure is available yet (due to the difficulty of such large, flexible proteins), computational modeling of XylR’s N-terminal domain has been performed to understand how aromatic effectors bind and cause allosteric changes (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=action%20of%20aromatic%20effectors%20on,2920.2002.00265.x%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar">pmc.ncbi.nlm.nih.gov</a>). Comparisons with its close homolog DmpR (which shares ~65% identity) are helping to pinpoint the amino acid differences that determine ligand specificity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Another%20NtrC,2000">pmc.ncbi.nlm.nih.gov</a>). Together, these efforts contribute to a <em>current understanding</em> of XylR as not just a singular protein, but as part of an integrated network that senses the environment, regulates a catabolic pathway, and interfaces with the cell’s physiology. Given its importance in pollution degradation and its amenability to engineering, XylR is likely to remain a focus of both fundamental and applied research, bridging microbiology, ecology, and synthetic biology.  </p>
+<p><strong>References:</strong>  </p>
+<ul>
+<li>Marc Valls &amp; Víctor de Lorenzo (2003). <em>Nucleic Acids Res</em>, <strong>31</strong>(23):6926-34. DOI:10.1093/nar/gkg912 (<a href="https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>S. Fernández, V. de Lorenzo, J. Pérez-Martín (1995). <em>Mol. Microbiol.</em>, <strong>16</strong>(2):205-213. DOI:10.1111/j.1365-2958.1995.tb02293.x (<a href="https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=the%20signal,located%20at%20the%20central%20domain">pubmed.ncbi.nlm.nih.gov</a>).  </li>
+<li>Rafael Silva-Rocha <em>et al.</em> (2011). <em>BMC Syst Biol</em>, <strong>5</strong>:191. DOI:10.1186/1752-0509-5-191 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=substrate%20is%20available%20,promoter%20Pm%20either%20by%20itself">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Matthew J. Bush &amp; Ray Dixon (2012). <em>Microbiol. Mol. Biol. Rev.</em>, <strong>76</strong>(3):497-529. DOI:10.1128/MMBR.00006-12 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Juhyun Kim <em>et al.</em> (2021). <em>mBio</em>, <strong>12</strong>(1):e03685-20. DOI:10.1128/mBio.03685-20 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led">pmc.ncbi.nlm.nih.gov</a>).  </li>
+<li>Raúl Fernández-López <em>et al.</em> (2015). <em>Front. Microbiol.</em>, <strong>6</strong>:648. DOI:10.3389/fmicb.2015.00648 (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development">pmc.ncbi.nlm.nih.gov</a>).</li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>AnnotationURLCitation(end_index=482, start_index=362, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162')</li>
+<li>AnnotationURLCitation(end_index=661, start_index=483, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain')</li>
+<li>AnnotationURLCitation(end_index=927, start_index=807, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162')</li>
+<li>AnnotationURLCitation(end_index=1341, start_index=1174, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons')</li>
+<li>AnnotationURLCitation(end_index=1481, start_index=1342, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=substrate%20is%20available%20,This%20factor%20has%20the')</li>
+<li>AnnotationURLCitation(end_index=1820, start_index=1653, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons')</li>
+<li>AnnotationURLCitation(end_index=2133, start_index=1980, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second')</li>
+<li>AnnotationURLCitation(end_index=2592, start_index=2439, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second')</li>
+<li>AnnotationURLCitation(end_index=2737, start_index=2593, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=two%20series%20of%20biotransformations,or%20in%20combination')</li>
+<li>AnnotationURLCitation(end_index=3095, start_index=2959, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect')</li>
+<li>AnnotationURLCitation(end_index=3702, start_index=3582, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162')</li>
+<li>AnnotationURLCitation(end_index=3818, start_index=3703, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%2C%20161%2C%20162')</li>
+<li>AnnotationURLCitation(end_index=4114, start_index=3977, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Other%20%CF%83,XylR%20and%20DmpR%20proteins%20confirm')</li>
+<li>AnnotationURLCitation(end_index=4425, start_index=4276, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=in%20a%20hybrid%20protein%20still,located%20at%20the%20central%20domain')</li>
+<li>AnnotationURLCitation(end_index=4694, start_index=4566, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=the%20signal,located%20at%20the%20central%20domain')</li>
+<li>AnnotationURLCitation(end_index=4946, start_index=4797, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=in%20a%20hybrid%20protein%20still,located%20at%20the%20central%20domain')</li>
+<li>AnnotationURLCitation(end_index=5387, start_index=5209, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain')</li>
+<li>AnnotationURLCitation(end_index=5678, start_index=5508, title='Transient XylR binding to the UAS of the Pseudomonas putida sigma54 promoter Pu revealed with high intensity UV footprinting in vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=The%20binding%20of%20the%20transcriptional,vivo%20genomic%20footprinting%20procedure%20that')</li>
+<li>AnnotationURLCitation(end_index=6082, start_index=5959, title='Transient XylR binding to the UAS of the Pseudomonas putida sigma54 promoter Pu revealed with high intensity UV footprinting in vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only')</li>
+<li>AnnotationURLCitation(end_index=6398, start_index=6220, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=Summary%3A%20Bacterial%20enhancer%20binding%20proteins,of%20the%20central%20catalytic%20domain')</li>
+<li>AnnotationURLCitation(end_index=6754, start_index=6600, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=activators%20that%20assemble%20as%20hexameric,54%7D%20for%20remodeling')</li>
+<li>AnnotationURLCitation(end_index=6922, start_index=6755, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons')</li>
+<li>AnnotationURLCitation(end_index=7440, start_index=7316, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=inducers,the%20release%20of%20the%20repression')</li>
+<li>AnnotationURLCitation(end_index=7822, start_index=7665, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=regulatory%20protein%20XylR%2C%20of%20the,of%20the%20protein%20stimulated%20the')</li>
+<li>AnnotationURLCitation(end_index=7949, start_index=7823, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=between%20the%20N,extent%20in%20vivo%20as%20XylR')</li>
+<li>AnnotationURLCitation(end_index=8275, start_index=8117, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=match%20at%20L473%20XylR%2C%20the,mutagenesis%20of%20the%20key%20aspartate')</li>
+<li>AnnotationURLCitation(end_index=9177, start_index=9026, title='Subcellular Architecture of the xyl Gene Expression Flow of the TOL Catabolic Plasmid of Pseudomonas putida mt-2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led')</li>
+<li>AnnotationURLCitation(end_index=9342, start_index=9178, title='Subcellular Architecture of the xyl Gene Expression Flow of the TOL Catabolic Plasmid of Pseudomonas putida mt-2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=signals%20stemming%20from%20xylUW%20or,were%20separately%20recorded%20with%20the')</li>
+<li>AnnotationURLCitation(end_index=9786, start_index=9663, title='Transient XylR binding to the UAS of the Pseudomonas putida sigma54 promoter Pu revealed with high intensity UV footprinting in vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only')</li>
+<li>AnnotationURLCitation(end_index=10502, start_index=10372, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene')</li>
+<li>AnnotationURLCitation(end_index=10774, start_index=10666, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20XylR%20auto,xylene')</li>
+<li>AnnotationURLCitation(end_index=10905, start_index=10775, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene')</li>
+<li>AnnotationURLCitation(end_index=11337, start_index=11185, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=inputs%20are%20strictly%20necessary%20to,XylS%20bound%20to%203%20MBz')</li>
+<li>AnnotationURLCitation(end_index=11805, start_index=11661, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=two%20series%20of%20biotransformations,or%20in%20combination')</li>
+<li>AnnotationURLCitation(end_index=12150, start_index=12020, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=the%20mechanism%20for%20regulation%20of,xylene')</li>
+<li>AnnotationURLCitation(end_index=12811, start_index=12691, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=global%20regulators%20,27%20%2C%2036')</li>
+<li>AnnotationURLCitation(end_index=12965, start_index=12812, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28')</li>
+<li>AnnotationURLCitation(end_index=13248, start_index=13095, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28')</li>
+<li>AnnotationURLCitation(end_index=14058, start_index=13935, title='Transient XylR binding to the UAS of the Pseudomonas putida sigma54 promoter Pu revealed with high intensity UV footprinting in vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only')</li>
+<li>AnnotationURLCitation(end_index=14346, start_index=14216, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=,acids%20and%20other%20repressive%20substrates')</li>
+<li>AnnotationURLCitation(end_index=14672, start_index=14519, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28')</li>
+<li>AnnotationURLCitation(end_index=15070, start_index=14917, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=physiological%20conditions%2C%20these%20default%20connections,35%2C28')</li>
+<li>AnnotationURLCitation(end_index=15924, start_index=15788, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect')</li>
+<li>AnnotationURLCitation(end_index=16447, start_index=16311, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect')</li>
+<li>AnnotationURLCitation(end_index=16824, start_index=16684, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=by%20this%20bacterium%20as%20a,This%20factor%20has%20the')</li>
+<li>AnnotationURLCitation(end_index=16992, start_index=16825, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons')</li>
+<li>AnnotationURLCitation(end_index=17752, start_index=17616, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect')</li>
+<li>AnnotationURLCitation(end_index=18070, start_index=17931, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a')</li>
+<li>AnnotationURLCitation(end_index=18386, start_index=18247, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a')</li>
+<li>AnnotationURLCitation(end_index=18645, start_index=18506, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=toluene%20and%20m,Heras%20and%20de%20Lorenzo%2C%202011a')</li>
+<li>AnnotationURLCitation(end_index=19050, start_index=18921, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,the%20implementation%20of%20simple%20Boolean')</li>
+<li>AnnotationURLCitation(end_index=19183, start_index=19051, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development')</li>
+<li>AnnotationURLCitation(end_index=19550, start_index=19420, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=oil%20industry,turned%20XylR%20into%20a%20most')</li>
+<li>AnnotationURLCitation(end_index=20229, start_index=20097, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development')</li>
+<li>AnnotationURLCitation(end_index=20588, start_index=20434, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=%28Garmendia%20et%20al,attractive%20TF%20for%20biosensor%20development')</li>
+<li>AnnotationURLCitation(end_index=20865, start_index=20733, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development')</li>
+<li>AnnotationURLCitation(end_index=21515, start_index=21383, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=metabolic%20amplifier%20motif%20%28MAM%29,xylene')</li>
+<li>AnnotationURLCitation(end_index=21663, start_index=21516, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,low%20amount%20of%20XylS%20protein')</li>
+<li>AnnotationURLCitation(end_index=22084, start_index=21933, title='Subcellular Architecture of the xyl Gene Expression Flow of the TOL Catabolic Plasmid of Pseudomonas putida mt-2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led')</li>
+<li>AnnotationURLCitation(end_index=22249, start_index=22085, title='Subcellular Architecture of the xyl Gene Expression Flow of the TOL Catabolic Plasmid of Pseudomonas putida mt-2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=signals%20stemming%20from%20xylUW%20or,were%20separately%20recorded%20with%20the')</li>
+<li>AnnotationURLCitation(end_index=22747, start_index=22557, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=action%20of%20aromatic%20effectors%20on,2920.2002.00265.x%20%5BDOI%5D%20%5BPubMed%5D%20%5BGoogle%20Scholar')</li>
+<li>AnnotationURLCitation(end_index=23006, start_index=22903, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Another%20NtrC,2000')</li>
+<li>AnnotationURLCitation(end_index=23714, start_index=23591, title='Transient XylR binding to the UAS of the Pseudomonas putida sigma54 promoter Pu revealed with high intensity UV footprinting in vivo - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/14627825/#:~:text=XylR%20protein%20is%20not%20permanently,Only')</li>
+<li>AnnotationURLCitation(end_index=23978, start_index=23850, title='Activation of the transcriptional regulator XylR of Pseudomonas putida by release of repression between functional domains - PubMed', type='url_citation', url='https://pubmed.ncbi.nlm.nih.gov/7565083/#:~:text=the%20signal,located%20at%20the%20central%20domain')</li>
+<li>AnnotationURLCitation(end_index=24229, start_index=24076, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=As%20shown%20in%20Figure%201,Unlike%20Pu%2C%20however%2C%20a%20second')</li>
+<li>AnnotationURLCitation(end_index=24380, start_index=24230, title='The logic layout of the TOL network of Pseudomonas putida pWW0 plasmid stems from a metabolic amplifier motif (MAM) that optimizes biodegradation of m-xylene - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3253710/#:~:text=substrate%20is%20available%20,promoter%20Pm%20either%20by%20itself')</li>
+<li>AnnotationURLCitation(end_index=24617, start_index=24497, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=XylR%20%20,76%20%2C%20%2064%2C%20162')</li>
+<li>AnnotationURLCitation(end_index=24785, start_index=24618, title='The Role of Bacterial Enhancer Binding Proteins as Specialized Activators of σ54-Dependent Transcription - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC3429621/#:~:text=expression%20of%20the%20dmp%20operon%2C,on%20toluene%20and%20related%20hydrocarbons')</li>
+<li>AnnotationURLCitation(end_index=25025, start_index=24874, title='Subcellular Architecture of the xyl Gene Expression Flow of the TOL Catabolic Plasmid of Pseudomonas putida mt-2 - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC8545136/#:~:text=flow%20remains%20unknown,based%20system%2C%20which%20likewise%20led')</li>
+<li>AnnotationURLCitation(end_index=25266, start_index=25130, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=Several%20NtrC,was%20also%20engineered%20to%20detect')</li>
+<li>AnnotationURLCitation(end_index=25399, start_index=25267, title='Transcription factor-based biosensors enlightened by the analyte - PMC', type='url_citation', url='https://pmc.ncbi.nlm.nih.gov/articles/PMC4486848/#:~:text=,attractive%20TF%20for%20biosensor%20development')</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(xylR-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P06519" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="xylr-gene-review-notes">xylR Gene Review Notes</h1>
+<h2 id="identity-and-organism-context">Identity And Organism Context</h2>
+<ul>
+<li>Requested target: <code>genes/PSEPK/xylR</code>, but the canonical reviewed accession recovered for <code>xylR</code> is <code>P06519</code>, where UniProt explicitly records <code>OG   Plasmid TOL pWW0.</code> and <code>OX   NCBI_TaxID=303;</code> [file:PSEPK/xylR/xylR-uniprot.txt, "OG   Plasmid TOL pWW0."] [file:PSEPK/xylR/xylR-uniprot.txt, "OX   NCBI_TaxID=303;"].</li>
+<li>The xylR literature is therefore anchored to the plasmid-borne TOL regulator from the <code>P. putida</code> mt-2 lineage, not to the native KT2440 chromosome [PMID:2430049 Genetic, functional and sequence analysis of the xylR and xylS regulatory genes of the TOL plasmid pWW0., "Genetic, functional and sequence analysis of the xylR and xylS regulatory genes of the TOL plasmid pWW0."].</li>
+<li>KT2440 is still a relevant experimental host for this system, because later work explicitly studies <code>Pseudomonas putida KT2440 pWW0</code> [PMID:16085802 Integration of signals through Crc and PtsN in catabolite repression of Pseudomonas putida TOL plasmid pWW0., "Toluene degradation in Pseudomonas putida KT2440 pWW0 plasmid is subjected to catabolite repression."].</li>
+</ul>
+<h2 id="core-biological-role">Core Biological Role</h2>
+<ul>
+<li><code>xylR</code> is the positive transcriptional regulator of the TOL plasmid <code>xyl</code> operons for toluene/xylene utilization [PMID:2993247 Determination of the transcription initiation site and identification of the protein product of the regulatory gene xylR for xyl operons on the TOL plasmid., "The xylR gene is a regulatory gene on the TOL plasmid, which acts in a positive manner on xyl operons for degradation of toluene and xylenes in Pseudomonas putida."].</li>
+<li>The reviewed UniProt entry summarizes the same regulatory scope and notes induction by aromatic effectors: <code>In the presence of m-xylene or m-methylbenzyl alcohol XylR activates both the xylCMABN operon and the regulatory gene xylS</code> [file:PSEPK/xylR/xylR-uniprot.txt, "In the CC       presence of m-xylene or m-methylbenzyl alcohol XylR activates both the"].</li>
+<li><code>xylR</code> encodes a 566 aa, ~67 kDa protein [PMID:3169574 Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas putida., "The 1698-bp sequence for a 566-amino acid (aa) protein (Mr 63741) was identified as the XylR-encoding sequence."] [PMID:2993247 Determination of the transcription initiation site and identification of the protein product of the regulatory gene xylR for xyl operons on the TOL plasmid., "The product of the xylR gene was identified by the maxicell system as a protein with an approximate molecular weight of 67,000."].</li>
+</ul>
+<h2 id="mechanism">Mechanism</h2>
+<ul>
+<li>XylR is an NtrC/NifA-like enhancer-binding regulator with a central sigma-factor interaction region and a C-terminal DNA-binding region [PMID:3169574 Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas putida., "The central region of XylR (aa 234-473) corresponds to the region that was proposed to interact with RNA polymerase having a sigma factor, NtrA"] [PMID:3169574 Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas putida., "The C-terminal region (aa 515-558) has a putative DNA-binding structure."].</li>
+<li>UniProt also marks the ATP-binding and DNA-binding features directly: <code>FT   BINDING         263..270</code> / <code>ligand="ATP"</code> and <code>FT   DNA_BIND        534..553</code> [file:PSEPK/xylR/xylR-uniprot.txt, "FT   BINDING         263..270"] [file:PSEPK/xylR/xylR-uniprot.txt, "FT                   /ligand=\"ATP\""] [file:PSEPK/xylR/xylR-uniprot.txt, "FT   DNA_BIND        534..553"].</li>
+<li>ATP is mechanistically relevant because activation involves ATP-dependent multimerization of XylR at upstream activating sequences (UAS) [PMID:9489676 Activation of the toluene-responsive regulator XylR causes a transcriptional switch between sigma54 and sigma70 promoters at the divergent Pr/Ps region of the TOL plasmid., "The addition of ATP, known to trigger multimerization of the regulator at the UAS, enhanced the repression of Pr by XylRdeltaA."].</li>
+<li>Activated XylR drives a promoter switch: it activates the sigma54-dependent <code>Ps</code> promoter while repressing the divergent <code>Pr</code> promoter [PMID:9489676 Activation of the toluene-responsive regulator XylR causes a transcriptional switch between sigma54 and sigma70 promoters at the divergent Pr/Ps region of the TOL plasmid., "These results support the notion that activation of XylR by aromatic inducers in vivo triggers a transcriptional switch between Pr and Ps."].</li>
+</ul>
+<h2 id="regulatory-context">Regulatory Context</h2>
+<ul>
+<li>Catabolite repression acts on the TOL system partly by reducing translation of <code>xylR</code> and <code>xylS</code> [PMID:20529863 The Crc global regulator inhibits the Pseudomonas putida pWW0 toluene/xylene assimilation pathway by repressing the translation of regulatory and structural genes., "This study reports that Crc binds to sites located at the translation initiation regions of the mRNAs coding for XylR and XylS"].</li>
+<li>In KT2440 carrying pWW0, the global regulators Crc and PtsN modulate XylR-dependent expression from <code>Pu</code>/<code>Ps</code> [PMID:16085802 Integration of signals through Crc and PtsN in catabolite repression of Pseudomonas putida TOL plasmid pWW0., "Pu and P(S1) promoters of the pWW0 TOL plasmid are down-regulated in vivo during exponential growth in rich medium."].</li>
+</ul>
+<h2 id="go-assessment">GO Assessment</h2>
+<ul>
+<li><code>GO:0043565 sequence-specific DNA binding</code>: strong keep. Supported by the C-terminal DNA-binding structure and the UAS-binding regulatory mechanism [PMID:3169574 Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas putida., "The C-terminal region (aa 515-558) has a putative DNA-binding structure."] [PMID:9489676 Activation of the toluene-responsive regulator XylR causes a transcriptional switch between sigma54 and sigma70 promoters at the divergent Pr/Ps region of the TOL plasmid., "which overlap the upstream activating sequences (UAS) for XylR"].</li>
+<li><code>GO:0006355 regulation of DNA-templated transcription</code>: real but too broad. <code>GO:0045893 positive regulation of DNA-templated transcription</code> is a better primary BP term because XylR is mainly an activator of <code>Pu</code>/<code>Ps</code>, even though it also participates in autoregulatory repression at <code>Pr</code>.</li>
+<li><code>GO:0005524 ATP binding</code>: mechanistically valid, but generic and less biologically informative than the activator function.</li>
+<li>Missing terms worth adding:</li>
+<li><code>GO:0141097 ligand-modulated transcription activator activity</code></li>
+<li><code>GO:0042203 toluene catabolic process</code></li>
+<li><code>GO:0042184 xylene catabolic process</code></li>
+</ul>
+<h2 id="review-position">Review Position</h2>
+<ul>
+<li>This review should explicitly state that the curated protein is the plasmid-borne <code>xylR</code> regulator (<code>P06519</code>, taxon 303) placed under the <code>PSEPK</code> folder only because the request was framed around the KT2440 project bucket.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P06519
+gene_symbol: xylR
+product_type: PROTEIN
+aliases:
+- 67 kDa protein
+status: COMPLETE
+taxon:
+  id: NCBITaxon:303
+  label: Pseudomonas putida
+description: xylR encodes the plasmid-borne TOL transcriptional regulator XylR, a 566 aa
+  NtrC-like enhancer-binding activator that senses aromatic effectors and uses ATP-dependent
+  multimerization plus sequence-specific DNA binding to activate the sigma54-dependent
+  Pu and Ps promoters of the xyl upper-pathway system and the downstream xylS regulator.
+  The curated reviewed accession (P06519) belongs to the pWW0 system in the Pseudomonas
+  putida mt-2 lineage (taxon 303), not the native KT2440 chromosome; this PSEPK folder
+  should therefore be interpreted as a KT2440/pWW0-context review rather than a chromosomal
+  KT2440 gene review.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: ATP binding is mechanistically credible for XylR because the protein contains
+      the canonical AAA+/sigma54 activator core and UniProt annotates explicit ATP-binding
+      residues. The 1998 promoter-switch paper further shows that ATP enhances active
+      XylR multimerization at the UAS. However, ATP binding is a generic mechanistic
+      property rather than the most informative description of the evolved role of this
+      regulator.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:PSEPK/xylR/xylR-uniprot.txt
+      supporting_text: FT   BINDING         263..270
+    - reference_id: file:PSEPK/xylR/xylR-uniprot.txt
+      supporting_text: FT                   /ligand=&#34;ATP&#34;
+    - reference_id: PMID:9489676
+      supporting_text: The addition of ATP, known to trigger multimerization of the
+        regulator at the UAS, enhanced the repression of Pr by XylR
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation captures the right general process class but is too broad.
+      XylR is primarily a positive activator of the sigma54-dependent Pu and Ps promoters
+      of the TOL system, although activated XylR also contributes to repression of the
+      divergent Pr promoter. The more specific child term positive regulation of DNA-templated
+      transcription better reflects the main curatable biology.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0045893
+      label: positive regulation of DNA-templated transcription
+    supported_by:
+    - reference_id: PMID:2993247
+      supporting_text: The xylR gene is a regulatory gene on the TOL plasmid, which
+        acts in a positive manner on xyl operons for degradation of toluene and xylenes
+        in Pseudomonas putida.
+    - reference_id: PMID:9489676
+      supporting_text: The mechanism by which XylR, the toluene-responsive activator
+        of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid
+        pWW0, downregulates its own sigma70 promoter Prhas been examined.
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This is a core XylR function. The C-terminal region carries the DNA-binding
+      structure/HTH motif, and activated XylR binds upstream activating sequences that
+      overlap the divergent Pr/Ps control region to regulate transcriptional switching.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:3169574
+      supporting_text: The C-terminal region (aa 515-558) has a putative DNA-binding
+        structure.
+    - reference_id: file:PSEPK/xylR/xylR-uniprot.txt
+      supporting_text: FT   DNA_BIND        534..553
+    - reference_id: PMID:9489676
+      supporting_text: The addition of ATP, known to trigger multimerization of the
+        regulator at the UAS, enhanced the repression of Pr by XylR
+- term:
+    id: GO:0141097
+    label: ligand-modulated transcription activator activity
+  evidence_type: TAS
+  original_reference_id: PMID:9489676
+  review:
+    summary: XylR is not merely a generic DNA-binding protein; it is an aromatic-effector-responsive
+      transcriptional activator. Aromatic induction triggers ATP-dependent multimerization
+      and activation of sigma54-dependent target promoters, which matches ligand-modulated
+      transcription activator activity better than the seeded GOA set.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:9489676
+      supporting_text: The mechanism by which XylR, the toluene-responsive activator
+        of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid
+        pWW0, downregulates its own sigma70 promoter Prhas been examined.
+    - reference_id: file:PSEPK/xylR/xylR-uniprot.txt
+      supporting_text: In the CC       presence of m-xylene or m-methylbenzyl alcohol
+        XylR activates both the
+- term:
+    id: GO:0042203
+    label: toluene catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:2993247
+  review:
+    summary: xylR is required for expression of the TOL xyl operons that drive toluene
+      assimilation/catabolism. This is the appropriate specific biological-process
+      context for the regulatory role of XylR.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:2993247
+      supporting_text: The xylR gene is a regulatory gene on the TOL plasmid, which
+        acts in a positive manner on xyl operons for degradation of toluene and xylenes
+        in Pseudomonas putida.
+    - reference_id: PMID:16085802
+      supporting_text: Toluene degradation in Pseudomonas putida KT2440 pWW0 plasmid
+        is subjected to catabolite repression.
+    - reference_id: file:PSEPK/xylR/xylR-deep-research-openai.md
+      supporting_text: XylR is the master regulator of the TOL plasmid *pWW0* upper
+        pathway, which governs the initial **oxidative catabolism of toluene and
+        xylenes**
+- term:
+    id: GO:0042184
+    label: xylene catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:2993247
+  review:
+    summary: The same regulatory logic applies to xylene degradation, since the xylR-controlled
+      TOL operons mediate degradation/assimilation of xylenes as well as toluene.
+      This process term is specific and well supported by the foundational xylR literature.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:2993247
+      supporting_text: The xylR gene is a regulatory gene on the TOL plasmid, which
+        acts in a positive manner on xyl operons for degradation of toluene and xylenes
+        in Pseudomonas putida.
+    - reference_id: PMID:20529863
+      supporting_text: In Pseudomonas putida, the expression of the pWW0 plasmid
+        genes for the toluene/xylene assimilation pathway (the TOL pathway) is subject
+        to complex regulation in response to environmental and physiological signals.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms.
+  findings:
+  - statement: InterPro captures the sigma54 activator and DNA-binding domains of XylR
+      but only yields broad seed annotations.
+- id: PMID:2993247
+  title: Determination of the transcription initiation site and identification of the protein
+    product of the regulatory gene xylR for xyl operons on the TOL plasmid.
+  findings:
+  - statement: xylR acts positively on xyl operons for degradation of toluene and xylenes.
+    supporting_text: The xylR gene is a regulatory gene on the TOL plasmid, which acts
+      in a positive manner on xyl operons for degradation of toluene and xylenes in
+      Pseudomonas putida.
+  - statement: xylR transcription has two mapped start sites and is inducer-independent
+      at the promoter level.
+    supporting_text: Two initiation sites were detected which were identical in both
+      P. putida and E. coli. The amounts of mRNA synthesized in both bacterial cells
+      were almost the same and independent of the inducers for xyl operons.
+  - statement: The xylR product is an approximately 67 kDa protein.
+    supporting_text: The product of the xylR gene was identified by the maxicell system
+      as a protein with an approximate molecular weight of 67,000.
+- id: PMID:3169574
+  title: Nucleotide sequence of the regulatory gene xylR of the TOL plasmid from Pseudomonas
+    putida.
+  findings:
+  - statement: xylR encodes a 566 aa transcriptional activator for the aromatic-hydrocarbon
+      degradative pathway.
+    supporting_text: The 1698-bp sequence for a 566-amino acid (aa) protein (Mr 63741)
+      was identified as the XylR-encoding sequence.
+  - statement: The central region corresponds to the sigma-factor interaction region.
+    supporting_text: The central region of XylR (aa 234-473) corresponds to the region
+      that was proposed to interact with RNA polymerase having a sigma factor, NtrA
+  - statement: The C-terminal region contains a putative DNA-binding structure.
+    supporting_text: The C-terminal region (aa 515-558) has a putative DNA-binding structure.
+- id: PMID:2430049
+  title: Genetic, functional and sequence analysis of the xylR and xylS regulatory genes
+    of the TOL plasmid pWW0.
+  findings:
+  - statement: xylR is one of the core regulatory genes of the TOL plasmid pWW0 system.
+    supporting_text: Insertion mutations of the xylR and xylS regulatory genes of the
+      catabolic pathway have been isolated and characterized
+  - statement: Tn5 mutagenesis and functional analysis linked xylR to catechol 2,3-oxygenase
+      induction.
+    supporting_text: their ability to induce catechol 2,3-oxygenase activity determined.
+- id: PMID:9489676
+  title: Activation of the toluene-responsive regulator XylR causes a transcriptional
+    switch between sigma54 and sigma70 promoters at the divergent Pr/Ps region of the
+    TOL plasmid.
+  findings:
+  - statement: Activated XylR is a toluene-responsive regulator of the sigma54-dependent
+      Pu and Ps promoters.
+    supporting_text: The mechanism by which XylR, the toluene-responsive activator of
+      the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid pWW0,
+      downregulates its own sigma70 promoter Prhas been examined.
+  - statement: ATP promotes multimerization at the UAS and contributes to the Pr/Ps
+      transcriptional switch.
+    supporting_text: The addition of ATP, known to trigger multimerization of the regulator
+      at the UAS, enhanced the repression of Pr by XylR
+- id: PMID:20529863
+  title: The Crc global regulator inhibits the Pseudomonas putida pWW0 toluene/xylene
+    assimilation pathway by repressing the translation of regulatory and structural genes.
+  findings:
+  - statement: Crc represses the TOL pathway partly by binding the translation-initiation
+      regions of xylR and xylS mRNAs.
+    supporting_text: This study reports that Crc binds to sites located at the translation
+      initiation regions of the mRNAs coding for XylR and XylS
+  - statement: XylR sits within a larger catabolite-repression hierarchy rather than
+      acting alone.
+    supporting_text: First, Crc inhibits the translation of the XylR and XylS regulators,
+      thereby reducing the transcription of all TOL pathway genes.
+- id: PMID:16085802
+  title: Integration of signals through Crc and PtsN in catabolite repression of Pseudomonas
+    putida TOL plasmid pWW0.
+  findings:
+  - statement: The pWW0 system has been studied in a KT2440 host background.
+    supporting_text: Toluene degradation in Pseudomonas putida KT2440 pWW0 plasmid is
+      subjected to catabolite repression.
+  - statement: Global regulation through Crc and PtsN modulates XylR-dependent promoter
+      output.
+    supporting_text: Pu and P(S1) promoters of the pWW0 TOL plasmid are down-regulated
+      in vivo during exponential growth in rich medium.
+- id: file:PSEPK/xylR/xylR-uniprot.txt
+  title: UniProt entry P06519
+  findings:
+  - statement: The reviewed accession is plasmid-borne on TOL pWW0 and mapped to taxon
+      303 rather than the native KT2440 chromosome.
+  - statement: UniProt records ATP-binding residues, a DNA-binding motif, and activation
+      of xylCMABN/xylS in response to aromatic effectors.
+- id: file:PSEPK/xylR/xylR-deep-research-openai.md
+  title: OpenAI deep research report for xylR
+  findings:
+  - statement: The deep research report converges on XylR as a sigma54-dependent aromatic-effector-responsive
+      transcriptional activator for the TOL network.
+- id: file:PSEPK/xylR/xylR-notes.md
+  title: xylR curation notes
+  findings:
+  - statement: This review treats the requested PSEPK folder as a KT2440/pWW0 context
+      while correcting the actual curated accession to the plasmid-borne xylR protein.
+core_functions:
+- description: XylR is an aromatic-effector-responsive enhancer-binding transcription
+    activator on TOL plasmid pWW0. In response to aromatic inducers and ATP, it multimerizes
+    at upstream activating sequences and activates the sigma54-dependent Pu and Ps promoters,
+    initiating expression of the upper xyl operon and xylS for toluene and xylene catabolism.
+  molecular_function:
+    id: GO:0141097
+    label: ligand-modulated transcription activator activity
+  directly_involved_in:
+  - id: GO:0042203
+    label: toluene catabolic process
+  - id: GO:0042184
+    label: xylene catabolic process
+  supported_by:
+  - reference_id: PMID:2993247
+    supporting_text: The xylR gene is a regulatory gene on the TOL plasmid, which
+      acts in a positive manner on xyl operons for degradation of toluene and xylenes
+      in Pseudomonas putida.
+  - reference_id: PMID:9489676
+    supporting_text: The mechanism by which XylR, the toluene-responsive activator
+      of the sigma54-dependent Pu and Ps promoters of the Pseudomonas TOL plasmid
+      pWW0, downregulates its own sigma70 promoter Prhas been examined.
+- description: XylR uses a C-terminal DNA-binding region to recognize promoter-proximal
+    upstream activating sequences and to implement the Pr/Ps transcriptional switch
+    that controls TOL pathway output.
+  molecular_function:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  directly_involved_in:
+  - id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  supported_by:
+  - reference_id: PMID:3169574
+    supporting_text: The C-terminal region (aa 515-558) has a putative DNA-binding
+      structure.
+  - reference_id: PMID:9489676
+    supporting_text: The addition of ATP, known to trigger multimerization of the
+      regulator at the UAS, enhanced the repression of Pr by XylR
+suggested_questions:
+- question: Should this review remain in the PSEPK project bucket even though the reviewed
+    accession is the plasmid-borne taxon 303 xylR protein rather than a native KT2440
+    chromosomal gene?
+- question: Do GO curators want a separate annotation strategy for XylR-mediated autorepression
+    of Pr, or is capturing the dominant positive activation of Pu/Ps sufficient?
+suggested_experiments:
+- hypothesis: Aromatic effector binding and ATP-dependent multimerization jointly determine
+    XylR promoter selectivity and output strength.
+  description: Compare WT XylR and ATP-site mutants in KT2440(pWW0) or mini-TOL reporter
+    strains across toluene, m-xylene, benzyl alcohol, and m-methylbenzyl alcohol and
+    measure Pu, Ps, and Pr outputs.
+  experiment_type: reporter assay
+- hypothesis: XylR directly occupies the known UAS elements at the divergent Pr/Ps control
+    region in an effector-dependent manner.
+  description: Perform ChIP-qPCR or DAP-seq for XylR with and without aromatic inducer
+    and test occupancy at Pu/Ps/Pr plus additional candidate TOL control regions.
+  experiment_type: DNA binding assay
+- hypothesis: Global catabolite repression acts both upstream and downstream of XylR.
+  description: Measure TOL promoter activity and XylR protein levels in WT, crc, ptsN,
+    and crc ptsN backgrounds carrying pWW0 during growth on preferred versus non-preferred
+    carbon sources.
+  experiment_type: genetic perturbation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

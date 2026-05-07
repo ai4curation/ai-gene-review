@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nasA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nasA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88L43" target="_blank" class="term-link">
+                        Q88L43
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_2092</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nasA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88L43" data-a="DESCRIPTION: Plasma-membrane major facilitator superfamily nitr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Plasma-membrane major facilitator superfamily nitrate/nitrite porter-family transporter that supports assimilatory nitrate use in Pseudomonas putida KT2440. In this strain, nasA refers to the transporter PP_2092 rather than an assimilatory nitrate reductase catalytic subunit. The protein is a predicted 12-pass membrane protein, is induced under nitrogen limitation in a NasT-associated regulatory context, and is best supported as a nitrate uptake component of the nitrate assimilation system. Nitrite transport remains plausible from family assignment, but the direct physiological evidence in KT2440 is stronger for nitrate than for nitrite as the core substrate.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015112" target="_blank" class="term-link">
+                                    GO:0015112
+                                </a>
+                            </span>
+                            <span class="term-label">nitrate transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0015112" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best-supported core molecular function. PP_2092 is annotated in UniProt as a nitrate/nitrite transporter in the MFS nitrate/nitrite porter family, and KT2440 transcriptome data place nasA in the NasT-regulated nitrate assimilation response under nitrogen limitation. Together these support nitrate transport as the central function of the protein.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Nitrate/nitrite porter (TC 2.A.1.8) family.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PP_2092 is identified as a distinct nitrate transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">was upregulated under nitrogen limitation and assigned to the NasT regulon</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015113" target="_blank" class="term-link">
+                                    GO:0015113
+                                </a>
+                            </span>
+                            <span class="term-label">nitrite transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0015113" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nitrite transport is plausible from the shared nitrate/nitrite porter family assignment, but it is not as strongly grounded as nitrate uptake in KT2440. Available strain-specific evidence points much more directly to a role in nitrate assimilation, and the current non-primary BarSeq evidence argues against making nitrite transport the core call.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Nitrate/nitrite transporter</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">no significant fitness phenotype was detected in the nitrite condition</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a caution against overcommitting to nitrite transport as a core function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent transporter term is correct but much less informative than the specific nitrate and possible nitrite transporter terms already present.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015706" target="_blank" class="term-link">
+                                    GO:0015706
+                                </a>
+                            </span>
+                            <span class="term-label">nitrate transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0015706" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological-process annotation matches the best-supported physiological role of the protein. nasA is induced in nitrogen-limitation conditions, falls under NasT-associated regulation, and fits the assimilatory nitrate transport step in KT2440.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">5 mM KNO3 as the sole nitrogen source</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015707" target="_blank" class="term-link">
+                                    GO:0015707
+                                </a>
+                            </span>
+                            <span class="term-label">nitrite transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0015707" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transporter family allows this process annotation to remain plausible, but direct KT2440 evidence is not as specific for nitrite handling as it is for nitrate. This should be retained as a non-core possibility rather than treated as the main biological-process call.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Nitrate/nitrite transporter</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042128" target="_blank" class="term-link">
+                                    GO:0042128
+                                </a>
+                            </span>
+                            <span class="term-label">nitrate assimilation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0042128" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an appropriate core biological-process annotation. KT2440 nitrate-assimilation studies place NasT at the center of the assimilatory response, nitrogen limitation induces nasA, and UniProt already associates PP_2092 with nitrate assimilation.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   GO; GO:0042128; P:nitrate assimilation;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination function of NasT in Pseudomonas putida</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad transport process term is redundant given the more informative nitrate transmembrane transport and nitrate assimilation annotations.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct cellular-component call. UniProt explicitly places the protein in the cell membrane as a multi-pass membrane protein, and the predicted topology is fully consistent with an MFS transporter.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell membrane</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">predicts 12 transmembrane helices, consistent with an MFS transporter</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L43" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein is clearly membrane-localized, but this parent term is less precise than the available plasma-membrane annotation.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/nasA/nasA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NasA/PP_2092 is a 12-pass major facilitator superfamily transporter in the plasma membrane that provides nitrate uptake for the assimilatory nitrate pathway in Pseudomonas putida KT2440, particularly in the nitrogen-limitation/NasT regulatory context.</h3>
+                <span class="vote-buttons" data-g="Q88L43" data-a="FUNCTION: NasA/PP_2092 is a 12-pass major facilitator superf..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015112" target="_blank" class="term-link">
+                            nitrate transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015706" target="_blank" class="term-link">
+                                nitrate transmembrane transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042128" target="_blank" class="term-link">
+                                nitrate assimilation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/nasA/nasA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Nitrate/nitrite porter (TC 2.A.1.8) family.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/nasA/nasA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PP_2092 is identified as a distinct nitrate transporter</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/nasA/nasA-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/nasA/nasA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88L43</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nasA encodes a nitrate/nitrite transporter in the MFS nitrate/nitrite porter family</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nasA is a predicted multi-pass cell membrane protein with twelve transmembrane helices</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt associates the protein with nitrate transmembrane transporter activity and nitrate assimilation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/nasA/nasA-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes on nasA (PP_2092) in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nasA is the KT2440 transporter PP_2092 and should not be confused with nitrate reductase NasA proteins from other organisms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">transcriptome data place nasA in the NasT-associated nitrogen-limitation response</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">thesis-level BarSeq evidence suggests the strongest strain-specific phenotype is on nitrate rather than nitrite</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/nasA/nasA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on nasA (PP_2092, UniProt Q88L43) in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PP_2092 is identified as a distinct nitrate transporter with a strong nitrate-condition fitness defect</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nasA is strongly induced under nitrogen limitation in KT2440</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nitrite transport is less directly supported than nitrate uptake in the retrieved KT2440 evidence</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link">
+                            PMID:19648236
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NtrC-Dependent Regulatory Network for Nitrogen Assimilation in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NtrC is the master nitrogen regulator for genes involved in nitrogen uptake and metabolism in P. putida</div>
+                        
+                        <div class="finding-text">"the nitrogen regulatory NtrC proteins from P. putida and Escherichia coli are functionally equivalent"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33375721" target="_blank" class="term-link">
+                            PMID:33375721
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptome Changes in Pseudomonas putida KT2440 during Medium-Chain-Length Polyhydroxyalkanoate Synthesis Induced by Nitrogen Limitation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nasA is induced under nitrogen limitation and assigned to the NasT regulon</div>
+                        
+                        <div class="finding-text">"nitrate transporter (nasA) are putatively regulated by nasT"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">nitrogen limitation activates nasT expression in KT2440</div>
+                        
+                        <div class="finding-text">"nitrogen limitation caused activation of the nasT regulator"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38000372" target="_blank" class="term-link">
+                            PMID:38000372
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination function of NasT in Pseudomonas putida</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 nitrate-assimilation experiments were performed with nitrate as sole nitrogen source</div>
+                        
+                        <div class="finding-text">"M9 medium containing 5 mM KNO3 as the sole nitrogen source"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_2092 a strictly nitrate-selective importer in KT2440, or can it also mediate physiologically relevant nitrite flux under defined pH and nitrogen regimes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88L43" data-a="Q: Is PP_2092 a strictly nitrate-selective importer i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NasA operate as a symporter, antiporter, or facilitated transporter in the assimilatory nitrate pathway of P. putida KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88L43" data-a="Q: Does NasA operate as a symporter, antiporter, or f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Create a clean nasA deletion and complemented strain, then compare growth and intracellular nitrate accumulation with nitrate as sole nitrogen source.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NasA is the main nitrate uptake system required for assimilatory growth on nitrate in KT2440.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic perturbation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88L43" data-a="EXPERIMENT: Create a clean nasA deletion and complemented stra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure uptake of labeled nitrate and nitrite in wild type and nasA mutant cells across a pH series to distinguish transporter-mediated flux from passive nitrous acid diffusion.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Nitrite transport is weaker or context-dependent relative to nitrate transport for NasA.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transport assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88L43" data-a="EXPERIMENT: Measure uptake of labeled nitrate and nitrite in w..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify nasA transcript and protein levels in wild type, nasT mutant, and altered c-di-GMP backgrounds during shifts from ammonium to nitrate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: NasT-dependent induction of nasA is a major control point for assimilatory nitrate use.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: gene expression analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88L43" data-a="EXPERIMENT: Quantify nasA transcript and protein levels in wil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nasA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L43" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:57:45.596179'<br />
+end_time: '2026-03-21T14:04:35.680081'<br />
+duration_seconds: 410.04<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: nasA<br />
+  gene_symbol: nasA<br />
+  uniprot_accession: Q88L43<br />
+  protein_description: 'RecName: Full=Nitrate/nitrite transporter {ECO:0000256|RuleBase:RU366033};'<br />
+  gene_info: Name=nasA {ECO:0000313|EMBL:AAN67706.1}; OrderedLocusNames=PP_2092 {ECO:0000313|EMBL:AAN67706.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the major facilitator superfamily.<br />
+  protein_domains: MFS. (IPR011701); MFS_dom. (IPR020846); MFS_trans_sf. (IPR036259);<br />
+    NO3_transporter. (IPR044772); NO3_transporter_NarK/NarU-like. (IPR004737)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 15</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88L43</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nitrate/nitrite transporter {ECO:0000256|RuleBase:RU366033};</li>
+<li><strong>Gene Information:</strong> Name=nasA {ECO:0000313|EMBL:AAN67706.1}; OrderedLocusNames=PP_2092 {ECO:0000313|EMBL:AAN67706.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the major facilitator superfamily.</li>
+<li><strong>Key Domains:</strong> MFS. (IPR011701); MFS_dom. (IPR020846); MFS_trans_sf. (IPR036259); NO3_transporter. (IPR044772); NO3_transporter_NarK/NarU-like. (IPR004737)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nasA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nasA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nasA</strong> (gene ID: nasA, UniProt: Q88L43) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88L43</li>
+<li><strong>Protein Description:</strong> RecName: Full=Nitrate/nitrite transporter {ECO:0000256|RuleBase:RU366033};</li>
+<li><strong>Gene Information:</strong> Name=nasA {ECO:0000313|EMBL:AAN67706.1}; OrderedLocusNames=PP_2092 {ECO:0000313|EMBL:AAN67706.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the major facilitator superfamily.</li>
+<li><strong>Key Domains:</strong> MFS. (IPR011701); MFS_dom. (IPR020846); MFS_trans_sf. (IPR036259); NO3_transporter. (IPR044772); NO3_transporter_NarK/NarU-like. (IPR004737)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "nasA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'nasA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>nasA</strong> (gene ID: nasA, UniProt: Q88L43) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-nasa-pp_2092-uniprot-q88l43-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>nasA</strong> (PP_2092; UniProt <strong>Q88L43</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-critical-disambiguation">0) Target verification (critical disambiguation)</h3>
+<p>The gene symbol <strong>nasA</strong> is used across diverse bacteria for different components of nitrate assimilation systems (e.g., MFS permeases in some organisms; ABC-type transport system components in others). In <em>Pseudomonas putida</em> KT2440, the locus <strong>PP_2092</strong> is explicitly identified as a <strong>nitrate transporter</strong> in an assimilatory nitrate reduction module by genome-context analysis coupled to pooled mutant fitness data (RB-TnSeq/BarSeq). This PP_2092 assignment matches the user-provided UniProt entry Q88L43 description as a <strong>NarK/NarU-like MFS nitrate/nitrite transporter</strong>. Therefore, the evidence summarized here is restricted to <strong>KT2440 PP_2092</strong> and related transporter-family context, and does not generalize from other unrelated “nasA” annotations without caution. (schmidt2022nitrogenmetabolismin pages 6-8, schmidt2022nitrogenmetabolismin media b1b76177)</p>
+<h3 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h3>
+<h4 id="11-assimilatory-nitrate-reduction-vs-other-nitrate-pathways">1.1 Assimilatory nitrate reduction vs other nitrate pathways</h4>
+<p><strong>Assimilatory nitrate reduction</strong> is a nutrient acquisition pathway in which extracellular nitrate (NO3−) is imported and reduced to nitrite (NO2−) and then to ammonium for incorporation into biomass. This differs from respiratory nitrate reduction/denitrification, where nitrate functions as a terminal electron acceptor and nitrogen can be lost as gaseous products.</p>
+<p>In bacterial nitrate assimilation, a transporter is often required because nitrate and nitrite are charged and do not freely cross membranes. Transport solutions vary by lifestyle: <strong>soil-associated bacteria</strong> commonly employ <strong>MFS-type proton-coupled nitrate uptake (NarK1/NasA-like)</strong>, whereas <strong>aquatic cyanobacteria</strong> frequently employ higher-affinity <strong>ABC-type nitrate uptake (NrtABCD)</strong> with periplasmic/extracellular binding proteins. (jarvis2022proteininteractionnetworks pages 26-32)</p>
+<h4 id="12-what-nasa-is-in-kt2440">1.2 What NasA is (in KT2440)</h4>
+<p>For <em>P. putida</em> KT2440, <strong>NasA = PP_2092 (Q88L43)</strong> is best supported as an <strong>inner-membrane nitrate uptake transporter</strong> that supplies nitrate to the intracellular assimilatory nitrate/nitrite reductases. The UniProt-provided domain context (MFS/NarK-like) is consistent with expert syntheses describing NasA proteins as <strong>NarK1-like nitrate/proton symporters</strong> (MFS family), rather than ABC transporter subunits. (schmidt2022nitrogenmetabolismin pages 6-8, jarvis2022proteininteractionnetworks pages 26-32)</p>
+<h3 id="2-functional-role-of-nasa-pp_2092q88l43-in-p-putida-kt2440">2) Functional role of nasA (PP_2092/Q88L43) in <em>P. putida</em> KT2440</h3>
+<h4 id="21-primary-function-nitrate-transport-substrate-specificity">2.1 Primary function: nitrate transport (substrate specificity)</h4>
+<p>The strongest KT2440-specific functional evidence is from genome-wide pooled fitness assays across nitrogen sources. In this dataset, <strong>PP_2092 is identified as a distinct nitrate transporter</strong> and shows a <strong>strong fitness defect during growth with nitrate as the sole nitrogen source</strong>, while <strong>no significant fitness phenotype was detected in the nitrite condition</strong>. The authors interpret the lack of a nitrite phenotype as suggesting PP_2092 is more specific for <strong>nitrate</strong> uptake (or that nitrite uptake can be bypassed under the experimental conditions). (schmidt2022nitrogenmetabolismin pages 6-8)</p>
+<p>A key quantitative point is visualized in the paper’s schematic of the assimilatory nitrate reduction module, where PP_2092 is labeled “nitrate transporter” and the nitrate-condition mutant fitness value is shown (fitness ≈ <strong>−2.6</strong>). (schmidt2022nitrogenmetabolismin media b1b76177)</p>
+<p><strong>Interpretation:</strong> In RB-TnSeq, a strong negative fitness under nitrate suggests PP_2092 is required for optimal nitrate assimilation. The lack of a nitrite phenotype does not prove that PP_2092 cannot transport nitrite; rather, it suggests nitrate uptake is the limiting step under nitrate-only conditions, while nitrite acquisition may occur via alternative routes (including chemical diffusion of nitrous acid, HNO2, depending on pH). (schmidt2022nitrogenmetabolismin pages 6-8)</p>
+<h4 id="22-pathway-context-coupling-to-assimilatory-reductases">2.2 Pathway context: coupling to assimilatory reductases</h4>
+<p>In the same fitness study, PP_2092 is discussed alongside assimilatory reductases (NarB and NirDB) and cofactor genes required for assimilatory nitrate reduction, supporting its placement in the nitrate assimilation pathway (nitrate uptake → reduction → incorporation). (schmidt2022nitrogenmetabolismin pages 6-8, schmidt2022nitrogenmetabolismin media b1b76177)</p>
+<h3 id="3-regulation-nitrogen-limitation-and-nitrate-responsive-control">3) Regulation: nitrogen limitation and nitrate-responsive control</h3>
+<h4 id="31-induction-under-nitrogen-limitation">3.1 Induction under nitrogen limitation</h4>
+<p>Transcriptomics during nitrogen-limited cultivation (in the context of mcl-PHA synthesis) reported <strong>strong upregulation of nasA (PP_2092)</strong> across backgrounds: approximately <strong>14.64-fold (WT)</strong>, <strong>12.04-fold (relA/spoT mutant)</strong>, and <strong>12.43-fold (rpoN mutant)</strong>. These data were generated by RNA-seq (with qRT-PCR used to validate the RNA-seq results overall), supporting that nasA is part of a nitrogen-starvation/limitation responsive program. (dabrowska2020transcriptomechangesin pages 8-10)</p>
+<h4 id="32-nassnast-regulatory-linkage">3.2 NasS/NasT regulatory linkage</h4>
+<p>Within the KT2440 nitrate assimilation module, regulation is consistent with a <strong>NasS/NasT nitrate/nitrite-responsive system</strong> (commonly described as a sensory/regulatory pair controlling expression of nitrate assimilation genes). In the BarSeq study, <strong>nasT (PP_2093)</strong> and <strong>nasS (PP_2094)</strong> show notable nitrate-condition fitness effects, consistent with a regulatory role controlling the nitrate assimilation genes that include the transporter PP_2092. Additionally, the transcriptomic study annotates nasA (PP_2092) as putatively regulated by <strong>NasT</strong> and shows nasT itself is strongly induced (including ~27.66-fold in relA/spoT). (schmidt2022nitrogenmetabolismin pages 6-8, dabrowska2020transcriptomechangesin pages 8-10)</p>
+<h3 id="4-cellular-localization-and-topology">4) Cellular localization and topology</h3>
+<p>No direct localization experiment (e.g., fractionation, fluorescent protein fusions, proteomics subcellular mapping) for KT2440 PP_2092 was retrieved in the searched corpus. However, multiple lines of inference support that NasA (Q88L43) is an <strong>integral inner membrane transporter</strong>:</p>
+<ul>
+<li>Family/domain inference: NasA is described as <strong>NarK/NarU-like MFS</strong>, which are canonical <strong>multi-pass inner-membrane transporters</strong>. (jarvis2022proteininteractionnetworks pages 26-32)</li>
+<li>Expert synthesis: NasA-type proteins are discussed as <strong>NarK1-like nitrate/proton symporters</strong> (membrane proteins) contrasted with ABC-type uptake systems that include periplasmic/external binding proteins. (jarvis2022proteininteractionnetworks pages 26-32)</li>
+</ul>
+<h3 id="5-recent-developments-emphasis-on-20232024-and-how-they-inform-annotation">5) Recent developments (emphasis on 2023–2024) and how they inform annotation</h3>
+<p>Direct 2023–2024 primary studies specifically characterizing <strong>PP_2092/Q88L43</strong> in <em>P. putida</em> KT2440 were not retrieved. Nevertheless, 2023–2024 research on microbial nitrogen metabolism continues to emphasize transporter-level control and pathway regulation in diverse bacteria, and more recent transporter-focused work (outside KT2440) illustrates that nitrate/nitrite transport can be dynamically regulated and can shape nitrogen-oxide kinetics.</p>
+<p>For example, transporter-centric analyses in nitrogen cycling organisms highlight that NarK-like transporters can mediate nitrate/nitrite exchange or proton-coupled fluxes, while alternative nitrite transport channels can contribute higher apparent affinity and change observed kinetics through expression shifts and environmental drivers (nitrite concentration, pH). While this specific kinetic example was retrieved from 2026, it reinforces a general modern view: nitrate/nitrite transporter families are functionally diverse, and physiological context (including pH-dependent passive diffusion of HNO2) can complicate inference from simple growth phenotypes. (lee2026kineticplasticityof pages 9-12, schmidt2022nitrogenmetabolismin pages 6-8)</p>
+<p><strong>Implication for KT2440 NasA annotation:</strong> The most defensible KT2440-specific statement remains that PP_2092 is required for growth on nitrate as nitrogen source (fitness defect) and is induced under nitrogen limitation (RNA-seq), while the exact transport mechanism (symport vs antiport) and nitrite permeability remain to be directly established experimentally. (schmidt2022nitrogenmetabolismin pages 6-8, dabrowska2020transcriptomechangesin pages 8-10)</p>
+<h3 id="6-current-applications-and-real-world-implementation-relevance">6) Current applications and real-world implementation relevance</h3>
+<h4 id="61-industrialbioprocess-relevance-nitrogen-limitation-regimes">6.1 Industrial/bioprocess relevance: nitrogen limitation regimes</h4>
+<p><em>P. putida</em> KT2440 is widely used as a biotechnology chassis, and <strong>nitrogen limitation</strong> is a common cultivation strategy to shift carbon flux (e.g., toward storage polymers such as mcl-PHAs). Transcriptomic profiling under nitrogen limitation during mcl-PHA production shows that nasA (PP_2092) is among the most strongly induced genes annotated as part of nitrogen acquisition/response, suggesting that nitrate uptake capacity can be upregulated during production-relevant nutrient limitation regimes. This provides a mechanistic link between bioprocess nutrient control and activation of nitrate assimilation functions. (dabrowska2020transcriptomechangesin pages 8-10)</p>
+<h4 id="62-systems-biology-application-functional-gene-discovery-for-engineering">6.2 Systems biology application: functional gene discovery for engineering</h4>
+<p>High-throughput pooled fitness mapping in KT2440 identifies PP_2092 as a functionally important nitrate transporter among hundreds of nitrogen-metabolism genes. This type of dataset is used in practice to prioritize genes for metabolic engineering, to build predictive models of nutrient utilization, and to select genetic parts/regulators (e.g., NasT-linked control) as potential synthetic biology tools. (schmidt2022nitrogenmetabolismin pages 6-8)</p>
+<h3 id="7-quantitative-evidence-summary-statisticsdata">7) Quantitative evidence summary (statistics/data)</h3>
+<p>Key quantitative points directly supporting annotation:</p>
+<ul>
+<li><strong>Mutant fitness under nitrate:</strong> PP_2092 shows a strong nitrate-dependent fitness defect; figure-level value shown ≈ <strong>−2.6</strong> in the nitrate condition. (schmidt2022nitrogenmetabolismin media b1b76177)</li>
+<li><strong>Substrate specificity (genetic evidence):</strong> strong phenotype on <strong>nitrate</strong> but <strong>not nitrite</strong>, interpreted as suggestive of nitrate specificity (with caveats about nitrite diffusion). (schmidt2022nitrogenmetabolismin pages 6-8)</li>
+<li><strong>Expression under nitrogen limitation:</strong> nasA/PP_2092 upregulated <strong>~12–15-fold</strong> across multiple strain backgrounds under N limitation (WT 14.64; relA/spoT 12.04; rpoN 12.43). (dabrowska2020transcriptomechangesin pages 8-10)</li>
+</ul>
+<h3 id="8-evidence-table">8) Evidence table</h3>
+<p>The following table consolidates key claims, evidence types, quantitative values, and limitations.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Aspect</th>
+<th>Evidence type</th>
+<th>Key quantitative data</th>
+<th>Source (first author year, journal)</th>
+<th>URL</th>
+<th>Notes/limits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Target identity in <em>Pseudomonas putida</em> KT2440</strong>: PP_2092 corresponds to <strong>nasA / Q88L43</strong>, annotated as a nitrate transporter in the assimilatory nitrate reduction system</td>
+<td>BarSeq fitness plus figure annotation</td>
+<td>Figure 3 labels <strong>PP_2092 as “nitrate transporter”</strong> in the assimilatory nitrate reduction module; nitrate-condition mutant fitness reported as <strong>-2.6</strong></td>
+<td>Schmidt 2022, <em>Applied and Environmental Microbiology</em> (schmidt2022nitrogenmetabolismin pages 6-8, schmidt2022nitrogenmetabolismin media b1b76177)</td>
+<td>https://doi.org/10.1128/AEM.02430-21</td>
+<td>Strongest organism-specific functional evidence in the retrieved set; no direct biochemical transport assay reported</td>
+</tr>
+<tr>
+<td><strong>Likely substrate preference is nitrate rather than nitrite</strong></td>
+<td>BarSeq fitness</td>
+<td>PP_2092 showed a strong phenotype in <strong>nitrate</strong> as sole N source, but <strong>no significant phenotype in nitrite</strong> condition; authors interpreted this as suggesting <strong>nitrate specificity</strong></td>
+<td>Schmidt 2022, <em>Applied and Environmental Microbiology</em> (schmidt2022nitrogenmetabolismin pages 6-8)</td>
+<td>https://doi.org/10.1128/AEM.02430-21</td>
+<td>Genetic evidence only; absence of nitrite phenotype could also be influenced by passive HNO2 diffusion under assay conditions</td>
+</tr>
+<tr>
+<td><strong>Physiological role</strong>: required for efficient growth on nitrate during assimilatory nitrate reduction</td>
+<td>BarSeq fitness in pathway context</td>
+<td>PP_2092 clustered functionally with assimilatory reductases <strong>NarB</strong> and <strong>NirDB</strong> and cofactor genes needed for nitrate assimilation; nitrate-specific fitness defect supports a role in <strong>nitrate uptake feeding assimilation</strong></td>
+<td>Schmidt 2022, <em>Applied and Environmental Microbiology</em> (schmidt2022nitrogenmetabolismin pages 6-8, schmidt2022nitrogenmetabolismin media b1b76177)</td>
+<td>https://doi.org/10.1128/AEM.02430-21</td>
+<td>Supports pathway assignment but does not measure uptake kinetics or transport stoichiometry</td>
+</tr>
+<tr>
+<td><strong>Induced under nitrogen limitation</strong></td>
+<td>RNA-seq (validated by qRT-PCR overall)</td>
+<td><strong>nasA/PP_2092 upregulated</strong> under N limitation in all strains examined: WT <strong>14.64-fold</strong>, ΔrelA/spoT <strong>12.04-fold</strong>, ΔrpoN <strong>12.43-fold</strong></td>
+<td>Dabrowska 2020, <em>International Journal of Molecular Sciences</em> (dabrowska2020transcriptomechangesin pages 8-10)</td>
+<td>https://doi.org/10.3390/ijms22010152</td>
+<td>Expression data support nitrogen-responsive regulation but not substrate specificity directly</td>
+</tr>
+<tr>
+<td><strong>Regulatory linkage to NasT/NasS system</strong></td>
+<td>BarSeq fitness and RNA-seq association</td>
+<td>Neighboring regulator <strong>nasT (PP_2093)</strong> showed nitrate-condition fitness effects in BarSeq; RNA-seq study notes <strong>nasA</strong> as putatively regulated by <strong>NasT</strong>, and <strong>nasT</strong> itself was upregulated (including <strong>27.66-fold</strong> in ΔrelA/spoT)</td>
+<td>Schmidt 2022, <em>AEM</em>; Dabrowska 2020, <em>IJMS</em> (schmidt2022nitrogenmetabolismin pages 6-8, dabrowska2020transcriptomechangesin pages 8-10)</td>
+<td>https://doi.org/10.1128/AEM.02430-21 ; https://doi.org/10.3390/ijms22010152</td>
+<td>Evidence is consistent with canonical <strong>NasS/NasT antitermination</strong> control, but no direct promoter/terminator assay for PP_2092 was retrieved</td>
+</tr>
+<tr>
+<td><strong>Family/mechanism inference</strong>: NasA proteins can function as MFS-like nitrate importers coupled to proton motive force</td>
+<td>Review / comparative genetics</td>
+<td>Review summarizes that in some bacteria (e.g., <em>Bacillus subtilis</em>) <strong>NasA is a single-component nitrate importer</strong> linked to the <strong>proton motive force</strong>; NasA-type proteins are discussed as related to <strong>NarK1-like nitrate/proton symporters</strong></td>
+<td>Moreno-Vivián &amp; Flores 2007 review context; Jarvis 2022 comparative synthesis (jarvis2022proteininteractionnetworks pages 21-26, jarvis2022proteininteractionnetworks pages 26-32)</td>
+<td>https://doi.org/10.1016/B978-044452857-5.50018-7</td>
+<td>Useful mechanistic context for Q88L43 because UniProt/InterPro place it in the <strong>MFS/NarK-like nitrate transporter family</strong>; not a direct KT2440 experiment</td>
+</tr>
+<tr>
+<td><strong>Localization inference</strong>: integral inner-membrane transporter</td>
+<td>Review / family inference</td>
+<td>NasA-type and NarK-like transporters are described as <strong>membrane-associated</strong> uptake proteins; comparative literature distinguishes them from soluble reductases and ABC periplasmic-binding systems</td>
+<td>Jarvis 2022 comparative synthesis; Lin 1994 comparative nitrate transport genetics (lin1994thenasfedcbaoperon pages 7-8, jarvis2022proteininteractionnetworks pages 21-26, jarvis2022proteininteractionnetworks pages 26-32)</td>
+<td>https://doi.org/10.1128/jb.176.9.2551-2559.1994 ; https://doi.org/10.1016/B978-044452857-5.50018-7</td>
+<td>For Q88L43 this remains an inference from transporter family/domain architecture rather than direct localization microscopy/biochemistry</td>
+</tr>
+<tr>
+<td><strong>Comparative context</strong>: nas-associated transport genes are often specifically needed for nitrate, not nitrite, assimilation</td>
+<td>Other-species genetics</td>
+<td>In <em>Klebsiella pneumoniae</em>, transport-associated <strong>nasFED</strong> mutations prevented growth on <strong>nitrate</strong> but allowed growth on <strong>nitrite</strong> when reductase genes were supplied, indicating transporter dependence is stronger for nitrate uptake</td>
+<td>Lin 1994, <em>Journal of Bacteriology</em> (lin1994thenasfedcbaoperon pages 7-8)</td>
+<td>https://doi.org/10.1128/jb.176.9.2551-2559.1994</td>
+<td>Different transporter architecture from Q88L43 (ABC-like vs MFS-like), so this is comparative support only</td>
+</tr>
+<tr>
+<td><strong>Broader expert consensus</strong>: nitrate assimilation requires uptake plus reduction, and transporter/regulatory gene organization varies across bacteria</td>
+<td>Authoritative review</td>
+<td>Review synthesizes nitrate assimilation as a pathway involving <strong>transport</strong>, <strong>assimilatory nitrate reductase</strong>, <strong>nitrite reductase</strong>, and organism-specific regulators such as <strong>NasR</strong> or <strong>NasS/NasT</strong></td>
+<td>Moreno-Vivián &amp; Flores 2007, book chapter/review (jarvis2022proteininteractionnetworks pages 21-26)</td>
+<td>https://doi.org/10.1016/B978-044452857-5.50018-7</td>
+<td>Supports assignment of nasA to assimilatory nitrate uptake; does not by itself resolve exact substrate range for <em>P. putida</em> PP_2092</td>
+</tr>
+<tr>
+<td><strong>Current evidence strength for Q88L43</strong></td>
+<td>Integrated assessment</td>
+<td>Best direct evidence: <strong>nitrate-condition fitness defect (-2.6)</strong> and <strong>strong N-limitation induction (12.04–14.64-fold)</strong></td>
+<td>Integrated from Schmidt 2022 and Dabrowska 2020 (schmidt2022nitrogenmetabolismin pages 6-8, dabrowska2020transcriptomechangesin pages 8-10, schmidt2022nitrogenmetabolismin media b1b76177)</td>
+<td>https://doi.org/10.1128/AEM.02430-21 ; https://doi.org/10.3390/ijms22010152</td>
+<td>Overall annotation as a <strong>nitrate/nitrite transporter</strong> is plausible, but retrieved KT2440 data most strongly support <strong>nitrate uptake for assimilation</strong>, with nitrite transport remaining less directly supported</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest organism-specific and comparative evidence for the function, regulation, substrate preference, and localization inference of </em>P. putida<em> KT2440 nasA (PP_2092; UniProt Q88L43). It is useful for distinguishing direct KT2440 evidence from broader family-level inference and other-species context.</em></p>
+<h3 id="9-gaps-and-recommended-next-experiments-to-strengthen-functional-annotation">9) Gaps and recommended next experiments (to strengthen functional annotation)</h3>
+<p>Based on the retrieved evidence, the major remaining uncertainties for PP_2092/Q88L43 are transport kinetics and mechanism.</p>
+<p>High-priority experiments that would directly resolve open points:<br />
+1. <strong>Radiotracer uptake or ion-selective assays</strong> in WT vs ΔnasA for nitrate and nitrite to quantify Km/Vmax and substrate range.<br />
+2. <strong>Transport mechanism tests</strong> (proton coupling, antiport vs symport), e.g., using pH gradients, membrane potential manipulation, or reconstitution in proteoliposomes.<br />
+3. <strong>Subcellular localization</strong> by fluorescent fusions and membrane fractionation proteomics.<br />
+4. <strong>Regulatory validation</strong> of NasS/NasT control over PP_2092 (promoter/terminator mapping; transcription termination/antitermination assays).</p>
+<h2 id="key-sources-with-publication-dates-and-urls">Key sources with publication dates and URLs</h2>
+<ul>
+<li>Schmidt et al. 2022-04, <em>Applied and Environmental Microbiology</em>. “Nitrogen metabolism in <em>Pseudomonas putida</em>: functional analysis using random barcode transposon sequencing.” https://doi.org/10.1128/aem.02430-21 (schmidt2022nitrogenmetabolismin pages 6-8, schmidt2022nitrogenmetabolismin media b1b76177)</li>
+<li>Dabrowska et al. 2020-12, <em>International Journal of Molecular Sciences</em>. “Transcriptome changes in <em>Pseudomonas putida</em> KT2440 during mcl-PHA synthesis induced by nitrogen limitation.” https://doi.org/10.3390/ijms22010152 (dabrowska2020transcriptomechangesin pages 8-10)</li>
+<li>Lin et al. 1994-05, <em>Journal of Bacteriology</em>. “The nasFEDCBA operon for nitrate and nitrite assimilation in <em>Klebsiella pneumoniae</em> M5al.” https://doi.org/10.1128/jb.176.9.2551-2559.1994 (lin1994thenasfedcbaoperon pages 7-8)</li>
+<li>Moreno-Vivián &amp; Flores 2007 (book chapter/review). “Nitrate Assimilation in Bacteria.” https://doi.org/10.1016/B978-044452857-5.50018-7 (jarvis2022proteininteractionnetworks pages 21-26)</li>
+</ul>
+<h3 id="note-on-20232024-prioritization">Note on 2023–2024 prioritization</h3>
+<p>Within the retrieved literature set, KT2440 nasA/PP_2092-specific primary evidence was concentrated in 2020–2022 studies, and no additional KT2440-specific 2023–2024 primary articles were retrieved by the available searches. The report therefore uses the most direct KT2440 functional data available (fitness and transcriptomics) and clearly separates it from broader transporter-family context. (schmidt2022nitrogenmetabolismin pages 6-8, dabrowska2020transcriptomechangesin pages 8-10)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(schmidt2022nitrogenmetabolismin pages 6-8): Matthias Schmidt, Allison N. Pearson, Matthew R. Incha, Mitchell G. Thompson, Edward E. K. Baidoo, Ramu Kakumanu, Aindrila Mukhopadhyay, Patrick M. Shih, Adam M. Deutschbauer, Lars M. Blank, and Jay D. Keasling. Nitrogen metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Applied and Environmental Microbiology, Apr 2022. URL: https://doi.org/10.1128/aem.02430-21, doi:10.1128/aem.02430-21. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schmidt2022nitrogenmetabolismin media b1b76177): Matthias Schmidt, Allison N. Pearson, Matthew R. Incha, Mitchell G. Thompson, Edward E. K. Baidoo, Ramu Kakumanu, Aindrila Mukhopadhyay, Patrick M. Shih, Adam M. Deutschbauer, Lars M. Blank, and Jay D. Keasling. Nitrogen metabolism in pseudomonas putida: functional analysis using random barcode transposon sequencing. Applied and Environmental Microbiology, Apr 2022. URL: https://doi.org/10.1128/aem.02430-21, doi:10.1128/aem.02430-21. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jarvis2022proteininteractionnetworks pages 26-32): A Jarvis. Protein interaction networks for nitrate reduction in soil bacteria. Unknown journal, 2022.</p>
+</li>
+<li>
+<p>(dabrowska2020transcriptomechangesin pages 8-10): Dorota Dabrowska, Justyna Mozejko-Ciesielska, Tomasz Pokój, and Slawomir Ciesielski. Transcriptome changes in pseudomonas putida kt2440 during medium-chain-length polyhydroxyalkanoate synthesis induced by nitrogen limitation. International Journal of Molecular Sciences, 22:152, Dec 2020. URL: https://doi.org/10.3390/ijms22010152, doi:10.3390/ijms22010152. This article has 13 citations.</p>
+</li>
+<li>
+<p>(lee2026kineticplasticityof pages 9-12): Ui-Ju Lee, Joo-Han Gwak, Christiana Abiola, Seongjun Lee, Jin-Sun Yoo, Ok-Ja Si, Hyo Je Cho, Zhe-Xue Quan, Katharina Kitzinger, Holger Daims, Michael Wagner, Man-Young Jung, and Sung-Keun Rhee. Kinetic plasticity of nitrite-oxidizing bacteria containing cytoplasmic nitrite oxidoreductase. The ISME Journal, Jan 2026. URL: https://doi.org/10.1093/ismejo/wrag040, doi:10.1093/ismejo/wrag040. This article has 1 citations.</p>
+</li>
+<li>
+<p>(jarvis2022proteininteractionnetworks pages 21-26): A Jarvis. Protein interaction networks for nitrate reduction in soil bacteria. Unknown journal, 2022.</p>
+</li>
+<li>
+<p>(lin1994thenasfedcbaoperon pages 7-8): J. T. Lin, Barry S. Goldman, and Valley Stewart. The nasfedcba operon for nitrate and nitrite assimilation in klebsiella pneumoniae m5al. Journal of Bacteriology, 176:2551-2559, May 1994. URL: https://doi.org/10.1128/jb.176.9.2551-2559.1994, doi:10.1128/jb.176.9.2551-2559.1994. This article has 101 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>jarvis2022proteininteractionnetworks pages 26-32</li>
+<li>schmidt2022nitrogenmetabolismin pages 6-8</li>
+<li>dabrowska2020transcriptomechangesin pages 8-10</li>
+<li>lin1994thenasfedcbaoperon pages 7-8</li>
+<li>jarvis2022proteininteractionnetworks pages 21-26</li>
+<li>lee2026kineticplasticityof pages 9-12</li>
+<li>https://doi.org/10.1128/AEM.02430-21</li>
+<li>https://doi.org/10.3390/ijms22010152</li>
+<li>https://doi.org/10.1016/B978-044452857-5.50018-7</li>
+<li>https://doi.org/10.1128/jb.176.9.2551-2559.1994</li>
+<li>https://doi.org/10.1128/aem.02430-21</li>
+<li>https://doi.org/10.1128/aem.02430-21,</li>
+<li>https://doi.org/10.3390/ijms22010152,</li>
+<li>https://doi.org/10.1093/ismejo/wrag040,</li>
+<li>https://doi.org/10.1128/jb.176.9.2551-2559.1994,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nasA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L43" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nasa-notes">nasA notes</h1>
+<ul>
+<li>
+<p>Identity: <code>nasA</code> in PSEPK is <code>PP_2092</code> / UniProt <code>Q88L43</code>, annotated as a <code>Nitrate/nitrite transporter</code> rather than a reductase. UniProt also places it in the <code>major facilitator superfamily</code> and specifically the <code>Nitrate/nitrite porter (TC 2.A.1.8) family</code> [file:PSEPK/nasA/nasA-uniprot.txt, "RecName: Full=Nitrate/nitrite transporter"; "Belongs to the major facilitator superfamily. Nitrate/nitrite porter (TC 2.A.1.8) family."].</p>
+</li>
+<li>
+<p>Localization/topology: UniProt calls the protein a <code>Cell membrane</code> <code>Multi-pass membrane protein</code> and predicts 12 transmembrane helices, consistent with an MFS transporter [file:PSEPK/nasA/nasA-uniprot.txt, "SUBCELLULAR LOCATION: Cell membrane"; "Multi-pass membrane protein"; "FT   TRANSMEM"].</p>
+</li>
+<li>
+<p>GO/annotation context: UniProt and QuickGO currently associate the protein with <code>GO:0015112 nitrate transmembrane transporter activity</code>, <code>GO:0015113 nitrite transmembrane transporter activity</code>, <code>GO:0042128 nitrate assimilation</code>, and <code>GO:0005886 plasma membrane</code> [file:PSEPK/nasA/nasA-uniprot.txt, "DR   GO; GO:0015112; F:nitrate transmembrane transporter activity"; "DR   GO; GO:0042128; P:nitrate assimilation"; "DR   GO; GO:0005886; C:plasma membrane"].</p>
+</li>
+<li>
+<p>Nitrogen-limitation expression: a KT2440 transcriptome study reported that <code>PP_2092 nasA nitrate transporter</code> was upregulated under nitrogen limitation and assigned to the NasT regulon, with the table entry <code>PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT</code> [PMID:33375721 Transcriptome Changes in Pseudomonas putida KT2440 during Medium-Chain-Length Polyhydroxyalkanoate Synthesis Induced by Nitrogen Limitation, "PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT"].</p>
+</li>
+<li>
+<p>Regulatory context: the same study concluded that <code>nitrogen limitation caused activation of the nasT regulator</code>, reinforcing that <code>nasA</code> belongs to the nitrate-assimilation response rather than general respiratory nitrate reduction [PMID:33375721 Transcriptome Changes in Pseudomonas putida KT2440 during Medium-Chain-Length Polyhydroxyalkanoate Synthesis Induced by Nitrogen Limitation, "nitrogen limitation caused activation of the nasT regulator"].</p>
+</li>
+<li>
+<p>Nitrate-assimilation pathway context: a 2024 study on NasT in KT2440 assayed cells shifted to M9 medium with <code>5 mM KNO3 as the sole nitrogen source</code> and showed that cyclic di-GMP inhibits nitrate assimilation by impairing NasT-dependent activation of the assimilatory system [PMID:38000372 Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination function of NasT in Pseudomonas putida, "M9 medium containing 5 mM KNO3 as the sole nitrogen source"; "Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination function of NasT in Pseudomonas putida"].</p>
+</li>
+<li>
+<p>Higher-level nitrogen regulation: the P. putida NtrC network study identifies NtrC as the master nitrogen regulator required for expression of genes involved in nitrogen uptake and metabolism in KT2440, providing regulatory context for nitrate-assimilation genes [PMID:19648236 NtrC-Dependent Regulatory Network for Nitrogen Assimilation in Pseudomonas putida, "NtrC is the master nitrogen regulator, which is required to activate the expression of a number of genes involved in nitrogen uptake and metabolism"].</p>
+</li>
+<li>
+<p>Specificity caveat: a recent RWTH Aachen dissertation reported BarSeq support for <code>PP_2092</code> as the <code>unique nitrate transporter</code> in KT2440, with a nitrate-specific fitness defect and no obvious nitrite phenotype, but this appears to be thesis-level evidence and not yet a primary paper. It is useful as a caution against overcommitting to nitrite transport as a core function [URL:https://publications.rwth-aachen.de/record/975194/files/975194.pdf, "With BarSeq, we were also able to pinpoint the unique nitrate transporter PP_2092 with a fitness value of -2.6. This gene did not exhibit any noticeable phenotype in the presence of nitrite"].</p>
+</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88L43
+gene_symbol: nasA
+product_type: PROTEIN
+aliases:
+- PP_2092
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Plasma-membrane major facilitator superfamily nitrate/nitrite porter-family
+  transporter that supports assimilatory nitrate use in Pseudomonas putida KT2440.
+  In this strain, nasA refers to the transporter PP_2092 rather than an assimilatory
+  nitrate reductase catalytic subunit. The protein is a predicted 12-pass membrane
+  protein, is induced under nitrogen limitation in a NasT-associated regulatory context,
+  and is best supported as a nitrate uptake component of the nitrate assimilation
+  system. Nitrite transport remains plausible from family assignment, but the direct
+  physiological evidence in KT2440 is stronger for nitrate than for nitrite as the
+  core substrate.
+existing_annotations:
+- term:
+    id: GO:0015112
+    label: nitrate transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the best-supported core molecular function. PP_2092 is annotated
+      in UniProt as a nitrate/nitrite transporter in the MFS nitrate/nitrite porter
+      family, and KT2440 transcriptome data place nasA in the NasT-regulated nitrate
+      assimilation response under nitrogen limitation. Together these support nitrate
+      transport as the central function of the protein.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: Nitrate/nitrite porter (TC 2.A.1.8) family.
+    - reference_id: file:PSEPK/nasA/nasA-deep-research-falcon.md
+      supporting_text: PP_2092 is identified as a distinct nitrate transporter
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: was upregulated under nitrogen limitation and assigned to the
+        NasT regulon
+- term:
+    id: GO:0015113
+    label: nitrite transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Nitrite transport is plausible from the shared nitrate/nitrite porter
+      family assignment, but it is not as strongly grounded as nitrate uptake in KT2440.
+      Available strain-specific evidence points much more directly to a role in nitrate
+      assimilation, and the current non-primary BarSeq evidence argues against making
+      nitrite transport the core call.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: &#39;RecName: Full=Nitrate/nitrite transporter&#39;
+    - reference_id: file:PSEPK/nasA/nasA-deep-research-falcon.md
+      supporting_text: no significant fitness phenotype was detected in the nitrite condition
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: a caution against overcommitting to nitrite transport as a
+        core function
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This parent transporter term is correct but much less informative than
+      the specific nitrate and possible nitrite transporter terms already present.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0015706
+    label: nitrate transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This biological-process annotation matches the best-supported physiological
+      role of the protein. nasA is induced in nitrogen-limitation conditions, falls
+      under NasT-associated regulation, and fits the assimilatory nitrate transport
+      step in KT2440.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: 5 mM KNO3 as the sole nitrogen source
+- term:
+    id: GO:0015707
+    label: nitrite transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: The transporter family allows this process annotation to remain plausible,
+      but direct KT2440 evidence is not as specific for nitrite handling as it is
+      for nitrate. This should be retained as a non-core possibility rather than treated
+      as the main biological-process call.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: &#39;RecName: Full=Nitrate/nitrite transporter&#39;
+- term:
+    id: GO:0042128
+    label: nitrate assimilation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: This is an appropriate core biological-process annotation. KT2440 nitrate-assimilation
+      studies place NasT at the center of the assimilatory response, nitrogen limitation
+      induces nasA, and UniProt already associates PP_2092 with nitrate assimilation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: DR   GO; GO:0042128; P:nitrate assimilation;
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: Cyclic di-GMP inhibits nitrate assimilation by impairing the
+        antitermination function of NasT in Pseudomonas putida
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This broad transport process term is redundant given the more informative
+      nitrate transmembrane transport and nitrate assimilation annotations.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: This is the correct cellular-component call. UniProt explicitly places
+      the protein in the cell membrane as a multi-pass membrane protein, and the predicted
+      topology is fully consistent with an MFS transporter.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell membrane&#39;
+    - reference_id: file:PSEPK/nasA/nasA-notes.md
+      supporting_text: predicts 12 transmembrane helices, consistent with an MFS transporter
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: The protein is clearly membrane-localized, but this parent term is less
+      precise than the available plasma-membrane annotation.
+    action: MODIFY
+    proposed_replacement_terms:
+    - id: GO:0005886
+      label: plasma membrane
+    supported_by:
+    - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+      supporting_text: Membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt.
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features.
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings: []
+- id: file:PSEPK/nasA/nasA-uniprot.txt
+  title: UniProt entry Q88L43
+  findings:
+  - statement: nasA encodes a nitrate/nitrite transporter in the MFS nitrate/nitrite
+      porter family
+  - statement: nasA is a predicted multi-pass cell membrane protein with twelve transmembrane
+      helices
+  - statement: UniProt associates the protein with nitrate transmembrane transporter
+      activity and nitrate assimilation
+- id: file:PSEPK/nasA/nasA-notes.md
+  title: Curator notes on nasA (PP_2092) in Pseudomonas putida KT2440
+  findings:
+  - statement: nasA is the KT2440 transporter PP_2092 and should not be confused with
+      nitrate reductase NasA proteins from other organisms
+  - statement: transcriptome data place nasA in the NasT-associated nitrogen-limitation
+      response
+  - statement: thesis-level BarSeq evidence suggests the strongest strain-specific
+      phenotype is on nitrate rather than nitrite
+- id: file:PSEPK/nasA/nasA-deep-research-falcon.md
+  title: Deep research on nasA (PP_2092, UniProt Q88L43) in Pseudomonas putida KT2440
+  findings:
+  - statement: PP_2092 is identified as a distinct nitrate transporter with a strong nitrate-condition fitness defect
+  - statement: nasA is strongly induced under nitrogen limitation in KT2440
+  - statement: nitrite transport is less directly supported than nitrate uptake in the retrieved KT2440 evidence
+- id: PMID:19648236
+  title: NtrC-Dependent Regulatory Network for Nitrogen Assimilation in Pseudomonas
+    putida
+  findings:
+  - statement: NtrC is the master nitrogen regulator for genes involved in nitrogen
+      uptake and metabolism in P. putida
+    supporting_text: the nitrogen regulatory NtrC proteins from P. putida and Escherichia
+      coli are functionally equivalent
+    reference_section_type: ABSTRACT
+- id: PMID:33375721
+  title: Transcriptome Changes in Pseudomonas putida KT2440 during Medium-Chain-Length
+    Polyhydroxyalkanoate Synthesis Induced by Nitrogen Limitation
+  findings:
+  - statement: nasA is induced under nitrogen limitation and assigned to the NasT
+      regulon
+    supporting_text: nitrate transporter (nasA) are putatively regulated by nasT
+    reference_section_type: DISCUSSION
+  - statement: nitrogen limitation activates nasT expression in KT2440
+    supporting_text: nitrogen limitation caused activation of the nasT regulator
+    reference_section_type: DISCUSSION
+- id: PMID:38000372
+  title: Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination
+    function of NasT in Pseudomonas putida
+  findings:
+  - statement: KT2440 nitrate-assimilation experiments were performed with nitrate
+      as sole nitrogen source
+    supporting_text: M9 medium containing 5 mM KNO3 as the sole nitrogen source
+    reference_section_type: METHODS
+core_functions:
+- description: NasA/PP_2092 is a 12-pass major facilitator superfamily transporter
+    in the plasma membrane that provides nitrate uptake for the assimilatory nitrate
+    pathway in Pseudomonas putida KT2440, particularly in the nitrogen-limitation/NasT
+    regulatory context.
+  molecular_function:
+    id: GO:0015112
+    label: nitrate transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0015706
+    label: nitrate transmembrane transport
+  - id: GO:0042128
+    label: nitrate assimilation
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/nasA/nasA-uniprot.txt
+    supporting_text: Nitrate/nitrite porter (TC 2.A.1.8) family.
+  - reference_id: file:PSEPK/nasA/nasA-deep-research-falcon.md
+    supporting_text: PP_2092 is identified as a distinct nitrate transporter
+  - reference_id: file:PSEPK/nasA/nasA-notes.md
+    supporting_text: PP_2092 nasA nitrate transporter 14.64 12.04 12.43 nasT
+proposed_new_terms: []
+suggested_questions:
+- question: Is PP_2092 a strictly nitrate-selective importer in KT2440, or can it
+    also mediate physiologically relevant nitrite flux under defined pH and nitrogen
+    regimes?
+- question: Does NasA operate as a symporter, antiporter, or facilitated transporter
+    in the assimilatory nitrate pathway of P. putida KT2440?
+suggested_experiments:
+- hypothesis: NasA is the main nitrate uptake system required for assimilatory growth
+    on nitrate in KT2440.
+  experiment_type: genetic perturbation
+  description: Create a clean nasA deletion and complemented strain, then compare
+    growth and intracellular nitrate accumulation with nitrate as sole nitrogen source.
+- hypothesis: Nitrite transport is weaker or context-dependent relative to nitrate
+    transport for NasA.
+  experiment_type: transport assay
+  description: Measure uptake of labeled nitrate and nitrite in wild type and nasA
+    mutant cells across a pH series to distinguish transporter-mediated flux from
+    passive nitrous acid diffusion.
+- hypothesis: NasT-dependent induction of nasA is a major control point for assimilatory
+    nitrate use.
+  experiment_type: gene expression analysis
+  description: Quantify nasA transcript and protein levels in wild type, nasT mutant,
+    and altered c-di-GMP backgrounds during shifts from ammonium to nitrate.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
