@@ -1,0 +1,3674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lbp-8 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lbp-8</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O02324" target="_blank" class="term-link">
+                        O02324
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lbp-8";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O02324" data-a="DESCRIPTION: LBP-8 is a lysosomal lipid chaperone belonging to ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LBP-8 is a lysosomal lipid chaperone belonging to the fatty acid-binding protein (FABP) family. It functions as an intracellular lipid shuttle, binding long-chain fatty acids (especially oleic acid) and oleoylethanolamide (OEA) with high affinity and transporting them from lysosomes to the nucleus. In the nucleus, LBP-8-delivered lipid signals activate the nuclear hormone receptors NHR-49 and NHR-80, promoting transcription of genes involved in mitochondrial beta-oxidation (e.g. acs-2) and longevity. LBP-8 is part of the LIPL-4-initiated lysosome-to-nucleus retrograde lipid signaling pathway that extends lifespan. LBP-8 overexpression extends lifespan by approximately 30%, and this effect requires its structurally conserved nuclear localization signal (NLS) in the N-terminal helix-turn-helix motif. LBP-8 is expressed exclusively in the intestine. The crystal structure at 1.3 angstrom resolution (PDB 6C1Z) confirms it is a monomer with a typical lipocalin fold and a large interior cavity capable of accommodating diverse fatty acids.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LBP-8 nuclear localization is well-established by direct experimental evidence (PMID:25554789). Folick et al. demonstrated partial nuclear localization of LBP-8 in the intestine, enhanced upon LIPL-4 overexpression. LBP-8 was detected in nuclear fractions of total worm lysate. The IBA annotation is consistent with all available evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is a core feature of LBP-8 function, demonstrated by fluorescent tagging and subcellular fractionation (PMID:25554789). Tillman et al. (PMID:31292465) further identified a structurally conserved NLS (K24, R33, K34) required for nuclear translocation. The IBA annotation is phylogenetically sound and experimentally validated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also detected partial nuclear localization of LBP-8 in the intestine, which was enhanced in lipl-4 Tg animals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we determined the first 1.3 Å high-resolution structure of this life-extending protein LBP-8, which allowed us to identify a structurally conserved nuclear localization signal</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LBP-8 is an intracellular lipid-binding protein and, as a soluble FABP, would be expected to be present in the cytosol. Folick et al. (PMID:25554789) detected LBP-8 in cytoplasmic fractions. The IBA annotation is phylogenetically reasonable for FABPs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytosolic localization is expected for a soluble FABP family member. LBP-8 was detected in cytoplasmic fractions (PMID:25554789), and as a lipid shuttle between lysosomes and nucleus, it transits through the cytosol. The IBA annotation is consistent with evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 contains an N-terminal nuclear localization signal (NLS) ... and was present in both cytoplasmic and nuclear fractions of total worm lysate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005504" target="_blank" class="term-link">
+                                    GO:0005504
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005504" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LBP-8 fatty acid binding is well-established experimentally. Folick et al. (PMID:25554789) showed LBP-8 binds arachidonic acid, omega-3 arachidonic acid, DGLA, and OEA. Tillman et al. (PMID:31292465) used mass spectrometry to identify a broad range of fatty acids co-purifying with LBP-8, with preference for monounsaturated fatty acids. The IBA annotation is appropriate and at the right level of specificity for the FABP family.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Fatty acid binding is the central molecular function of LBP-8 as a FABP family member. Extensive experimental validation by both fluorescence-based binding assays (PMID:25554789) and LC/MS (PMID:31292465). The IBA annotation is at an appropriate level.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we described the range of fatty acids LBP-8 is capable of binding and show that it binds to life-extending ligands in worms such as oleic acid and oleoylethanolamide with high affinity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">all four lipids bound to LBP-8, and the binding affinity of OEA for LBP-8 was 3 times higher than that of the fatty acids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015908" target="_blank" class="term-link">
+                                    GO:0015908
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0015908" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LBP-8 functions as an intracellular fatty acid transporter, shuttling lipid signals from lysosomes to the nucleus (PMID:25554789). The IBA annotation for fatty acid transport is phylogenetically sound and at the right level of specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> LBP-8 is an intracellular lipid chaperone that transports fatty acids and their derivatives from lysosomes to the nucleus (PMID:25554789). This is its core biological process. The IBA annotation at the level of fatty acid transport is appropriate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals to the nucleus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">supporting the role of LBP-8 as a shuttling protein for monounsaturated fatty acids and their derivatives</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005504" target="_blank" class="term-link">
+                                    GO:0005504
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005504" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for fatty acid binding via ARBA machine learning. This is consistent with the experimentally validated function of LBP-8 as a FABP. Duplicates the IBA annotation but is acceptable as an independent computational prediction.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation is correct and consistent with extensive experimental evidence for fatty acid binding by LBP-8 (PMID:25554789, PMID:31292465). It is a valid independent computational prediction that agrees with the IBA annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for nuclear localization based on UniProt subcellular location mapping. Consistent with IDA evidence from PMID:25554789 showing LBP-8 in the nucleus.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation correctly reflects the experimentally determined nuclear localization of LBP-8 (PMID:25554789). UniProt mapping is appropriate here.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005764" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for lysosomal localization based on UniProt subcellular location mapping. Consistent with IDA evidence from PMID:25554789 showing LBP-8 localization to lysosomes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation correctly reflects the experimentally determined lysosomal localization of LBP-8. Folick et al. (PMID:25554789) showed FLAG- and mCherry-tagged LBP-8 predominantly localized to intestinal lysosomes.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both FLAG- and mCherry-tagged LBP-8 proteins were predominantly localized to intestinal lysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0008289" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for lipid binding based on InterPro domain mapping. LBP-8 contains the FABP domain (IPR000463). This is a broader parent term of fatty acid binding (GO:0005504), which is already annotated with more specific evidence. The IEA is acceptable as it captures the InterPro-based prediction, though it is less specific than the IBA/IDA annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The IEA annotation is correct but broader than the more specific fatty acid binding annotations already present. It is acceptable as an independent InterPro-based prediction. LBP-8 binds diverse lipids including fatty acids and OEA (PMID:25554789, PMID:31292465).
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070538" target="_blank" class="term-link">
+                                    GO:0070538
+                                </a>
+                            </span>
+                            <span class="term-label">oleic acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31292465
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural characterization of life-extending Caenorhabditis...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0070538" data-r="PMID:31292465" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tillman et al. (PMID:31292465) directly demonstrated oleic acid binding to LBP-8 using competitive fluorescence-based binding assays and mass spectrometry. Oleic acid was the most abundant fatty acid co-purifying with LBP-8 from both E. coli and C. elegans lipid extracts. Oleic acid and OEA had similar high-affinity Ki values. This is a well-supported IDA annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Oleic acid binding is directly demonstrated by competitive fluorescence binding assays and LC/MS co-purification in PMID:31292465. Oleic acid was the most abundant fatty acid bound to LBP-8 (28.93% from C. elegans extracts, 35.72% from E. coli). This specific binding activity is core to LBP-8 function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A fluorescence-based ligand binding assay was used to compare the affinity of oleic acid and OEA, and both had very similar Ki&#39;s, suggesting oleic acid, along with OEA, are high affinity ligands of LBP-8</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">While the relative percentage of oleic acid decreased, it was still the most abundant fatty acid that bound to LBP-8</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005324" target="_blank" class="term-link">
+                                    GO:0005324
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty acid transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005324" data-r="PMID:25554789" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0005324 (long-chain fatty acid transporter activity) is defined as enabling transfer of long-chain fatty acids from one side of a membrane to the other. LBP-8 is not a transmembrane transporter. It is a soluble intracellular lipid chaperone that shuttles fatty acids between cellular compartments (lysosomes to nucleus) through the cytosol. Folick et al. (PMID:25554789) showed LBP-8 translocates from lysosomes to the nucleus carrying lipid signals, but this is intracellular lipid transfer, not transmembrane transport. The IMP evidence is based on lbp-8 mutant phenotypes affecting lipid signaling, not transmembrane transport assays.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term GO:0005324 (long-chain fatty acid transporter activity) specifically describes transmembrane transport activity, which is not the mechanism by which LBP-8 functions. LBP-8 is a soluble lipid chaperone that binds fatty acids and shuttles them intracellularly (PMID:25554789, PMID:31292465). A more appropriate MF term would be lipid transfer activity (GO:0120013), defined as removing a lipid from a membrane, transporting it through the aqueous phase in a hydrophobic pocket, and delivering it to an acceptor. This matches the LBP-8 mechanism precisely.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120013" target="_blank" class="term-link">
+                                    lipid transfer activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals to the nucleus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">certain human FABPs have been shown to shuttle nuclear receptor ligands into the nucleus to regulate nuclear receptor transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005634" data-r="PMID:25554789" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folick et al. (PMID:25554789) directly showed nuclear localization of LBP-8 in the intestine using fluorescent tagging (mCherry, FLAG) and subcellular fractionation. Nuclear localization was enhanced in LIPL-4 overexpressing animals. LBP-8 was present in nuclear fractions. Deletion of the NLS abolished nuclear localization and lifespan extension.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is a core feature of LBP-8 function, directly demonstrated by IDA evidence in PMID:25554789. LBP-8 translocates to the nucleus to deliver lipid signals to nuclear hormone receptors NHR-49 and NHR-80.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We also detected partial nuclear localization of LBP-8 in the intestine, which was enhanced in lipl-4 Tg animals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 contains an N-terminal nuclear localization signal (NLS) ... and was present in both cytoplasmic and nuclear fractions of total worm lysate</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0005764" data-r="PMID:25554789" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folick et al. (PMID:25554789) directly showed LBP-8 localization to intestinal lysosomes using FLAG and mCherry tagging with colocalization studies. LBP-8 was predominantly found at lysosomes under basal conditions, with nuclear translocation enhanced upon LIPL-4 overexpression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Lysosomal localization is a core feature of LBP-8, demonstrated by direct fluorescent microscopy and colocalization in PMID:25554789. This localization is central to LBP-8&#39;s role in the lysosome-to-nucleus signaling pathway.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both FLAG- and mCherry-tagged LBP-8 proteins were predominantly localized to intestinal lysosomes</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015909" target="_blank" class="term-link">
+                                    GO:0015909
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty acid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0015909" data-r="PMID:25554789" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folick et al. (PMID:25554789) demonstrated that LBP-8 is required for LIPL-4-mediated longevity signaling, which involves transport of lipid signals (including long-chain fatty acids and OEA) from lysosomes to the nucleus. The IMP evidence comes from lbp-8 loss-of-function suppressing lipl-4-mediated lifespan extension. While the biological process annotation is broadly correct, the transport is intracellular rather than across membranes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Long-chain fatty acid transport is an appropriate biological process term for LBP-8. The GO:0015909 definition includes movement &#34;within a cell&#34;, which accurately describes LBP-8&#39;s intracellular lipid shuttling function. The IMP evidence is sound: lbp-8 mutants suppress lipl-4-mediated longevity and lipid signaling (PMID:25554789).
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both RNA interference (RNAi)-mediated depletion of LBP-8 and a newly isolated deletion mutant, lbp-8(rax1), suppressed the lifespan extension in lipl-4 Tg animals</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">supporting the role of LBP-8 as a shuttling protein for monounsaturated fatty acids and their derivatives</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036041" target="_blank" class="term-link">
+                                    GO:0036041
+                                </a>
+                            </span>
+                            <span class="term-label">long-chain fatty acid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0036041" data-r="PMID:25554789" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Folick et al. (PMID:25554789) demonstrated LBP-8 binding to long-chain fatty acids (arachidonic acid, omega-3 arachidonic acid, DGLA) and OEA using fluorescence-based binding assays. Tillman et al. (PMID:31292465) confirmed and extended this with LC/MS showing binding to a diverse range of long-chain fatty acids including oleic acid, arachidonic acid, linoleic acid, palmitic acid, and stearic acid.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Long-chain fatty acid binding is directly demonstrated by IDA evidence. Fluorescence-based binding assays (PMID:25554789) and mass spectrometry co-purification (PMID:31292465) both confirm LBP-8 binds diverse long-chain fatty acids. This is a core molecular function and the term is at the right level of specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we focused our analysis on three C20 fatty acids—arachidonic acid (AA), ω-3 arachidonic acid (ω-3 AA), and dihomo-γ-linolenic acid (DGLA)—and oleoylethanolamide (OEA) ... all four lipids bound to LBP-8</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 does not bind to one fatty acid selectively but is capable of binding many fatty acids. However, LBP-8 does have a preference for unsaturated fatty acids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006869" target="_blank" class="term-link">
+                                    GO:0006869
+                                </a>
+                            </span>
+                            <span class="term-label">lipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10693745" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10693745
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Secretion of a novel class of iFABPs in nematodes: coordinat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0006869" data-r="PMID:10693745" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plenefisch et al. (PMID:10693745) identified LBP-8 as one of nine C. elegans FABP homologs. The paper primarily focused on LBP-1, LBP-2, and LBP-3 (the secreted FABPs), and did not directly study LBP-8 function. The TAS evidence for lipid transport is based on homology to other FABPs. While the annotation is correct (LBP-8 does transport lipids), the evidence is weak for this specific gene. However, the annotation itself is valid given later experimental confirmation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Lipid transport is a correct annotation for LBP-8, now thoroughly validated by later experimental work (PMID:25554789, PMID:31292465). While the original TAS reference (PMID:10693745) mainly studied other C. elegans FABPs (LBP-1, LBP-2, LBP-3), the general assignment of lipid transport to the FABP family was appropriate. More specific annotations (long-chain fatty acid transport) are also present with stronger evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10693745" target="_blank" class="term-link">
+                                        PMID:10693745
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">at least eight potential homologues of As-p18 have been identified in the Caenorhabditis elegans genome</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals to the nucleus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10693745" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10693745
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Secretion of a novel class of iFABPs in nematodes: coordinat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0008289" data-r="PMID:10693745" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plenefisch et al. (PMID:10693745) identified LBP-8 as a FABP homolog in C. elegans. The TAS annotation for lipid binding is based on homology to fatty acid binding proteins. While the original paper mainly studied LBP-1/2/3, the annotation is correct and validated by later work. More specific annotations (fatty acid binding, long-chain fatty acid binding, oleic acid binding) are also present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Lipid binding is correct for LBP-8, validated by extensive experimental evidence (PMID:25554789, PMID:31292465). The TAS evidence from PMID:10693745 was based on homology to known FABPs, which proved accurate. The annotation is broader than the more specific IDA/IBA annotations but acceptable.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032365" target="_blank" class="term-link">
+                                    GO:0032365
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular lipid transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25554789
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Aging. Lysosomal signaling molecules regulate longevity in C...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O02324" data-a="GO:0032365" data-r="PMID:25554789" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LBP-8 is an intracellular lipid chaperone that shuttles fatty acid signals from lysosomes to the nucleus. Folick et al. (PMID:25554789) demonstrated lysosome-to-nucleus translocation of LBP-8 carrying lipid signals including OEA. This intracellular lipid transport function is the core biological process of LBP-8.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0032365 (intracellular lipid transport) is more precise than GO:0006869 (lipid transport) for describing LBP-8 function, as it specifically captures the intracellular nature of the lipid shuttling. LBP-8 transports lipids from lysosomes to nucleus within the cell. This term is not present in the current annotation set but is well-supported by experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                        PMID:25554789
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals to the nucleus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                        PMID:31292465
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">certain human FABPs have been shown to shuttle nuclear receptor ligands into the nucleus to regulate nuclear receptor transcription</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LBP-8 binds long-chain fatty acids and oleoylethanolamide (OEA) with high affinity and transfers them between intracellular membranes and acceptor proteins. Oleic acid and OEA are the preferred ligands. The conserved R132 residue coordinates fatty acid head groups in the binding cavity.</h3>
+                <span class="vote-buttons" data-g="O02324" data-a="FUNCTION: LBP-8 binds long-chain fatty acids and oleoylethan..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120013" target="_blank" class="term-link">
+                            lipid transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032365" target="_blank" class="term-link">
+                                intracellular lipid transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015909" target="_blank" class="term-link">
+                                long-chain fatty acid transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                lysosome
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:16196" target="_blank" class="term-link">
+                                oleic acid
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:73497" target="_blank" class="term-link">
+                                oleoylethanolamide
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                PMID:31292465
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">we described the range of fatty acids LBP-8 is capable of binding and show that it binds to life-extending ligands in worms such as oleic acid and oleoylethanolamide with high affinity</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                PMID:25554789
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">all four lipids bound to LBP-8, and the binding affinity of OEA for LBP-8 was 3 times higher than that of the fatty acids</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LBP-8 shuttles OEA and oleic acid from lysosomes to the nucleus via its structurally conserved NLS (K24, R33, K34), delivering these lipid ligands to the nuclear hormone receptors NHR-49 and NHR-80. This activates transcription of beta-oxidation genes (acs-2) and promotes longevity. Nuclear translocation is enhanced by LIPL-4-generated lysosomal lipid signals and is required for lifespan extension.</h3>
+                <span class="vote-buttons" data-g="O02324" data-a="FUNCTION: LBP-8 shuttles OEA and oleic acid from lysosomes t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120013" target="_blank" class="term-link">
+                            lipid transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032365" target="_blank" class="term-link">
+                                intracellular lipid transport
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                determination of adult lifespan
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                                PMID:25554789
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the lysosomal acid lipase LIPL-4 triggered nuclear translocalization of a lysosomal lipid chaperone LBP-8, which promoted longevity by activating the nuclear hormone receptors NHR-49 and NHR-80</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                                PMID:31292465
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">certain human FABPs have been shown to shuttle nuclear receptor ligands into the nucleus to regulate nuclear receptor transcription</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30713071" target="_blank" class="term-link">
+                                PMID:30713071
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Lysosomal Signaling Promotes Longevity by Adjusting Mitochondrial Activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LBP-8 contains the FABP domain (IPR000463), which maps to lipid binding (GO:0008289)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference supports LBP-8 annotations for nucleus, cytosol, fatty acid binding, and fatty acid transport, consistent with the broader FABP family</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular location mapping correctly assigns LBP-8 to nucleus and lysosome, consistent with direct experimental evidence from PMID:25554789</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA correctly predicts fatty acid binding for LBP-8 based on sequence features</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10693745" target="_blank" class="term-link">
+                            PMID:10693745
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Secretion of a novel class of iFABPs in nematodes: coordinate use of the Ascaris/Caenorhabditis model systems.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LBP-8 identified as one of at least eight C. elegans homologs of the Ascaris fatty acid binding protein As-p18. The paper focused on the secreted FABPs (LBP-1, LBP-2, LBP-3) but established the FABP family membership of LBP-8.</div>
+                        
+                        <div class="finding-text">"at least eight potential homologues of As-p18 have been identified in the Caenorhabditis elegans genome"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" target="_blank" class="term-link">
+                            PMID:25554789
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Aging. Lysosomal signaling molecules regulate longevity in Caenorhabditis elegans.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LBP-8 is a lysosomal lipid chaperone that translocates from lysosomes to the nucleus upon LIPL-4 overexpression. LBP-8 overexpression extends lifespan by 30%. LBP-8 is required for LIPL-4-mediated longevity. LBP-8 binds OEA with 3-fold higher affinity than C20 fatty acids. LBP-8 nuclear localization requires its NLS. LBP-8 activates NHR-49/NHR-80-dependent transcription of acs-2. LBP-8 is exclusively expressed in the intestine.</div>
+                        
+                        <div class="finding-text">"In the worm Caenorhabditis elegans, the lysosomal acid lipase LIPL-4 triggered nuclear translocalization of a lysosomal lipid chaperone LBP-8, which promoted longevity by activating the nuclear hormone receptors NHR-49 and NHR-80"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" target="_blank" class="term-link">
+                            PMID:31292465
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural characterization of life-extending Caenorhabditis elegans Lipid Binding Protein 8.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of LBP-8 solved at 1.3 angstrom resolution (PDB 6C1Z). LBP-8 is a monomer with a typical lipocalin fold. A structurally conserved NLS (K24, R33, K34) was identified in the portal region. Mass spectrometry identified a broad range of fatty acids co-purifying with LBP-8, with preference for monounsaturated fatty acids. Oleic acid was the most abundant bound fatty acid. Both oleic acid and OEA bind with high affinity (similar Ki values). Oleic acid destabilizes LBP-8, decreasing Tm by approximately 4 degrees C, while OEA has no effect on stability.</div>
+                        
+                        <div class="finding-text">"we determined the first 1.3 Å high-resolution structure of this life-extending protein LBP-8, which allowed us to identify a structurally conserved nuclear localization signal and amino acids involved in lipid binding"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30713071" target="_blank" class="term-link">
+                            PMID:30713071
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Lysosomal Signaling Promotes Longevity by Adjusting Mitochondrial Activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ramachandran et al. showed that the LIPL-4/LBP-8 lysosomal signaling pathway promotes longevity by adjusting mitochondrial activity, specifically through activation of mitochondrial beta-oxidation. This extends the understanding of LBP-8&#39;s downstream effects beyond nuclear receptor activation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lbp-8-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O02324" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lbp-8-research-notes">lbp-8 Research Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>lbp-8 (T22G5.6) encodes a fatty acid-binding protein (FABP) homolog that functions as a lysosomal lipid chaperone in C. elegans. It is a key mediator in the lysosome-to-nucleus retrograde lipid signaling pathway linking lysosomal lipid metabolism to nuclear transcription and longevity.</p>
+<h2 id="core-pathway-lipl-4-lbp-8-nhr-49nhr-80">Core Pathway: LIPL-4 → LBP-8 → NHR-49/NHR-80</h2>
+<p>LBP-8 shuttles lipid signals generated by the lysosomal lipase LIPL-4 to the nucleus, where they activate transcription factors NHR-49 and NHR-80 to promote longevity <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" title="Lysosomal signaling molecules regulate longevity in Caenorhabditis elegans">PMID:25554789</a>.</p>
+<h2 id="structural-features">Structural Features</h2>
+<ul>
+<li>Crystal structure solved at 1.3 Å (PDB: 6C1Z) <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" title="Structural characterization of life-extending Caenorhabditis elegans Lipid Binding Protein 8">PMID:31292465</a></li>
+<li>Adopts typical lipocalin/FABP fold: beta barrel capped by alpha helical lid</li>
+<li>Monomer in solution (16.4 kDa)</li>
+<li>Interior cavity: 825 Å² surface area, 1170 Å³ volume</li>
+<li>Contains structurally conserved nuclear localization signal (NLS) in portal region (K24, R33, K34)</li>
+<li>Classified as a "collisional" FABP - interacts with membranes via hydrophobic patch in alpha helical lid</li>
+</ul>
+<h2 id="lipid-binding">Lipid Binding</h2>
+<ul>
+<li>Binds oleic acid and OEA with high and similar affinity <a href="https://pubmed.ncbi.nlm.nih.gov/31292465" title="both had very similar Ki's, suggesting oleic acid, along with OEA, are high affinity ligands of LBP-8">PMID:31292465</a></li>
+<li>OEA binding affinity ~3x higher than for C20 fatty acids (AA, DGLA, omega-3 AA) <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Also binds arachidonic acid, DGLA, palmitic acid, linoleic acid, and other long-chain fatty acids <a href="https://pubmed.ncbi.nlm.nih.gov/31292465">PMID:31292465</a></li>
+<li>Does NOT bind bile acids (cholic, taurocholic, glycocholic) despite pocket size similarity to FABP6 <a href="https://pubmed.ncbi.nlm.nih.gov/31292465">PMID:31292465</a></li>
+<li>R132 is the key conserved residue for fatty acid head group interaction <a href="https://pubmed.ncbi.nlm.nih.gov/31292465">PMID:31292465</a></li>
+<li>Oleic acid destabilizes LBP-8 (Tm decreased ~4°C); OEA has no effect on Tm <a href="https://pubmed.ncbi.nlm.nih.gov/31292465">PMID:31292465</a></li>
+</ul>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<ul>
+<li>Expressed exclusively in the intestine <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Predominantly localized to intestinal lysosomes <a href="https://pubmed.ncbi.nlm.nih.gov/25554789" title="Both FLAG- and mCherry-tagged LBP-8 proteins were predominantly localized to intestinal lysosomes">PMID:25554789</a></li>
+<li>Partial nuclear localization enhanced in lipl-4 Tg animals <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>NLS deletion abolishes nuclear localization and lifespan extension <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+</ul>
+<h2 id="longevity-function">Longevity Function</h2>
+<ul>
+<li>LBP-8 overexpression extends lifespan by ~30% <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Nuclear localization required for longevity effect (no NLS version shows little extension) <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>LBP-8 depletion or deletion (lbp-8(rax1)) suppresses lipl-4 Tg longevity <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Longevity requires NHR-49 and NHR-80 <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+</ul>
+<h2 id="regulation">Regulation</h2>
+<ul>
+<li>lbp-8 is exclusively upregulated (of 9 FABP homologs) in lipl-4 Tg animals <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Not upregulated in lipl-4 Tg no SP strain <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>OEA and its analogue induce lbp-8 transcription in wild-type via NHR-49/NHR-80 <a href="https://pubmed.ncbi.nlm.nih.gov/25554789">PMID:25554789</a></li>
+<li>Positive feedback loop: LIPL-4 → OEA → NHR-49/NHR-80 → lbp-8 transcription</li>
+</ul>
+<h2 id="early-characterization">Early Characterization</h2>
+<ul>
+<li>Initially characterized as part of a novel class of intracellular FABPs in nematodes <a href="https://pubmed.ncbi.nlm.nih.gov/10693745" title="A novel fatty acid binding protein, As-p18, is secreted... at least eight potential homologues of As-p18 have been identified in the Caenorhabditis elegans genome">PMID:10693745</a></li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O02324
+gene_symbol: lbp-8
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  LBP-8 is a lysosomal lipid chaperone belonging to the fatty acid-binding protein
+  (FABP) family.
+  It functions as an intracellular lipid shuttle, binding long-chain fatty acids (especially
+  oleic acid)
+  and oleoylethanolamide (OEA) with high affinity and transporting them from lysosomes
+  to the nucleus.
+  In the nucleus, LBP-8-delivered lipid signals activate the nuclear hormone receptors
+  NHR-49 and NHR-80,
+  promoting transcription of genes involved in mitochondrial beta-oxidation (e.g.
+  acs-2) and longevity.
+  LBP-8 is part of the LIPL-4-initiated lysosome-to-nucleus retrograde lipid signaling
+  pathway that
+  extends lifespan. LBP-8 overexpression extends lifespan by approximately 30%, and
+  this effect requires
+  its structurally conserved nuclear localization signal (NLS) in the N-terminal helix-turn-helix
+  motif.
+  LBP-8 is expressed exclusively in the intestine. The crystal structure at 1.3 angstrom
+  resolution
+  (PDB 6C1Z) confirms it is a monomer with a typical lipocalin fold and a large interior
+  cavity
+  capable of accommodating diverse fatty acids.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      LBP-8 nuclear localization is well-established by direct experimental evidence
+      (PMID:25554789).
+      Folick et al. demonstrated partial nuclear localization of LBP-8 in the intestine,
+      enhanced
+      upon LIPL-4 overexpression. LBP-8 was detected in nuclear fractions of total
+      worm lysate.
+      The IBA annotation is consistent with all available evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is a core feature of LBP-8 function, demonstrated by fluorescent
+      tagging
+      and subcellular fractionation (PMID:25554789). Tillman et al. (PMID:31292465)
+      further identified
+      a structurally conserved NLS (K24, R33, K34) required for nuclear translocation.
+      The IBA
+      annotation is phylogenetically sound and experimentally validated.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        We also detected partial nuclear localization of LBP-8 in the intestine, which
+        was
+        enhanced in lipl-4 Tg animals
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        we determined the first 1.3 Å high-resolution structure of this life-extending
+        protein LBP-8, which allowed us to identify a structurally conserved nuclear
+        localization signal
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      LBP-8 is an intracellular lipid-binding protein and, as a soluble FABP, would
+      be expected to
+      be present in the cytosol. Folick et al. (PMID:25554789) detected LBP-8 in cytoplasmic
+      fractions.
+      The IBA annotation is phylogenetically reasonable for FABPs.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosolic localization is expected for a soluble FABP family member. LBP-8 was
+      detected in
+      cytoplasmic fractions (PMID:25554789), and as a lipid shuttle between lysosomes
+      and nucleus,
+      it transits through the cytosol. The IBA annotation is consistent with evidence.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 contains an N-terminal nuclear localization signal (NLS) ... and was
+        present
+        in both cytoplasmic and nuclear fractions of total worm lysate
+- term:
+    id: GO:0005504
+    label: fatty acid binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      LBP-8 fatty acid binding is well-established experimentally. Folick et al. (PMID:25554789)
+      showed
+      LBP-8 binds arachidonic acid, omega-3 arachidonic acid, DGLA, and OEA. Tillman
+      et al.
+      (PMID:31292465) used mass spectrometry to identify a broad range of fatty acids
+      co-purifying
+      with LBP-8, with preference for monounsaturated fatty acids. The IBA annotation
+      is appropriate
+      and at the right level of specificity for the FABP family.
+    action: ACCEPT
+    reason: &gt;-
+      Fatty acid binding is the central molecular function of LBP-8 as a FABP family
+      member. Extensive
+      experimental validation by both fluorescence-based binding assays (PMID:25554789)
+      and LC/MS
+      (PMID:31292465). The IBA annotation is at an appropriate level.
+    supported_by:
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        we described the range of fatty acids LBP-8 is capable of binding and show
+        that it
+        binds to life-extending ligands in worms such as oleic acid and
+        oleoylethanolamide with high affinity
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        all four lipids bound to LBP-8, and the binding affinity of OEA for LBP-8
+        was 3 times
+        higher than that of the fatty acids
+- term:
+    id: GO:0015908
+    label: fatty acid transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      LBP-8 functions as an intracellular fatty acid transporter, shuttling lipid
+      signals from
+      lysosomes to the nucleus (PMID:25554789). The IBA annotation for fatty acid
+      transport is
+      phylogenetically sound and at the right level of specificity.
+    action: ACCEPT
+    reason: &gt;-
+      LBP-8 is an intracellular lipid chaperone that transports fatty acids and their
+      derivatives
+      from lysosomes to the nucleus (PMID:25554789). This is its core biological process.
+      The IBA
+      annotation at the level of fatty acid transport is appropriate.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals
+        to the nucleus
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        supporting the role of LBP-8 as a shuttling protein for monounsaturated fatty
+        acids
+        and their derivatives
+- term:
+    id: GO:0005504
+    label: fatty acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for fatty acid binding via ARBA machine learning. This is consistent
+      with the
+      experimentally validated function of LBP-8 as a FABP. Duplicates the IBA annotation
+      but is
+      acceptable as an independent computational prediction.
+    action: ACCEPT
+    reason: &gt;-
+      The IEA annotation is correct and consistent with extensive experimental evidence
+      for fatty
+      acid binding by LBP-8 (PMID:25554789, PMID:31292465). It is a valid independent
+      computational
+      prediction that agrees with the IBA annotation.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation for nuclear localization based on UniProt subcellular location
+      mapping.
+      Consistent with IDA evidence from PMID:25554789 showing LBP-8 in the nucleus.
+    action: ACCEPT
+    reason: &gt;-
+      The IEA annotation correctly reflects the experimentally determined nuclear
+      localization
+      of LBP-8 (PMID:25554789). UniProt mapping is appropriate here.
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      IEA annotation for lysosomal localization based on UniProt subcellular location
+      mapping.
+      Consistent with IDA evidence from PMID:25554789 showing LBP-8 localization to
+      lysosomes.
+    action: ACCEPT
+    reason: &gt;-
+      The IEA annotation correctly reflects the experimentally determined lysosomal
+      localization
+      of LBP-8. Folick et al. (PMID:25554789) showed FLAG- and mCherry-tagged LBP-8
+      predominantly
+      localized to intestinal lysosomes.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        Both FLAG- and mCherry-tagged LBP-8 proteins were predominantly localized
+        to
+        intestinal lysosomes
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for lipid binding based on InterPro domain mapping. LBP-8 contains
+      the FABP
+      domain (IPR000463). This is a broader parent term of fatty acid binding (GO:0005504),
+      which
+      is already annotated with more specific evidence. The IEA is acceptable as it
+      captures the
+      InterPro-based prediction, though it is less specific than the IBA/IDA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      The IEA annotation is correct but broader than the more specific fatty acid
+      binding annotations
+      already present. It is acceptable as an independent InterPro-based prediction.
+      LBP-8 binds
+      diverse lipids including fatty acids and OEA (PMID:25554789, PMID:31292465).
+- term:
+    id: GO:0070538
+    label: oleic acid binding
+  evidence_type: IDA
+  original_reference_id: PMID:31292465
+  review:
+    summary: &gt;-
+      Tillman et al. (PMID:31292465) directly demonstrated oleic acid binding to LBP-8
+      using
+      competitive fluorescence-based binding assays and mass spectrometry. Oleic acid
+      was the most
+      abundant fatty acid co-purifying with LBP-8 from both E. coli and C. elegans
+      lipid extracts.
+      Oleic acid and OEA had similar high-affinity Ki values. This is a well-supported
+      IDA annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Oleic acid binding is directly demonstrated by competitive fluorescence binding
+      assays and
+      LC/MS co-purification in PMID:31292465. Oleic acid was the most abundant fatty
+      acid bound to
+      LBP-8 (28.93% from C. elegans extracts, 35.72% from E. coli). This specific
+      binding activity
+      is core to LBP-8 function.
+    supported_by:
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        A fluorescence-based ligand binding assay was used to compare the affinity
+        of oleic
+        acid and OEA, and both had very similar Ki&#39;s, suggesting oleic acid, along
+        with OEA,
+        are high affinity ligands of LBP-8
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        While the relative percentage of oleic acid decreased, it was still the most
+        abundant
+        fatty acid that bound to LBP-8
+- term:
+    id: GO:0005324
+    label: long-chain fatty acid transmembrane transporter activity
+  evidence_type: IMP
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      GO:0005324 (long-chain fatty acid transporter activity) is defined as enabling
+      transfer of
+      long-chain fatty acids from one side of a membrane to the other. LBP-8 is not
+      a transmembrane
+      transporter. It is a soluble intracellular lipid chaperone that shuttles fatty
+      acids between
+      cellular compartments (lysosomes to nucleus) through the cytosol. Folick et
+      al. (PMID:25554789)
+      showed LBP-8 translocates from lysosomes to the nucleus carrying lipid signals,
+      but this is
+      intracellular lipid transfer, not transmembrane transport. The IMP evidence
+      is based on
+      lbp-8 mutant phenotypes affecting lipid signaling, not transmembrane transport
+      assays.
+    action: MODIFY
+    reason: &gt;-
+      The term GO:0005324 (long-chain fatty acid transporter activity) specifically
+      describes
+      transmembrane transport activity, which is not the mechanism by which LBP-8
+      functions. LBP-8
+      is a soluble lipid chaperone that binds fatty acids and shuttles them intracellularly
+      (PMID:25554789, PMID:31292465). A more appropriate MF term would be lipid transfer
+      activity
+      (GO:0120013), defined as removing a lipid from a membrane, transporting it through
+      the aqueous
+      phase in a hydrophobic pocket, and delivering it to an acceptor. This matches
+      the LBP-8
+      mechanism precisely.
+    proposed_replacement_terms:
+    - id: GO:0120013
+      label: lipid transfer activity
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals
+        to the nucleus
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        certain human FABPs have been shown to shuttle nuclear receptor ligands into
+        the
+        nucleus to regulate nuclear receptor transcription
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      Folick et al. (PMID:25554789) directly showed nuclear localization of LBP-8
+      in the intestine
+      using fluorescent tagging (mCherry, FLAG) and subcellular fractionation. Nuclear
+      localization
+      was enhanced in LIPL-4 overexpressing animals. LBP-8 was present in nuclear
+      fractions. Deletion
+      of the NLS abolished nuclear localization and lifespan extension.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is a core feature of LBP-8 function, directly demonstrated
+      by IDA
+      evidence in PMID:25554789. LBP-8 translocates to the nucleus to deliver lipid
+      signals to
+      nuclear hormone receptors NHR-49 and NHR-80.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        We also detected partial nuclear localization of LBP-8 in the intestine, which
+        was
+        enhanced in lipl-4 Tg animals
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 contains an N-terminal nuclear localization signal (NLS) ... and was
+        present
+        in both cytoplasmic and nuclear fractions of total worm lysate
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IDA
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      Folick et al. (PMID:25554789) directly showed LBP-8 localization to intestinal
+      lysosomes
+      using FLAG and mCherry tagging with colocalization studies. LBP-8 was predominantly
+      found
+      at lysosomes under basal conditions, with nuclear translocation enhanced upon
+      LIPL-4
+      overexpression.
+    action: ACCEPT
+    reason: &gt;-
+      Lysosomal localization is a core feature of LBP-8, demonstrated by direct fluorescent
+      microscopy and colocalization in PMID:25554789. This localization is central
+      to LBP-8&#39;s
+      role in the lysosome-to-nucleus signaling pathway.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        Both FLAG- and mCherry-tagged LBP-8 proteins were predominantly localized
+        to
+        intestinal lysosomes
+- term:
+    id: GO:0015909
+    label: long-chain fatty acid transport
+  evidence_type: IMP
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      Folick et al. (PMID:25554789) demonstrated that LBP-8 is required for LIPL-4-mediated
+      longevity signaling, which involves transport of lipid signals (including long-chain
+      fatty
+      acids and OEA) from lysosomes to the nucleus. The IMP evidence comes from lbp-8
+      loss-of-function
+      suppressing lipl-4-mediated lifespan extension. While the biological process
+      annotation is
+      broadly correct, the transport is intracellular rather than across membranes.
+    action: ACCEPT
+    reason: &gt;-
+      Long-chain fatty acid transport is an appropriate biological process term for
+      LBP-8. The
+      GO:0015909 definition includes movement &#34;within a cell&#34;, which accurately describes
+      LBP-8&#39;s
+      intracellular lipid shuttling function. The IMP evidence is sound: lbp-8 mutants
+      suppress
+      lipl-4-mediated longevity and lipid signaling (PMID:25554789).
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        Both RNA interference (RNAi)-mediated depletion of LBP-8 and a newly isolated
+        deletion
+        mutant, lbp-8(rax1), suppressed the lifespan extension in lipl-4 Tg animals
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        supporting the role of LBP-8 as a shuttling protein for monounsaturated fatty
+        acids
+        and their derivatives
+- term:
+    id: GO:0036041
+    label: long-chain fatty acid binding
+  evidence_type: IDA
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      Folick et al. (PMID:25554789) demonstrated LBP-8 binding to long-chain fatty
+      acids
+      (arachidonic acid, omega-3 arachidonic acid, DGLA) and OEA using fluorescence-based
+      binding
+      assays. Tillman et al. (PMID:31292465) confirmed and extended this with LC/MS
+      showing binding
+      to a diverse range of long-chain fatty acids including oleic acid, arachidonic
+      acid, linoleic
+      acid, palmitic acid, and stearic acid.
+    action: ACCEPT
+    reason: &gt;-
+      Long-chain fatty acid binding is directly demonstrated by IDA evidence. Fluorescence-based
+      binding assays (PMID:25554789) and mass spectrometry co-purification (PMID:31292465)
+      both confirm LBP-8 binds diverse long-chain fatty acids. This is a core molecular
+      function
+      and the term is at the right level of specificity.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        we focused our analysis on three C20 fatty acids—arachidonic acid (AA), ω-3
+        arachidonic
+        acid (ω-3 AA), and dihomo-γ-linolenic acid (DGLA)—and oleoylethanolamide (OEA)
+        ...
+        all four lipids bound to LBP-8
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        LBP-8 does not bind to one fatty acid selectively but is capable of binding
+        many
+        fatty acids. However, LBP-8 does have a preference for unsaturated fatty acids
+- term:
+    id: GO:0006869
+    label: lipid transport
+  evidence_type: TAS
+  original_reference_id: PMID:10693745
+  review:
+    summary: &gt;-
+      Plenefisch et al. (PMID:10693745) identified LBP-8 as one of nine C. elegans
+      FABP homologs.
+      The paper primarily focused on LBP-1, LBP-2, and LBP-3 (the secreted FABPs),
+      and did not
+      directly study LBP-8 function. The TAS evidence for lipid transport is based
+      on homology
+      to other FABPs. While the annotation is correct (LBP-8 does transport lipids),
+      the evidence
+      is weak for this specific gene. However, the annotation itself is valid given
+      later
+      experimental confirmation.
+    action: ACCEPT
+    reason: &gt;-
+      Lipid transport is a correct annotation for LBP-8, now thoroughly validated
+      by later
+      experimental work (PMID:25554789, PMID:31292465). While the original TAS reference
+      (PMID:10693745) mainly studied other C. elegans FABPs (LBP-1, LBP-2, LBP-3),
+      the
+      general assignment of lipid transport to the FABP family was appropriate. More
+      specific
+      annotations (long-chain fatty acid transport) are also present with stronger
+      evidence.
+    supported_by:
+    - reference_id: PMID:10693745
+      supporting_text: &gt;-
+        at least eight potential homologues of As-p18 have been identified in the
+        Caenorhabditis elegans genome
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals
+        to the nucleus
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: TAS
+  original_reference_id: PMID:10693745
+  review:
+    summary: &gt;-
+      Plenefisch et al. (PMID:10693745) identified LBP-8 as a FABP homolog in C. elegans.
+      The TAS
+      annotation for lipid binding is based on homology to fatty acid binding proteins.
+      While the
+      original paper mainly studied LBP-1/2/3, the annotation is correct and validated
+      by later work.
+      More specific annotations (fatty acid binding, long-chain fatty acid binding,
+      oleic acid
+      binding) are also present.
+    action: ACCEPT
+    reason: &gt;-
+      Lipid binding is correct for LBP-8, validated by extensive experimental evidence
+      (PMID:25554789, PMID:31292465). The TAS evidence from PMID:10693745 was based
+      on
+      homology to known FABPs, which proved accurate. The annotation is broader than
+      the
+      more specific IDA/IBA annotations but acceptable.
+- term:
+    id: GO:0032365
+    label: intracellular lipid transport
+  evidence_type: IDA
+  original_reference_id: PMID:25554789
+  review:
+    summary: &gt;-
+      LBP-8 is an intracellular lipid chaperone that shuttles fatty acid signals from
+      lysosomes
+      to the nucleus. Folick et al. (PMID:25554789) demonstrated lysosome-to-nucleus
+      translocation
+      of LBP-8 carrying lipid signals including OEA. This intracellular lipid transport
+      function
+      is the core biological process of LBP-8.
+    action: NEW
+    reason: &gt;-
+      GO:0032365 (intracellular lipid transport) is more precise than GO:0006869 (lipid
+      transport)
+      for describing LBP-8 function, as it specifically captures the intracellular
+      nature of the
+      lipid shuttling. LBP-8 transports lipids from lysosomes to nucleus within the
+      cell. This term
+      is not present in the current annotation set but is well-supported by experimental
+      evidence.
+    supported_by:
+    - reference_id: PMID:25554789
+      supporting_text: &gt;-
+        LBP-8 may function as a lysosomal lipid chaperone transducing lipid signals
+        to the nucleus
+    - reference_id: PMID:31292465
+      supporting_text: &gt;-
+        certain human FABPs have been shown to shuttle nuclear receptor ligands into
+        the
+        nucleus to regulate nuclear receptor transcription
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: LBP-8 contains the FABP domain (IPR000463), which maps to lipid binding
+      (GO:0008289)
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: &gt;-
+      Phylogenetic inference supports LBP-8 annotations for nucleus, cytosol, fatty
+      acid binding,
+      and fatty acid transport, consistent with the broader FABP family
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: &gt;-
+      UniProt subcellular location mapping correctly assigns LBP-8 to nucleus and
+      lysosome,
+      consistent with direct experimental evidence from PMID:25554789
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA correctly predicts fatty acid binding for LBP-8 based on sequence
+      features
+- id: PMID:10693745
+  title: &#39;Secretion of a novel class of iFABPs in nematodes: coordinate use of the
+    Ascaris/Caenorhabditis model systems.&#39;
+  findings:
+  - statement: &gt;-
+      LBP-8 identified as one of at least eight C. elegans homologs of the Ascaris
+      fatty acid binding
+      protein As-p18. The paper focused on the secreted FABPs (LBP-1, LBP-2, LBP-3)
+      but established
+      the FABP family membership of LBP-8.
+    supporting_text: &gt;-
+      at least eight potential homologues of As-p18 have been identified in the
+      Caenorhabditis elegans genome
+- id: PMID:25554789
+  title: Aging. Lysosomal signaling molecules regulate longevity in Caenorhabditis
+    elegans.
+  findings:
+  - statement: &gt;-
+      LBP-8 is a lysosomal lipid chaperone that translocates from lysosomes to the
+      nucleus upon
+      LIPL-4 overexpression. LBP-8 overexpression extends lifespan by 30%. LBP-8 is
+      required for
+      LIPL-4-mediated longevity. LBP-8 binds OEA with 3-fold higher affinity than
+      C20 fatty acids.
+      LBP-8 nuclear localization requires its NLS. LBP-8 activates NHR-49/NHR-80-dependent
+      transcription of acs-2. LBP-8 is exclusively expressed in the intestine.
+    supporting_text: &gt;-
+      In the worm Caenorhabditis elegans, the lysosomal acid lipase LIPL-4 triggered
+      nuclear
+      translocalization of a lysosomal lipid chaperone LBP-8, which promoted longevity
+      by
+      activating the nuclear hormone receptors NHR-49 and NHR-80
+- id: PMID:31292465
+  title: Structural characterization of life-extending Caenorhabditis elegans Lipid
+    Binding Protein 8.
+  findings:
+  - statement: &gt;-
+      Crystal structure of LBP-8 solved at 1.3 angstrom resolution (PDB 6C1Z). LBP-8
+      is a monomer
+      with a typical lipocalin fold. A structurally conserved NLS (K24, R33, K34)
+      was identified in
+      the portal region. Mass spectrometry identified a broad range of fatty acids
+      co-purifying with
+      LBP-8, with preference for monounsaturated fatty acids. Oleic acid was the most
+      abundant bound
+      fatty acid. Both oleic acid and OEA bind with high affinity (similar Ki values).
+      Oleic acid
+      destabilizes LBP-8, decreasing Tm by approximately 4 degrees C, while OEA has
+      no effect on stability.
+    supporting_text: &gt;-
+      we determined the first 1.3 Å high-resolution structure of this life-extending
+      protein LBP-8, which allowed us to identify a structurally conserved nuclear
+      localization signal and amino acids involved in lipid binding
+- id: PMID:30713071
+  title: Lysosomal Signaling Promotes Longevity by Adjusting Mitochondrial Activity.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      Ramachandran et al. showed that the LIPL-4/LBP-8 lysosomal signaling pathway
+      promotes
+      longevity by adjusting mitochondrial activity, specifically through activation
+      of
+      mitochondrial beta-oxidation. This extends the understanding of LBP-8&#39;s downstream
+      effects beyond nuclear receptor activation.
+core_functions:
+- description: &gt;-
+    LBP-8 binds long-chain fatty acids and oleoylethanolamide (OEA) with high
+    affinity and transfers them between intracellular membranes and acceptor
+    proteins. Oleic acid and OEA are the preferred ligands. The conserved R132
+    residue coordinates fatty acid head groups in the binding cavity.
+  molecular_function:
+    id: GO:0120013
+    label: lipid transfer activity
+  directly_involved_in:
+  - id: GO:0032365
+    label: intracellular lipid transport
+  - id: GO:0015909
+    label: long-chain fatty acid transport
+  locations:
+  - id: GO:0005764
+    label: lysosome
+  - id: GO:0005829
+    label: cytosol
+  substrates:
+  - id: CHEBI:16196
+    label: oleic acid
+  - id: CHEBI:73497
+    label: oleoylethanolamide
+  supported_by:
+  - reference_id: PMID:31292465
+    supporting_text: &gt;-
+      we described the range of fatty acids LBP-8 is capable of binding and
+      show that it binds to life-extending ligands in worms such as oleic
+      acid and oleoylethanolamide with high affinity
+  - reference_id: PMID:25554789
+    supporting_text: &gt;-
+      all four lipids bound to LBP-8, and the binding affinity of OEA for
+      LBP-8 was 3 times higher than that of the fatty acids
+- description: &gt;-
+    LBP-8 shuttles OEA and oleic acid from lysosomes to the nucleus via its
+    structurally conserved NLS (K24, R33, K34), delivering these lipid ligands
+    to the nuclear hormone receptors NHR-49 and NHR-80. This activates
+    transcription of beta-oxidation genes (acs-2) and promotes longevity.
+    Nuclear translocation is enhanced by LIPL-4-generated lysosomal lipid
+    signals and is required for lifespan extension.
+  molecular_function:
+    id: GO:0120013
+    label: lipid transfer activity
+  directly_involved_in:
+  - id: GO:0032365
+    label: intracellular lipid transport
+  - id: GO:0008340
+    label: determination of adult lifespan
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  anatomical_locations:
+  - id: UBERON:0000160
+    label: intestine
+  supported_by:
+  - reference_id: PMID:25554789
+    supporting_text: &gt;-
+      the lysosomal acid lipase LIPL-4 triggered nuclear translocalization
+      of a lysosomal lipid chaperone LBP-8, which promoted longevity by
+      activating the nuclear hormone receptors NHR-49 and NHR-80
+  - reference_id: PMID:31292465
+    supporting_text: &gt;-
+      certain human FABPs have been shown to shuttle nuclear receptor
+      ligands into the nucleus to regulate nuclear receptor transcription
+  - reference_id: PMID:30713071
+    supporting_text: &gt;-
+      Lysosomal Signaling Promotes Longevity by Adjusting Mitochondrial Activity
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+---
+name: Weekly Compliance
+
+on:
+  schedule:
+    # Runs every Friday at 8:00 AM UTC
+    - cron: '0 8 * * 5'
+  workflow_dispatch:
+    inputs:
+      num_files:
+        description: 'Number of lowest-scoring gene review files to improve'
+        required: false
+        default: '5'
+        type: string
+
+      areas_for_improvement:
+        description: 'Focus areas: data model (core_functions, references); annotation type (evidence, action); organism (human, worm); or ALL'
+        required: false
+        default: 'ALL'
+        type: string
+
+      model:
+        description: "Claude model to use"
+        default: claude-opus-4-7
+        type: choice
+        options:
+          - claude-sonnet-4-6
+          - claude-haiku-4-5-20251001
+          - claude-opus-4-7
+
+jobs:
+  compliance-fixes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install python tools
+        run: uv sync
+
+      - name: Install just
+        run: |
+          uv tool install rust-just
+          uv sync
+
+      - name: Run Claude Compliance Fixes
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          claude_args: |
+            --dangerously-skip-permissions
+            --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}}}'
+            --model ${{ inputs.model || 'claude-opus-4-7' }}
+
+          prompt: |
+            You are running as part of an automated CI workflow to improve the AI Gene Review knowledge base.
+
+            ## Your Task
+
+            1. **Get overall compliance report**: Run `just compliance-all` and examine per-file compliance scores
+               in `reports/compliance-all.tsv`.
+
+            2. **Select ${{ inputs.num_files || '5' }} poorly performing files**: From the report, identify the
+               gene review YAML files with the LOWEST weighted compliance scores.
+               Some randomness is fine; try for a common theme (organism, pathway, annotation gap) if possible.
+               Gradual, incremental improvement is the goal.
+
+               Focus areas requested: ${{ inputs.areas_for_improvement }}
+
+            3. **For each selected file**:
+               - Determine the organism and gene from the file path (e.g. `genes/human/CFAP300/CFAP300-ai-review.yaml`)
+               - Run `just validate <organism> <gene>` to get a detailed validation report
+               - Identify gaps: missing or weak `core_functions`, under-justified annotation `action` choices,
+                 missing `references`, over-generic GO terms, absent `review.summary` or `review.reason` text
+               - Read the gene's companion files (`*-uniprot.txt`, `*-deep-research*.md`, `*-notes.md`,
+                 cited `publications/PMID_*.md`) for evidence to fill gaps
+               - Use OLS MCP to find more specific GO terms when existing terms are over-generic
+               - Edit the `-ai-review.yaml` file to improve compliance
+               - Run `just validate <organism> <gene>` again to confirm validity
+               - Create a **per-file PR**:
+                 - Branch name: `weekly-compliance-YYYY-MM-DD-GENE`
+                 - Title: "Weekly Compliance: improve GENE review (YYYY-MM-DD)"
+                 - Include a report in the PR body: what was changed, original compliance gaps,
+                   what was fixed, and any remaining issues
+
+            ## Important Guidelines
+
+            - Only add GO terms you can verify via OLS — never hallucinate IDs or labels
+            - Use the exact label returned by OLS for the `label` field
+            - Do not edit derived files (`*-uniprot.txt`, `*-goa.tsv`, `*-deep-research*.md`, `publications/*`)
+            - Incremental fixes are fine — we will get to everything eventually
+            - Follow `CLAUDE.md` conventions and the gene review schema
+            - Be conservative with annotation `action` changes; only upgrade confidence when evidence is clear

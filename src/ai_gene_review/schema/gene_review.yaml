@@ -430,12 +430,15 @@ classes:
       - isoform
       - supporting_entities
       - review
-    slot_usage:
-      term:
-        bindings:
-          - binds_value_of: id
-            range: GOTermEnum
-            obligation_level: REQUIRED
+    # Note: we deliberately do NOT add bindings (GOTermEnum or label
+    # validation) to term.id here.  ExistingAnnotation terms come from GOA
+    # and may be out of sync with the current ontology — obsolete terms
+    # (for REMOVE/MODIFY actions), synonym labels, or terms not yet in the
+    # local OAK cache.  A GOTermEnum binding would reject these since it
+    # uses reachable_from (current subClassOf descendants only).
+    # As a consequence, linkml-term-validator does not check term IDs or
+    # labels in existing_annotations.  Label correctness is instead
+    # covered by the GOA comparison in check_best_practices_rules().
 
   Review:
     description: A review of an existing annotation.
@@ -470,7 +473,6 @@ classes:
       molecular_function:
         range: Term
         inlined: true
-        required: true
         description: >-
           The molecular function this gene product enables (i.e., has the activity
           independently). For complex subunits that contribute to but don't
@@ -1129,7 +1131,6 @@ classes:
       PANTHER/IBA, InterPro2GO, CLEAN, GloEC, MAPred, etc. and evaluates them against
       literature and bioinformatic evidence. Inspired by the systematic evaluation in
       de Crécy-Lagard et al. 2025 (PMID:40703034).
-    tree_root: true
     slots:
       - id
       - gene_symbol
@@ -1141,6 +1142,10 @@ classes:
       locus_tag:
         range: string
         description: Locus tag for the gene (e.g., b1267 for E. coli)
+      source_documents:
+        range: string
+        multivalued: true
+        description: Paths to supporting source documents (e.g., reasoning traces, raw model outputs) for provenance
       predictions:
         range: PredictedAnnotation
         multivalued: true
@@ -1415,13 +1420,14 @@ enums:
           Weaker than located_in or part_of.
 
   GOTermEnum:
-    description: A term in the GO ontology
+    description: A term in the GO ontology (including roots, to allow ND annotations)
     reachable_from:
       source_nodes:
         - GO:0003674
         - GO:0008150
         - GO:0005575
       is_direct: false
+      include_self: true
       relationship_types:
         - rdfs:subClassOf
   
@@ -1456,7 +1462,7 @@ enums:
     description: A protein-containing complex term in the GO ontology
     reachable_from:
       source_nodes:
-        - GO:0030246
+        - GO:0032991
       is_direct: false
       relationship_types:
         - rdfs:subClassOf

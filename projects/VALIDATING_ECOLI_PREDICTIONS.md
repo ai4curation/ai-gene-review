@@ -31,29 +31,29 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 ### Correct Novel (COR)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| ygfF | b2878 | P76626 | EC 1.1.1.47 (glucose 1-dehydrogenase) | COR (CS=2) - validated | PENDING |
+| ygfF | b2878 | P76626 | EC 1.1.1.47 (glucose 1-dehydrogenase) | COR (CS=2) - validated | COMPLETE |
 
 ### Paralog Incorrect (PLI)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yciO | b1282 | P0AB18 | EC 2.7.7.87 (threonylcarbamoyladenylate synthase) | PLI (CS=0) - paralog of TsaC, different function | PENDING |
-| yegV | b2100 | P0A8A8 | EC 2.7.1.92 (dehydro-2-deoxygluconokinase) | PLI (CS=0) - correct first 3 digits, wrong substrate | PENDING |
+| yciO | b1282 | P0AB18 | EC 2.7.7.87 (threonylcarbamoyladenylate synthase) | PLI (CS=0) - paralog of TsaC, different function | COMPLETE |
+| yegV | b2100 | P0A8A8 | EC 2.7.1.92 (dehydro-2-deoxygluconokinase) | PLI (CS=0) - correct first 3 digits, wrong substrate | COMPLETE |
 
 ### Non-Paralog Incorrect (NPI)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yjhQ | b4307 | P39358 | EC 2.3.1.189 (mycothiol synthase) | NPI (CS=0) - mycothiol pathway absent in E. coli | PENDING |
-| yrhB | b3446 | P0AES2 | EC 4.1.2.50 (6-carboxytetrahydropterin synthase) | NPI (CS=0) - activity already encoded by QueD | PENDING |
+| yjhQ | b4307 | P39358 | EC 2.3.1.189 (mycothiol synthase) | NPI (CS=0) - mycothiol pathway absent in E. coli | COMPLETE |
+| yrhB | b3446 | P0AES2 | EC 4.1.2.50 (6-carboxytetrahydropterin synthase) | NPI (CS=0) - activity already encoded by QueD | COMPLETE |
 
 ### Uncertain
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yjdM | b4108 | P39330 | EC 3.11.1.2 (phosphonoacetate hydrolase) | UNC (CS=1) - in vitro activity not supported in vivo | PENDING |
+| yjdM | b4108 | P39330 | EC 3.11.1.2 (phosphonoacetate hydrolase) | UNC (CS=1) - in vitro activity not supported in vivo | COMPLETE |
 
 ### Repetition Error (REP)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| fepE | b0587 | P24079 | EC 2.7.13.3 (histidine kinase) | REP (CS=0) - no similarity to HK family | PENDING |
+| fepE | b0587 | P24079 | EC 2.7.13.3 (histidine kinase) | REP (CS=0) - no similarity to HK family | COMPLETE |
 
 ## Key Questions
 
@@ -71,20 +71,34 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 # STATUS
 
 ## Completed Reviews
-(none yet)
+- [x] ECOLI/ygfF - Correct novel prediction (SDR family) - glucose 1-dehydrogenase confirmed
+- [x] ECOLI/yciO - Paralog incorrect (TsaC paralog) - 10,000x weaker activity, recommends removing EC 2.7.7.87
+- [x] ECOLI/yegV - Paralog incorrect (sugar kinase) - first 3 EC digits correct, substrate unknown
+- [x] ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase) - mycothiol absent from E. coli; actually antitoxin
+- [x] ECOLI/yrhB - Non-paralog incorrect (QueD duplicate) - activity belongs to QueD; Imm35 immunity domain
+- [x] ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase) - in vitro activity but no in vivo support
+- [x] ECOLI/fepE - Repetition error (histidine kinase) - frequency bias; actually Wzz O-antigen regulator
 
 ## Pending Reviews
-- [ ] ECOLI/ygfF - Correct novel prediction (SDR family)
-- [ ] ECOLI/yciO - Paralog incorrect (TsaC paralog)
-- [ ] ECOLI/yegV - Paralog incorrect (sugar kinase)
-- [ ] ECOLI/yjhQ - Non-paralog incorrect (mycothiol synthase)
-- [ ] ECOLI/yrhB - Non-paralog incorrect (QueD duplicate)
-- [ ] ECOLI/yjdM - Uncertain (phosphonoacetate hydrolase)
-- [ ] ECOLI/fepE - Repetition error (histidine kinase)
+(none)
 
-Last updated: 2026-03-06
+Last updated: 2026-03-22
 
 # NOTES
+
+## 2026-03-22
+
+**All 7 reviews completed**
+
+Completed reviews for all 7 E. coli genes spanning the de Crecy-Lagard et al. error taxonomy.
+Key findings:
+- COR (ygfF): DeepECTF prediction validated; existing GO annotations mostly appropriate
+- PLI (yciO, yegV): Paralog confusion leads to incorrect substrate/function annotations
+- NPI (yjhQ, yrhB): ML models ignore organism pathway context entirely
+- UNC (yjdM): In vitro activity != in vivo function; genetic evidence contradicts ML prediction
+- REP (fepE): Frequency-biased prediction of histidine kinase; also found erroneous IBA tyrosine kinase annotation
+
+Also created predictions-review.yaml files for all 7 genes with structured error assessments.
 
 ## 2026-03-06
 

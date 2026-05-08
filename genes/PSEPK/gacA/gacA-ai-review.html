@@ -1,0 +1,2459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gacA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gacA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88FJ6" target="_blank" class="term-link">
+                        Q88FJ6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">uvrY</span>
+                    
+                    <span class="badge">PP_4099</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gacA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88FJ6" data-a="DESCRIPTION: GacA is the response regulator output of the GacS/..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GacA is the response regulator output of the GacS/GacA two-component regulatory system in Pseudomonas putida KT2440. Domain architecture and the conserved phosphoacceptor Asp54 support a phosphorelay-activated DNA-binding transcription regulator. In KT2440, the strongest direct evidence links the Gac system to transcriptional control of adhesin genes important for biofilm development, broader c-di-GMP-associated surface behaviors, and positive regulation of the K1 type VI secretion system.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0000976" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a reasonable computational annotation for a LuxR-family DNA-binding response regulator. The KT2440 literature does not yet provide direct promoter-binding data for GacA itself, but domain architecture and transcriptional regulator function support retention of this term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is informative, consistent with the HTH LuxR-type output domain, and not contradicted by the reviewed literature.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">HTH luxR-type output domain and phosphoaccepting receiver domain identify GacA as a DNA-binding response regulator.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Existing GOA terms for transcription-related DNA binding are directionally correct.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator, but direct KT2440 promoter targets remain incompletely mapped.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is true for GacA, but this term is too broad to be a useful core annotation for a two-component transcription regulator. More informative replacements capture both the response-regulator nature of the protein and its role as a DNA-binding transcription factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct in essence but overly general compared with more specific terms already supported by domain architecture and literature synthesis.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                                    phosphorelay response regulator activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    DNA-binding transcription factor activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">UniProt shows a response-regulator receiver domain, LuxR-type HTH domain, and phosphoacceptor Asp54.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO:0003677 DNA binding is too broad to be a useful core annotation for this protein.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cleanest GO additions are therefore GO:0000156 phosphorelay response regulator activity and GO:0003700 DNA-binding transcription factor activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term captures a core and well-supported role of GacA as the response-regulator arm of a two-component phosphorelay. The receiver domain and conserved phosphoacceptor residue are consistent with classic phosphorelay signaling, and the KT2440 literature treats GacS/GacA explicitly as a functional two-component system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the central biological-process annotation for GacA and is directly aligned with both sequence architecture and experimental interpretation in KT2440 studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Response-regulator receiver domain plus 4-aspartylphosphate at Asp54 support phosphorelay signaling.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">KT2440 literature consistently treats GacS/GacA as a two-component system governing surface-associated behaviors and other outputs.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GacA is clearly a transcription-related regulator, but this process term is very broad and does not capture the best supported KT2440 outputs. It is safer to keep it as non-core while using more specific added terms and core-function summaries to represent the reviewed biology.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong, but it is substantially less informative than phosphorelay response regulator activity and positive regulation of biofilm-associated programs.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Current GOA terms for phosphorelay signal transduction and transcription-related DNA binding are directionally correct, but broad transcription-regulation terms are non-core.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The cleanest GO additions are core response-regulator and biofilm-regulation terms, while broader transcription-regulation terms are non-core.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                                    GO:0000156
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay response regulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/gacA/gacA-notes.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0000156" data-r="file:PSEPK/gacA/gacA-notes.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most informative molecular-function term for GacA. The protein is a canonical receiver/output response regulator with a conserved phosphoacceptor and a DNA-binding output domain.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Response-regulator receiver domain, LuxR-type output domain, and phosphoacceptor Asp54 identify GacA as a phosphorelay response regulator.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Phosphorelay response regulator activity is a better core molecular-function summary than generic DNA binding.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/gacA/gacA-notes.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:0003700" data-r="file:PSEPK/gacA/gacA-notes.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GacA should be represented as a DNA-binding transcription factor rather than only by generic DNA-binding and transcription-regulation terms. This term summarizes the protein&#39;s output role in the two-component regulatory system.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">The C-terminal LuxR-type HTH domain supports transcription factor activity.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Literature and domain architecture support GacA as a DNA-binding transcription regulator, even though direct promoter targets remain incompletely mapped in KT2440.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900192" target="_blank" class="term-link">
+                                    GO:1900192
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of single-species biofilm formation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/gacA/gacA-notes.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88FJ6" data-a="GO:1900192" data-r="file:PSEPK/gacA/gacA-notes.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KT2440 and KT2442 literature directly connects the Gac system to adhesin-gene control and biofilm formation, making this the best supported specific biological-process term to add for the reviewed strain lineage.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The strongest direct KT2440 evidence places the Gac system upstream of adhesin expression and biofilm development.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacA/gacA-deep-research-codex.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The strongest direct KT2440 evidence links GacA to adhesin regulation, biofilm development, c-di-GMP-associated surface phenotypes, and positive regulation of the K1-T6SS.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GacA is the response-regulator output of the GacS/GacA two-component system. Phosphorelay signaling to the conserved Asp54 receiver module is coupled to a LuxR-type DNA-binding output domain that reprograms downstream gene expression.</h3>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="FUNCTION: GacA is the response-regulator output of the GacS/..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                            phosphorelay response regulator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">GacA has a response-regulator receiver domain, a LuxR-type HTH domain, and a phosphoacceptor Asp54.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">KT2440 literature consistently treats GacS/GacA as a two-component phosphorelay controlling lifestyle programs.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-deep-research-codex.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In the KT2440 lineage, GacA functions as an upstream transcriptional regulator that promotes surface-associated community behavior, including adhesin expression and biofilm development.</h3>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="FUNCTION: In the KT2440 lineage, GacA functions as an upstre..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900192" target="_blank" class="term-link">
+                                positive regulation of single-species biofilm formation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The lapA/lapF and biofilm-screen studies place the Gac system upstream of adhesin control and biofilm development in the KT2440 lineage.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">The HTH LuxR-type domain supports DNA-binding transcription factor activity.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacA/gacA-deep-research-codex.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The strongest direct KT2440 evidence links GacA to adhesin regulation and biofilm development.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-based electronic annotation correctly identifies a bacterial response regulator with transcription-related domains.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gacA/gacA-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes for gacA in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 literature best supports GacA as a phosphorelay response regulator that promotes biofilm-associated adhesin expression and other lifestyle outputs.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct KT2440 evidence is strongest for biofilm regulation and K1-T6SS regulation, while other outputs are more strain-specific.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GO:0003677 is too general; phosphorelay response regulator activity is a better core molecular-function summary.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gacA/gacA-deep-research-codex.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report for gacA in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The strongest direct KT2440 evidence links GacA to adhesin regulation, biofilm development, c-di-GMP-associated surface phenotypes, and positive regulation of the K1-T6SS.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator, but direct KT2440 promoter targets remain incompletely mapped.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gacA/gacA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88FJ6</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names the protein Response regulator GacA, records the gene name as uvrY, and assigns locus tag PP_4099.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein contains a response-regulator receiver domain, a LuxR-type HTH domain, and a predicted 4-aspartylphosphate residue at position 54.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 promoters or regulatory RNAs are direct binding targets of phosphorylated GacA?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="Q: Which KT2440 promoters or regulatory RNAs are dire..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is K1-T6SS control by GacA direct, or does it flow through Rsm, FleQ, RpoN, or other intermediate regulators?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="Q: Is K1-T6SS control by GacA direct, or does it flow..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What environmental or physiological signals activate GacS/GacA during surface growth and interbacterial competition in KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="Q: What environmental or physiological signals activa..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct an epitope-tagged functional GacA strain and perform ChIP-seq under planktonic, surface-grown, and stationary-phase conditions, ideally alongside a phosphomimetic or phosphodead allele to identify phosphorylation-dependent binding sites.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GacA directly binds a limited set of promoters or sRNA loci that seed the broader KT2440 Gac regulon.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="EXPERIMENT: Construct an epitope-tagged functional GacA strain..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare RNA-seq profiles of wild type, gacA loss-of-function, gacS loss-of-function, and phosphosite-mutant gacA strains during planktonic growth, surface attachment, and late growth, then integrate with promoter-reporter assays for lapA, lapF, rpoS, and the K1-T6SS promoters.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The biofilm and T6SS phenotypes attributed to GacA separate into direct and indirect branches of the regulon.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: RNA-seq and promoter-reporter analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="EXPERIMENT: Compare RNA-seq profiles of wild type, gacA loss-o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Complement a gacA mutant with wild-type, D54A, and D54E alleles and quantify biofilm biomass, lapA/lapF promoter activity, and K1-T6SS expression or competition phenotypes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Phosphorylation of Asp54 is required for the adhesin- and T6SS-regulatory outputs of GacA.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: targeted mutagenesis and phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88FJ6" data-a="EXPERIMENT: Complement a gacA mutant with wild-type, D54A, and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Codex</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gacA-deep-research-codex.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FJ6" data-a="DOC: Deep Research Codex" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="deep-research-report-gaca-psepk">Deep Research Report: gacA (PSEPK)</h1>
+<h2 id="gene-identity">Gene identity</h2>
+<p>The review target requested as <code>gacA</code> in <em>Pseudomonas putida</em> KT2440 maps to UniProt <code>Q88FJ6</code>. UniProt records the gene name as <code>uvrY</code>, the ordered locus name as <code>PP_4099</code>, and the protein name as "Response regulator GacA (Global activator)." The protein is 212 aa long and contains a receiver domain plus a C-terminal LuxR-type helix-turn-helix output domain, with a predicted phosphoacceptor Asp54. This is the expected architecture of a transcriptionally acting two-component response regulator. [file:PSEPK/gacA/gacA-uniprot.txt "RecName: Full=Response regulator GacA"] [file:PSEPK/gacA/gacA-uniprot.txt "DOMAIN          3..119"] [file:PSEPK/gacA/gacA-uniprot.txt "DOMAIN          141..206"] [file:PSEPK/gacA/gacA-uniprot.txt "MOD_RES         54"]</p>
+<h2 id="high-confidence-kt2440-functions">High-confidence KT2440 functions</h2>
+<h3 id="1-upstream-regulator-of-adhesin-expression-and-biofilm-development">1. Upstream regulator of adhesin expression and biofilm development</h3>
+<p>The most direct KT2440 evidence ties the Gac system to transcriptional control of the two major adhesin loci <code>lapA</code> and <code>lapF</code>, which organize the transition from early attachment to mature biofilm architecture. The key KT2440 paper states that both adhesin genes are controlled by GacS/GacA and describes the system as a master regulator of the biofilm program. <a href="https://pubmed.ncbi.nlm.nih.gov/24488315" title="Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA">PMID:24488315</a> <a href="https://pubmed.ncbi.nlm.nih.gov/24488315" title="The two-component system GacS/GacA appears as a master regulator of the process">PMID:24488315</a></p>
+<p>Independent support comes from a KT2442 mutant screen, where a <code>gacS</code> insertion produced a moderate biofilm defect. That does not isolate GacA biochemically, but it reinforces that the same two-component system contributes to biofilm development in the lab strain lineage. <a href="https://pubmed.ncbi.nlm.nih.gov/27190143" title="A mutation in gacS, encoding the sensor element of the GacS/GacA two-component system, also had a moderate effect on biofilm formation">PMID:27190143</a></p>
+<h3 id="2-contributor-to-c-di-gmp-associated-surface-phenotypes">2. Contributor to c-di-GMP-associated surface phenotypes</h3>
+<p>In KT2440, a genetic dissection of the high-c-di-GMP crinkly-colony phenotype recovered GacA as one of the global regulators needed for the lifestyle shift associated with elevated c-di-GMP. This places GacA in the regulatory network that connects phosphorelay signaling to surface-associated behavior. <a href="https://pubmed.ncbi.nlm.nih.gov/27489550" title="Among the bacterial determinants found in this screen are the global transcriptional regulators GacA, AlgU and FleQ">PMID:27489550</a></p>
+<p>The same paper also notes that GacS/GacA is essential for <code>rpoS</code> expression in KT2440, offering a mechanistic route by which GacA can influence broad stationary-phase and biofilm-associated outputs even when direct GacA promoter binding has not yet been mapped. <a href="https://pubmed.ncbi.nlm.nih.gov/27489550" title="the two component system GacS/GacA is essential for the expression of rpoS in KT2440">PMID:27489550</a></p>
+<h3 id="3-positive-regulator-of-k1-type-vi-secretion-system-expression">3. Positive regulator of K1 type VI secretion system expression</h3>
+<p>More recent KT2440 work extends the GacA regulon beyond biofilm-associated genes. The K1 type VI secretion system (T6SS), which supports interbacterial competition and plant-protective activity, is positively regulated by GacS-GacA and repressed by RetS. This indicates that GacA is part of a broader lifestyle-control module spanning both surface colonization and contact-dependent antagonism. <a href="https://pubmed.ncbi.nlm.nih.gov/36748579" title="expression of the K1-T6SS gene cluster is positively regulated by the GacS-GacA two-component regulatory system (TCS) and repressed by the RetS sensor kinase">PMID:36748579</a></p>
+<h2 id="conserved-mechanistic-interpretation">Conserved mechanistic interpretation</h2>
+<p>The broader Gac/Rsm literature describes GacA/UvrY proteins as phosphorelay-activated transcription regulators that trigger expression of one or more small RNAs, which then sequester Rsm/Csr translational repressors. This is the standard mechanistic framework for interpreting GacA-like regulators across gamma-proteobacteria. <a href="https://pubmed.ncbi.nlm.nih.gov/18047567" title="the conserved GacS/GacA (BarA/UvrY) two-component system positively controls the expression of one to five genes specifying small RNAs">PMID:18047567</a> <a href="https://pubmed.ncbi.nlm.nih.gov/11768529" title="GacS senses a still-unknown signal and activates, via a phosphorelay mechanism, the GacA transcription regulator, which in turn triggers the expression of target genes">PMID:11768529</a></p>
+<p>For KT2440 specifically, this framework is highly plausible, but I did not find direct evidence in the examined papers that identifies the precise small RNA promoters or demonstrates purified GacA binding to a defined target promoter. Because of that gap, the safest curation stance is:</p>
+<ul>
+<li>strong support for <code>phosphorelay signal transduction system</code></li>
+<li>strong support for <code>phosphorelay response regulator activity</code></li>
+<li>good support for transcription-factor-related DNA binding</li>
+<li>conservative treatment of direct promoter-binding claims in KT2440</li>
+</ul>
+<h2 id="strain-specific-downstream-outputs-outside-kt2440">Strain-specific downstream outputs outside KT2440</h2>
+<p>Other <em>P. putida</em> strains show the same regulatory module governing quorum sensing, cyclic lipopeptide biosynthesis, and carbon-storage/polymer phenotypes:</p>
+<ul>
+<li>WCS358: GacA positively regulates the <code>ppuI</code> quorum-sensing synthase. <a href="https://pubmed.ncbi.nlm.nih.gov/15345437" title="GacA positively regulating ppuI expression">PMID:15345437</a></li>
+<li>PCL1445: putisolvin biosynthesis depends on GacA/GacS. <a href="https://pubmed.ncbi.nlm.nih.gov/16109938" title="putisolvin biosynthesis of PCL1445 was found to be dependent on the GacA/GacS two-component signaling system">PMID:16109938</a></li>
+<li>RW10S2: WLIP production is downstream of a GacS-dependent branch. <a href="https://pubmed.ncbi.nlm.nih.gov/22544260" title="Expression of wlpR is dependent on gacS">PMID:22544260</a></li>
+<li>CA-3: PHA synthesis is connected to a GacS/GacA-rsm cascade. <a href="https://pubmed.ncbi.nlm.nih.gov/23291549" title="gene homologues of the GacS/GacA-rsm small RNA (sRNA) regulatory cascade">PMID:23291549</a></li>
+</ul>
+<p>These strain-level observations strengthen the interpretation of GacA as a pleiotropic lifestyle regulator, but they should not automatically be converted into KT2440-specific GO terms without direct support in the KT2440 lineage.</p>
+<h2 id="curation-summary">Curation summary</h2>
+<p>The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator and DNA-binding transcription regulator upstream of biofilm-associated adhesin control, c-di-GMP-linked surface behavior, and at least one antagonistic output (K1-T6SS). The cleanest GO additions are therefore <code>GO:0000156 phosphorelay response regulator activity</code>, <code>GO:0003700 DNA-binding transcription factor activity</code>, and <code>GO:1900192 positive regulation of single-species biofilm formation</code>, while keeping broader transcription-regulation terms as non-core.</p>
+<h2 id="remaining-uncertainties">Remaining uncertainties</h2>
+<ul>
+<li>Direct GacA DNA-binding targets in KT2440 remain incompletely mapped.</li>
+<li>The extent to which KT2440 outputs are mediated through canonical <code>rsmY/rsmZ</code>-type RNAs versus additional regulators is not clear from the examined literature.</li>
+<li>The signal sensed by GacS in KT2440 remains unresolved in the sources reviewed here.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gacA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88FJ6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gaca-notes">gacA notes</h1>
+<h2 id="identity-and-sequence-context">Identity and sequence context</h2>
+<ul>
+<li>The requested <code>gacA</code> locus in <em>Pseudomonas putida</em> KT2440 maps to UniProt <code>Q88FJ6</code>; UniProt records the gene name as <code>uvrY</code>, the locus tag as <code>PP_4099</code>, and the protein name as "Response regulator GacA (Global activator)." The protein is 212 aa long. [file:PSEPK/gacA/gacA-uniprot.txt "GN   Name=uvrY ... OrderedLocusNames=PP_4099 ... DE   RecName: Full=Response regulator GacA ... AltName: Full=Global activator"]</li>
+<li>Domain architecture is consistent with a classic DNA-binding two-component response regulator: an N-terminal response-regulator receiver domain, a C-terminal LuxR-type helix-turn-helix DNA-binding domain, and a predicted phosphoacceptor Asp54. [file:PSEPK/gacA/gacA-uniprot.txt "FT   DOMAIN          3..119 /note=\"Response regulatory\" ... FT   DOMAIN          141..206 /note=\"HTH luxR-type\" ... FT   MOD_RES         54 /note=\"4-aspartylphosphate\""]</li>
+</ul>
+<h2 id="kt2440-focused-functional-evidence">KT2440-focused functional evidence</h2>
+<ul>
+<li>The strongest direct KT2440 evidence places the Gac system upstream of adhesin expression and biofilm development. The lapA/lapF study states that "Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA" and concludes that "The two-component system GacS/GacA appears as a master regulator of the process" of biofilm formation in <em>P. putida</em>. <a href="https://pubmed.ncbi.nlm.nih.gov/24488315" title="Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA">PMID:24488315</a> <a href="https://pubmed.ncbi.nlm.nih.gov/24488315" title="The two-component system GacS/GacA appears as a master regulator of the process">PMID:24488315</a></li>
+<li>A KT2442 mutant screen recovered a <code>gacS</code> insertion as a moderate biofilm-defective mutant, reinforcing that the Gac system contributes to biofilm development in the KT2440/KT2442 lineage. <a href="https://pubmed.ncbi.nlm.nih.gov/27190143" title="A mutation in gacS, encoding the sensor element of the GacS/GacA two-component system, also had a moderate effect on biofilm formation">PMID:27190143</a></li>
+<li>A KT2440 c-di-GMP regulatory-network study identified GacA among the global regulators needed for the high-c-di-GMP crinkly/biofilm phenotype. The discussion also states that in KT2440 the GacS/GacA system is essential for <code>rpoS</code> expression, which provides a plausible route by which this regulator affects broad lifestyle programs. <a href="https://pubmed.ncbi.nlm.nih.gov/27489550" title="Among the bacterial determinants found in this screen are the global transcriptional regulators GacA, AlgU and FleQ">PMID:27489550</a> <a href="https://pubmed.ncbi.nlm.nih.gov/27489550" title="the two component system GacS/GacA is essential for the expression of rpoS in KT2440">PMID:27489550</a></li>
+<li>A 2023 KT2440 study expanded the phenotype space beyond biofilm control and found that K1 type VI secretion system expression is positively regulated by GacS-GacA and opposed by RetS. <a href="https://pubmed.ncbi.nlm.nih.gov/36748579" title="Importantly, expression of the K1-T6SS gene cluster is positively regulated by the GacS-GacA two-component regulatory system (TCS) and repressed by the RetS sensor kinase, which inhibits this TCS">PMID:36748579</a></li>
+</ul>
+<h2 id="broader-gacrsm-interpretation">Broader Gac/Rsm interpretation</h2>
+<ul>
+<li>Reviews of the Gac/Rsm cascade describe GacA/UvrY-family proteins as phosphorelay-activated transcription regulators that induce small RNAs, antagonize Rsm/Csr proteins, and thereby reprogram social behavior and secondary metabolism. This is useful mechanistic context, but strain-specific outputs should not be transferred uncritically into KT2440 curation. <a href="https://pubmed.ncbi.nlm.nih.gov/18047567" title="the conserved GacS/GacA (BarA/UvrY) two-component system positively controls the expression of one to five genes specifying small RNAs">PMID:18047567</a> <a href="https://pubmed.ncbi.nlm.nih.gov/11768529" title="GacS senses a still-unknown signal and activates, via a phosphorelay mechanism, the GacA transcription regulator, which in turn triggers the expression of target genes">PMID:11768529</a></li>
+<li>Other <em>P. putida</em> strains show the same regulator controlling diverse downstream programs: quorum-sensing gene expression in WCS358, putisolvin biosynthesis in PCL1445, WLIP biosynthesis in RW10S2, and PHA accumulation in CA-3. These support the view that GacA is a pleiotropic lifestyle regulator, but they are secondary to the KT2440-specific biofilm and T6SS evidence. <a href="https://pubmed.ncbi.nlm.nih.gov/15345437" title="GacA positively regulating ppuI expression">PMID:15345437</a> <a href="https://pubmed.ncbi.nlm.nih.gov/16109938" title="putisolvin biosynthesis of PCL1445 was found to be dependent on the GacA/GacS two-component signaling system">PMID:16109938</a> <a href="https://pubmed.ncbi.nlm.nih.gov/22544260" title="Expression of wlpR is dependent on gacS">PMID:22544260</a> <a href="https://pubmed.ncbi.nlm.nih.gov/23291549" title="gene homologues of the GacS/GacA-rsm small RNA (sRNA) regulatory cascade">PMID:23291549</a></li>
+</ul>
+<h2 id="curation-takeaways">Curation takeaways</h2>
+<ul>
+<li>Current GOA terms for phosphorelay signal transduction and transcription-related DNA binding are directionally correct.</li>
+<li><code>GO:0003677 DNA binding</code> is too broad to be a useful core annotation for this protein; <code>GO:0000156 phosphorelay response regulator activity</code> and <code>GO:0003700 DNA-binding transcription factor activity</code> are more informative.</li>
+<li>The best supported KT2440-specific process term to add is <code>GO:1900192 positive regulation of single-species biofilm formation</code>.</li>
+<li>K1-T6SS regulation is real and experimentally supported in KT2440, but I am treating it as secondary/non-core until direct GacA target promoters are mapped in this strain.</li>
+<li>I did not find direct KT2440 evidence in the examined sources showing purified GacA binding a specific promoter or explicitly identifying the cognate <code>rsmY</code>/<code>rsmZ</code>-like promoters. Any direct promoter-binding language in the review should therefore stay conservative.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88FJ6
+gene_symbol: gacA
+aliases:
+  - uvrY
+  - PP_4099
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: GacA is the response regulator output of the GacS/GacA two-component
+  regulatory system in Pseudomonas putida KT2440. Domain architecture and the
+  conserved phosphoacceptor Asp54 support a phosphorelay-activated DNA-binding
+  transcription regulator. In KT2440, the strongest direct evidence links the Gac
+  system to transcriptional control of adhesin genes important for biofilm development,
+  broader c-di-GMP-associated surface behaviors, and positive regulation of the
+  K1 type VI secretion system.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms.
+    findings:
+      - statement: InterPro-based electronic annotation correctly identifies a bacterial response regulator with transcription-related domains.
+  - id: file:PSEPK/gacA/gacA-notes.md
+    title: Curator notes for gacA in Pseudomonas putida KT2440
+    findings:
+      - statement: KT2440 literature best supports GacA as a phosphorelay response regulator that promotes biofilm-associated adhesin expression and other lifestyle outputs.
+      - statement: Direct KT2440 evidence is strongest for biofilm regulation and K1-T6SS regulation, while other outputs are more strain-specific.
+      - statement: GO:0003677 is too general; phosphorelay response regulator activity is a better core molecular-function summary.
+  - id: file:PSEPK/gacA/gacA-deep-research-codex.md
+    title: Deep research report for gacA in Pseudomonas putida KT2440
+    findings:
+      - statement: The strongest direct KT2440 evidence links GacA to adhesin regulation, biofilm development, c-di-GMP-associated surface phenotypes, and positive regulation of the K1-T6SS.
+      - statement: The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator, but direct KT2440 promoter targets remain incompletely mapped.
+  - id: file:PSEPK/gacA/gacA-uniprot.txt
+    title: UniProt entry Q88FJ6
+    findings:
+      - statement: UniProt names the protein Response regulator GacA, records the gene name as uvrY, and assigns locus tag PP_4099.
+      - statement: The protein contains a response-regulator receiver domain, a LuxR-type HTH domain, and a predicted 4-aspartylphosphate residue at position 54.
+existing_annotations:
+  - term:
+      id: GO:0000976
+      label: transcription cis-regulatory region binding
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: This is a reasonable computational annotation for a LuxR-family
+        DNA-binding response regulator. The KT2440 literature does not yet provide
+        direct promoter-binding data for GacA itself, but domain architecture and
+        transcriptional regulator function support retention of this term.
+      action: ACCEPT
+      reason: The term is informative, consistent with the HTH LuxR-type output
+        domain, and not contradicted by the reviewed literature.
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+          supporting_text: HTH luxR-type output domain and phosphoaccepting receiver domain identify GacA as a DNA-binding response regulator.
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: Existing GOA terms for transcription-related DNA binding are directionally correct.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator, but direct KT2440 promoter targets remain incompletely mapped.
+  - term:
+      id: GO:0003677
+      label: DNA binding
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: DNA binding is true for GacA, but this term is too broad to be a useful
+        core annotation for a two-component transcription regulator. More informative
+        replacements capture both the response-regulator nature of the protein and
+        its role as a DNA-binding transcription factor.
+      action: MODIFY
+      reason: The annotation is correct in essence but overly general compared with
+        more specific terms already supported by domain architecture and literature synthesis.
+      proposed_replacement_terms:
+        - id: GO:0000156
+          label: phosphorelay response regulator activity
+        - id: GO:0003700
+          label: DNA-binding transcription factor activity
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+          supporting_text: UniProt shows a response-regulator receiver domain, LuxR-type HTH domain, and phosphoacceptor Asp54.
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: GO:0003677 DNA binding is too broad to be a useful core annotation for this protein.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The cleanest GO additions are therefore GO:0000156 phosphorelay response regulator activity and GO:0003700 DNA-binding transcription factor activity.
+  - term:
+      id: GO:0000160
+      label: phosphorelay signal transduction system
+    qualifier: involved_in
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: This term captures a core and well-supported role of GacA as the response-regulator
+        arm of a two-component phosphorelay. The receiver domain and conserved phosphoacceptor
+        residue are consistent with classic phosphorelay signaling, and the KT2440 literature
+        treats GacS/GacA explicitly as a functional two-component system.
+      action: ACCEPT
+      reason: This is the central biological-process annotation for GacA and is directly aligned
+        with both sequence architecture and experimental interpretation in KT2440 studies.
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+          supporting_text: Response-regulator receiver domain plus 4-aspartylphosphate at Asp54 support phosphorelay signaling.
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: KT2440 literature consistently treats GacS/GacA as a two-component system governing surface-associated behaviors and other outputs.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.
+  - term:
+      id: GO:0006355
+      label: regulation of DNA-templated transcription
+    qualifier: involved_in
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: GacA is clearly a transcription-related regulator, but this process
+        term is very broad and does not capture the best supported KT2440 outputs.
+        It is safer to keep it as non-core while using more specific added terms
+        and core-function summaries to represent the reviewed biology.
+      action: KEEP_AS_NON_CORE
+      reason: The term is not wrong, but it is substantially less informative than
+        phosphorelay response regulator activity and positive regulation of biofilm-associated programs.
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: Current GOA terms for phosphorelay signal transduction and transcription-related DNA binding are directionally correct, but broad transcription-regulation terms are non-core.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The cleanest GO additions are core response-regulator and biofilm-regulation terms, while broader transcription-regulation terms are non-core.
+  - term:
+      id: GO:0000156
+      label: phosphorelay response regulator activity
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/gacA/gacA-notes.md
+    review:
+      summary: This is the most informative molecular-function term for GacA. The
+        protein is a canonical receiver/output response regulator with a conserved
+        phosphoacceptor and a DNA-binding output domain.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+          supporting_text: Response-regulator receiver domain, LuxR-type output domain, and phosphoacceptor Asp54 identify GacA as a phosphorelay response regulator.
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: Phosphorelay response regulator activity is a better core molecular-function summary than generic DNA binding.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.
+  - term:
+      id: GO:0003700
+      label: DNA-binding transcription factor activity
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/gacA/gacA-notes.md
+    review:
+      summary: GacA should be represented as a DNA-binding transcription factor rather
+        than only by generic DNA-binding and transcription-regulation terms. This
+        term summarizes the protein&#39;s output role in the two-component regulatory system.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+          supporting_text: The C-terminal LuxR-type HTH domain supports transcription factor activity.
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: Literature and domain architecture support GacA as a DNA-binding transcription regulator, even though direct promoter targets remain incompletely mapped in KT2440.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The broader Gac/Rsm model supports interpreting GacA as a phosphorelay-activated transcription regulator.
+  - term:
+      id: GO:1900192
+      label: positive regulation of single-species biofilm formation
+    qualifier: involved_in
+    evidence_type: IEA
+    original_reference_id: file:PSEPK/gacA/gacA-notes.md
+    review:
+      summary: KT2440 and KT2442 literature directly connects the Gac system to
+        adhesin-gene control and biofilm formation, making this the best supported
+        specific biological-process term to add for the reviewed strain lineage.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/gacA/gacA-notes.md
+          supporting_text: The strongest direct KT2440 evidence places the Gac system upstream of adhesin expression and biofilm development.
+        - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+          supporting_text: The strongest direct KT2440 evidence links GacA to adhesin regulation, biofilm development, c-di-GMP-associated surface phenotypes, and positive regulation of the K1-T6SS.
+core_functions:
+  - description: GacA is the response-regulator output of the GacS/GacA two-component
+      system. Phosphorelay signaling to the conserved Asp54 receiver module is coupled
+      to a LuxR-type DNA-binding output domain that reprograms downstream gene expression.
+    molecular_function:
+      id: GO:0000156
+      label: phosphorelay response regulator activity
+    directly_involved_in:
+      - id: GO:0000160
+        label: phosphorelay signal transduction system
+    supported_by:
+      - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+        supporting_text: GacA has a response-regulator receiver domain, a LuxR-type HTH domain, and a phosphoacceptor Asp54.
+      - reference_id: file:PSEPK/gacA/gacA-notes.md
+        supporting_text: KT2440 literature consistently treats GacS/GacA as a two-component phosphorelay controlling lifestyle programs.
+      - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+        supporting_text: The most defensible core picture for KT2440 is that GacA is a phosphorelay response regulator.
+  - description: In the KT2440 lineage, GacA functions as an upstream transcriptional
+      regulator that promotes surface-associated community behavior, including
+      adhesin expression and biofilm development.
+    molecular_function:
+      id: GO:0003700
+      label: DNA-binding transcription factor activity
+    directly_involved_in:
+      - id: GO:1900192
+        label: positive regulation of single-species biofilm formation
+    supported_by:
+      - reference_id: file:PSEPK/gacA/gacA-notes.md
+        supporting_text: The lapA/lapF and biofilm-screen studies place the Gac system upstream of adhesin control and biofilm development in the KT2440 lineage.
+      - reference_id: file:PSEPK/gacA/gacA-uniprot.txt
+        supporting_text: The HTH LuxR-type domain supports DNA-binding transcription factor activity.
+      - reference_id: file:PSEPK/gacA/gacA-deep-research-codex.md
+        supporting_text: The strongest direct KT2440 evidence links GacA to adhesin regulation and biofilm development.
+proposed_new_terms: []
+suggested_questions:
+  - question: Which KT2440 promoters or regulatory RNAs are direct binding targets of phosphorylated GacA?
+  - question: Is K1-T6SS control by GacA direct, or does it flow through Rsm, FleQ, RpoN, or other intermediate regulators?
+  - question: What environmental or physiological signals activate GacS/GacA during surface growth and interbacterial competition in KT2440?
+suggested_experiments:
+  - hypothesis: GacA directly binds a limited set of promoters or sRNA loci that seed the broader KT2440 Gac regulon.
+    description: Construct an epitope-tagged functional GacA strain and perform ChIP-seq under planktonic, surface-grown, and stationary-phase conditions, ideally alongside a phosphomimetic or phosphodead allele to identify phosphorylation-dependent binding sites.
+    experiment_type: ChIP-seq
+  - hypothesis: The biofilm and T6SS phenotypes attributed to GacA separate into direct and indirect branches of the regulon.
+    description: Compare RNA-seq profiles of wild type, gacA loss-of-function, gacS loss-of-function, and phosphosite-mutant gacA strains during planktonic growth, surface attachment, and late growth, then integrate with promoter-reporter assays for lapA, lapF, rpoS, and the K1-T6SS promoters.
+    experiment_type: RNA-seq and promoter-reporter analysis
+  - hypothesis: Phosphorylation of Asp54 is required for the adhesin- and T6SS-regulatory outputs of GacA.
+    description: Complement a gacA mutant with wild-type, D54A, and D54E alleles and quantify biofilm biomass, lapA/lapF promoter activity, and K1-T6SS expression or competition phenotypes.
+    experiment_type: targeted mutagenesis and phenotyping
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

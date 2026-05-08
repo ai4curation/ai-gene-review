@@ -1,0 +1,2610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CHL1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9LUJ8" target="_blank" class="term-link">
+                        Q9LUJ8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">CHS1-LIKE 1</span>
+                    
+                    <span class="badge">At5g40090</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CHL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9LUJ8" data-a="DESCRIPTION: CHL1 (CHS1-Like 1, At5g40090) is a truncated TIR-N..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CHL1 (CHS1-Like 1, At5g40090) is a truncated TIR-NBS immune receptor that lacks a leucine-rich repeat (LRR) domain. It belongs to a class of atypical NLR proteins (TN proteins) that function as adaptors or regulators within the plant immune system, often pairing with neighboring full-length TNL receptors. Its paralog CHS1 (At1g17610) was identified through a chilling-sensitive mutant screen; overexpression of either CHS1 or CHL1 alleviates chilling damage and enhances plant growth at both moderate and cold temperatures. The TIR domain possesses NAD+ hydrolase (NADase) enzymatic activity (EC 3.2.2.6), generating small-molecule signals that activate the EDS1-PAD4-ADR1 immune signaling node. CHL1 limits chloroplast damage and cell death at low temperatures, integrating temperature sensing with innate immune signaling pathways. The chilling phenotype of the paralog chs1 mutant depends on EDS1 and PAD4 defense regulators, and requires the neighboring TNL gene SOC3, establishing a paired immune receptor mechanism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043531" target="_blank" class="term-link">
+                                    GO:0043531
+                                </a>
+                            </span>
+                            <span class="term-label">ADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0043531" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ADP binding is inferred from the NB-ARC domain (IPR002182). NB-ARC domains are nucleotide-binding switches that cycle between ADP-bound (inactive) and ATP-bound (active) states to regulate NLR activation. ADP binding is a genuine molecular function of the NB-ARC domain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ADP binding is a well-established function of NB-ARC domains in plant NLR proteins. The NB-ARC domain acts as a molecular switch gating immune activation. This IEA annotation from InterPro is correct.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061809" target="_blank" class="term-link">
+                                    GO:0061809
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ nucleosidase activity, cyclic ADP-ribose generating</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0061809" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ nucleosidase activity is inferred from the EC number 3.2.2.6 assigned to this protein. Plant TIR domains have been shown to possess NADase enzymatic activity, cleaving NAD+ to produce signaling molecules including pRib-AMP, pRib-ADP, di-ADPR, and ADPr-ATP that activate downstream immune signaling through EDS1-PAD4 heterodimers.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TIR domain NADase activity is now well-established for plant NLR proteins. The enzymatic activity requires TIR domain self-association and oligomerization. This is a core molecular function of TIR-containing immune receptors. While the specific cyclic ADP-ribose generating subtype (GO:0061809) may be slightly narrower than the full range of TIR NADase products, it captures the key enzymatic function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                                        PMID:23617639
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The sequence of another TIR-NBS gene (At5g40090) named CHL1 (CHS1-like 1) is related to that of CHS1</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0006952" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Defense response is inferred from the disease resistance protein family membership (IPR044974). CHL1 is classified as a disease resistance protein based on its TIR-NB-ARC domain architecture. The paralog CHS1 mutant activates defense-associated phenotypes including SA accumulation and PR gene expression at low temperatures, and the chilling sensitivity requires defense regulators EDS1 and PAD4.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While CHL1 has not been directly shown to mediate pathogen resistance, its domain architecture, family membership, and the defense-associated phenotypes of its paralog CHS1 strongly support involvement in defense response. The defense signaling pathway (EDS1/PAD4 dependence) is experimentally validated for the CHS1 paralog.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                                        PMID:23617639
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">chs1-1 chilling sensitivity requires the TIR-NBS-LRR and basal resistance regulators encoded by EDS1 and PAD4</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Signal transduction is inferred from the TIR domain (IPR000157). TIR domains mediate intracellular immune signaling by generating NAD+ cleavage products that activate downstream EDS1-PAD4-ADR1 signaling complexes.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TIR domain-mediated signal transduction is a well-characterized function of plant immune receptors. The TIR domain generates enzymatic products that serve as signaling molecules to activate downstream immune pathways.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27699788" target="_blank" class="term-link">
+                                        PMID:27699788
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the TN protein CHS1 interacts with the TNL protein SOC3 to modulate temperature-dependent autoimmunity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is annotated from UniProt subcellular location data. Plant NLR proteins are typically cytoplasmic, where they function as intracellular immune receptors.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic localization is consistent with the known biology of plant NLR immune receptors, which function as intracellular surveillance proteins.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009507" target="_blank" class="term-link">
+                                    GO:0009507
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000122
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0009507" data-r="GO_REF:0000122" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chloroplast localization is predicted by TAIR computational methods. CHL1/CHS1 function involves limiting chloroplast damage at low temperatures, so chloroplast proximity or association is biologically plausible, though direct experimental localization data is lacking.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The ISM prediction is plausible given that CHS1/CHL1 function involves protection of chloroplasts from chilling damage. However, this is a computational prediction without direct experimental support for CHL1 localization to chloroplasts. Keep as non-core pending experimental validation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                                        PMID:23617639
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">alterations in photosynthetic complexes and thylakoid membrane integrity precede leaf cell death</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009409" target="_blank" class="term-link">
+                                    GO:0009409
+                                </a>
+                            </span>
+                            <span class="term-label">response to cold</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23617639
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A TIR-NBS protein encoded by Arabidopsis Chilling Sensitive ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9LUJ8" data-a="GO:0009409" data-r="PMID:23617639" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Overexpression of CHL1 alleviates chilling damage and enhances plant growth at low temperatures. The paralog CHS1 was identified in a chilling-sensitive mutant screen, and CHL1 has the same protective function when overexpressed. This establishes CHL1 as involved in the response to cold.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Response to cold is the primary experimentally characterized function of CHL1. Overexpression experiments show CHL1 alleviates chilling damage. This annotation is missing from the current GOA and should be added. Supported by deep research analysis in CHL1-deep-research-bioreason-sft.md which correctly identified the TIR-NBS domain architecture underlying this function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                                        PMID:23617639
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances plant growth at moderate (24°C) and chilling (13°C) temperatures</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/CHL1/CHL1-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">[BioReason correctly identified TIR-NB-ARC domain architecture consistent with immune/stress response function]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD+ hydrolase activity through the TIR domain, generating signaling molecules (pRib-AMP, di-ADPR) that activate the EDS1-PAD4-ADR1 immune signaling node. Acts as a truncated TIR-NBS adaptor/regulator, pairing with full-length TNL receptors to integrate temperature sensing with innate immune signaling. Limits chloroplast damage and cell death at low temperatures.</h3>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="FUNCTION: NAD+ hydrolase activity through the TIR domain, ge..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061809" target="_blank" class="term-link">
+                            NAD+ nucleosidase activity, cyclic ADP-ribose generating
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                defense response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009409" target="_blank" class="term-link">
+                                response to cold
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                                PMID:23617639
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances plant growth at moderate (24°C) and chilling (13°C) temperatures</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27699788" target="_blank" class="term-link">
+                                PMID:27699788
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CHS1 interacted with the NB and LRR domains of SOC3; however, mutated chs1 interacted with the TIR, NB and LRR domains of SOC3 in vitro and in vivo</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through UniProt Subcellular Localization</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation by TAIR computational methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23617639" target="_blank" class="term-link">
+                            PMID:23617639
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A TIR-NBS protein encoded by Arabidopsis Chilling Sensitive 1 (CHS1) limits chloroplast damage and cell death at low temperature.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHS1 (At1g17610) and its paralog CHL1 (At5g40090) are TIR-NBS proteins that limit chloroplast damage and cell death at low temperature.</div>
+                        
+                        <div class="finding-text">"Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances plant growth at moderate (24°C) and chilling (13°C) temperatures"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The chilling-sensitive phenotype depends on defense regulators EDS1 and PAD4.</div>
+                        
+                        <div class="finding-text">"chs1-1 chilling sensitivity requires the TIR-NBS-LRR and basal resistance regulators encoded by EDS1 and PAD4 but not salicylic acid"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23651299" target="_blank" class="term-link">
+                            PMID:23651299
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A missense mutation in CHS1, a TIR-NB protein, induces chilling sensitivity in Arabidopsis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHS1 protein stability is positively regulated by low temperature independently of the 26S proteasome pathway.</div>
+                        
+                        <div class="finding-text">"the stability of the CHS1 protein was positively regulated by low temperatures independently of the 26S proteasome pathway"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27699788" target="_blank" class="term-link">
+                            PMID:27699788
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Temperature-dependent autoimmunity mediated by chs1 requires its neighboring TNL gene SOC3.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHS1 physically interacts with the neighboring TNL gene SOC3 to form a paired immune receptor complex.</div>
+                        
+                        <div class="finding-text">"CHS1 interacted with the NB and LRR domains of SOC3; however, mutated chs1 interacted with the TIR, NB and LRR domains of SOC3 in vitro and in vivo"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of SOC3 completely suppresses the chilling-sensitive phenotype of chs1-2.</div>
+                        
+                        <div class="finding-text">"downregulation of SOC3 by an artificial microRNA construct fully rescued the chilling sensitivity and defense defects of chs1-2"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CHL1/CHL1-deep-research-bioreason-sft.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BioReason SFT deep research prediction for CHL1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">BioReason correctly identifies TIR-NB-ARC domain architecture and plant immune receptor classification.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/CHL1/CHL1-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual research notes for CHL1 review</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CHL1 (At5g40090) pair with a specific neighboring TNL receptor analogous to the CHS1-SOC3 pairing? If so, what is the identity of the partner TNL and what pathogen or stress signal does the complex detect?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="Q: Does CHL1 (At5g40090) pair with a specific neighbo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise subcellular localization of CHL1? Is it cytoplasmic, chloroplast-associated, or does it shuttle between compartments in response to cold stress?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="Q: What is the precise subcellular localization of CH..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does CHL1 possess NADase activity in vitro, and if so, what are the specific products generated (pRib-AMP, di-ADPR, etc.)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="Q: Does CHL1 possess NADase activity in vitro, and if..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant CHL1 TIR domain. Perform in vitro NADase assays with NAD+ substrate, analyzing products by LC-MS. Compare activity of wild-type vs catalytic mutant (E/A mutation in conserved TIR catalytic residue). Test whether TIR domain self-association is required for activity by comparing monomeric vs oligomeric protein preparations.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CHL1 has NADase activity that generates immune signaling molecules.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: biochemical assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="EXPERIMENT: Express and purify recombinant CHL1 TIR domain. Pe..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform co-immunoprecipitation experiments using tagged CHL1 expressed under its native promoter. Identify interacting partners by mass spectrometry. Test candidate neighboring TNL genes by genetic epistasis (knockout of neighboring TNLs should suppress any chl1 gain-of-function phenotypes).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CHL1 pairs with a neighboring TNL receptor to form a functional immune complex.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein interaction and genetic analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9LUJ8" data-a="EXPERIMENT: Perform co-immunoprecipitation experiments using t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+            
+            <span class="badge">plant-immunity</span>
+            
+            <span class="badge">NLR</span>
+            
+            <span class="badge">TIR-NBS</span>
+            
+            <span class="badge">truncated-NLR</span>
+            
+            <span class="badge">cold-stress</span>
+            
+        </div>
+    </div>
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CHL1-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9LUJ8" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="nl">provider:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="nl">model:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="nl">source:</span><span class="w"> </span><span class="n">huggingface</span><span class="p">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="nl">date:</span><span class="w"> </span><span class="p">&#39;</span><span class="mh">2026</span><span class="o">-</span><span class="mh">04</span><span class="o">-</span><span class="mh">04</span><span class="p">&#39;</span>
+<span class="nl">uniprot_id:</span><span class="w"> </span><span class="n">Q9LUJ8</span>
+<span class="nl">gene:</span><span class="w"> </span><span class="n">CHL1</span>
+<span class="nl">organism:</span><span class="w"> </span><span class="n">Arabidopsis</span><span class="w"> </span><span class="n">thaliana</span><span class="w"> </span><span class="p">(</span><span class="n">Mouse</span><span class="o">-</span><span class="n">ear</span><span class="w"> </span><span class="n">cress</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="p">##</span><span class="w"> </span><span class="n">Thinking</span><span class="w"> </span><span class="n">Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="k">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">architecture</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminus</span><span class="w"> </span><span class="n">carries</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Toll</span><span class="o">/</span><span class="n">interleukin</span><span class="o">-</span><span class="mh">1</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="n">captured</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR035897</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">12</span><span class="err">–</span><span class="mh">140</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mh">15</span><span class="err">–</span><span class="mh">171</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">specifically</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR000157</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="w"> </span><span class="n">domain</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">16</span><span class="err">–</span><span class="mh">170</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mh">20</span><span class="err">–</span><span class="mh">175</span><span class="p">).</span><span class="w"> </span><span class="n">This</span><span class="w"> </span><span class="n">tandem</span><span class="w"> </span><span class="n">superfamily</span><span class="o">/</span><span class="n">domain</span><span class="w"> </span><span class="n">coverage</span><span class="w"> </span><span class="n">indicates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">canonical</span><span class="w"> </span><span class="n">plant</span><span class="w"> </span><span class="n">TIR</span><span class="w"> </span><span class="k">module</span><span class="w"> </span><span class="n">positioned</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">extreme</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminus</span><span class="p">.</span><span class="w"> </span><span class="n">Immediately</span><span class="w"> </span><span class="n">downstream</span><span class="p">,</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">sequence</span><span class="w"> </span><span class="n">transitions</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="w"> </span><span class="n">NTPase</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="n">defined</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR027417</span><span class="w"> </span><span class="p">(</span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="w"> </span><span class="n">containing</span><span class="w"> </span><span class="n">nucleoside</span><span class="w"> </span><span class="n">triphosphate</span><span class="w"> </span><span class="n">hydrolase</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">172</span><span class="err">–</span><span class="mh">324</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="mh">178</span><span class="err">–</span><span class="mh">409</span><span class="p">),</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">well</span><span class="o">-</span><span class="n">delimited</span><span class="w"> </span><span class="n">IPR002182</span><span class="w"> </span><span class="n">NB</span><span class="o">-</span><span class="n">ARC</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">residues</span><span class="w"> </span><span class="mh">199</span><span class="err">–</span><span class="mh">348</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">IPR003593</span><span class="w"> </span><span class="n">AAA</span><span class="o">+</span><span class="w"> </span><span class="n">ATPase</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">residues</span><span class="w"> </span><span class="mh">202</span><span class="err">–</span><span class="mh">332</span><span class="p">).</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">region</span><span class="w"> </span><span class="n">includes</span><span class="w"> </span><span class="n">IPR042197</span><span class="w"> </span><span class="p">(</span><span class="n">Apoptotic</span><span class="w"> </span><span class="n">protease</span><span class="o">-</span><span class="n">activating</span><span class="w"> </span><span class="n">factors</span><span class="p">,</span><span class="w"> </span><span class="n">helical</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">331</span><span class="err">–</span><span class="mh">412</span><span class="p">),</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">helical</span><span class="w"> </span><span class="n">scaffold</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">stabilizes</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">nucleotide</span><span class="o">-</span><span class="n">bound</span><span class="w"> </span><span class="n">switch</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">oligomerization</span><span class="w"> </span><span class="n">interfaces</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">NB</span><span class="o">-</span><span class="n">ARC</span><span class="o">/</span><span class="n">Apaf</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">assemblies</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">entire</span><span class="w"> </span><span class="n">polypeptide</span><span class="w"> </span><span class="n">is</span><span class="w"> </span><span class="n">classified</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR044974</span><span class="w"> </span><span class="p">(</span><span class="n">Disease</span><span class="w"> </span><span class="n">resistance</span><span class="w"> </span><span class="n">protein</span><span class="p">,</span><span class="w"> </span><span class="n">plants</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mh">18</span><span class="err">–</span><span class="mh">402</span><span class="p">),</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">unifies</span><span class="w"> </span><span class="n">these</span><span class="w"> </span><span class="n">modules</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">plant</span><span class="w"> </span><span class="n">immune</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">TIR</span><span class="err">–</span><span class="n">NB</span><span class="o">-</span><span class="n">ARC</span><span class="w"> </span><span class="n">class</span><span class="p">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="n">layout</span><span class="err">—</span><span class="n">TIR</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminus</span><span class="w"> </span><span class="n">followed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">NB</span><span class="o">-</span><span class="n">ARC</span><span class="o">/</span><span class="n">AAA</span><span class="o">+</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="w"> </span><span class="n">engine</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">helical</span><span class="w"> </span><span class="n">scaffold</span><span class="err">—</span><span class="n">creates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">remains</span><span class="w"> </span><span class="n">autoinhibited</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">absence</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">stimulus</span><span class="w"> </span><span class="k">and</span><span class="p">,</span><span class="w"> </span><span class="n">upon</span><span class="w"> </span><span class="n">activation</span><span class="p">,</span><span class="w"> </span><span class="n">oligomerizes</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">exposes</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">effector</span><span class="w"> </span><span class="n">surfaces</span><span class="p">.</span>
+</code></pre></div>
+
+<p>This architecture causes a molecular function centered on regulated protein binding (GO:0005515). The TIR domain provides a docking surface for downstream immune adaptors, while the NB-ARC/AAA+ core drives conformational switching and multimerization, thereby increasing avidity for partner proteins. The P-loop NTPase cycle gates assembly: ATP-bound states favor the active oligomer, and ADP-bound states favor the inactive monomer, ensuring stimulus-coupled protein–protein interactions.</p>
+<p>At the process level, such a TIR–NB-ARC receptor is a trigger for immune signaling. Oligomerization of the NB-ARC core exposes the TIR domain, which then recruits signaling partners to initiate defense pathways. This mechanism directly supports roles in defense response to fungus (GO:0050832) and defense response to bacterium (GO:0042742). The same signaling cascade is known to culminate in localized programmed cell death to contain infection, aligning with positive regulation of cell death (GO:0010942). The presence of a TIR domain suggests engagement of TIR-dependent pathways that can activate transcriptional defenses and cell death programs; the NB-ARC switch ensures that these outputs are tightly coupled to pathogen perception.</p>
+<p>Cellular localization follows from the signaling logic and the provided compartment label. The GO:0005739 mitochondrion placement is consistent with immune receptor activation at or near mitochondria, where signaling nodes for reactive oxygen species production and death control assemble. The NB-ARC helical domain (Apaf-like) further supports mitochondrial proximity, as Apaf-like assemblies often interface with mitochondrial signaling hubs. Thus, a mitochondrial locale provides the platform for rapid conversion of receptor activation into oxidative and transcriptional outputs that drive defense and cell death.</p>
+<p>From this, a mechanistic hypothesis emerges. In the resting state, the NB-ARC holds the TIR domain in a closed conformation. Pathogen-derived effectors or host guardees perturb this equilibrium, allowing the NB-ARC/AAA+ module to bind and hydrolyze NTPs, driving oligomerization. The exposed TIR domain then nucleates a signaling complex at mitochondria, recruiting immune adaptors and helper NLRs to propagate defense and execute cell death. Post-translational control likely tunes this switch: ERAD-associated E3 ubiquitin-protein ligase HRD1A could ubiquitinate the receptor to restrain signaling, while Ubiquitin C-terminal hydrolase 22 could remove ubiquitin to stabilize or reactivate the receptor. Additional partners are expected among TIR-NBS-LRR immune components that assemble higher-order complexes to amplify the defense response.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">## Functional Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">plant</span><span class="w"> </span><span class="n">intracellular</span><span class="w"> </span><span class="n">immune</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">N</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="n">coupled</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">nucleotide</span><span class="o">-</span><span class="n">gated</span><span class="w"> </span><span class="n">switch</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">detect</span><span class="w"> </span><span class="n">pathogen</span><span class="w"> </span><span class="n">challenge</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">initiate</span><span class="w"> </span><span class="n">defense</span><span class="o">.</span><span class="w"> </span><span class="n">Upon</span><span class="w"> </span><span class="n">activation</span><span class="p">,</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">oligomerizes</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">exposes</span><span class="w"> </span><span class="n">effector</span><span class="w"> </span><span class="n">surfaces</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">assemble</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="n">complexes</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">mitochondria</span><span class="p">,</span><span class="w"> </span><span class="n">driving</span><span class="w"> </span><span class="n">antimicrobial</span><span class="w"> </span><span class="n">responses</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">promoting</span><span class="w"> </span><span class="n">programmed</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">death</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">contain</span><span class="w"> </span><span class="n">infection</span><span class="o">.</span><span class="w"> </span><span class="n">Its</span><span class="w"> </span><span class="n">activity</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">likely</span><span class="w"> </span><span class="n">tuned</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">ubiquitination</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">deubiquitination</span><span class="p">,</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">an</span><span class="w"> </span><span class="n">E3</span><span class="w"> </span><span class="n">ligase</span><span class="w"> </span><span class="n">dampening</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">deubiquitinase</span><span class="w"> </span><span class="n">restoring</span><span class="w"> </span><span class="n">competence</span><span class="o">.</span>
+
+<span class="c1">## UniProt Summary</span>
+
+<span class="n">Probable</span><span class="w"> </span><span class="n">disease</span><span class="w"> </span><span class="n">resistance</span><span class="w"> </span><span class="n">protein</span><span class="o">.</span>
+
+<span class="c1">## InterPro Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="n">IPR035897</span><span class="p">:</span><span class="w"> </span><span class="n">Toll</span><span class="o">/</span><span class="n">interleukin</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="p">)</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">12</span><span class="o">-</span><span class="mi">140</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR035897</span><span class="p">:</span><span class="w"> </span><span class="n">Toll</span><span class="o">/</span><span class="n">interleukin</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="p">)</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">15</span><span class="o">-</span><span class="mi">171</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR000157</span><span class="p">:</span><span class="w"> </span><span class="n">Toll</span><span class="o">/</span><span class="n">interleukin</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="p">)</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">16</span><span class="o">-</span><span class="mi">170</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR044974</span><span class="p">:</span><span class="w"> </span><span class="n">Disease</span><span class="w"> </span><span class="n">resistance</span><span class="w"> </span><span class="n">protein</span><span class="p">,</span><span class="w"> </span><span class="n">plants</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">18</span><span class="o">-</span><span class="mi">402</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR000157</span><span class="p">:</span><span class="w"> </span><span class="n">Toll</span><span class="o">/</span><span class="n">interleukin</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="n">receptor</span><span class="w"> </span><span class="n">homology</span><span class="w"> </span><span class="p">(</span><span class="n">TIR</span><span class="p">)</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">20</span><span class="o">-</span><span class="mi">175</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR027417</span><span class="p">:</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="w"> </span><span class="n">containing</span><span class="w"> </span><span class="n">nucleoside</span><span class="w"> </span><span class="n">triphosphate</span><span class="w"> </span><span class="n">hydrolase</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">172</span><span class="o">-</span><span class="mi">324</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR027417</span><span class="p">:</span><span class="w"> </span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="w"> </span><span class="n">containing</span><span class="w"> </span><span class="n">nucleoside</span><span class="w"> </span><span class="n">triphosphate</span><span class="w"> </span><span class="n">hydrolase</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">178</span><span class="o">-</span><span class="mi">409</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR002182</span><span class="p">:</span><span class="w"> </span><span class="n">NB</span><span class="o">-</span><span class="n">ARC</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">199</span><span class="o">-</span><span class="mi">348</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR003593</span><span class="p">:</span><span class="w"> </span><span class="n">AAA</span><span class="o">+</span><span class="w"> </span><span class="n">ATPase</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">202</span><span class="o">-</span><span class="mi">332</span><span class="p">]</span>
+<span class="o">-</span><span class="w"> </span><span class="n">IPR042197</span><span class="p">:</span><span class="w"> </span><span class="n">Apoptotic</span><span class="w"> </span><span class="n">protease</span><span class="o">-</span><span class="n">activating</span><span class="w"> </span><span class="n">factors</span><span class="p">,</span><span class="w"> </span><span class="n">helical</span><span class="w"> </span><span class="n">domain</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="p">[</span><span class="mi">331</span><span class="o">-</span><span class="mi">412</span><span class="p">]</span>
+
+<span class="c1">## GO Term Predictions</span>
+
+<span class="c1">### Molecular Function</span>
+
+
+<span class="c1">### Biological Process</span>
+
+
+<span class="c1">### Cellular Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CHL1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9LUJ8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="chl1-at5g40090-disease-resistance-protein-chs1-like-1">CHL1 (At5g40090) - Disease Resistance Protein / CHS1-Like 1</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li><strong>UniProt</strong>: Q9LUJ8</li>
+<li><strong>Gene</strong>: CHL1 (CHILLING SENSITIVE 1-LIKE 1, CHS1-LIKE 1)</li>
+<li><strong>Locus</strong>: At5g40090</li>
+<li><strong>Organism</strong>: Arabidopsis thaliana</li>
+<li><strong>Protein</strong>: Disease resistance protein CHL1 (459 aa, 51.6 kDa)</li>
+<li><strong>Domain architecture</strong>: TIR -- NB-ARC (truncated NLR, lacks LRR domain)</li>
+</ul>
+<p><strong>CRITICAL NOTE</strong>: The gene symbol "CHL1" in Arabidopsis is ambiguous. The more<br />
+commonly studied CHL1 is At1g12110 (Q05085/NPF6.3/NRT1.1), a nitrate transporter<br />
+also known as CHLORINA 1. The CHL1 under review here (Q9LUJ8, At5g40090) is a<br />
+disease resistance protein named CHS1-LIKE 1. The existing GOA and UniProt files<br />
+in this directory were fetched for the wrong protein (Q05085). The BioReason<br />
+prediction file correctly targets Q9LUJ8.</p>
+<h2 id="domain-architecture">Domain Architecture</h2>
+<ul>
+<li>
+<p><strong>TIR domain</strong> (residues 16-170): Toll/interleukin-1 receptor homology domain.<br />
+  In plant NLRs, TIR domains have NADase enzymatic activity -- they cleave NAD+<br />
+  to produce signaling molecules (pRib-AMP, di-ADPR, etc.) that activate the<br />
+  EDS1-PAD4-ADR1 signaling node [PMID:34497423, "The EDS1-PAD4-ADR1 node<br />
+  mediates Arabidopsis pattern-triggered immunity"].</p>
+</li>
+<li>
+<p><strong>NB-ARC domain</strong> (residues 191-401): Nucleotide-binding adaptor shared by<br />
+  APAF-1, R proteins, and CED-4. This is an AAA+ ATPase that acts as a molecular<br />
+  switch: ATP-bound = active, ADP-bound = inactive.</p>
+</li>
+<li>
+<p><strong>No LRR domain</strong>: CHL1 is a "truncated NLR" or TIR-NBS (TN) protein. It lacks<br />
+  the C-terminal leucine-rich repeat domain found in canonical TNL immune receptors.<br />
+  This places it in a special class of atypical NLR proteins whose functions are<br />
+  still being elucidated.</p>
+</li>
+</ul>
+<h2 id="functional-summary">Functional Summary</h2>
+<p>CHL1 is a truncated TIR-NBS immune receptor that limits chloroplast damage and<br />
+cell death at low temperatures. Its paralog CHS1 (At1g17610) was identified through<br />
+a chilling-sensitive mutant screen. CHL1 overexpression alleviates chilling damage<br />
+and enhances plant growth at both moderate and cold temperatures<br />
+[PMID:23617639, "Over-expression of CHS1 or CHL1 alleviates chilling damage and<br />
+enhances plant growth at moderate (24C) and chilling (13C) temperatures"].</p>
+<h2 id="key-literature">Key Literature</h2>
+<h3 id="pmid23617639-zbierzak-et-al-2013-plant-journal">PMID:23617639 - Zbierzak et al. 2013, Plant Journal</h3>
+<p>"A TIR-NBS protein encoded by Arabidopsis Chilling Sensitive 1 (CHS1) limits<br />
+chloroplast damage and cell death at low temperature"</p>
+<p>Key findings:<br />
+- CHS1 (At1g17610) encodes a TIR-NBS protein; CHL1 (At5g40090) is its paralog<br />
+- The chs1-1 mutation causes chilling sensitivity with activated defense responses<br />
+  and salicylic acid production at 13C<br />
+- Overexpression of CHS1 or CHL1 alleviates chilling damage<br />
+- Chilling sensitivity depends on EDS1 and PAD4 regulators<br />
+- Photosynthetic complex changes and thylakoid membrane damage precede cell death<br />
+- The mutant showed excessive necrotic response to bacterial infection</p>
+<h3 id="pmid23651299-wang-et-al-2013-plant-journal">PMID:23651299 - Wang et al. 2013, Plant Journal</h3>
+<p>"A missense mutation in CHS1, a TIR-NB protein, induces chilling sensitivity in<br />
+Arabidopsis"</p>
+<p>Key findings:<br />
+- Independent identification of CHS1 as a TIR-NB protein<br />
+- CHS1 protein stability is positively regulated by low temperature<br />
+- The chs1 mutant displays both chilling-sensitive and defense-associated phenotypes<br />
+- Defense phenotypes include extensive cell death, H2O2 and SA accumulation, PR gene<br />
+  expression</p>
+<h3 id="pmid27699788-zhang-et-al-2017-new-phytologist">PMID:27699788 - Zhang et al. 2017, New Phytologist</h3>
+<p>"Temperature-dependent autoimmunity mediated by chs1 requires its neighboring TNL<br />
+gene SOC3"</p>
+<p>Key findings:<br />
+- CHS1 interacts with the NB and LRR domains of neighboring TNL gene SOC3<br />
+- Mutant chs1 gains additional interaction with the TIR domain of SOC3<br />
+- Loss of SOC3 completely suppresses the chilling-sensitive phenotype of chs1-2<br />
+- This establishes a paired immune receptor mechanism: TN protein (CHS1) working<br />
+  with neighboring TNL (SOC3) to control temperature-dependent immunity</p>
+<h2 id="molecular-mechanism">Molecular Mechanism</h2>
+<p>CHL1/CHS1-type TIR-NBS proteins function as adaptors or regulators within the<br />
+plant immune system. They pair with full-length TNL receptors (like SOC3 pairs with<br />
+CHS1) to form functional immune receptor complexes. This is analogous to other<br />
+documented truncated NLR functions:</p>
+<ul>
+<li>TN10 pairs with clustered TNL receptors [PMC8069298]</li>
+<li>TN13 associates with CC-NBS-LRR receptor RPS5 <a href="https://pubmed.ncbi.nlm.nih.gov/33982335">PMID:33982335</a></li>
+<li>TIR-NBS2 is required for activated defense in exo70B1 mutant <a href="https://pubmed.ncbi.nlm.nih.gov/25617755">PMID:25617755</a></li>
+</ul>
+<p>The TIR domain in these proteins has NADase activity that generates small molecule<br />
+signals (pRib-AMP/ADP, di-ADPR) which bind to and activate EDS1-PAD4 heterodimers,<br />
+recruiting helper NLRs like ADR1 to execute immune responses.</p>
+<h2 id="go-annotation-status">GO Annotation Status</h2>
+<p>The actual GOA annotations for Q9LUJ8 (from QuickGO) are:<br />
+- GO:0043531 ADP binding (IEA, InterPro:IPR002182)<br />
+- GO:0061809 NAD+ nucleosidase activity, cyclic ADP-ribose generating (IEA, EC:3.2.2.6)<br />
+- GO:0006952 defense response (IEA, InterPro:IPR044974)<br />
+- GO:0007165 signal transduction (IEA, InterPro:IPR000157)<br />
+- GO:0005737 cytoplasm (IEA, UniProt-SubCell)<br />
+- GO:0009507 chloroplast (ISM, TAIR)</p>
+<h2 id="bioreason-prediction-assessment">BioReason Prediction Assessment</h2>
+<p>The BioReason SFT prediction for Q9LUJ8 is domain-architecture-driven and generally<br />
+sound in recognizing the TIR-NB-ARC architecture. However:</p>
+<ol>
+<li>
+<p><strong>Mitochondrial localization (GO:0005739)</strong>: BioReason claims mitochondrial<br />
+   localization. This is INCORRECT. UniProt annotates CHL1 to the cytoplasm, and<br />
+   TAIR predicts chloroplast. There is no evidence for mitochondrial localization.<br />
+   The reasoning that "Apaf-like assemblies often interface with mitochondrial<br />
+   signaling hubs" conflates animal apoptosome biology with plant NLR biology.</p>
+</li>
+<li>
+<p><strong>Defense response to fungus (GO:0050832) and bacterium (GO:0042742)</strong>: These<br />
+   are plausible but SPECULATIVE for CHL1 specifically. The documented function is<br />
+   in cold stress response. The chs1 mutant showed altered bacterial response<br />
+   (excessive necrosis), but CHL1 itself has not been shown to directly mediate<br />
+   pathogen defense.</p>
+</li>
+<li>
+<p><strong>Positive regulation of cell death (GO:0010942)</strong>: Partially supported. The<br />
+   chs1 mutant (gain-of-function) activates cell death, but the wild-type CHS1/CHL1<br />
+   actually LIMITS cell death. So this is backwards.</p>
+</li>
+<li>
+<p><strong>Protein binding (GO:0005515)</strong>: Too generic. The actual molecular function is<br />
+   NAD+ nucleosidase activity (GO:0061809) based on TIR domain enzymatic function.<br />
+   BioReason missed this key enzymatic activity entirely.</p>
+</li>
+<li>
+<p><strong>No GO term predictions listed</strong>: The BioReason file has empty GO term prediction<br />
+   sections, suggesting the model did not generate specific GO predictions beyond the<br />
+   narrative.</p>
+</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CHL1-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9LUJ8" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-chl1-arabidopsis-thaliana">BioReason-Pro SFT Review: CHL1 (Arabidopsis thaliana)</h1>
+<p>Source: CHL1-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 3/5</li>
+<li><strong>Completeness</strong>: 2/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes CHL1 as:</p>
+<blockquote>
+<p>A plant intracellular immune receptor that uses an N-terminal signaling module coupled to a nucleotide-gated switch to detect pathogen challenge and initiate defense. Upon activation, it oligomerizes and exposes effector surfaces that assemble signaling complexes at mitochondria, driving antimicrobial responses and promoting programmed cell death to contain infection. Its activity is likely tuned by ubiquitination and deubiquitination, with an E3 ligase dampening signaling and a deubiquitinase restoring competence.</p>
+</blockquote>
+<p>This summary captures the general architecture of a TIR-NB-ARC immune receptor but contains several errors and omissions specific to CHL1.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p><strong>Mitochondrial localization is incorrect.</strong> BioReason claims CHL1 "assembles signaling complexes at mitochondria" based on the GO:0005739 annotation and Apaf-like domain reasoning. However, UniProt annotates CHL1 to the cytoplasm, and TAIR predicts chloroplast localization. There is no evidence for mitochondrial localization. The reasoning conflates animal apoptosome biology (Apaf-1 at mitochondria) with plant NLR biology -- a fundamental kingdom-level error. Plant TIR-NB-ARC proteins do not function at mitochondria.</p>
+</li>
+<li>
+<p><strong>"Promoting programmed cell death to contain infection" is backwards for CHL1.</strong> Wild-type CHS1/CHL1 actually LIMITS cell death at low temperatures (PMID:23617639). It is the gain-of-function chs1 mutant that activates inappropriate cell death. The BioReason model defaulted to a generic NLR narrative ("promote cell death to fight pathogens") without recognizing that this specific protein restrains rather than promotes cell death.</p>
+</li>
+<li>
+<p><strong>Protein binding (GO:0005515) was cited as the core molecular function.</strong> This is too generic and misses the actual enzymatic function. UniProt assigns EC 3.2.2.6 (ADP-ribosyl cyclase/cyclic ADP-ribose hydrolase) to CHL1, reflecting the NADase activity of the TIR domain. TIR domain NADase activity is the key molecular function of this class of immune receptors, not generic protein binding.</p>
+</li>
+<li>
+<p><strong>The ubiquitination/deubiquitination regulation is speculative.</strong> The thinking trace mentions "ERAD-associated E3 ubiquitin-protein ligase HRD1A" and "Ubiquitin C-terminal hydrolase 22" as regulators. These appear to be drawn from generic protein interaction databases or domain-based inference rather than CHL1-specific evidence. No published study documents these specific regulatory interactions for CHL1.</p>
+</li>
+<li>
+<p><strong>Defense response to fungus (GO:0050832) and bacterium (GO:0042742) are not supported.</strong> CHL1 has not been shown to mediate resistance to any specific pathogen. Its documented function is in cold stress/chilling response. While the chs1 mutant showed altered response to bacterial infection (PMID:23617639), this was excessive necrosis rather than enhanced defense, and applies to the paralog's mutant, not CHL1 itself.</p>
+</li>
+</ol>
+<p><strong>Completeness issues:</strong></p>
+<ol>
+<li>
+<p><strong>No mention of chilling/cold stress function</strong> -- the most prominent experimentally characterized role. CHL1 stands for "Chilling Sensitive 1-Like 1" and its function in limiting chloroplast damage and cell death at low temperatures is the primary literature finding (PMID:23617639).</p>
+</li>
+<li>
+<p><strong>No mention of the CHS1 paralog relationship.</strong> CHL1 was named specifically because it is the paralog of CHS1 (At1g17610). Understanding the CHS1-CHL1 relationship is essential for interpreting CHL1 function.</p>
+</li>
+<li>
+<p><strong>No mention that CHL1 is a truncated NLR lacking LRR.</strong> The absence of the LRR domain places CHL1 in a special class of TIR-NBS (TN) proteins that function as adaptors/regulators rather than as standalone immune receptors. This is a critical architectural distinction.</p>
+</li>
+<li>
+<p><strong>No mention of the paired receptor mechanism.</strong> CHS1 pairs with the neighboring TNL gene SOC3 to form a functional immune receptor complex (PMID:27699788). This paired TN-TNL mechanism is fundamental to understanding how truncated NLRs operate.</p>
+</li>
+<li>
+<p><strong>No mention of the EDS1-PAD4 signaling dependence.</strong> The chilling phenotype requires the defense regulators EDS1 and PAD4, establishing the connection between temperature sensing and immune signaling.</p>
+</li>
+<li>
+<p><strong>No mention of TIR domain NADase activity.</strong> The enzymatic function of TIR domains -- cleaving NAD+ to produce signaling molecules that activate EDS1-PAD4 -- is the key molecular mechanism and was completely absent from the BioReason analysis.</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with InterPro2GO</h2>
+<p>The InterPro2GO annotations are:<br />
+- GO:0043531 ADP binding (from IPR002182/NB-ARC)<br />
+- GO:0006952 defense response (from IPR044974/disease resistance protein family)<br />
+- GO:0007165 signal transduction (from IPR000157/TIR domain)</p>
+<p>The BioReason narrative adds some mechanistic context (oligomerization, conformational switching, autoinhibition) that goes beyond raw InterPro2GO mappings. However, it introduces errors (mitochondrial localization, cell death promotion) that make it less accurate than the straightforward InterPro2GO annotations. The UniProt-derived annotation of NADase activity (GO:0061809, from EC:3.2.2.6) provides more functional insight than either InterPro2GO or BioReason.</p>
+<h2 id="notes-on-thinking-trace">Notes on Thinking Trace</h2>
+<p>The thinking trace is methodical in dissecting domain architecture but reveals a critical weakness: it reasons entirely from domain homology and generic NLR biology without any organism-specific or gene-specific literature knowledge. Key problems:</p>
+<ol>
+<li>
+<p>The Apaf-1 analogy is pushed too far -- the "Apoptotic protease-activating factors, helical domain" classification is a structural superfamily annotation, not evidence for mitochondrial function or apoptotic activity in plants.</p>
+</li>
+<li>
+<p>The GO:0005739 (mitochondrion) annotation mentioned in the trace does not appear in the actual GOA for Q9LUJ8. It is unclear where this annotation originated -- possibly from the BioReason training data or a prediction, not from curated databases.</p>
+</li>
+<li>
+<p>The trace defaults to a generic "NLR detects pathogen effectors and triggers cell death" narrative. While this is true for many NLRs, it fails to capture what makes CHL1 distinctive: its truncated architecture, its role in cold stress, and its function in limiting (not promoting) cell death.</p>
+</li>
+<li>
+<p>The trace mentions "host guardees" as potential triggers -- this is a valid concept in NLR biology but is speculative for CHL1 specifically.</p>
+</li>
+</ol>
+<p>The BioReason prediction demonstrates the limitations of domain-architecture-only reasoning for proteins whose specific biology diverges from the generic family narrative. For CHL1, the cold-stress and chloroplast-protection functions cannot be inferred from domains alone and require literature-informed analysis.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9LUJ8
+gene_symbol: CHL1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+aliases:
+  - CHS1-LIKE 1
+  - At5g40090
+tags:
+  - plant-immunity
+  - NLR
+  - TIR-NBS
+  - truncated-NLR
+  - cold-stress
+description: &gt;-
+  CHL1 (CHS1-Like 1, At5g40090) is a truncated TIR-NBS immune receptor that
+  lacks a leucine-rich repeat (LRR) domain. It belongs to a class of atypical
+  NLR proteins (TN proteins) that function as adaptors or regulators within the
+  plant immune system, often pairing with neighboring full-length TNL receptors.
+  Its paralog CHS1 (At1g17610) was identified through a chilling-sensitive
+  mutant screen; overexpression of either CHS1 or CHL1 alleviates chilling
+  damage and enhances plant growth at both moderate and cold temperatures. The
+  TIR domain possesses NAD+ hydrolase (NADase) enzymatic activity (EC 3.2.2.6),
+  generating small-molecule signals that activate the EDS1-PAD4-ADR1 immune
+  signaling node. CHL1 limits chloroplast damage and cell death at low
+  temperatures, integrating temperature sensing with innate immune signaling
+  pathways. The chilling phenotype of the paralog chs1 mutant depends on EDS1
+  and PAD4 defense regulators, and requires the neighboring TNL gene SOC3,
+  establishing a paired immune receptor mechanism.
+existing_annotations:
+  - term:
+      id: GO:0043531
+      label: ADP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        ADP binding is inferred from the NB-ARC domain (IPR002182). NB-ARC
+        domains are nucleotide-binding switches that cycle between ADP-bound
+        (inactive) and ATP-bound (active) states to regulate NLR activation.
+        ADP binding is a genuine molecular function of the NB-ARC domain.
+      action: ACCEPT
+      reason: &gt;-
+        ADP binding is a well-established function of NB-ARC domains in plant
+        NLR proteins. The NB-ARC domain acts as a molecular switch gating
+        immune activation. This IEA annotation from InterPro is correct.
+      supported_by: []
+  - term:
+      id: GO:0061809
+      label: NAD+ nucleosidase activity, cyclic ADP-ribose generating
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000003
+    review:
+      summary: &gt;-
+        NAD+ nucleosidase activity is inferred from the EC number 3.2.2.6
+        assigned to this protein. Plant TIR domains have been shown to possess
+        NADase enzymatic activity, cleaving NAD+ to produce signaling molecules
+        including pRib-AMP, pRib-ADP, di-ADPR, and ADPr-ATP that activate
+        downstream immune signaling through EDS1-PAD4 heterodimers.
+      action: ACCEPT
+      reason: &gt;-
+        TIR domain NADase activity is now well-established for plant NLR
+        proteins. The enzymatic activity requires TIR domain self-association
+        and oligomerization. This is a core molecular function of TIR-containing
+        immune receptors. While the specific cyclic ADP-ribose generating
+        subtype (GO:0061809) may be slightly narrower than the full range of
+        TIR NADase products, it captures the key enzymatic function.
+      supported_by:
+        - reference_id: PMID:23617639
+          supporting_text: &gt;-
+            The sequence of another TIR-NBS gene (At5g40090) named CHL1
+            (CHS1-like 1) is related to that of CHS1
+  - term:
+      id: GO:0006952
+      label: defense response
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        Defense response is inferred from the disease resistance protein family
+        membership (IPR044974). CHL1 is classified as a disease resistance
+        protein based on its TIR-NB-ARC domain architecture. The paralog CHS1
+        mutant activates defense-associated phenotypes including SA accumulation
+        and PR gene expression at low temperatures, and the chilling sensitivity
+        requires defense regulators EDS1 and PAD4.
+      action: ACCEPT
+      reason: &gt;-
+        While CHL1 has not been directly shown to mediate pathogen resistance,
+        its domain architecture, family membership, and the defense-associated
+        phenotypes of its paralog CHS1 strongly support involvement in defense
+        response. The defense signaling pathway (EDS1/PAD4 dependence) is
+        experimentally validated for the CHS1 paralog.
+      supported_by:
+        - reference_id: PMID:23617639
+          supporting_text: &gt;-
+            chs1-1 chilling sensitivity requires the TIR-NBS-LRR and basal
+            resistance regulators encoded by EDS1 and PAD4
+  - term:
+      id: GO:0007165
+      label: signal transduction
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        Signal transduction is inferred from the TIR domain (IPR000157). TIR
+        domains mediate intracellular immune signaling by generating NAD+
+        cleavage products that activate downstream EDS1-PAD4-ADR1 signaling
+        complexes.
+      action: ACCEPT
+      reason: &gt;-
+        TIR domain-mediated signal transduction is a well-characterized
+        function of plant immune receptors. The TIR domain generates
+        enzymatic products that serve as signaling molecules to activate
+        downstream immune pathways.
+      supported_by:
+        - reference_id: PMID:27699788
+          supporting_text: &gt;-
+            the TN protein CHS1 interacts with the TNL protein SOC3 to modulate
+            temperature-dependent autoimmunity
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: &gt;-
+        Cytoplasmic localization is annotated from UniProt subcellular
+        location data. Plant NLR proteins are typically cytoplasmic, where
+        they function as intracellular immune receptors.
+      action: ACCEPT
+      reason: &gt;-
+        Cytoplasmic localization is consistent with the known biology of plant
+        NLR immune receptors, which function as intracellular surveillance
+        proteins.
+      supported_by: []
+  - term:
+      id: GO:0009507
+      label: chloroplast
+    evidence_type: ISM
+    original_reference_id: GO_REF:0000122
+    review:
+      summary: &gt;-
+        Chloroplast localization is predicted by TAIR computational methods.
+        CHL1/CHS1 function involves limiting chloroplast damage at low
+        temperatures, so chloroplast proximity or association is biologically
+        plausible, though direct experimental localization data is lacking.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The ISM prediction is plausible given that CHS1/CHL1 function involves
+        protection of chloroplasts from chilling damage. However, this is a
+        computational prediction without direct experimental support for CHL1
+        localization to chloroplasts. Keep as non-core pending experimental
+        validation.
+      supported_by:
+        - reference_id: PMID:23617639
+          supporting_text: &gt;-
+            alterations in photosynthetic complexes and thylakoid membrane
+            integrity precede leaf cell death
+  - term:
+      id: GO:0009409
+      label: response to cold
+    evidence_type: IMP
+    original_reference_id: PMID:23617639
+    review:
+      summary: &gt;-
+        Overexpression of CHL1 alleviates chilling damage and enhances plant
+        growth at low temperatures. The paralog CHS1 was identified in a
+        chilling-sensitive mutant screen, and CHL1 has the same protective
+        function when overexpressed. This establishes CHL1 as involved in
+        the response to cold.
+      action: NEW
+      reason: &gt;-
+        Response to cold is the primary experimentally characterized function
+        of CHL1. Overexpression experiments show CHL1 alleviates chilling
+        damage. This annotation is missing from the current GOA and should be
+        added. Supported by deep research analysis in
+        CHL1-deep-research-bioreason-sft.md which correctly identified the TIR-NBS
+        domain architecture underlying this function.
+      supported_by:
+        - reference_id: PMID:23617639
+          supporting_text: &gt;-
+            Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances
+            plant growth at moderate (24°C) and chilling (13°C) temperatures
+        - reference_id: file:ARATH/CHL1/CHL1-deep-research-bioreason-sft.md
+          supporting_text: &gt;-
+            [BioReason correctly identified TIR-NB-ARC domain architecture
+            consistent with immune/stress response function]
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO
+      terms
+    findings: []
+  - id: GO_REF:0000003
+    title: Gene Ontology annotation based on Enzyme Commission mapping
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation through UniProt Subcellular Localization
+    findings: []
+  - id: GO_REF:0000122
+    title: Gene Ontology annotation by TAIR computational methods
+    findings: []
+  - id: PMID:23617639
+    title: A TIR-NBS protein encoded by Arabidopsis Chilling Sensitive 1 (CHS1)
+      limits chloroplast damage and cell death at low temperature.
+    findings:
+      - statement: CHS1 (At1g17610) and its paralog CHL1 (At5g40090) are TIR-NBS
+          proteins that limit chloroplast damage and cell death at low temperature.
+        supporting_text: &gt;-
+          Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances
+          plant growth at moderate (24°C) and chilling (13°C) temperatures
+      - statement: The chilling-sensitive phenotype depends on defense regulators EDS1
+          and PAD4.
+        supporting_text: &gt;-
+          chs1-1 chilling sensitivity requires the TIR-NBS-LRR and basal
+          resistance regulators encoded by EDS1 and PAD4 but not salicylic acid
+  - id: PMID:23651299
+    title: A missense mutation in CHS1, a TIR-NB protein, induces chilling
+      sensitivity in Arabidopsis.
+    findings:
+      - statement: CHS1 protein stability is positively regulated by low temperature
+          independently of the 26S proteasome pathway.
+        supporting_text: &gt;-
+          the stability of the CHS1 protein was positively regulated by low
+          temperatures independently of the 26S proteasome pathway
+  - id: PMID:27699788
+    title: Temperature-dependent autoimmunity mediated by chs1 requires its
+      neighboring TNL gene SOC3.
+    findings:
+      - statement: CHS1 physically interacts with the neighboring TNL gene SOC3 to
+          form a paired immune receptor complex.
+        supporting_text: &gt;-
+          CHS1 interacted with the NB and LRR domains of SOC3; however, mutated
+          chs1 interacted with the TIR, NB and LRR domains of SOC3 in vitro and
+          in vivo
+      - statement: Loss of SOC3 completely suppresses the chilling-sensitive phenotype
+          of chs1-2.
+        supporting_text: &gt;-
+          downregulation of SOC3 by an artificial microRNA construct fully rescued
+          the chilling sensitivity and defense defects of chs1-2
+  - id: file:ARATH/CHL1/CHL1-deep-research-bioreason-sft.md
+    title: BioReason SFT deep research prediction for CHL1
+    findings:
+      - statement: BioReason correctly identifies TIR-NB-ARC domain architecture and
+          plant immune receptor classification.
+  - id: file:ARATH/CHL1/CHL1-notes.md
+    title: Manual research notes for CHL1 review
+    findings: []
+core_functions:
+  - description: &gt;-
+      NAD+ hydrolase activity through the TIR domain, generating signaling
+      molecules (pRib-AMP, di-ADPR) that activate the EDS1-PAD4-ADR1 immune
+      signaling node. Acts as a truncated TIR-NBS adaptor/regulator, pairing
+      with full-length TNL receptors to integrate temperature sensing with
+      innate immune signaling. Limits chloroplast damage and cell death at
+      low temperatures.
+    molecular_function:
+      id: GO:0061809
+      label: NAD+ nucleosidase activity, cyclic ADP-ribose generating
+    directly_involved_in:
+      - id: GO:0006952
+        label: defense response
+      - id: GO:0009409
+        label: response to cold
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: PMID:23617639
+        supporting_text: &gt;-
+          Over-expression of CHS1 or CHL1 alleviates chilling damage and enhances
+          plant growth at moderate (24°C) and chilling (13°C) temperatures
+      - reference_id: PMID:27699788
+        supporting_text: &gt;-
+          CHS1 interacted with the NB and LRR domains of SOC3; however, mutated
+          chs1 interacted with the TIR, NB and LRR domains of SOC3 in vitro and
+          in vivo
+suggested_questions:
+  - question: &gt;-
+      Does CHL1 (At5g40090) pair with a specific neighboring TNL receptor
+      analogous to the CHS1-SOC3 pairing? If so, what is the identity of the
+      partner TNL and what pathogen or stress signal does the complex detect?
+  - question: &gt;-
+      What is the precise subcellular localization of CHL1? Is it
+      cytoplasmic, chloroplast-associated, or does it shuttle between
+      compartments in response to cold stress?
+  - question: &gt;-
+      Does CHL1 possess NADase activity in vitro, and if so, what are the
+      specific products generated (pRib-AMP, di-ADPR, etc.)?
+suggested_experiments:
+  - hypothesis: CHL1 has NADase activity that generates immune signaling molecules.
+    description: &gt;-
+      Express and purify recombinant CHL1 TIR domain. Perform in vitro NADase
+      assays with NAD+ substrate, analyzing products by LC-MS. Compare activity
+      of wild-type vs catalytic mutant (E/A mutation in conserved TIR catalytic
+      residue). Test whether TIR domain self-association is required for activity
+      by comparing monomeric vs oligomeric protein preparations.
+    experiment_type: biochemical assay
+  - hypothesis: CHL1 pairs with a neighboring TNL receptor to form a functional
+      immune complex.
+    description: &gt;-
+      Perform co-immunoprecipitation experiments using tagged CHL1 expressed under
+      its native promoter. Identify interacting partners by mass spectrometry.
+      Test candidate neighboring TNL genes by genetic epistasis (knockout of
+      neighboring TNLs should suppress any chl1 gain-of-function phenotypes).
+    experiment_type: protein interaction and genetic analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
