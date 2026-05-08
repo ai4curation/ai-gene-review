@@ -214,13 +214,14 @@ GPCR ligands [UniProt FUNCTION: by similarity, Q9QXV0]:
 - Big LEN → endogenous ligand for **GPR171**, regulates feeding
 - PEN → endogenous ligand for **GPR83**, regulates feeding
 
-This supports the existing **GO:0005102 signaling receptor binding** annotation
-(TAS, PMID:10632593), although the literature actually supporting GPR171/GPR83
-binding is more recent (e.g. Wardman et al., Gomes et al.) than the cited
-PMID:10632593, which itself does not demonstrate receptor binding. The annotation
-is therefore better re-evidenced. The peptide-receptor interaction can also
-support **GO:0007218 neuropeptide signaling pathway** (already keyword-derived
-on record).
+This may support future processed-peptide receptor-binding annotations, but not
+the existing precursor-level **GO:0005102 signaling receptor binding** annotation
+(TAS, PMID:10632593). The literature actually supporting GPR171/GPR83 binding is
+more recent (e.g. Wardman et al., Gomes et al.) than the cited PMID:10632593,
+which itself does not demonstrate receptor binding. Processed peptide ligands
+should be re-evidenced separately if annotated. The peptide-receptor interaction
+can also support **GO:0007218 neuropeptide signaling pathway** (already
+keyword-derived on record).
 
 ## Function 4 — Disease association markers (not function per se)
 
@@ -238,7 +239,7 @@ on record).
 | --- | --- | --- | --- |
 | GO:0004866 endopeptidase inhibitor activity | IBA, IEA, TAS | KEEP_AS_NON_CORE / MODIFY → GO:0004867 | Parent of more-specific GO:0004867 (which is also already on record as IEA). PCSK1 is a serine endopeptidase (subtilisin) so the specific term is preferable. |
 | GO:0004867 serine-type endopeptidase inhibitor activity | IEA | ACCEPT | Mutagenesis maps inhibitory determinants to LLRVKR (PMID:11435430); appropriate for the C-terminal inhibitory peptide. |
-| GO:0005102 signaling receptor binding | TAS (PMID:10632593) | KEEP_AS_NON_CORE | Refers to processed peptides PEN/Big LEN binding GPR83/GPR171. Cited PMID does not directly demonstrate this; better refs exist (Wardman, Gomes). Not the dominant/core function. |
+| GO:0005102 signaling receptor binding | TAS (PMID:10632593) | REMOVE | The cited PMID does not demonstrate receptor binding; future processed-peptide ligand annotations should use direct GPR83/GPR171 evidence if appropriate. |
 | GO:0005576 extracellular region | IEA, ISS, TAS | ACCEPT | Secreted; well-established. |
 | GO:0005794 Golgi apparatus | IEA | ACCEPT | True (parent of TGN). |
 | GO:0005802 trans-Golgi network | IEA | ACCEPT | More specific Golgi sublocation; consistent with regulated secretion / processing site. |
