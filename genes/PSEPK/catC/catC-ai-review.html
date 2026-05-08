@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>catC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>catC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88GK7" target="_blank" class="term-link">
+                        Q88GK7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_3714</span>
+                    
+                    <span class="badge">MIase</span>
+                    
+                    <span class="badge">muconolactone delta-isomerase</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "catC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88GK7" data-a="DESCRIPTION: catC encodes a muconolactone delta-isomerase famil..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>catC encodes a muconolactone delta-isomerase family enzyme (EC 5.3.3.4) in the catechol ortho-cleavage branch of the beta-ketoadipate pathway. In Pseudomonas putida KT2440, CatC acts downstream of catechol 1,2-dioxygenase and muconate cycloisomerase to convert muconolactone to beta-ketoadipate enol-lactone, linking catechol degradation to the rest of central aromatic-compound assimilation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016159" target="_blank" class="term-link">
+                                    GO:0016159
+                                </a>
+                            </span>
+                            <span class="term-label">muconolactone delta-isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GK7" data-a="GO:0016159" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term matches the core enzymatic activity of CatC. The UniProt entry for Q88GK7 names the protein as a muconolactone delta-isomerase, assigns EC 5.3.3.4, and gives the expected catalytic reaction for the muconolactone isomerization step.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016159 is already the specific molecular function that defines this enzyme. The annotation is consistent with the UniProt catalytic activity statement and with CatC&#39;s placement in the catechol branch of aromatic compound degradation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88GK7
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88GK7
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the muconolactone Delta-isomerase family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042952" target="_blank" class="term-link">
+                                    GO:0042952
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ketoadipate pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GK7" data-a="GO:0042952" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CatC clearly functions within the beta-ketoadipate pathway, but this term is broader than necessary. The gene product acts in the catechol ortho-cleavage branch specifically, rather than generically across the full beta-ketoadipate pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> A more specific biological process term is available. UniProt places CatC at the catechol-derived step 3/3 of the pathway, and GO:0019615 captures the immediate process level better than the broader parent term GO:0042952.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019615" target="_blank" class="term-link">
+                                    catechol catabolic process, ortho-cleavage
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88GK7
+                                    
+                                </span>
+                                
+                                <div class="support-text">4,5-dihydro-2-furylacetate from catechol: step 3/3.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/catC/catC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CatC catalyzes the muconolactone isomerization step of catechol ortho-cleavage, producing the beta-ketoadipate enol-lactone intermediate used for aromatic compound assimilation through the beta-ketoadipate network.</h3>
+                <span class="vote-buttons" data-g="Q88GK7" data-a="FUNCTION: CatC catalyzes the muconolactone isomerization ste..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016159" target="_blank" class="term-link">
+                            muconolactone delta-isomerase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019615" target="_blank" class="term-link">
+                                catechol catabolic process, ortho-cleavage
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88GK7
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/catC/catC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88GK7
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry for catC / muconolactone delta-isomerase (Q88GK7)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">catC is annotated as a muconolactone delta-isomerase</div>
+                        
+                        <div class="finding-text">"RecName: Full=Muconolactone Delta-isomerase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">catC catalyzes the muconolactone isomerization step</div>
+                        
+                        <div class="finding-text">"Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">catC belongs to the muconolactone delta-isomerase family</div>
+                        
+                        <div class="finding-text">"Belongs to the muconolactone Delta-isomerase family."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/catC/catC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research on catC in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">catC functions downstream of CatA and CatB in the catechol branch</div>
+                        
+                        <div class="finding-text">"CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">catC is part of the catBC operon under CatR control</div>
+                        
+                        <div class="finding-text">"**catBC is an operon** encoding **CatB (EC 5.5.1.1)** and **CatC (EC 5.3.3.4)**."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is CatC the only physiologically relevant muconolactone delta-isomerase supporting catechol ortho-cleavage in KT2440, or is there redundancy with paralogous aromatic-catabolic enzymes?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GK7" data-a="Q: Is CatC the only physiologically relevant muconola..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How broad is CatC substrate tolerance for substituted muconolactones generated from alternative aromatic feedstocks?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GK7" data-a="Q: How broad is CatC substrate tolerance for substitu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare wild type, clean catC deletion, and complemented strains for growth on catechol, benzoate, and upstream aromatics that funnel through catechol, while measuring accumulation of muconolactone-pathway intermediates.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CatC is required for efficient flux through the catechol ortho-cleavage branch during growth on benzoate-derived substrates.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: growth assay with targeted metabolite profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GK7" data-a="EXPERIMENT: Compare wild type, clean catC deletion, and comple..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify recombinant CatC and quantify turnover of muconolactone and substituted analogs using LC-MS or coupled spectrophotometric assays that monitor beta-ketoadipate enol-lactone formation.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: CatC is a narrow-specificity muconolactone delta-isomerase rather than a broad aromatic-lactone isomerase.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GK7" data-a="EXPERIMENT: Purify recombinant CatC and quantify turnover of m..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(catC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GK7" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T10:03:40.085600'<br />
+end_time: '2026-03-21T10:11:58.792538'<br />
+duration_seconds: 498.71<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: catC<br />
+  gene_symbol: catC<br />
+  uniprot_accession: Q88GK7<br />
+  protein_description: 'RecName: Full=Muconolactone Delta-isomerase {ECO:0000256|ARBA:ARBA00012070,<br />
+    ECO:0000256|NCBIfam:TIGR03221}; Short=MIase {ECO:0000256|PIRNR:PIRNR001486}; EC=5.3.3.4<br />
+    {ECO:0000256|ARBA:ARBA00012070, ECO:0000256|NCBIfam:TIGR03221};'<br />
+  gene_info: Name=catC {ECO:0000313|EMBL:AAN69311.1}; OrderedLocusNames=PP_3714 {ECO:0000313|EMBL:AAN69311.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the muconolactone Delta-isomerase family.<br />
+  protein_domains: Dimeric_a/b-barrel. (IPR011008); MLI_dom. (IPR026029); Muconolactone_d_Isoase.<br />
+    (IPR003464); MIase (PF02426)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88GK7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Muconolactone Delta-isomerase {ECO:0000256|ARBA:ARBA00012070, ECO:0000256|NCBIfam:TIGR03221}; Short=MIase {ECO:0000256|PIRNR:PIRNR001486}; EC=5.3.3.4 {ECO:0000256|ARBA:ARBA00012070, ECO:0000256|NCBIfam:TIGR03221};</li>
+<li><strong>Gene Information:</strong> Name=catC {ECO:0000313|EMBL:AAN69311.1}; OrderedLocusNames=PP_3714 {ECO:0000313|EMBL:AAN69311.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the muconolactone Delta-isomerase family.</li>
+<li><strong>Key Domains:</strong> Dimeric_a/b-barrel. (IPR011008); MLI_dom. (IPR026029); Muconolactone_d_Isoase. (IPR003464); MIase (PF02426)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "catC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'catC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>catC</strong> (gene ID: catC, UniProt: Q88GK7) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88GK7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Muconolactone Delta-isomerase {ECO:0000256|ARBA:ARBA00012070, ECO:0000256|NCBIfam:TIGR03221}; Short=MIase {ECO:0000256|PIRNR:PIRNR001486}; EC=5.3.3.4 {ECO:0000256|ARBA:ARBA00012070, ECO:0000256|NCBIfam:TIGR03221};</li>
+<li><strong>Gene Information:</strong> Name=catC {ECO:0000313|EMBL:AAN69311.1}; OrderedLocusNames=PP_3714 {ECO:0000313|EMBL:AAN69311.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the muconolactone Delta-isomerase family.</li>
+<li><strong>Key Domains:</strong> Dimeric_a/b-barrel. (IPR011008); MLI_dom. (IPR026029); Muconolactone_d_Isoase. (IPR003464); MIase (PF02426)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "catC" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'catC' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>catC</strong> (gene ID: catC, UniProt: Q88GK7) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-catc-muconolactone-isomerase-ec-5334-in-pseudomonas-putida-kt2440-uniprot-q88gk7">Functional annotation research report: <strong>catC</strong> (Muconolactone Δ-isomerase; EC 5.3.3.4) in <em>Pseudomonas putida</em> KT2440 (UniProt: Q88GK7)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The <em>Pseudomonas putida</em> KT2440 gene <strong>catC</strong> encodes <strong>muconolactone Δ-isomerase</strong> (also called muconolactone isomerase), an intracellular enzyme in the <strong>catechol (ortho-cleavage) branch of the β-ketoadipate pathway</strong> that enables assimilation of diverse aromatic substrates by converting <strong>muconolactone</strong> to <strong>(3-)oxoadipate enol-lactone/ketoadipate enol-lactone</strong>, which is subsequently funneled to central carbon metabolism (acetyl‑CoA and succinyl‑CoA). (okamuraabe2016betaketoadipicacidand pages 2-2, ning2024pseudomonasassociatedbacteria media 82e82b1a, lund2025metabolicengineeringof pages 57-60)</p>
+<p>A major modern application of this step is <strong>metabolic engineering for cis,cis‑muconic acid production</strong>, where <strong>catB/catC deletions are used to block downstream muconate metabolism</strong>, enabling high titers such as <strong>74 g/L muconic acid from catechol at 1.0 mol/mol yield</strong> in fed‑batch processes as summarized in recent engineering work. (lund2025metabolicengineeringof pages 57-60)</p>
+<h2 id="1-target-identity-verification-avoiding-gene-symbol-ambiguity">1. Target identity verification (avoiding gene-symbol ambiguity)</h2>
+<p>Across authoritative pathway depictions and classic genetic/regulatory studies in <em>Pseudomonas</em>, <strong>catC</strong> is consistently defined as <strong>muconolactone isomerase (muconolactone Δ-isomerase), EC 5.3.3.4</strong>, acting in the catechol branch downstream of catechol 1,2‑dioxygenase (CatA) and muconate cycloisomerase (CatB). (okamuraabe2016betaketoadipicacidand pages 2-2, rothmel1991functionalanalysisof pages 1-2, kukor1988cloningandexpression pages 1-2)</p>
+<p>In <em>P. putida</em> specifically, CatC is discussed as part of the <strong>cat regulon</strong> that enables growth on aromatics (e.g., benzoate-derived catechol), with CatR controlling expression of catBC and influencing catA. (rothmel1990nucleotidesequencingand pages 1-2)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-the-ketoadipate-pathway-and-catechol-branch">2.1 The β-ketoadipate pathway and “catechol branch”</h3>
+<p>The <strong>β-ketoadipate pathway</strong> is a central bacterial route that funnels diverse aromatic compounds into <strong>TCA-cycle entry metabolites</strong>, typically <strong>acetyl‑CoA and succinyl‑CoA</strong>, via ring cleavage and subsequent processing of ring-opened intermediates. (ning2024pseudomonasassociatedbacteria pages 8-10, lund2025metabolicengineeringof pages 57-60)</p>
+<p>Within this pathway, the <strong>catechol branch</strong> comprises the enzymatic steps that convert catechol to intermediates including <strong>cis,cis‑muconate</strong>, then through lactonization/isomerization steps to a common lower pathway intermediate (enol-lactone), ultimately yielding acetyl‑CoA and succinyl‑CoA. (ning2024pseudomonasassociatedbacteria pages 8-10, lund2025metabolicengineeringof pages 57-60)</p>
+<h3 id="22-what-catc-does-enzyme-definition">2.2 What CatC does (enzyme definition)</h3>
+<p><strong>CatC (muconolactone Δ-isomerase; EC 5.3.3.4)</strong> catalyzes an <strong>intramolecular isomerization</strong> in the catechol branch. In a 2024 pathway schematic, the CatC step is explicitly labeled as conversion of <strong>(S)-5-oxo-2,5-dihydrofuran-2-acetate</strong> to <strong>3-oxoadipate enol-lactone</strong>. (ning2024pseudomonasassociatedbacteria media 82e82b1a)</p>
+<p>A KT2440-focused pathway depiction places CatC at the step <strong>muconolactone (ML) → ketoadipate enol-lactone (KEL)</strong>. (okamuraabe2016betaketoadipicacidand pages 2-2)</p>
+<h2 id="3-molecular-function-reaction-substratesproducts-and-specificity">3. Molecular function: reaction, substrates/products, and specificity</h2>
+<h3 id="31-reaction-assignment-best-supported-from-available-evidence">3.1 Reaction assignment (best-supported from available evidence)</h3>
+<p>The strongest direct evidence in the retrieved corpus for CatC’s chemistry comes from pathway schematics:</p>
+<ul>
+<li><strong>Muconolactone → ketoadipate enol‑lactone</strong> in <em>P. putida</em> KT2440 pathway context. (okamuraabe2016betaketoadipicacidand pages 2-2)</li>
+<li><strong>(S)-5-oxo-2,5-dihydrofuran-2-acetate → 3-oxoadipate enol-lactone</strong>, explicitly annotated as the CatC-catalyzed step. (ning2024pseudomonasassociatedbacteria media 82e82b1a)</li>
+</ul>
+<p>Together, these support the standard functional annotation that CatC converts a muconolactone intermediate (generated from cis,cis‑muconate by CatB) into an enol‑lactone that is shared with the protocatechuate branch downstream. (ning2024pseudomonasassociatedbacteria pages 8-10, ning2024pseudomonasassociatedbacteria media 82e82b1a)</p>
+<h3 id="32-evidence-gaps-kineticsmechanism-for-kt2440-catc">3.2 Evidence gaps: kinetics/mechanism for KT2440 CatC</h3>
+<p>The retrieved sources firmly establish <strong>EC number, pathway position, and genetic regulation</strong>, but <strong>do not provide kinetic constants (Km/kcat), catalytic residues, or substrate-scope measurements</strong> for the specific KT2440 protein (UniProt Q88GK7). (rothmel1991functionalanalysisof pages 1-2, ning2024pseudomonasassociatedbacteria media 82e82b1a)</p>
+<p>Accordingly, substrate specificity beyond the canonical catechol-branch intermediate(s) should be treated as <strong>inferred from pathway context</strong> rather than experimentally quantified for Q88GK7 in the evidence set assembled here.</p>
+<h2 id="4-biological-role-and-pathway-context-in-p-putida">4. Biological role and pathway context in <em>P. putida</em></h2>
+<h3 id="41-pathway-integration-and-physiological-role">4.1 Pathway integration and physiological role</h3>
+<p>CatC enables <strong>assimilation of aromatics that converge on catechol</strong> by preventing accumulation of lactone intermediates and enabling conversion to lower-pathway intermediates that ultimately yield <strong>succinyl‑CoA and acetyl‑CoA</strong> for the TCA cycle. (ning2024pseudomonasassociatedbacteria pages 8-10, okamuraabe2016betaketoadipicacidand pages 2-2)</p>
+<h3 id="42-genomicoperon-context-and-regulation-catr-control">4.2 Genomic/operon context and regulation (CatR control)</h3>
+<p>Classic <em>P. putida</em> regulatory work shows:</p>
+<ul>
+<li><strong>catBC is an operon</strong> encoding <strong>CatB (EC 5.5.1.1)</strong> and <strong>CatC (EC 5.3.3.4)</strong>. (rothmel1991functionalanalysisof pages 1-2)</li>
+<li><strong>catR is divergently transcribed relative to catBC</strong> and the <strong>catR and catBC promoters overlap</strong> (reported as a 2 bp overlap). (rothmel1991functionalanalysisof pages 1-2)</li>
+<li><strong>CatR is a LysR-family positive regulator</strong>; CatR binds the catR–catBC control region in vitro with or without inducer, but <strong>cis,cis‑muconate is required for in vivo activation</strong> of the catBC promoter. (rothmel1991functionalanalysisof pages 1-2, rothmel1990nucleotidesequencingand pages 1-1)</li>
+</ul>
+<p>Engineering-focused summaries in the <em>P. putida</em> KT2440 biomanufacturing literature also treat cat genes as a functional unit (e.g., catA with catBC and catR in pathway descriptions) in the context of modulating flux to muconate. (lund2025metabolicengineeringof pages 57-60)</p>
+<h3 id="43-cellular-localization">4.3 Cellular localization</h3>
+<p>No direct microscopy/fractionation localization result for CatC in KT2440 was retrieved. However, CatC is repeatedly described as a <strong>metabolic enzyme acting on soluble intracellular intermediates</strong> of aromatic catabolism, with no evidence in the assembled sources for membrane anchoring, periplasmic localization, or secretion. (okamuraabe2016betaketoadipicacidand pages 2-2, lund2025metabolicengineeringof pages 57-60)</p>
+<p>Thus, the best evidence-supported annotation is <strong>intracellular (cytosolic) localization</strong>, with the explicit caveat that this is <strong>contextual inference</strong> rather than direct localization measurement.</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2024-pathway-evidence-and-comparative-functional-context">5.1 2024 pathway evidence and comparative functional context</h3>
+<p>A 2024 metagenomic comparative study of wild giant panda gut microbiomes identified the <strong>catechol branch β‑ketoadipate genes (catA, catB, catC)</strong> as significantly enriched in bamboo-eating pandas’ gut microbiota, and presents a pathway schematic explicitly mapping catC to the muconolactone→enol‑lactone conversion. (Publication date: March 2024; URL: https://doi.org/10.1128/spectrum.03819-23) (ning2024pseudomonasassociatedbacteria pages 8-10, ning2024pseudomonasassociatedbacteria media 82e82b1a)</p>
+<p>Although not performed in KT2440, this study reflects current systems-level usage of catC as a robust marker of catechol-branch capability in diverse <em>Pseudomonas</em>-associated communities. (ning2024pseudomonasassociatedbacteria pages 8-10)</p>
+<h3 id="52-2024current-engineering-context-for-aromatic-valorization-catc-relevance-via-catbc">5.2 2024–current engineering context for aromatic valorization (CatC relevance via ΔcatBC)</h3>
+<p>Recent metabolic-engineering narratives for <em>P. putida</em> KT2440 emphasize that <strong>blocking CatB/CatC is a foundational intervention</strong> for accumulating cis,cis‑muconate (muconic acid) as a product, demonstrating continued relevance of catC as a controllable node in lignin/aromatic valorization. (lund2025metabolicengineeringof pages 57-60)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-biomanufacturing-muconic-acid-as-a-platform-chemical-catc-as-a-knockout-target">6.1 Biomanufacturing: muconic acid as a platform chemical (CatC as a knockout target)</h3>
+<p>In engineered <em>P. putida</em> KT2440, <strong>targeted deletion of catB and catC</strong> blocks downstream metabolism of muconic acid and enables accumulation; this is described as a prerequisite for muconic acid production strains in recent engineering summaries. (lund2025metabolicengineeringof pages 57-60)</p>
+<p>Quantitative examples reported in the retrieved engineering evidence include:</p>
+<ul>
+<li><strong>74 g/L muconic acid from catechol, yield 1.0 mol/mol</strong> in fed‑batch (summarized as Kohlstedt et al., 2022 in the engineering source). (lund2025metabolicengineeringof pages 57-60)</li>
+<li>A reported prior result that catB/catC deletion enabled <strong>100% yield</strong> muconic acid from catechol and benzoic acid (summarized as Kohlstedt et al., 2018). (lund2025metabolicengineeringof pages 57-60)</li>
+</ul>
+<p>These implementations position CatC not merely as a degradative enzyme but as an <strong>industrial control point</strong>: removing catC increases product retention (muconate) at the expense of growth/complete mineralization. (lund2025metabolicengineeringof pages 57-60)</p>
+<h3 id="62-environmental-biotechnology-aromatic-hydrocarbon-biodegradation-capacity-in-pseudomonas">6.2 Environmental biotechnology: aromatic hydrocarbon biodegradation capacity in <em>Pseudomonas</em></h3>
+<p>While not directly assaying catC, a 2024 proteogenomic study of <em>Pseudomonas veronii</em> SM‑20 shows the continued practical significance of aromatic-catabolic capacity in the genus: the strain degraded <strong>~25% of phenanthrene over 30 days</strong> starting from <strong>600 µg/mL</strong>, with ~<strong>2.5‑fold biomass increase</strong> (protein content). (Publication date: April 2024; URL: https://doi.org/10.3390/microorganisms12040753) (zavalameneses2024proteogenomiccharacterizationof pages 9-11)</p>
+<p>This supports the broader applied context in which β‑ketoadipate/catechol-branch modules (including cat genes) are commonly used as part of bacterial aromatic degradation strategies, even when the specific CatC step is not singled out as the limiting factor. (zavalameneses2024proteogenomiccharacterizationof pages 9-11)</p>
+<h2 id="7-expert-synthesis-and-authoritative-interpretations">7. Expert synthesis and authoritative interpretations</h2>
+<h3 id="71-regulatory-architecture-as-a-canonical-lysr-controlled-catabolic-module">7.1 Regulatory architecture as a canonical LysR-controlled catabolic module</h3>
+<p>The catR/catBC arrangement in <em>P. putida</em> is a well-characterized example of a <strong>LysR-family regulator controlling a catabolic operon</strong>, including overlapping divergent promoters and inducer-dependent activation. These classic mechanistic transcription studies remain the most authoritative evidence for regulation of catC expression. (Rothmel et al., 1990–1991; URLs: https://doi.org/10.1128/jb.172.2.922-931.1990 and https://doi.org/10.1128/jb.173.15.4717-4724.1991) (rothmel1990nucleotidesequencingand pages 1-1, rothmel1991functionalanalysisof pages 1-2)</p>
+<h3 id="72-catc-as-an-engineering-valve-in-aromatic-funneling">7.2 CatC as an engineering “valve” in aromatic funneling</h3>
+<p>Modern <em>P. putida</em> metabolic engineering practice treats catB/catC as a downstream “valve” on catechol-derived carbon: deletion prevents conversion beyond muconate, enabling high-titer muconate accumulation but preventing complete channeling into acetyl‑CoA/succinyl‑CoA. (lund2025metabolicengineeringof pages 57-60)</p>
+<h2 id="8-visual-evidence-catcs-pathway-step">8. Visual evidence: CatC’s pathway step</h2>
+<p>The following figure crop provides direct visual support for CatC’s step assignment in the β‑ketoadipate pathway.</p>
+<p>(ning2024pseudomonasassociatedbacteria media 82e82b1a)</p>
+<h2 id="9-consolidated-evidence-table">9. Consolidated evidence table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Finding</th>
+<th>Evidence / citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identity</td>
+<td><strong>catC / PP_3714 / UniProt Q88GK7</strong> in <em>Pseudomonas putida</em> KT2440 encodes <strong>muconolactone delta-isomerase</strong>; synonym <strong>muconolactone isomerase / MIase</strong>; EC <strong>5.3.3.4</strong>. Literature for <em>Pseudomonas</em> catC aligns with the catechol-branch enzyme identity and does not indicate a conflicting gene assignment for KT2440.</td>
+<td>Okamura-Abe et al. 2016, J. Biosci. Bioeng., https://doi.org/10.1016/j.jbiosc.2015.11.007; Rothmel et al. 1991, J. Bacteriol., https://doi.org/10.1128/jb.173.15.4717-4724.1991; Shanley et al. 1986, J. Bacteriol., https://doi.org/10.1128/jb.165.2.557-563.1986 (okamuraabe2016betaketoadipicacidand pages 2-2, rothmel1991functionalanalysisof pages 1-2, shanley1986cloningandexpression pages 1-2)</td>
+</tr>
+<tr>
+<td>Pathway step</td>
+<td>CatC functions in the <strong>catechol branch of the β-ketoadipate pathway</strong>, downstream of CatA and CatB. In pathway descriptions, catechol is converted to cis,cis-muconate by CatA, then via CatB/CatC to <strong>β-ketoadipate enol-lactone / γ-ketoadipate enol-lactone</strong>, before conversion to central metabolites.</td>
+<td>Pathway figure and text explicitly place CatC after CatB in catechol degradation and before shared lower β-ketoadipate steps. Recent enrichment study also marks catA/catB/catC as catechol-branch genes. Okamura-Abe et al. 2016, https://doi.org/10.1016/j.jbiosc.2015.11.007; Ning et al. 2024, https://doi.org/10.1128/spectrum.03819-23; Lund 2025 thesis excerpt (okamuraabe2016betaketoadipicacidand pages 2-2, ning2024pseudomonasassociatedbacteria pages 8-10, lund2025metabolicengineeringof pages 57-60, ning2024pseudomonasassociatedbacteria media 82e82b1a)</td>
+</tr>
+<tr>
+<td>Reaction / substrate-product names in evidence</td>
+<td>Evidence names the CatC reaction as <strong>muconolactone → ketoadipate enol-lactone</strong>. The image-derived pathway annotation specifies conversion of <strong>(S)-5-oxo-2,5-dihydrofuran-2-acetate</strong> to <strong>3-oxoadipate enol-lactone</strong>. Other pathway texts phrase the overall CatB/CatC transformation as <strong>muconic acid (via muconolactone intermediate) → γ-ketoadipate enol-lactone</strong>.</td>
+<td>Ning et al. 2024 figure crop explicitly labels the CatC step; pathway figure in Okamura-Abe et al. 2016 shows <strong>ML → KEL</strong>; engineering review text summarizes CatB/CatC conversion of MA to γ-ketoadipate enol-lactone. https://doi.org/10.1128/spectrum.03819-23; https://doi.org/10.1016/j.jbiosc.2015.11.007 (ning2024pseudomonasassociatedbacteria media 82e82b1a, okamuraabe2016betaketoadipicacidand pages 2-2, lund2025metabolicengineeringof pages 57-60)</td>
+</tr>
+<tr>
+<td>Operon organization</td>
+<td>Classic <em>P. putida</em> studies show <strong>catR</strong> is divergently transcribed relative to the <strong>catBC operon</strong>; <strong>catB and catC are tightly linked and coordinately controlled</strong>. Some later pathway-engineering summaries describe a larger functional cluster including <strong>catA</strong> with catB/catC/catR in KT2440.</td>
+<td>Rothmel et al. 1990 and 1991 define <strong>catR-catBC</strong> promoter architecture and divergent transcription; Kukor et al. 1988 notes catB/catC linkage and coordinate control in <em>P. putida</em>; recent engineering summary places catB/catC in an operon with catA and catR. https://doi.org/10.1128/jb.172.2.922-931.1990; https://doi.org/10.1128/jb.173.15.4717-4724.1991; https://doi.org/10.1128/jb.170.10.4458-4465.1988 (rothmel1990nucleotidesequencingand pages 1-1, rothmel1991functionalanalysisof pages 1-2, rothmel1990nucleotidesequencingand pages 1-2, kukor1988cloningandexpression pages 1-2, lund2025metabolicengineeringof pages 57-60)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td><strong>CatR</strong> is a <strong>LysR-family positive regulator</strong> of catBC. <strong>cis,cis-muconate</strong> is the inducer required for in vivo activation of catBC; CatR binds the control region in the presence or absence of inducer, but activation requires inducer. The <strong>catBC promoter is inducible</strong>, whereas the <strong>catR promoter is constitutive</strong>.</td>
+<td>Rothmel et al. 1990, 1991 provide promoter mapping, DNA binding, and induction data. https://doi.org/10.1128/jb.172.2.922-931.1990; https://doi.org/10.1128/jb.173.15.4717-4724.1991 (rothmel1990nucleotidesequencingand pages 1-1, rothmel1991functionalanalysisof pages 1-2, rothmel1990nucleotidesequencingand pages 1-2)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>No direct localization experiment for KT2440 CatC was retrieved in the available evidence. However, CatC acts on soluble aromatic-catabolic intermediates of the β-ketoadipate pathway and is discussed exclusively as part of intracellular metabolism; thus the best-supported annotation is <strong>cytosolic / intracellular enzyme</strong>, with no evidence for secretion, membrane anchoring, or periplasmic localization.</td>
+<td>Inference from pathway context in <em>P. putida</em> aromatic catabolism and absence of transport/signal-peptide evidence in the retrieved literature. Okamura-Abe et al. 2016; Lund 2025 pathway summary (okamuraabe2016betaketoadipicacidand pages 2-2, lund2025metabolicengineeringof pages 57-60, lund2025metabolicengineeringof pages 32-37)</td>
+</tr>
+<tr>
+<td>Physiological role</td>
+<td>CatC enables assimilation of catechol-derived aromatics by funneling ring-cleavage products into the common lower β-ketoadipate route that yields <strong>succinyl-CoA and acetyl-CoA</strong> for the TCA cycle.</td>
+<td>Ning et al. 2024 states catechol and protocatechuate branches converge and end in succinyl-CoA and acetyl-CoA; Okamura-Abe et al. 2016 places CatC in this route in KT2440. https://doi.org/10.1128/spectrum.03819-23; https://doi.org/10.1016/j.jbiosc.2015.11.007 (ning2024pseudomonasassociatedbacteria pages 8-10, okamuraabe2016betaketoadipicacidand pages 2-2)</td>
+</tr>
+<tr>
+<td>Current applications</td>
+<td>In metabolic engineering, <strong>ΔcatB ΔcatC</strong> is a standard strategy to <strong>block downstream muconate metabolism</strong> and accumulate <strong>muconic acid (MA)</strong> from lignin-derived aromatics. This is central to biorefinery and nylon/PET precursor production schemes using <em>P. putida</em> KT2440.</td>
+<td>Recent engineering summaries note deletion of catB/catC as prerequisite for MA production strains and as a recurring chassis modification. (lund2025metabolicengineeringof pages 57-60, politi2026strategiesforrenewable pages 31-33)</td>
+</tr>
+<tr>
+<td>Quantitative implementation examples</td>
+<td>Reported values include <strong>74 g/L muconic acid from catechol, yield 1.0 mol/mol</strong> in fed-batch; <strong>100% yield from catechol and benzoic acid</strong> after catB/catC deletion in one cited study; in lignin/upstream-engineered strains, <strong>up to 30.5 g/L</strong> muconate and <strong>100% mol/mol yield from p-coumaric acid</strong> were reported; deletion of <strong>crc</strong> raised muconate yield from p-coumarate by <strong>~70%</strong> and from ferulate by <strong>&gt;2-fold</strong> in engineered derivatives.</td>
+<td>Lund 2025 thesis excerpt citing Kohlstedt et al. 2018/2022 and others; Politi 2026 thesis excerpt summarizing engineered KT2440 derivatives. (lund2025metabolicengineeringof pages 57-60, politi2026strategiesforrenewable pages 31-33)</td>
+</tr>
+<tr>
+<td>Evidence limitations</td>
+<td>Direct <strong>kinetic constants, purified-enzyme biochemistry, and localization experiments for KT2440 Q88GK7</strong> were not available in the retrieved evidence set. Functional annotation is therefore strongest for <strong>identity, pathway placement, regulation, and engineering relevance</strong>, with substrate/product assignment supported mainly by pathway diagrams and operon literature rather than a recent dedicated biochemical study of KT2440 CatC.</td>
+<td>Absence of such data in retrieved classic and recent sources despite clear agreement on EC, pathway role, and regulation. (okamuraabe2016betaketoadipicacidand pages 2-2, rothmel1990nucleotidesequencingand pages 1-1, rothmel1991functionalanalysisof pages 1-2, ning2024pseudomonasassociatedbacteria media 82e82b1a)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, pathway role, regulation, inferred localization, and engineering applications of </em>Pseudomonas putida<em> KT2440 catC (Q88GK7). It is useful as a compact evidence map linking classical operon studies with recent β-ketoadipate pathway and muconic-acid production literature.</em></p>
+<h2 id="10-limitations-and-recommended-next-steps-for-higher-confidence-functional-annotation">10. Limitations and recommended next steps for higher-confidence functional annotation</h2>
+<ol>
+<li><strong>KT2440 Q88GK7 enzyme biochemistry</strong>: The assembled evidence does not include a dedicated purification/kinetic study for KT2440 CatC; obtaining such data would require targeted retrieval of CatC biochemical papers or direct experimentation. (rothmel1991functionalanalysisof pages 1-2, ning2024pseudomonasassociatedbacteria media 82e82b1a)</li>
+<li><strong>Subcellular localization</strong>: Localization is inferred as intracellular based on pathway function; direct validation would require fractionation or tagged-protein imaging in KT2440. (okamuraabe2016betaketoadipicacidand pages 2-2, lund2025metabolicengineeringof pages 57-60)</li>
+</ol>
+<h2 id="key-primary-sources-with-dates-and-urls">Key primary sources (with dates and URLs)</h2>
+<ul>
+<li>Rothmel et al., <strong>1990-02</strong>. <em>Journal of Bacteriology.</em> “Nucleotide sequencing and characterization of <em>P. putida</em> catR…” https://doi.org/10.1128/jb.172.2.922-931.1990 (rothmel1990nucleotidesequencingand pages 1-1)</li>
+<li>Rothmel et al., <strong>1991-08</strong>. <em>Journal of Bacteriology.</em> “Functional analysis of the <em>P. putida</em> regulatory protein CatR…” https://doi.org/10.1128/jb.173.15.4717-4724.1991 (rothmel1991functionalanalysisof pages 1-2)</li>
+<li>Okamura‑Abe et al., <strong>2016-06</strong>. <em>Journal of Bioscience and Bioengineering.</em> Pathway depiction including CatC as muconolactone Δ‑isomerase in KT2440. https://doi.org/10.1016/j.jbiosc.2015.11.007 (okamuraabe2016betaketoadipicacidand pages 2-2)</li>
+<li>Ning et al., <strong>2024-03</strong>. <em>Microbiology Spectrum.</em> Enrichment of catA/catB/catC and pathway schematic showing CatC step. https://doi.org/10.1128/spectrum.03819-23 (ning2024pseudomonasassociatedbacteria pages 8-10, ning2024pseudomonasassociatedbacteria media 82e82b1a)</li>
+<li>Zavala‑Meneses et al., <strong>2024-04</strong>. <em>Microorganisms.</em> Phenanthrene degradation quantitative data in <em>Pseudomonas</em> context. https://doi.org/10.3390/microorganisms12040753 (zavalameneses2024proteogenomiccharacterizationof pages 9-11)</li>
+<li>Lund, <strong>2025</strong> (thesis excerpt). Engineering summary of ΔcatBC for muconate production and quantitative titers/yields. (lund2025metabolicengineeringof pages 57-60)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(okamuraabe2016betaketoadipicacidand pages 2-2): Yuriko Okamura-Abe, Tomokuni Abe, Kei Nishimura, Yasutaka Kawata, Kanna Sato-Izawa, Yuichiro Otsuka, Masaya Nakamura, Shinya Kajita, Eiji Masai, Tomonori Sonoki, and Yoshihiro Katayama. Beta-ketoadipic acid and muconolactone production from a lignin-related aromatic compound through the protocatechuate 3,4-metabolic pathway. Journal of Bioscience and Bioengineering, 121(6):652-658, Jun 2016. URL: https://doi.org/10.1016/j.jbiosc.2015.11.007, doi:10.1016/j.jbiosc.2015.11.007. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ning2024pseudomonasassociatedbacteria media 82e82b1a): Ruihong Ning, Caiwu Li, Maohua Xia, Yu Zhang, Yunong Gan, Yan Huang, Tianyou Zhang, Haitao Song, Siyuan Zhang, and Wei Guo. <i>pseudomonas</i> -associated bacteria play a key role in obtaining nutrition from bamboo for the giant panda ( <i>ailuropoda melanoleuca</i> ). Mar 2024. URL: https://doi.org/10.1128/spectrum.03819-23, doi:10.1128/spectrum.03819-23. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lund2025metabolicengineeringof pages 57-60): F Lund. Metabolic engineering of pseudomonas putida for production of nylon precursors from paper and pulp waste. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(rothmel1991functionalanalysisof pages 1-2): R. Rothmel, Dean L. Shinabarger, M. Parsek, L. Teri, Aldrichj, and A. M. Chakrabarty. Functional analysis of the pseudomonas putida regulatory protein catr: transcriptional studies and determination of the catr dna-binding site by hydroxyl-radical footprinting. Journal of Bacteriology, 173:4717-4724, Aug 1991. URL: https://doi.org/10.1128/jb.173.15.4717-4724.1991, doi:10.1128/jb.173.15.4717-4724.1991. This article has 105 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kukor1988cloningandexpression pages 1-2): J J Kukor, R H Olsen, and D P Ballou. Cloning and expression of the cata and catbc gene clusters from pseudomonas aeruginosa pao. Journal of Bacteriology, 170:4458-4465, Oct 1988. URL: https://doi.org/10.1128/jb.170.10.4458-4465.1988, doi:10.1128/jb.170.10.4458-4465.1988. This article has 47 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rothmel1990nucleotidesequencingand pages 1-2): R. Rothmel, L. Teri, Aldrich, John E. Houghton, W. M. Coco, L. Ornston, and A. Chakrabarty. Nucleotide sequencing and characterization of pseudomonas putida catr: a positive regulator of the catbc operon is a member of the lysr family. Journal of Bacteriology, 172:922-931, Feb 1990. URL: https://doi.org/10.1128/jb.172.2.922-931.1990, doi:10.1128/jb.172.2.922-931.1990. This article has 183 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ning2024pseudomonasassociatedbacteria pages 8-10): Ruihong Ning, Caiwu Li, Maohua Xia, Yu Zhang, Yunong Gan, Yan Huang, Tianyou Zhang, Haitao Song, Siyuan Zhang, and Wei Guo. <i>pseudomonas</i> -associated bacteria play a key role in obtaining nutrition from bamboo for the giant panda ( <i>ailuropoda melanoleuca</i> ). Mar 2024. URL: https://doi.org/10.1128/spectrum.03819-23, doi:10.1128/spectrum.03819-23. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rothmel1990nucleotidesequencingand pages 1-1): R. Rothmel, L. Teri, Aldrich, John E. Houghton, W. M. Coco, L. Ornston, and A. Chakrabarty. Nucleotide sequencing and characterization of pseudomonas putida catr: a positive regulator of the catbc operon is a member of the lysr family. Journal of Bacteriology, 172:922-931, Feb 1990. URL: https://doi.org/10.1128/jb.172.2.922-931.1990, doi:10.1128/jb.172.2.922-931.1990. This article has 183 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zavalameneses2024proteogenomiccharacterizationof pages 9-11): Sofía G. Zavala-Meneses, Andrea Firrincieli, Petra Chalova, Petr Pajer, Alice Checcucci, Ludovit Skultety, and Martina Cappelletti. Proteogenomic characterization of pseudomonas veronii sm-20 growing on phenanthrene as only carbon and energy source. Apr 2024. URL: https://doi.org/10.3390/microorganisms12040753, doi:10.3390/microorganisms12040753. This article has 8 citations.</p>
+</li>
+<li>
+<p>(shanley1986cloningandexpression pages 1-2): M S Shanley, E L Neidle, R E Parales, and L N Ornston. Cloning and expression of acinetobacter calcoaceticus catbcde genes in pseudomonas putida and escherichia coli. Journal of Bacteriology, 165:557-563, Feb 1986. URL: https://doi.org/10.1128/jb.165.2.557-563.1986, doi:10.1128/jb.165.2.557-563.1986. This article has 90 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lund2025metabolicengineeringof pages 32-37): F Lund. Metabolic engineering of pseudomonas putida for production of nylon precursors from paper and pulp waste. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(politi2026strategiesforrenewable pages 31-33): PM Politi. Strategies for renewable muconic acid production from lignin-based aromatics through rational metabolic engineering of pseudomonas putida kt2440. Unknown journal, 2026.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lund2025metabolicengineeringof pages 57-60</li>
+<li>rothmel1990nucleotidesequencingand pages 1-2</li>
+<li>okamuraabe2016betaketoadipicacidand pages 2-2</li>
+<li>rothmel1991functionalanalysisof pages 1-2</li>
+<li>ning2024pseudomonasassociatedbacteria pages 8-10</li>
+<li>zavalameneses2024proteogenomiccharacterizationof pages 9-11</li>
+<li>rothmel1990nucleotidesequencingand pages 1-1</li>
+<li>kukor1988cloningandexpression pages 1-2</li>
+<li>shanley1986cloningandexpression pages 1-2</li>
+<li>lund2025metabolicengineeringof pages 32-37</li>
+<li>politi2026strategiesforrenewable pages 31-33</li>
+<li>https://doi.org/10.1128/spectrum.03819-23</li>
+<li>https://doi.org/10.3390/microorganisms12040753</li>
+<li>https://doi.org/10.1128/jb.172.2.922-931.1990</li>
+<li>https://doi.org/10.1128/jb.173.15.4717-4724.1991</li>
+<li>https://doi.org/10.1016/j.jbiosc.2015.11.007;</li>
+<li>https://doi.org/10.1128/jb.173.15.4717-4724.1991;</li>
+<li>https://doi.org/10.1128/jb.165.2.557-563.1986</li>
+<li>https://doi.org/10.1128/spectrum.03819-23;</li>
+<li>https://doi.org/10.1016/j.jbiosc.2015.11.007</li>
+<li>https://doi.org/10.1128/jb.172.2.922-931.1990;</li>
+<li>https://doi.org/10.1128/jb.170.10.4458-4465.1988</li>
+<li>https://doi.org/10.1016/j.jbiosc.2015.11.007,</li>
+<li>https://doi.org/10.1128/spectrum.03819-23,</li>
+<li>https://doi.org/10.1128/jb.173.15.4717-4724.1991,</li>
+<li>https://doi.org/10.1128/jb.170.10.4458-4465.1988,</li>
+<li>https://doi.org/10.1128/jb.172.2.922-931.1990,</li>
+<li>https://doi.org/10.3390/microorganisms12040753,</li>
+<li>https://doi.org/10.1128/jb.165.2.557-563.1986,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(catC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GK7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="catc-notes">catC notes</h1>
+<ul>
+<li><code>catC</code> in <em>Pseudomonas putida</em> KT2440 corresponds to UniProt <code>Q88GK7</code> / locus <code>PP_3714</code> and is annotated as muconolactone delta-isomerase, EC <code>5.3.3.4</code> [UniProt:Q88GK7 "RecName: Full=Muconolactone Delta-isomerase"; "Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;"].</li>
+<li>The Falcon deep research places CatC in the catechol branch of the beta-ketoadipate pathway, downstream of CatA and CatB [file:PSEPK/catC/catC-deep-research-falcon.md "CatC functions in the <strong>catechol branch of the β-ketoadipate pathway</strong>, downstream of CatA and CatB."].</li>
+<li>Falcon also supports that <code>catBC</code> is an operon under CatR control rather than an isolated enzyme annotation [file:PSEPK/catC/catC-deep-research-falcon.md "<strong>catBC is an operon</strong> encoding <strong>CatB (EC 5.5.1.1)</strong> and <strong>CatC (EC 5.3.3.4)</strong>."].</li>
+<li>Review decision: keep <code>GO:0016159</code> as the core MF term, but narrow <code>GO:0042952 beta-ketoadipate pathway</code> to <code>GO:0019615 catechol catabolic process, ortho-cleavage</code>, because UniProt places CatC at the catechol-derived step <code>3/3</code> rather than generically across the whole pathway [UniProt:Q88GK7 "4,5-dihydro-2-furylacetate from catechol: step 3/3."].</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88GK7
+gene_symbol: catC
+product_type: PROTEIN
+aliases:
+  - PP_3714
+  - MIase
+  - muconolactone delta-isomerase
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  catC encodes a muconolactone delta-isomerase family enzyme (EC 5.3.3.4) in the
+  catechol ortho-cleavage branch of the beta-ketoadipate pathway. In Pseudomonas
+  putida KT2440, CatC acts downstream of catechol 1,2-dioxygenase and muconate
+  cycloisomerase to convert muconolactone to beta-ketoadipate enol-lactone, linking
+  catechol degradation to the rest of central aromatic-compound assimilation.
+existing_annotations:
+  - term:
+      id: GO:0016159
+      label: muconolactone delta-isomerase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        This term matches the core enzymatic activity of CatC. The UniProt entry for
+        Q88GK7 names the protein as a muconolactone delta-isomerase, assigns EC 5.3.3.4,
+        and gives the expected catalytic reaction for the muconolactone isomerization
+        step.
+      action: ACCEPT
+      reason: &gt;-
+        GO:0016159 is already the specific molecular function that defines this
+        enzyme. The annotation is consistent with the UniProt catalytic activity
+        statement and with CatC&#39;s placement in the catechol branch of aromatic
+        compound degradation.
+      supported_by:
+        - reference_id: UniProt:Q88GK7
+          supporting_text: &#34;Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;&#34;
+        - reference_id: UniProt:Q88GK7
+          supporting_text: &#34;Belongs to the muconolactone Delta-isomerase family.&#34;
+  - term:
+      id: GO:0042952
+      label: beta-ketoadipate pathway
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        CatC clearly functions within the beta-ketoadipate pathway, but this term is
+        broader than necessary. The gene product acts in the catechol ortho-cleavage
+        branch specifically, rather than generically across the full beta-ketoadipate
+        pathway.
+      action: MODIFY
+      reason: &gt;-
+        A more specific biological process term is available. UniProt places CatC at
+        the catechol-derived step 3/3 of the pathway, and GO:0019615 captures the
+        immediate process level better than the broader parent term GO:0042952.
+      proposed_replacement_terms:
+        - id: GO:0019615
+          label: catechol catabolic process, ortho-cleavage
+      supported_by:
+        - reference_id: UniProt:Q88GK7
+          supporting_text: &#34;4,5-dihydro-2-furylacetate from catechol: step 3/3.&#34;
+        - reference_id: file:PSEPK/catC/catC-deep-research-falcon.md
+          supporting_text: &#34;CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB.&#34;
+references:
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: UniProt:Q88GK7
+    title: UniProtKB entry for catC / muconolactone delta-isomerase (Q88GK7)
+    findings:
+      - statement: catC is annotated as a muconolactone delta-isomerase
+        supporting_text: &#34;RecName: Full=Muconolactone Delta-isomerase&#34;
+      - statement: catC catalyzes the muconolactone isomerization step
+        supporting_text: &#34;Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;&#34;
+      - statement: catC belongs to the muconolactone delta-isomerase family
+        supporting_text: &#34;Belongs to the muconolactone Delta-isomerase family.&#34;
+  - id: file:PSEPK/catC/catC-deep-research-falcon.md
+    title: Deep research on catC in Pseudomonas putida KT2440
+    findings:
+      - statement: catC functions downstream of CatA and CatB in the catechol branch
+        supporting_text: &#34;CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB.&#34;
+      - statement: catC is part of the catBC operon under CatR control
+        supporting_text: &#34;**catBC is an operon** encoding **CatB (EC 5.5.1.1)** and **CatC (EC 5.3.3.4)**.&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0016159
+      label: muconolactone delta-isomerase activity
+    directly_involved_in:
+      - id: GO:0019615
+        label: catechol catabolic process, ortho-cleavage
+    description: &gt;-
+      CatC catalyzes the muconolactone isomerization step of catechol ortho-cleavage,
+      producing the beta-ketoadipate enol-lactone intermediate used for aromatic
+      compound assimilation through the beta-ketoadipate network.
+    supported_by:
+      - reference_id: UniProt:Q88GK7
+        supporting_text: &#34;Reaction=(S)-muconolactone = (4,5-dihydro-5-oxofuran-2-yl)-acetate;&#34;
+      - reference_id: file:PSEPK/catC/catC-deep-research-falcon.md
+        supporting_text: &#34;CatC functions in the **catechol branch of the β-ketoadipate pathway**, downstream of CatA and CatB.&#34;
+suggested_questions:
+  - question: Is CatC the only physiologically relevant muconolactone delta-isomerase supporting catechol ortho-cleavage in KT2440, or is there redundancy with paralogous aromatic-catabolic enzymes?
+  - question: How broad is CatC substrate tolerance for substituted muconolactones generated from alternative aromatic feedstocks?
+suggested_experiments:
+  - hypothesis: CatC is required for efficient flux through the catechol ortho-cleavage branch during growth on benzoate-derived substrates.
+    description: Compare wild type, clean catC deletion, and complemented strains for growth on catechol, benzoate, and upstream aromatics that funnel through catechol, while measuring accumulation of muconolactone-pathway intermediates.
+    experiment_type: growth assay with targeted metabolite profiling
+  - hypothesis: CatC is a narrow-specificity muconolactone delta-isomerase rather than a broad aromatic-lactone isomerase.
+    description: Purify recombinant CatC and quantify turnover of muconolactone and substituted analogs using LC-MS or coupled spectrophotometric assays that monitor beta-ketoadipate enol-lactone formation.
+    experiment_type: in vitro enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

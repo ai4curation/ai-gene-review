@@ -12,6 +12,12 @@ OXPHOS is responsible for ~90% of cellular ATP production and is unique in requi
 coordinated expression from both nuclear and mitochondrial genomes: 13 subunits are
 mtDNA-encoded, while ~80 structural subunits and dozens of assembly factors are nuclear-encoded.
 
+![TCA cycle and OXPHOS coordination](https://media.springernature.com/lw1200/springer-static/image/art%3A10.1038%2Fs41467-019-13668-3/MediaObjects/41467_2019_13668_Fig3_HTML.png)
+*Fig. 3 from Martínez-Reyes & Chandel (2020) [PMID:31911585](https://pubmed.ncbi.nlm.nih.gov/31911585/).
+The TCA cycle and OXPHOS are tightly coordinated. Complex II (SDH) uniquely bridges both
+pathways: the succinate → fumarate reaction (TCA step 6) simultaneously feeds electrons
+into the ETC via FAD → FADH₂ → Fe-S → ubiquinone.*
+
 ## Model Species
 
 **Primary: Homo sapiens (human)**

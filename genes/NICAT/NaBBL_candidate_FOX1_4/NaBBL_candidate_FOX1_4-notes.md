@@ -1,0 +1,4 @@
+# NaBBL_candidate_FOX1_4 Notes
+
+- The full preprint identifies **BBLa/NicGS** as the BBL-family enzyme responsible for stereoselective late-pathway oxidation in nicotine synthesis, so FOX1_4 remains a substantive BBL-like candidate rather than a generic flavoprotein bystander. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "BBLa = NicGS, an (S)-nicotine glucoside synthase that drives pathway stereoselectivity"; "A622 and BBL should be treated as core late-pathway enzymes with direct mechanistic support, not as loose historical candidates."]
+- The paper sharpens the biological role of the family but does not settle which current NICAT BBL paralog corresponds to the tobacco NicGS enzyme. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]

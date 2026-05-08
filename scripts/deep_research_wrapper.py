@@ -14,6 +14,9 @@ import sys
 from pathlib import Path
 import re
 
+# Default timeout for deep research subprocess (seconds)
+DEFAULT_TIMEOUT = 600
+
 
 def parse_uniprot_gene_name(uniprot_file: Path) -> str:
     """Extract gene name from UniProt file.
@@ -129,33 +132,17 @@ def parse_uniprot_context(uniprot_file: Path) -> dict:
     return context
 
 
-def run_deep_research(
+def _build_cmd(
     organism: str,
     gene_id: str,
     provider: str,
     gene_symbol: str,
     output_path: Path,
-    uniprot_context: dict = None,
-    extra_args: list = None,
-    use_template: bool = True
-) -> int:
-    """Run deep-research-client with proper arguments.
-
-    Args:
-        organism: Organism name
-        gene_id: Gene identifier (UniProt ID, locus tag, or gene symbol)
-        provider: Provider name (openai, perplexity, perplexity-lite, falcon, cyberian)
-        gene_symbol: Gene symbol/name to use in template
-        output_path: Where to write output
-        uniprot_context: Dictionary with UniProt context fields
-        extra_args: Additional arguments to pass
-        use_template: Whether to use template (False for perplexity-lite)
-
-    Returns:
-        Exit code from deep-research-client
-    """
-    # Map internal provider names to deep-research-client provider names
-    # perplexity-lite is our internal name, but we use perplexity provider with params
+    uniprot_context: dict | None = None,
+    extra_args: list | None = None,
+    use_template: bool = True,
+) -> list[str]:
+    """Build the deep-research-client command list."""
     actual_provider = "perplexity" if provider == "perplexity-lite" else provider
 
     if use_template:
@@ -169,7 +156,6 @@ def run_deep_research(
             "--output", str(output_path)
         ]
 
-        # Add UniProt context variables if available
         if uniprot_context:
             if uniprot_context.get('accession'):
                 cmd.extend(["--var", f"uniprot_accession={uniprot_context['accession']}"])
@@ -179,17 +165,14 @@ def run_deep_research(
             cmd.extend(["--var", f"gene_info={gene_info}"])
             if uniprot_context.get('organism_full'):
                 cmd.extend(["--var", f"organism_full={uniprot_context['organism_full']}"])
-            # Provide default for protein_family if not available
             protein_family = uniprot_context.get('protein_family') or "Not specified in UniProt"
             cmd.extend(["--var", f"protein_family={protein_family}"])
-            # Provide default for protein_domains if not available
             if uniprot_context.get('protein_domains'):
                 domains_str = '; '.join(uniprot_context['protein_domains'])
             else:
                 domains_str = "Not specified in UniProt"
             cmd.extend(["--var", f"protein_domains={domains_str}"])
     else:
-        # For perplexity-lite, use direct query with perplexity provider
         query = (
             f"Research the {gene_symbol} ({gene_id}) gene in {organism}, "
             f"focusing on its molecular function, biological processes, and cellular localization. "
@@ -207,9 +190,80 @@ def run_deep_research(
     if extra_args:
         cmd.extend(extra_args)
 
-    print(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd)
-    return result.returncode
+    return cmd
+
+
+def run_deep_research(
+    organism: str,
+    gene_id: str,
+    provider: str,
+    gene_symbol: str,
+    output_path: Path,
+    uniprot_context: dict | None = None,
+    extra_args: list[str] | None = None,
+    use_template: bool = True,
+    timeout: int = DEFAULT_TIMEOUT,
+    fallback_providers: list[str] | None = None,
+) -> int:
+    """Run deep-research-client with proper arguments.
+
+    Args:
+        organism: Organism name
+        gene_id: Gene identifier (UniProt ID, locus tag, or gene symbol)
+        provider: Provider name (openai, perplexity, perplexity-lite, falcon, cyberian)
+        gene_symbol: Gene symbol/name to use in template
+        output_path: Where to write output
+        uniprot_context: Dictionary with UniProt context fields
+        extra_args: Additional arguments to pass
+        use_template: Whether to use template (False for perplexity-lite)
+        timeout: Timeout in seconds for the subprocess (default 600)
+        fallback_providers: Ordered list of providers to try if the primary provider fails or times out
+
+    Returns:
+        Exit code from deep-research-client
+    """
+    providers_to_try: list[str] = [provider] + list(fallback_providers or [])
+
+    for i, prov in enumerate(providers_to_try):
+        is_fallback = i > 0
+        prov_use_template = use_template if not is_fallback else (prov != "perplexity-lite")
+
+        # Adjust output path for fallback providers
+        if is_fallback:
+            prov_output = output_path.parent / f"{output_path.stem.rsplit('-', 1)[0]}-{prov}{output_path.suffix}"
+        else:
+            prov_output = output_path
+
+        cmd = _build_cmd(
+            organism=organism,
+            gene_id=gene_id,
+            provider=prov,
+            gene_symbol=gene_symbol,
+            output_path=prov_output,
+            uniprot_context=uniprot_context,
+            extra_args=extra_args,
+            use_template=prov_use_template,
+        )
+
+        label = f"[fallback {i}/{len(providers_to_try)-1}] " if is_fallback else ""
+        print(f"{label}Running: {' '.join(cmd)}")
+        print(f"{label}Timeout: {timeout}s")
+
+        try:
+            result = subprocess.run(cmd, timeout=timeout)
+            if result.returncode == 0:
+                return 0
+            print(f"Provider {prov} exited with code {result.returncode}", file=sys.stderr)
+        except subprocess.TimeoutExpired:
+            print(f"Provider {prov} timed out after {timeout}s", file=sys.stderr)
+
+        if i < len(providers_to_try) - 1:
+            next_prov = providers_to_try[i + 1]
+            print(f"Trying fallback provider: {next_prov}", file=sys.stderr)
+
+    # All providers failed
+    print("All providers failed", file=sys.stderr)
+    return 1
 
 
 def main():
@@ -221,6 +275,19 @@ def main():
     parser.add_argument("gene_id", help="Gene identifier (UniProt ID, locus tag, or gene symbol)")
     parser.add_argument("provider", help="Provider (openai, perplexity, perplexity-lite, falcon)")
     parser.add_argument("--alias", help="Gene symbol alias (if not provided, will lookup from UniProt)")
+    parser.add_argument(
+        "--fallback",
+        nargs="+",
+        metavar="PROVIDER",
+        help="Ordered list of fallback providers to try if the primary provider fails or times out "
+             "(e.g. --fallback perplexity-lite falcon)"
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=DEFAULT_TIMEOUT,
+        help=f"Timeout in seconds for each provider attempt (default: {DEFAULT_TIMEOUT})"
+    )
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, help="Extra args to pass to deep-research-client")
 
     args = parser.parse_args()
@@ -287,7 +354,9 @@ def main():
         output_path=output_file,
         uniprot_context=uniprot_context,
         extra_args=args.extra_args,
-        use_template=use_template
+        use_template=use_template,
+        timeout=args.timeout,
+        fallback_providers=args.fallback,
     )
 
 

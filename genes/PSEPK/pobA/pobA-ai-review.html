@@ -1,0 +1,2855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pobA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pobA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88H28" target="_blank" class="term-link">
+                        Q88H28
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pobA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88H28" data-a="DESCRIPTION: pobA encodes an FAD-dependent 4-hydroxybenzoate 3-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pobA encodes an FAD-dependent 4-hydroxybenzoate 3-monooxygenase that uses NADPH and molecular oxygen to hydroxylate 4-hydroxybenzoate to 3,4-dihydroxybenzoate (protocatechuate). This is a peripheral aromatic-catabolic step that feeds the protocatechuate branch of aromatic degradation rather than the unsubstituted benzoate-to-catechol branch.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>4-hydroxybenzoate catabolic process</h3>
+                <span class="vote-buttons" data-g="Q88H28" data-a="4-hydroxybenzoate catabolic process" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the breakdown of 4-hydroxybenzoate, beginning with its hydroxylation to 3,4-dihydroxybenzoate (protocatechuate) and continuing through downstream aromatic catabolic steps.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Existing GO terms capture benzoate catabolism and 3,4-dihydroxybenzoate metabolism, but they do not provide a substrate-specific term for the 4-hydroxybenzoate branch. This gap encourages incorrect automated transfer of PobA annotations to benzoate catabolic process.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009056" target="_blank" class="term-link">
+                    catabolic process
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:PSEPK/pobA/pobA-deep-research-falcon.md
+                    
+                    
+                    : PobA is the 4-HBA -&gt; PCA gateway enzyme in KT2440
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PobA is certainly an oxidoreductase, but this term is only a very broad parent of the much more informative catalytic term GO:0018659. The UniProt entry and KT2440 literature both identify PobA specifically as a 4-hydroxybenzoate 3-monooxygenase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is technically correct but too general to be useful once the specific substrate-defined monooxygenase activity is present.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016709" target="_blank" class="term-link">
+                                    GO:0016709
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of one atom of oxygen</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0016709" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This class-level monooxygenase term is mechanistically consistent with PobA, which is an FAD/NADPH-dependent oxygenase. However, GO:0018659 already captures the exact substrate-specific reaction carried out by this enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is redundant with the more precise 4-hydroxybenzoate 3-monooxygenase activity term and adds little biological specificity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PobA is the 4-HBA -&gt; PCA gateway enzyme in KT2440</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018659" target="_blank" class="term-link">
+                                    GO:0018659
+                                </a>
+                            </span>
+                            <span class="term-label">4-hydroxybenzoate 3-monooxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0018659" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the core catalytic function of PobA. The enzyme is explicitly identified as 4-hydroxybenzoate 3-monooxygenase in UniProt, and KT2440-focused literature describes the PobA reaction as conversion of 4-hydroxybenzoate to 3,4-dihydroxybenzoate/protocatechuate using oxygen, FAD, and NADPH.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term precisely matches the known biochemical activity and is the most informative molecular-function annotation for this gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PobA catalyzing 4-HBA -&gt; PCA with NADPH and O2</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018874" target="_blank" class="term-link">
+                                    GO:0018874
+                                </a>
+                            </span>
+                            <span class="term-label">benzoate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0018874" data-r="GO_REF:0000104" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This biological-process assignment is likely an automated substrate overgeneralization. PobA acts on 4-hydroxybenzoate, not unsubstituted benzoate, and produces protocatechuate. That places the enzyme on the hydroxybenzoate/protocatechuate branch rather than generic benzoate metabolism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The substrate specificity is wrong for plain benzoate metabolism. A product-centric process such as 3,4-dihydroxybenzoate biosynthetic/metabolic process is a closer representation, and GO currently lacks a clean 4-hydroxybenzoate catabolic term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">feeds the protocatechuate branch rather than benzoate-to-catechol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043639" target="_blank" class="term-link">
+                                    GO:0043639
+                                </a>
+                            </span>
+                            <span class="term-label">benzoate catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0043639" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation points to the wrong peripheral branch. Benzoate catabolism in KT2440 is associated with conversion of benzoate to catechol, whereas PobA converts 4-hydroxybenzoate to protocatechuate.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> There is no evidence here for direct participation in unsubstituted benzoate catabolism, and the annotation likely arose from family-level transfer rather than the actual substrate handled by PobA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PobA catalyzes 4-HBA -&gt; PCA, not benzoate -&gt; catechol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PobA binds FAD as an obligate cofactor. The UniProt entry records a crystal structure of KT2440 PobA in complex with FAD and lists multiple FAD-contacting residues.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> FAD binding is a direct, mechanistically central molecular property of the enzyme and is well supported by structural evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">X-RAY CRYSTALLOGRAPHY (2.20 ANGSTROMS) IN COMPLEX WITH FAD</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">BINDING 13 /ligand=&#34;FAD&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88H28" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation describes the same cofactor-binding function as GO:0050660. Keeping both terms would duplicate the same molecular property without adding biological specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0050660 is the clearer and more descriptive FAD-binding term, so GO:0071949 is best treated as a redundant duplicate here.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/pobA/pobA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">KW   FAD</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PobA is an FAD-dependent monooxygenase that uses NADPH and molecular oxygen to hydroxylate 4-hydroxybenzoate to 3,4-dihydroxybenzoate (protocatechuate), supplying the protocatechuate branch of aromatic compound degradation.</h3>
+                <span class="vote-buttons" data-g="Q88H28" data-a="FUNCTION: PobA is an FAD-dependent monooxygenase that uses N..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018659" target="_blank" class="term-link">
+                            4-hydroxybenzoate 3-monooxygenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046279" target="_blank" class="term-link">
+                                3,4-dihydroxybenzoate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pobA/pobA-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PobA catalyzing 4-HBA -&gt; PCA with NADPH and O2</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pobA/pobA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PobA noncovalently binds FAD as the catalytic flavin cofactor required for oxygen activation during monooxygenase chemistry.</h3>
+                <span class="vote-buttons" data-g="Q88H28" data-a="FUNCTION: PobA noncovalently binds FAD as the catalytic flav..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046279" target="_blank" class="term-link">
+                                3,4-dihydroxybenzoate biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/pobA/pobA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">X-RAY CRYSTALLOGRAPHY (2.20 ANGSTROMS) IN COMPLEX WITH FAD</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro correctly identifies PobA as a flavin-dependent monooxygenase scaffold and supports FAD binding.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-derived biological-process transfer overreaches when it assigns PobA to unsubstituted benzoate catabolism.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Sequence-transfer rules recover broad pathway placement but can blur the important substrate distinction between benzoate and 4-hydroxybenzoate branches.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA correctly places PobA among NAD(P)H-dependent oxygenases, but the substrate-specific monooxygenase term is the key curation outcome.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods correctly recover the exact monooxygenase activity term GO:0018659.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes pobA/PP_3537 as part of the KT2440 genome.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1107/S2053230X19008653
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural comparison of p-hydroxybenzoate hydroxylase (PobA) from Pseudomonas putida with PobA from other Pseudomonas spp. and other monooxygenases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides a KT2440 PobA crystal structure with bound FAD and supports classification as a flavin-dependent monooxygenase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1007/s00253-017-8211-y
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Conversion of lignin model compounds by Pseudomonas putida KT2440 and isolates from compost.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Places PobA at the 4-hydroxybenzoate-to-protocatechuate step in the KT2440 aromatic degradation map.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports NADPH and oxygen use for the KT2440 pathway step.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        DOI:10.1016/j.ymben.2021.12.010
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pseudomonas putida KT2440 engineered for efficient salicylate and gentisate production from lignin-derived para-coumarate.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Describes PobA in KT2440 as converting 4-hydroxybenzoic acid to 3,4-dihydroxybenzoic acid.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reinforces NADPH-dependent hydroxylation chemistry for the KT2440 enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pobA/pobA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research summary for pobA</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies PobA as the 4-HBA-to-PCA gateway enzyme in KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Places PobA in the protocatechuate branch of aromatic degradation rather than the benzoate-to-catechol branch.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Infers cytosolic localization for the soluble flavin monooxygenase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/pobA/pobA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88H28</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies PobA as EC 1.14.13.2 4-hydroxybenzoate 3-monooxygenase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Lists PDB 6DLL and multiple FAD-binding features for the KT2440 protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which regulator directly controls pobA transcription in KT2440 during growth on 4-hydroxybenzoate?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88H28" data-a="Q: Which regulator directly controls pobA transcripti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PobA the only physiologically relevant route from 4-hydroxybenzoate to protocatechuate under standard laboratory conditions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88H28" data-a="Q: Is PobA the only physiologically relevant route fr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct a clean delta-pobA mutant and compare growth plus extracellular metabolite profiles on benzoate, 4-hydroxybenzoate, and protocatechuate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PobA is required for growth on 4-hydroxybenzoate but dispensable for growth on downstream protocatechuate.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: microbial growth assay with targeted metabolomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88H28" data-a="EXPERIMENT: Construct a clean delta-pobA mutant and compare gr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure pobA, pca, and ben operon transcript levels by RT-qPCR or RNA-seq after shifting KT2440 cells to benzoate versus 4-hydroxybenzoate.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: pobA induction is specific to the 4-hydroxybenzoate branch and not to unsubstituted benzoate catabolism.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: transcriptional profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88H28" data-a="EXPERIMENT: Measure pobA, pca, and ben operon transcript level..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mutate selected FAD-contacting residues from the UniProt/PDB annotation and assay recombinant enzyme activity with 4-hydroxybenzoate and NADPH.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: FAD-binding residues observed in the KT2440 structure are required for catalytic turnover.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: site-directed mutagenesis with enzyme kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88H28" data-a="EXPERIMENT: Mutate selected FAD-contacting residues from the U..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pobA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88H28" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:47:17.989249'<br />
+end_time: '2026-03-21T13:56:19.745879'<br />
+duration_seconds: 541.77<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: pobA<br />
+  gene_symbol: pobA<br />
+  uniprot_accession: Q88H28<br />
+  protein_description: 'RecName: Full=4-hydroxybenzoate 3-monooxygenase {ECO:0000256|NCBIfam:TIGR02360};<br />
+    EC=1.14.13.2 {ECO:0000256|NCBIfam:TIGR02360};'<br />
+  gene_info: Name=pobA {ECO:0000313|EMBL:AAN69138.1}; OrderedLocusNames=PP_3537 {ECO:0000313|EMBL:AAN69138.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: FAD-bd. (IPR002938); FAD/NAD-bd_sf. (IPR036188); HB_mOase. (IPR012733);<br />
+    RIFMO-like. (IPR050641); FAD_binding_3 (PF01494)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 29</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88H28</li>
+<li><strong>Protein Description:</strong> RecName: Full=4-hydroxybenzoate 3-monooxygenase {ECO:0000256|NCBIfam:TIGR02360}; EC=1.14.13.2 {ECO:0000256|NCBIfam:TIGR02360};</li>
+<li><strong>Gene Information:</strong> Name=pobA {ECO:0000313|EMBL:AAN69138.1}; OrderedLocusNames=PP_3537 {ECO:0000313|EMBL:AAN69138.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> FAD-bd. (IPR002938); FAD/NAD-bd_sf. (IPR036188); HB_mOase. (IPR012733); RIFMO-like. (IPR050641); FAD_binding_3 (PF01494)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pobA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pobA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pobA</strong> (gene ID: pobA, UniProt: Q88H28) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88H28</li>
+<li><strong>Protein Description:</strong> RecName: Full=4-hydroxybenzoate 3-monooxygenase {ECO:0000256|NCBIfam:TIGR02360}; EC=1.14.13.2 {ECO:0000256|NCBIfam:TIGR02360};</li>
+<li><strong>Gene Information:</strong> Name=pobA {ECO:0000313|EMBL:AAN69138.1}; OrderedLocusNames=PP_3537 {ECO:0000313|EMBL:AAN69138.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> FAD-bd. (IPR002938); FAD/NAD-bd_sf. (IPR036188); HB_mOase. (IPR012733); RIFMO-like. (IPR050641); FAD_binding_3 (PF01494)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "pobA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'pobA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>pobA</strong> (gene ID: pobA, UniProt: Q88H28) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-poba-uniprot-q88h28-locus-pp_3537-in-pseudomonas-putida-kt2440">Research report: Functional annotation of <strong>pobA</strong> (UniProt <strong>Q88H28</strong>, locus <strong>PP_3537</strong>) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-mandatory-identity-verification-critical-disambiguation">0) Mandatory identity verification (critical disambiguation)</h3>
+<p>The UniProt entry <strong>Q88H28</strong> corresponds to <em>Pseudomonas putida</em> strain KT2440 locus <strong>PP_3537</strong> annotated as <strong>4-hydroxybenzoate 3-monooxygenase</strong> (also called <strong>p-hydroxybenzoate hydroxylase; PHBH</strong>) and is placed in the aromatic “upper” pathway that converts <strong>4-hydroxybenzoate (4-HBA)</strong> to <strong>protocatechuate (PCA; 3,4-dihydroxybenzoate)</strong>. This identity is consistent with KT2440 pathway mapping and with PHBH/PobA family literature that uses “pobA/PHBH” for the same enzymatic step (ravi2017conversionoflignin pages 7-9, westphal2018pyridinenucleotidecoenzyme pages 15-15).</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-poba-is">1.1 What PobA is</h4>
+<p><strong>PobA (4-hydroxybenzoate 3-monooxygenase; EC 1.14.13.2)</strong> is a <strong>flavin-dependent monooxygenase</strong> that performs an <strong>ortho-hydroxylation</strong> of 4-HBA to form PCA, an essential “funneling” intermediate of bacterial aromatic metabolism (ravi2017conversionoflignin pages 7-9, tsagogiannis2024elucidationof4hydroxybenzoic pages 1-2).</p>
+<h4 id="12-core-biochemical-reaction-and-stoichiometry">1.2 Core biochemical reaction and stoichiometry</h4>
+<p>In <em>P. putida</em> KT2440, PobA is mapped to the step:</p>
+<ul>
+<li><strong>Substrate:</strong> 4-hydroxybenzoic acid (4-HBA)</li>
+<li><strong>Product:</strong> protocatechuic acid (PCA; 3,4-dihydroxybenzoate)</li>
+<li><strong>Co-substrates/cofactors (as shown in a KT2440 pathway diagram):</strong> <strong>NADPH + O2 + H+ → NADP+ + H2O</strong> (ravi2017conversionoflignin media 4266a7b4, ravi2017conversionoflignin pages 7-9).</li>
+</ul>
+<p>This reaction definition matches the general description of PHBH/PobA enzymes as flavoprotein monooxygenases that consume reducing equivalents and oxygen to hydroxylate aromatic substrates (westphal2018pyridinenucleotidecoenzyme pages 15-15, tsagogiannis2024elucidationof4hydroxybenzoic pages 1-2).</p>
+<h4 id="13-pathway-role-ketoadipate-protocatechuate-branch">1.3 Pathway role: β-ketoadipate “protocatechuate branch”</h4>
+<p>PCA produced by PobA is a central intermediate that can be cleaved by ring-cleavage dioxygenases and funneled into central metabolism (TCA cycle intermediates) via the <strong>β-ketoadipate pathway</strong> and related branches (tsagogiannis2024elucidationof4hydroxybenzoic pages 1-2, ravi2017conversionoflignin pages 7-9).</p>
+<p>A 2024 systems-level analysis in <em>Comamonas testosteroni</em> (a different but relevant aromatic-degrading bacterium) summarizes the general logic: diverse aromatics (including 4-HBA) are funneled through PCA and then routed via alternative ring-cleavage routes (ortho and meta) with strong dependence on cellular redox (NAD(P)H) and multilevel regulation of flux (wilkes2023complexregulationin pages 1-2). This provides a modern conceptual framing for why the 4-HBA→PCA “gateway” step is often critical in aromatic metabolism engineering.</p>
+<hr />
+<h3 id="2-molecular-function-substrate-specificity-cofactors-and-enzyme-family-insights">2) Molecular function: substrate specificity, cofactors, and enzyme family insights</h3>
+<h4 id="21-enzyme-family-and-coenzyme-specificity-nadph-vs-nadh">2.1 Enzyme family and coenzyme specificity (NADPH vs NADH)</h4>
+<p>PHBH/PobA enzymes are classically described as flavoprotein monooxygenases that do not carry a canonical nucleotide-binding Rossmann domain, and <strong>coenzyme specificity varies by clade</strong> (NADPH-specific, NAD(P)H-dependent, or NADH-preferring) (westphal2018pyridinenucleotidecoenzyme pages 15-15).</p>
+<p>Direct kinetic constants for <strong>KT2440 PP_3537 (Q88H28)</strong> were not recovered in the retrieved full text set, so <strong>KT2440-specific</strong> NADPH vs NADH preference cannot be asserted here beyond the pathway depiction that uses NADPH (ravi2017conversionoflignin media 4266a7b4). However, biochemical work on a PobA homolog from <em>Agrobacterium tumefaciens</em> demonstrates that PobA can utilize <strong>either NADH or NADPH</strong>, with higher activity on NADPH (4.53 U/mg vs 1.96 U/mg, in vitro; FAD-dependent), illustrating the plausible coenzyme range across homologs (xu2025functionandregulation pages 2-5).</p>
+<h4 id="22-substrate-specificity-and-engineered-variants">2.2 Substrate specificity and engineered variants</h4>
+<p>A 2024 review of microbial lignin valorization highlights <strong>engineered PobA variants</strong> (e.g., <strong>PobAY385F</strong>) that alter/improve substrate usage toward PCA-related chemistry, indicating that PobA’s active site can be tuned for different aromatic hydroxylation/oxidation objectives (zhang2024tappingintothe pages 6-9). Consistent with this, a 2023 KT2440 metabolic-engineering study used a <strong>heterologous PobA* (Y385F)</strong> to push conversion from PCA toward <strong>gallic acid</strong> as part of a synthetic operon, underscoring the practical relevance of PobA mutability for product-directed biocatalysis (dias2023fromdegraderto pages 2-4).</p>
+<hr />
+<h3 id="3-biological-process-context-in-pseudomonas-putida-kt2440">3) Biological process context in <em>Pseudomonas putida</em> KT2440</h3>
+<h4 id="31-role-in-lignin-related-aromatic-funneling">3.1 Role in lignin-related aromatic funneling</h4>
+<p>Aromatic monomers from lignin (and model lignin compounds) are often converted into a smaller set of “central intermediates” such as PCA. In KT2440, a pathway map explicitly places <strong>PobA at 4-HBA→PCA</strong>, upstream of PCA ring cleavage, defining it as an <strong>upper funneling enzyme</strong> (ravi2017conversionoflignin media 4266a7b4, ravi2017conversionoflignin pages 7-9).</p>
+<p>Physiologically, KT2440 grows efficiently on 4-HBA among lignin model compounds (reported specific growth rates ~0.26–0.27 h−1 on benzoate, p-coumarate, and 4-HBA under the tested conditions), consistent with an effective upper pathway that includes PobA (ravi2017conversionoflignin pages 7-9).</p>
+<h4 id="32-regulation-carbon-catabolite-repression-impacts-poba-usage">3.2 Regulation: carbon catabolite repression impacts PobA usage</h4>
+<p>A key KT2440-specific regulatory point retrieved here is that the global carbon catabolite repression regulator <strong>Crc</strong> (working with Hfq) targets translation of multiple aromatic-catabolic proteins; proteomics identified <strong>PobA</strong> among Crc targets. Deletion of <strong>crc</strong> in an engineered KT2440 background reduced accumulation of aromatic intermediates (including 4-HBA) and improved downstream product yields, consistent with derepression of the upper pathway that includes PobA (johnson2017eliminatingaglobal pages 1-3).</p>
+<hr />
+<h3 id="4-cellular-localization-evidence-and-inference">4) Cellular localization (evidence and inference)</h3>
+<p>No KT2440-specific experimental localization (e.g., fractionation, fluorescence tagging) for Q88H28/PP_3537 was present in the retrieved full text. Based on (i) its assignment to a soluble flavin monooxygenase family and (ii) its role in intracellular aromatic intermediate metabolism after substrate uptake, the most plausible localization is <strong>cytosolic (soluble)</strong>. This statement should be treated as <strong>inference</strong>, not direct KT2440 evidence (westphal2018pyridinenucleotidecoenzyme pages 15-15, ravi2017conversionoflignin pages 7-9).</p>
+<p>A broader 2024 review notes that <em>P. putida</em> KT2440 can secrete outer membrane vesicles and has an extracellular proteome enriched in aromatic-catabolism enzymes in lignin-rich contexts, but this does not directly demonstrate PobA secretion/periplasmic localization, and should not be interpreted as localization evidence for PobA itself (zhang2024tappingintothe pages 6-9).</p>
+<hr />
+<h3 id="5-recent-developments-prioritizing-20232024-and-latest-research-themes">5) Recent developments (prioritizing 2023–2024) and latest research themes</h3>
+<h4 id="51-2023-multilevel-regulation-and-redox-constraints-in-aromatic-funneling-generalizable-insight">5.1 2023: multilevel regulation and redox constraints in aromatic funneling (generalizable insight)</h4>
+<p>Wilkes et al. (Nature Chemical Biology, <strong>2023-02</strong>, https://doi.org/10.1038/s41589-022-01237-7) demonstrated in <em>Comamonas testosteroni</em> that aromatic catabolism through PCA is controlled by <strong>transcriptional activation</strong> plus <strong>metabolite-level thermodynamic regulation</strong>, and that 4-HBA→PCA requires reducing power (NADPH or NADH). Quantitatively, during growth on 4-HBA, secreted metabolites represented <strong>28% of 4-HBA-derived carbon</strong>, with about <strong>60% of carbon loss</strong> attributable to secretion of PCA/PDC before entry to central metabolism (wilkes2023complexregulationin pages 1-2). While not a <em>P. putida</em> KT2440 study, this is a high-authority 2023 reference framing why the 4-HBA→PCA gateway step and NAD(P)H supply are central design constraints in aromatic valorization.</p>
+<h4 id="52-2024-authoritative-review-synthesis-for-lignin-valorization">5.2 2024: authoritative review synthesis for lignin valorization</h4>
+<p>Zhang et al. (Green Chemistry, <strong>2024-01</strong>, https://doi.org/10.1039/d4gc03567d) synthesize microbial lignin valorization strategies and explicitly cite PobA as a key hydroxylation node in aromatic funneling, including discussion of engineered PobA variants (e.g., Y385F) used to redirect aromatic intermediates toward value-added products (zhang2024tappingintothe pages 6-9).</p>
+<h4 id="53-2024-near-theoretical-yield-production-regimes-using-p-putida-poba-deletion-as-a-design-lever">5.3 2024: near-theoretical-yield production regimes using <em>P. putida</em> (pobA deletion as a design lever)</h4>
+<p>Bruinsma et al. (bioRxiv, <strong>2024-07</strong>, https://doi.org/10.1101/2024.07.06.602327) reprogrammed <em>P. putida</em> metabolism to make shikimate-pathway-dependent catabolism and used <strong>pobA deletion</strong> as part of a strategy to enable <strong>4-HBA accumulation/excretion</strong> rather than catabolism. Flux balance analysis predicted a maximum 4-HBA yield of <strong>0.39 mol/mol glycerol</strong>; engineered strains achieved <strong>0.35 mol/mol glycerol (0.52 g/g)</strong>, corresponding to <strong>~89.2%</strong> of that predicted maximum (bruinsma2024shikimatepathwaydependentcatabolism pages 10-13, bruinsma2024shikimatepathwaydependentcatabolism pages 1-4). This modern study highlights how removing PobA activity can be beneficial when the engineering objective is <strong>4-HBA production</strong> rather than 4-HBA utilization.</p>
+<h4 id="54-2024-updated-multi-omics-pathway-elucidation-for-4-hba-biodegradation-environmentalbioremediation-relevance">5.4 2024: updated multi-omics pathway elucidation for 4-HBA biodegradation (environmental/bioremediation relevance)</h4>
+<p>Tsagogiannis et al. (IJMS, <strong>2024-01</strong>, https://doi.org/10.3390/ijms25020843) provides a recent, clear definition of the pobA step (4-HBA hydroxylation to PCA by a class A flavin monooxygenase) and shows, in a soil actinobacterium model, that downstream metabolism can proceed through multiple cleavage routes; it also provides quantitative biodegradation phenotypes (e.g., ~92% 4-HBA consumed by 12 h in their system) (tsagogiannis2024elucidationof4hydroxybenzoic pages 1-2, tsagogiannis2024elucidationof4hydroxybenzoic pages 2-4). This supports the current understanding that 4-HBA→PCA is a conserved entry step to diverse aromatic assimilation pathways.</p>
+<hr />
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-lignin-valorization-and-platform-chemical-production-in-kt2440-muconate">6.1 Lignin valorization and platform chemical production in KT2440 (muconate)</h4>
+<p>In KT2440 engineered for muconate production from lignin-related aromatics, derepressing aromatic uptake/upper catabolism (including PobA as a Crc target) improves overall conversion. Johnson et al. (Metabolic Engineering Communications, <strong>2017-12</strong>, https://doi.org/10.1016/j.meteno.2017.05.002) reported that <strong>crc deletion</strong> improved muconate yields (mol/mol) on glucose:<br />
+- From p-coumarate: <strong>56.0 ± 3.0% → 94.6 ± 0.6%</strong> (36 h)<br />
+- From ferulate: <strong>12.0 ± 2.3% → 28.3 ± 3.3%</strong> (72 h)<br />
+with improvements also under acetate co-feeding (johnson2017eliminatingaglobal pages 1-3).</p>
+<p>Although the study optimizes a pathway-level objective and does not isolate PobA kinetics, it is strong evidence that PobA-linked upper pathway capacity is a practical bottleneck/lever in KT2440 aromatic bioconversion (johnson2017eliminatingaglobal pages 1-3).</p>
+<h4 id="62-production-of-gallic-acid-in-kt2440-using-poba-variants">6.2 Production of gallic acid in KT2440 using PobA variants</h4>
+<p>Dias et al. (International Microbiology, <strong>2023-11</strong>, https://doi.org/10.1007/s10123-022-00282-5) demonstrate engineering of KT2440 to produce <strong>gallic acid</strong> from glycerol, using a synthetic operon incorporating a <strong>PobA* (Y385F) variant</strong> (heterologous) and deletions blocking degradation of PCA/GA. The reported final gallic acid concentration was <strong>346.7 ± 0.004 mg/L after 72 h</strong> (dias2023fromdegraderto pages 1-2, dias2023fromdegraderto pages 2-4).</p>
+<h4 id="63-transferability-of-poba-as-a-modular-enzyme-in-heterologous-hosts">6.3 Transferability of PobA as a modular enzyme in heterologous hosts</h4>
+<p>A <em>P. putida</em> pobA expressed in <em>E. coli</em> supported in vivo conversion of 4-HBA to PCA (PCA detection), enabling downstream synthetic routes (e.g., muconate pathway builds) (sengupta2015metabolicengineeringof pages 13-17). This illustrates real-world synthetic biology usage: PobA provides a modular “entry” reaction from 4-HBA into PCA-centered chemistry.</p>
+<hr />
+<h3 id="7-expert-synthesis-and-analysis-authoritative-perspectives">7) Expert synthesis and analysis (authoritative perspectives)</h3>
+<ol>
+<li><strong>PobA is a gateway enzyme</strong>: modern lignin valorization frameworks repeatedly identify hydroxylation steps producing PCA as central “funneling” nodes, and PobA is the canonical 4-HBA→PCA entry point (zhang2024tappingintothe pages 6-9, ravi2017conversionoflignin media 4266a7b4).</li>
+<li><strong>Redox supply is often the hidden constraint</strong>: 4-HBA hydroxylation consumes reducing power, and recent quantitative work shows that even when catabolic enzymes are induced, metabolite-level thermodynamic/redox constraints can dominate aromatic flux outcomes—important for designing strains where PobA flux must be high (wilkes2023complexregulationin pages 1-2).</li>
+<li><strong>Engineering direction determines whether PobA is helpful or harmful</strong>: </li>
+<li>For <em>utilization</em> of 4-HBA (e.g., lignin streams), derepression/robust expression of PobA can improve downstream conversion and yields (johnson2017eliminatingaglobal pages 1-3).</li>
+<li>For <em>production</em> of 4-HBA as a product, <strong>disabling pobA</strong> prevents the cell from consuming the product and can enable near-theoretical yields in engineered regimes (bruinsma2024shikimatepathwaydependentcatabolism pages 10-13).</li>
+</ol>
+<hr />
+<h3 id="8-quantitative-data-highlights-recent-and-foundational">8) Quantitative data highlights (recent and foundational)</h3>
+<ul>
+<li>KT2440 aromatic assimilation: growth rates on 4-HBA reported around <strong>0.26–0.27 h−1</strong> under tested conditions (ravi2017conversionoflignin pages 7-9).</li>
+<li>KT2440 pathway-level outcome: <strong>crc deletion</strong> improves muconate yield from lignin aromatics (up to ~<strong>94.6% mol/mol</strong> from p-coumarate on glucose) (johnson2017eliminatingaglobal pages 1-3).</li>
+<li>KT2440 engineered product: <strong>346.7 mg/L gallic acid</strong> at 72 h using a PobA* variant pathway (dias2023fromdegraderto pages 1-2).</li>
+<li>2024 high-yield production regime: <strong>0.35 mol 4-HBA/mol glycerol (0.52 g/g)</strong>, ~<strong>89.2%</strong> of predicted maximum (<strong>0.39 mol/mol</strong>) in engineered <em>P. putida</em> strains where <strong>pobA is deleted</strong> to avoid 4-HBA consumption (bruinsma2024shikimatepathwaydependentcatabolism pages 10-13).</li>
+<li>2023 systems context (Comamonas): <strong>28%</strong> of 4-HBA-derived carbon secreted as metabolites; ~<strong>60%</strong> of carbon loss attributable to PCA/PDC secretion prior to central metabolism (wilkes2023complexregulationin pages 1-2).</li>
+</ul>
+<hr />
+<h3 id="9-visual-confirmation-of-kt2440-poba-pathway-placement">9) Visual confirmation of KT2440 PobA pathway placement</h3>
+<p>The following cropped figure region directly shows <strong>PobA</strong> catalyzing <strong>4-HBA → PCA</strong> with NADPH and O2 in the KT2440 aromatic degradation map (ravi2017conversionoflignin media 4266a7b4).</p>
+<hr />
+<h3 id="10-summary-of-function-for-annotation-kt2440-q88h28">10) Summary of function for annotation (KT2440 Q88H28)</h3>
+<p><strong>pobA (PP_3537; UniProt Q88H28) encodes a cytosolic flavin-dependent monooxygenase (PHBH-like; EC 1.14.13.2) that hydroxylates 4-hydroxybenzoate to protocatechuate, consuming reducing equivalents and oxygen, thereby funneling lignin- and plant-derived aromatics into the protocatechuate branch of aromatic ring cleavage/β-ketoadipate metabolism.</strong> (ravi2017conversionoflignin media 4266a7b4, ravi2017conversionoflignin pages 7-9, westphal2018pyridinenucleotidecoenzyme pages 15-15)</p>
+<hr />
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key finding</th>
+<th>Evidence (with citation ids)</th>
+<th>Notes/limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene/protein identity</td>
+<td>The requested target matches <strong>pobA / PP_3537 / UniProt Q88H28</strong> in <em>Pseudomonas putida</em> KT2440 and corresponds to <strong>4-hydroxybenzoate 3-monooxygenase</strong> (also called p-hydroxybenzoate hydroxylase, PHBH).</td>
+<td>(westphal2018pyridinenucleotidecoenzyme pages 15-15, ravi2017conversionoflignin pages 7-9)</td>
+<td>Most direct biochemical details in this run come from pathway/context papers and PHBH family literature; not all are specific to PP_3537 protein purification.</td>
+</tr>
+<tr>
+<td>Enzyme class / EC</td>
+<td>PobA is a <strong>flavin-dependent monooxygenase</strong> in the PHBH/PHBH-like family; enzyme commission annotation is <strong>EC 1.14.13.2</strong>.</td>
+<td>(westphal2018pyridinenucleotidecoenzyme pages 15-15, ravi2017conversionoflignin pages 7-9)</td>
+<td>EC assignment is strongly supported by family/function literature and pathway annotation, but this run did not retrieve a KT2440-specific purification paper.</td>
+</tr>
+<tr>
+<td>Catalyzed reaction</td>
+<td>PobA catalyzes <strong>4-hydroxybenzoate (4-HBA) → protocatechuate (3,4-dihydroxybenzoate, PCA)</strong> via hydroxylation at the 3-position.</td>
+<td>(xu2025functionandregulation pages 2-5, ravi2017conversionoflignin pages 7-9, xu2025functionandregulation pages 1-2)</td>
+<td>Reaction assignment is consistent across organisms carrying homologous pobA genes and in KT2440 pathway maps.</td>
+</tr>
+<tr>
+<td>Cofactors / stoichiometry</td>
+<td>The pathway figure for <em>P. putida</em> KT2440 shows consumption of <strong>NADPH + O2 + H+</strong> and formation of <strong>NADP+ + H2O</strong> during 4-HBA hydroxylation; PHBH-family enzymes are FAD-dependent monooxygenases.</td>
+<td>(ravi2017conversionoflignin pages 7-9, ravi2017conversionoflignin media 4266a7b4, westphal2018pyridinenucleotidecoenzyme pages 15-15)</td>
+<td>Direct KT2440 enzymology was not retrieved here; cofactor specificity can vary among PHBH homologs.</td>
+</tr>
+<tr>
+<td>Cofactor specificity nuance</td>
+<td>Across PHBH enzymes, coenzyme usage can differ (<strong>NADPH-specific, NAD(P)H-dependent, or NADH-preferring</strong> clades); a homologous PobA from <em>A. tumefaciens</em> used both NADH and NADPH, with higher activity on NADPH (<strong>4.53 U/mg vs 1.96 U/mg</strong>).</td>
+<td>(westphal2018pyridinenucleotidecoenzyme pages 15-15, xu2025functionandregulation pages 2-5)</td>
+<td>These values are <strong>not</strong> from KT2440 PP_3537 and should be used only as comparative family evidence.</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>In KT2440, PobA is an <strong>upper funneling enzyme</strong> that channels 4-HBA into the <strong>protocatechuate branch of the β-ketoadipate pathway</strong>, connecting lignin-derived aromatics to central metabolism.</td>
+<td>(ravi2017conversionoflignin pages 7-9, johnson2017eliminatingaglobal pages 1-3)</td>
+<td>Strong pathway placement; this run did not retrieve the full genomic neighborhood for PP_3537.</td>
+</tr>
+<tr>
+<td>Substrate context in lignin metabolism</td>
+<td>4-HBA is a key intermediate derived from lignin-related aromatics; limiting conversion of 4-HBA to PCA can constrain downstream production of muconate or PCA-derived products in engineered <em>P. putida</em>.</td>
+<td>(johnson2017eliminatingaglobal pages 1-3, politi2026strategiesforrenewable pages 31-33)</td>
+<td>The “rate-limiting” framing in some engineering summaries comes from downstream interpretation rather than direct enzyme kinetics for KT2440 PobA.</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>In <em>P. putida</em>, <strong>Crc-mediated carbon catabolite repression</strong> affects PobA; proteomics identified PobA as a Crc target, and deleting <strong>crc</strong> reduced accumulation of upstream intermediates and improved aromatic conversion.</td>
+<td>(johnson2017eliminatingaglobal pages 1-3)</td>
+<td>This is the strongest KT2440-specific regulation evidence retrieved in this run; detailed promoter/operator mapping for PP_3537 was not retrieved.</td>
+</tr>
+<tr>
+<td>Additional regulatory context from homolog systems</td>
+<td>In other bacteria, pobA is often induced during 4-HBA catabolism by local regulators such as <strong>PobR</strong>; homolog studies note that in <em>Pseudomonas</em> species, <strong>PobR/PobC</strong>-type regulation has been described.</td>
+<td>(xu2025functionandregulation pages 2-5, xu2025functionandregulation pages 1-2, westphal2018pyridinenucleotidecoenzyme pages 15-15)</td>
+<td>Relevant as comparative evidence, but not a direct characterization of the KT2440 PP_3537 regulatory region.</td>
+</tr>
+<tr>
+<td>Localization inference</td>
+<td>PobA is most plausibly a <strong>soluble cytosolic enzyme</strong>: it acts on intracellular aromatic intermediates after uptake and belongs to soluble FAD-dependent monooxygenase families; no signal peptide or membrane-association evidence was retrieved in this run.</td>
+<td>(westphal2018pyridinenucleotidecoenzyme pages 15-15, ravi2017conversionoflignin pages 7-9)</td>
+<td>This is an <strong>inference</strong>, not a direct experimental localization result from KT2440.</td>
+</tr>
+<tr>
+<td>Structural/domain inference</td>
+<td>PobA belongs to the PHBH-like flavoprotein monooxygenases with <strong>FAD-dependent catalytic machinery</strong> and a mechanistically important coenzyme-interacting region; PHBH studies emphasize <strong>mobile flavin/protein dynamics</strong> in catalysis.</td>
+<td>(westphal2018pyridinenucleotidecoenzyme pages 15-15)</td>
+<td>Structural insights are from PHBH family studies rather than a KT2440-specific structure in this run.</td>
+</tr>
+<tr>
+<td>Application: muconate production</td>
+<td>In engineered KT2440 producing muconate from lignin-derived aromatics, relieving Crc repression improved yields: from <strong>p-coumarate, 56.0 ± 3.0% to 94.6 ± 0.6% mol/mol (36 h)</strong>; from <strong>ferulate, 12.0 ± 2.3% to 28.3 ± 3.3% mol/mol (72 h)</strong> on glucose.</td>
+<td>(johnson2017eliminatingaglobal pages 1-3)</td>
+<td>Improvement reflects pathway-level engineering, not isolated modification of pobA alone.</td>
+</tr>
+<tr>
+<td>Application: acetate co-substrate case</td>
+<td>Under acetate co-feeding, muconate yields also increased after <strong>crc</strong> deletion: <strong>40.7 ± 3.6% to 47.7 ± 0.6%</strong> from p-coumarate and <strong>10.3 ± 0.1% to 16.9 ± 1.4%</strong> from ferulate.</td>
+<td>(johnson2017eliminatingaglobal pages 1-3)</td>
+<td>Again shows pathway impact of better upper-pathway utilization, indirectly relevant to PobA function in aromatic funneling.</td>
+</tr>
+<tr>
+<td>Application: gallic acid engineering</td>
+<td>A heterologous <strong>pobA</strong><em> variant (from </em>P. aeruginosa<em>, Tyr385Phe) was used in engineered KT2440 to convert PCA toward gallic acid; with competing degradation blocked, the strain produced </em><em>346.7 ± 0.004 mg/L gallic acid after 72 h</em>* from glycerol.</td>
+<td>(dias2023fromdegraderto pages 1-2, dias2023fromdegraderto pages 2-4)</td>
+<td>This involves a <strong>heterologous, mutated PobA</strong>, not native KT2440 PP_3537, but it demonstrates the practical engineering value of PobA-type chemistry.</td>
+</tr>
+<tr>
+<td>Application: heterologous pathway transfer</td>
+<td>A <em>P. putida</em> pobA expressed in <em>E. coli</em> was functionally active for <strong>4-HBA → PCA</strong> conversion in vivo, supporting its utility as a transferable aromatic funneling enzyme in synthetic pathways.</td>
+<td>(sengupta2015metabolicengineeringof pages 13-17)</td>
+<td>Quantitative data in that study concern downstream muconate production in <em>E. coli</em>, not native KT2440 physiology.</td>
+</tr>
+<tr>
+<td>Quantitative physiological context</td>
+<td>KT2440 grows relatively well on 4-HBA among lignin model compounds, with reported specific growth rates of about <strong>0.26–0.27 h−1</strong> on benzoate, p-coumarate, and <strong>4-hydroxybenzoate</strong>, indicating efficient upper-pathway assimilation.</td>
+<td>(ravi2017conversionoflignin pages 7-9)</td>
+<td>This is a whole-cell phenotype and does not isolate PobA-specific kinetics.</td>
+</tr>
+<tr>
+<td>Visual evidence retrieved</td>
+<td>A pathway image from KT2440 explicitly places <strong>PobA</strong> on the <strong>4-HBA → PCA</strong> step and annotates the required reducing equivalents/oxygen.</td>
+<td>(ravi2017conversionoflignin media 4266a7b4)</td>
+<td>Useful confirmatory evidence for pathway placement and cofactor usage, but not a standalone biochemical assay.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation of pobA (Q88H28/PP_3537) in Pseudomonas putida KT2440, including reaction chemistry, pathway role, regulation, localization inference, and engineering relevance. It consolidates direct KT2440 evidence with carefully labeled comparative evidence from homologous PobA/PHBH studies retrieved in this run.</em></p>
+<hr />
+<h2 id="limitations-of-this-evidence-set-important-for-correct-annotation">Limitations of this evidence set (important for correct annotation)</h2>
+<ul>
+<li>No KT2440 PP_3537 (Q88H28)-specific purification/steady-state kinetic constants (Km, kcat), crystal structure, or subcellular localization experiments were retrieved in the accessible full texts; cofactor usage in KT2440 is supported by pathway depiction and family knowledge but not by a KT2440-specific enzymology assay here (ravi2017conversionoflignin media 4266a7b4, westphal2018pyridinenucleotidecoenzyme pages 15-15).</li>
+<li>Some mechanistic and quantitative insights come from closely related systems (e.g., <em>Comamonas</em> and actinobacteria), which are explicitly labeled as comparative context rather than KT2440-specific claims (wilkes2023complexregulationin pages 1-2, tsagogiannis2024elucidationof4hydroxybenzoic pages 2-4).</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(ravi2017conversionoflignin pages 7-9): Krithika Ravi, Javier García-Hidalgo, Marie F Gorwa-Grauslund, and Gunnar Lidén. Conversion of lignin model compounds by pseudomonas putida kt2440 and isolates from compost. Applied Microbiology and Biotechnology, 101:5059-5070, Mar 2017. URL: https://doi.org/10.1007/s00253-017-8211-y, doi:10.1007/s00253-017-8211-y. This article has 169 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(westphal2018pyridinenucleotidecoenzyme pages 15-15): Adrie H. Westphal, Dirk Tischler, Florian Heinke, Sarah Hofmann, Janosch A. D. Gröning, Dirk Labudde, and Willem J. H. van Berkel. Pyridine nucleotide coenzyme specificity of p-hydroxybenzoate hydroxylase and related flavoprotein monooxygenases. Frontiers in Microbiology, Dec 2018. URL: https://doi.org/10.3389/fmicb.2018.03050, doi:10.3389/fmicb.2018.03050. This article has 33 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tsagogiannis2024elucidationof4hydroxybenzoic pages 1-2): Epameinondas Tsagogiannis, Stamatia Asimakoula, Alexandros P. Drainas, Orfeas Marinakos, Vasiliki I. Boti, Ioanna S. Kosma, and Anna-Irini Koukkou. Elucidation of 4-hydroxybenzoic acid catabolic pathways in pseudarthrobacter phenanthrenivorans sphe3. International Journal of Molecular Sciences, 25:843, Jan 2024. URL: https://doi.org/10.3390/ijms25020843, doi:10.3390/ijms25020843. This article has 11 citations.</p>
+</li>
+<li>
+<p>(ravi2017conversionoflignin media 4266a7b4): Krithika Ravi, Javier García-Hidalgo, Marie F Gorwa-Grauslund, and Gunnar Lidén. Conversion of lignin model compounds by pseudomonas putida kt2440 and isolates from compost. Applied Microbiology and Biotechnology, 101:5059-5070, Mar 2017. URL: https://doi.org/10.1007/s00253-017-8211-y, doi:10.1007/s00253-017-8211-y. This article has 169 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wilkes2023complexregulationin pages 1-2): Rebecca A. Wilkes, Jacob Waldbauer, Austin Carroll, Manuel Nieto-Domínguez, Darren J. Parker, Lichun Zhang, Adam M. Guss, and Ludmilla Aristilde. Complex regulation in a comamonas platform for diverse aromatic carbon metabolism. Nature Chemical Biology, 19:651-662, Feb 2023. URL: https://doi.org/10.1038/s41589-022-01237-7, doi:10.1038/s41589-022-01237-7. This article has 75 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2025functionandregulation pages 2-5): Nan Xu, Wanyu Wang, Shuang Cheng, Jiaojiao Zuo, and Minliang Guo. Function and regulation of <i>pob</i> genes for 4-hydroxybenzoate catabolism in <i>agrobacterium tumefaciens</i>. Jul 2025. URL: https://doi.org/10.1128/aem.00255-25, doi:10.1128/aem.00255-25. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2024tappingintothe pages 6-9): Xiao-Lei Zhang, Zhi-Hua Liu, Bing-Zhi Li, and Ying-Jin Yuan. Tapping into the natural aromatic potential: microbial lignin valorization towards aromatic fine chemicals. Green Chemistry, 26:11378-11405, Jan 2024. URL: https://doi.org/10.1039/d4gc03567d, doi:10.1039/d4gc03567d. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 2-4): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johnson2017eliminatingaglobal pages 1-3): Christopher W. Johnson, Paul E. Abraham, Jeffrey G. Linger, Payal Khanna, Robert L. Hettich, and Gregg T. Beckham. Eliminating a global regulator of carbon catabolite repression enhances the conversion of aromatic lignin monomers to muconate in pseudomonas putida kt2440. Metabolic Engineering Communications, 5:19-25, Dec 2017. URL: https://doi.org/10.1016/j.meteno.2017.05.002, doi:10.1016/j.meteno.2017.05.002. This article has 150 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bruinsma2024shikimatepathwaydependentcatabolism pages 10-13): Lyon Bruinsma, Christos Batianis, Sara Moreno Paz, Kesi Kurnia, Job. J Dirkmaat, Alexandra Müller, Jose Juncosa Nunez, Ruud A. Weusthuis, and Vitor A. P. Martins dos Santos. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. BioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.06.602327, doi:10.1101/2024.07.06.602327. This article has 0 citations.</p>
+</li>
+<li>
+<p>(bruinsma2024shikimatepathwaydependentcatabolism pages 1-4): Lyon Bruinsma, Christos Batianis, Sara Moreno Paz, Kesi Kurnia, Job. J Dirkmaat, Alexandra Müller, Jose Juncosa Nunez, Ruud A. Weusthuis, and Vitor A. P. Martins dos Santos. Shikimate pathway-dependent catabolism: enabling near-to-maximum production yield of aromatics. BioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.06.602327, doi:10.1101/2024.07.06.602327. This article has 0 citations.</p>
+</li>
+<li>
+<p>(tsagogiannis2024elucidationof4hydroxybenzoic pages 2-4): Epameinondas Tsagogiannis, Stamatia Asimakoula, Alexandros P. Drainas, Orfeas Marinakos, Vasiliki I. Boti, Ioanna S. Kosma, and Anna-Irini Koukkou. Elucidation of 4-hydroxybenzoic acid catabolic pathways in pseudarthrobacter phenanthrenivorans sphe3. International Journal of Molecular Sciences, 25:843, Jan 2024. URL: https://doi.org/10.3390/ijms25020843, doi:10.3390/ijms25020843. This article has 11 citations.</p>
+</li>
+<li>
+<p>(dias2023fromdegraderto pages 1-2): Felipe M. S. Dias, Raoní K. Pantoja, José Gregório C. Gomez, and Luiziana F. Silva. From degrader to producer: reversing the gallic acid metabolism of pseudomonas putida kt2440. International Microbiology, 26:243-255, Nov 2023. URL: https://doi.org/10.1007/s10123-022-00282-5, doi:10.1007/s10123-022-00282-5. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sengupta2015metabolicengineeringof pages 13-17): Sudeshna Sengupta, Sudhakar Jonnalagadda, Lakshani Goonewardena, and Veeresh Juturu. Metabolic engineering of a novel muconic acid biosynthesis pathway via 4-hydroxybenzoic acid in escherichia coli. Applied and Environmental Microbiology, 81:8037-8043, Dec 2015. URL: https://doi.org/10.1128/aem.01386-15, doi:10.1128/aem.01386-15. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2025functionandregulation pages 1-2): Nan Xu, Wanyu Wang, Shuang Cheng, Jiaojiao Zuo, and Minliang Guo. Function and regulation of <i>pob</i> genes for 4-hydroxybenzoate catabolism in <i>agrobacterium tumefaciens</i>. Jul 2025. URL: https://doi.org/10.1128/aem.00255-25, doi:10.1128/aem.00255-25. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(politi2026strategiesforrenewable pages 31-33): PM Politi. Strategies for renewable muconic acid production from lignin-based aromatics through rational metabolic engineering of pseudomonas putida kt2440. Unknown journal, 2026.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>wilkes2023complexregulationin pages 1-2</li>
+<li>westphal2018pyridinenucleotidecoenzyme pages 15-15</li>
+<li>xu2025functionandregulation pages 2-5</li>
+<li>zhang2024tappingintothe pages 6-9</li>
+<li>dias2023fromdegraderto pages 2-4</li>
+<li>ravi2017conversionoflignin pages 7-9</li>
+<li>johnson2017eliminatingaglobal pages 1-3</li>
+<li>sengupta2015metabolicengineeringof pages 13-17</li>
+<li>bruinsma2024shikimatepathwaydependentcatabolism pages 10-13</li>
+<li>dias2023fromdegraderto pages 1-2</li>
+<li>bruinsma2024shikimatepathwaydependentcatabolism pages 1-4</li>
+<li>xu2025functionandregulation pages 1-2</li>
+<li>politi2026strategiesforrenewable pages 31-33</li>
+<li>https://doi.org/10.1038/s41589-022-01237-7</li>
+<li>https://doi.org/10.1039/d4gc03567d</li>
+<li>https://doi.org/10.1101/2024.07.06.602327</li>
+<li>https://doi.org/10.3390/ijms25020843</li>
+<li>https://doi.org/10.1016/j.meteno.2017.05.002</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5</li>
+<li>https://doi.org/10.1007/s00253-017-8211-y,</li>
+<li>https://doi.org/10.3389/fmicb.2018.03050,</li>
+<li>https://doi.org/10.3390/ijms25020843,</li>
+<li>https://doi.org/10.1038/s41589-022-01237-7,</li>
+<li>https://doi.org/10.1128/aem.00255-25,</li>
+<li>https://doi.org/10.1039/d4gc03567d,</li>
+<li>https://doi.org/10.1007/s10123-022-00282-5,</li>
+<li>https://doi.org/10.1016/j.meteno.2017.05.002,</li>
+<li>https://doi.org/10.1101/2024.07.06.602327,</li>
+<li>https://doi.org/10.1128/aem.01386-15,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pobA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88H28" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="poba-notes">pobA Notes</h1>
+<ul>
+<li><code>pobA</code> in <em>Pseudomonas putida</em> KT2440 corresponds to UniProt <code>Q88H28</code> / locus <code>PP_3537</code> and is a 395 aa protein annotated as <code>4-hydroxybenzoate 3-monooxygenase</code> with EC <code>1.14.13.2</code> [file:PSEPK/pobA/pobA-uniprot.txt "RecName: Full=4-hydroxybenzoate 3-monooxygenase"; "OrderedLocusNames=PP_3537"; "395 AA"].</li>
+<li>The UniProt entry includes PDB <code>6DLL</code> and explicit FAD-binding features, supporting a flavin-dependent monooxygenase mechanism rather than a generic oxidoreductase-only description [file:PSEPK/pobA/pobA-uniprot.txt "X-RAY CRYSTALLOGRAPHY (2.20 ANGSTROMS) IN COMPLEX WITH FAD"; "BINDING 13 /ligand=\"FAD\""].</li>
+<li>Falcon deep research for KT2440 converged on the same pathway placement: PobA is the <code>4-HBA -&gt; PCA</code> gateway enzyme in the protocatechuate branch of aromatic degradation, with inferred cytosolic localization and NADPH/O2-dependent monooxygenase chemistry [file:PSEPK/pobA/pobA-deep-research-falcon.md "PobA catalyzing 4-HBA -&gt; PCA with NADPH and O2"; "encodes a cytosolic flavin-dependent monooxygenase"].</li>
+<li>KT2440 PobA is described as converting <code>4-hydroxybenzoic acid (4-HBA)</code> to <code>3,4-dihydroxybenzoic acid</code> (protocatechuate) using oxygen, FAD, and NADPH, which supports <code>GO:0018659 4-hydroxybenzoate 3-monooxygenase activity</code> as the core MF [DOI:10.1016/j.ymben.2021.12.010].</li>
+<li>The automated GO BP annotations to <code>benzoate metabolic process</code> and <code>benzoate catabolic process</code> look overgeneralized for this gene because PobA acts on hydroxy-substituted benzoate and feeds the protocatechuate branch, not the unsubstituted benzoate-to-catechol branch [file:PSEPK/pobA/pobA-goa.tsv "GO:0018874 benzoate metabolic process"; "GO:0043639 benzoate catabolic process"].</li>
+<li><code>GO:0050660 flavin adenine dinucleotide binding</code> is the better cofactor-binding term to keep; <code>GO:0071949 FAD binding</code> is effectively redundant with it and is removed as a duplicate in other reviews in this repository [file:PSEPK/pobA/pobA-goa.tsv "GO:0050660 flavin adenine dinucleotide binding"; "GO:0071949 FAD binding"].</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88H28
+gene_symbol: pobA
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  pobA encodes an FAD-dependent 4-hydroxybenzoate 3-monooxygenase that uses NADPH
+  and molecular oxygen to hydroxylate 4-hydroxybenzoate to 3,4-dihydroxybenzoate
+  (protocatechuate). This is a peripheral aromatic-catabolic step that feeds the
+  protocatechuate branch of aromatic degradation rather than the unsubstituted
+  benzoate-to-catechol branch.
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      PobA is certainly an oxidoreductase, but this term is only a very broad parent
+      of the much more informative catalytic term GO:0018659. The UniProt entry and
+      KT2440 literature both identify PobA specifically as a 4-hydroxybenzoate
+      3-monooxygenase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term is technically correct but too general to be useful once the specific
+      substrate-defined monooxygenase activity is present.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+        supporting_text: &#34;RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2&#34;
+- term:
+    id: GO:0016709
+    label: oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, NAD(P)H as one donor, and incorporation of one atom of oxygen
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      This class-level monooxygenase term is mechanistically consistent with PobA,
+      which is an FAD/NADPH-dependent oxygenase. However, GO:0018659 already captures
+      the exact substrate-specific reaction carried out by this enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The annotation is redundant with the more precise 4-hydroxybenzoate
+      3-monooxygenase activity term and adds little biological specificity.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+        supporting_text: &#34;PobA is the 4-HBA -&gt; PCA gateway enzyme in KT2440&#34;
+- term:
+    id: GO:0018659
+    label: 4-hydroxybenzoate 3-monooxygenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the core catalytic function of PobA. The enzyme is explicitly identified
+      as 4-hydroxybenzoate 3-monooxygenase in UniProt, and KT2440-focused literature
+      describes the PobA reaction as conversion of 4-hydroxybenzoate to
+      3,4-dihydroxybenzoate/protocatechuate using oxygen, FAD, and NADPH.
+    action: ACCEPT
+    reason: &gt;-
+      The term precisely matches the known biochemical activity and is the most
+      informative molecular-function annotation for this gene.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+        supporting_text: &#34;RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2&#34;
+      - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+        supporting_text: &#34;PobA catalyzing 4-HBA -&gt; PCA with NADPH and O2&#34;
+- term:
+    id: GO:0018874
+    label: benzoate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      This biological-process assignment is likely an automated substrate overgeneralization.
+      PobA acts on 4-hydroxybenzoate, not unsubstituted benzoate, and produces
+      protocatechuate. That places the enzyme on the hydroxybenzoate/protocatechuate
+      branch rather than generic benzoate metabolism.
+    action: REMOVE
+    reason: &gt;-
+      The substrate specificity is wrong for plain benzoate metabolism. A product-centric
+      process such as 3,4-dihydroxybenzoate biosynthetic/metabolic process is a closer
+      representation, and GO currently lacks a clean 4-hydroxybenzoate catabolic term.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+        supporting_text: &#34;feeds the protocatechuate branch rather than benzoate-to-catechol&#34;
+- term:
+    id: GO:0043639
+    label: benzoate catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation points to the wrong peripheral branch. Benzoate catabolism in
+      KT2440 is associated with conversion of benzoate to catechol, whereas PobA
+      converts 4-hydroxybenzoate to protocatechuate.
+    action: REMOVE
+    reason: &gt;-
+      There is no evidence here for direct participation in unsubstituted benzoate
+      catabolism, and the annotation likely arose from family-level transfer rather
+      than the actual substrate handled by PobA.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+        supporting_text: &#34;PobA catalyzes 4-HBA -&gt; PCA, not benzoate -&gt; catechol&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      PobA binds FAD as an obligate cofactor. The UniProt entry records a crystal
+      structure of KT2440 PobA in complex with FAD and lists multiple FAD-contacting
+      residues.
+    action: ACCEPT
+    reason: &gt;-
+      FAD binding is a direct, mechanistically central molecular property of the
+      enzyme and is well supported by structural evidence.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+        supporting_text: &#34;X-RAY CRYSTALLOGRAPHY (2.20 ANGSTROMS) IN COMPLEX WITH FAD&#34;
+      - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+        supporting_text: &#34;BINDING 13 /ligand=\&#34;FAD\&#34;&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This annotation describes the same cofactor-binding function as GO:0050660.
+      Keeping both terms would duplicate the same molecular property without adding
+      biological specificity.
+    action: REMOVE
+    reason: &gt;-
+      GO:0050660 is the clearer and more descriptive FAD-binding term, so GO:0071949
+      is best treated as a redundant duplicate here.
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+        supporting_text: &#34;KW   FAD&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+    - statement: InterPro correctly identifies PobA as a flavin-dependent monooxygenase scaffold and supports FAD binding.
+    - statement: InterPro-derived biological-process transfer overreaches when it assigns PobA to unsubstituted benzoate catabolism.
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings:
+    - statement: Sequence-transfer rules recover broad pathway placement but can blur the important substrate distinction between benzoate and 4-hydroxybenzoate branches.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+    - statement: ARBA correctly places PobA among NAD(P)H-dependent oxygenases, but the substrate-specific monooxygenase term is the key curation outcome.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings:
+    - statement: Combined IEA methods correctly recover the exact monooxygenase activity term GO:0018659.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+  findings:
+    - statement: Establishes pobA/PP_3537 as part of the KT2440 genome.
+- id: DOI:10.1107/S2053230X19008653
+  title: Structural comparison of p-hydroxybenzoate hydroxylase (PobA) from Pseudomonas putida with PobA from other Pseudomonas spp. and other monooxygenases.
+  findings:
+    - statement: Provides a KT2440 PobA crystal structure with bound FAD and supports classification as a flavin-dependent monooxygenase.
+- id: DOI:10.1007/s00253-017-8211-y
+  title: Conversion of lignin model compounds by Pseudomonas putida KT2440 and isolates from compost.
+  findings:
+    - statement: Places PobA at the 4-hydroxybenzoate-to-protocatechuate step in the KT2440 aromatic degradation map.
+    - statement: Supports NADPH and oxygen use for the KT2440 pathway step.
+- id: DOI:10.1016/j.ymben.2021.12.010
+  title: Pseudomonas putida KT2440 engineered for efficient salicylate and gentisate production from lignin-derived para-coumarate.
+  findings:
+    - statement: Describes PobA in KT2440 as converting 4-hydroxybenzoic acid to 3,4-dihydroxybenzoic acid.
+    - statement: Reinforces NADPH-dependent hydroxylation chemistry for the KT2440 enzyme.
+- id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+  title: Deep research summary for pobA
+  findings:
+    - statement: Identifies PobA as the 4-HBA-to-PCA gateway enzyme in KT2440.
+    - statement: Places PobA in the protocatechuate branch of aromatic degradation rather than the benzoate-to-catechol branch.
+    - statement: Infers cytosolic localization for the soluble flavin monooxygenase.
+- id: file:PSEPK/pobA/pobA-uniprot.txt
+  title: UniProt entry Q88H28
+  findings:
+    - statement: Identifies PobA as EC 1.14.13.2 4-hydroxybenzoate 3-monooxygenase.
+    - statement: Lists PDB 6DLL and multiple FAD-binding features for the KT2440 protein.
+core_functions:
+- description: &gt;-
+    PobA is an FAD-dependent monooxygenase that uses NADPH and molecular oxygen
+    to hydroxylate 4-hydroxybenzoate to 3,4-dihydroxybenzoate (protocatechuate),
+    supplying the protocatechuate branch of aromatic compound degradation.
+  molecular_function:
+    id: GO:0018659
+    label: 4-hydroxybenzoate 3-monooxygenase activity
+  directly_involved_in:
+    - id: GO:0046279
+      label: 3,4-dihydroxybenzoate biosynthetic process
+  supported_by:
+    - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+      supporting_text: &#34;PobA catalyzing 4-HBA -&gt; PCA with NADPH and O2&#34;
+    - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+      supporting_text: &#34;RecName: Full=4-hydroxybenzoate 3-monooxygenase; EC=1.14.13.2&#34;
+- description: &gt;-
+    PobA noncovalently binds FAD as the catalytic flavin cofactor required for
+    oxygen activation during monooxygenase chemistry.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  directly_involved_in:
+    - id: GO:0046279
+      label: 3,4-dihydroxybenzoate biosynthetic process
+  supported_by:
+    - reference_id: file:PSEPK/pobA/pobA-uniprot.txt
+      supporting_text: &#34;X-RAY CRYSTALLOGRAPHY (2.20 ANGSTROMS) IN COMPLEX WITH FAD&#34;
+proposed_new_terms:
+  - proposed_name: 4-hydroxybenzoate catabolic process
+    proposed_definition: &gt;-
+      The chemical reactions and pathways resulting in the breakdown of
+      4-hydroxybenzoate, beginning with its hydroxylation to 3,4-dihydroxybenzoate
+      (protocatechuate) and continuing through downstream aromatic catabolic steps.
+    justification: &gt;-
+      Existing GO terms capture benzoate catabolism and 3,4-dihydroxybenzoate
+      metabolism, but they do not provide a substrate-specific term for the
+      4-hydroxybenzoate branch. This gap encourages incorrect automated transfer of
+      PobA annotations to benzoate catabolic process.
+    proposed_parent:
+      id: GO:0009056
+      label: catabolic process
+    supported_by:
+      - reference_id: file:PSEPK/pobA/pobA-deep-research-falcon.md
+        supporting_text: &#34;PobA is the 4-HBA -&gt; PCA gateway enzyme in KT2440&#34;
+suggested_questions:
+  - question: Which regulator directly controls pobA transcription in KT2440 during growth on 4-hydroxybenzoate?
+  - question: Is PobA the only physiologically relevant route from 4-hydroxybenzoate to protocatechuate under standard laboratory conditions?
+suggested_experiments:
+  - hypothesis: PobA is required for growth on 4-hydroxybenzoate but dispensable for growth on downstream protocatechuate.
+    description: Construct a clean delta-pobA mutant and compare growth plus extracellular metabolite profiles on benzoate, 4-hydroxybenzoate, and protocatechuate.
+    experiment_type: microbial growth assay with targeted metabolomics
+  - hypothesis: pobA induction is specific to the 4-hydroxybenzoate branch and not to unsubstituted benzoate catabolism.
+    description: Measure pobA, pca, and ben operon transcript levels by RT-qPCR or RNA-seq after shifting KT2440 cells to benzoate versus 4-hydroxybenzoate.
+    experiment_type: transcriptional profiling
+  - hypothesis: FAD-binding residues observed in the KT2440 structure are required for catalytic turnover.
+    description: Mutate selected FAD-contacting residues from the UniProt/PDB annotation and assay recombinant enzyme activity with 4-hydroxybenzoate and NADPH.
+    experiment_type: site-directed mutagenesis with enzyme kinetics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

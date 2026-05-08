@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>algD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>algD</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NC4" target="_blank" class="term-link">
+                        Q88NC4
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "algD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NC4" data-a="DESCRIPTION: AlgD is the GDP-mannose 6-dehydrogenase that conve..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AlgD is the GDP-mannose 6-dehydrogenase that converts GDP-mannose to GDP-mannuronate, the committed precursor-forming step in alginate biosynthesis. In Pseudomonas putida KT2440, alginate production and algD expression are most prominent under water-limiting conditions, where alginate contributes to hydrated biofilm microenvironments and protection from dehydration-associated stress, while playing a comparatively minor role in standard biofilm stability assays.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC4" data-a="GO:0016616" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This mechanistic parent term is correct for AlgD. The enzyme oxidizes the CH-OH group of GDP-mannose using NAD+ as electron acceptor to generate GDP-mannuronate. It is less specific than GO:0047919 but still accurately describes the reaction chemistry.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=GDP-alpha-D-mannose + 2 NAD(+) + H2O = GDP-alpha-D-mannuronate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most defensible direct function assignment is GDP-mannose 6-dehydrogenase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                    GO:0042121
+                                </a>
+                            </span>
+                            <span class="term-label">alginic acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC4" data-a="GO:0042121" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct and captures the direct pathway role of AlgD. AlgD generates GDP-mannuronate, the committed precursor for alginate synthesis. KT2440 literature shows alginate production and algD-pathway expression under water-limiting conditions, although alginate is not the dominant exopolysaccharide in every biofilm assay.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Glycan biosynthesis; alginate biosynthesis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20236161" target="_blank" class="term-link">
+                                        PMID:20236161
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22138988" target="_blank" class="term-link">
+                                        PMID:22138988
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Upregulation of alginate genes was notable in this early response.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AlgD is directly involved in alginate biosynthesis because it generates GDP-mannuronate, the committed precursor for alginate polymerization.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047919" target="_blank" class="term-link">
+                                    GO:0047919
+                                </a>
+                            </span>
+                            <span class="term-label">GDP-mannose 6-dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC4" data-a="GO:0047919" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and best supported molecular function term for AlgD. The UniProt record identifies the protein as GDP-mannose 6-dehydrogenase and gives the expected NAD-dependent oxidation of GDP-mannose to GDP-mannuronate. This is the core catalytic activity of the gene product.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Full=GDP-mannose 6-dehydrogenase;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=GDP-alpha-D-mannose + 2 NAD(+) + H2O = GDP-alpha-D-mannuronate</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The most defensible direct function assignment is GDP-mannose 6-dehydrogenase activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC4" data-a="GO:0051287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is correct as a supporting molecular function. AlgD is an NAD-dependent dehydrogenase with an N-terminal Rossmann-like nucleotide-binding domain, and the UniProt record lists multiple NAD(+) binding residues. This term is less informative than the catalytic activity term but remains valid.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">NAD(P)-binding Rossmann-like Domain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">ligand=&#34;NAD(+)&#34;</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algD/algD-deep-research-manual.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The presence of an NAD(P)-binding Rossmann-like domain and annotated NAD(+) binding residues supports the NAD-binding annotation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>AlgD catalyzes the NAD-dependent oxidation of GDP-mannose to GDP-mannuronate, the committed precursor-forming step in alginate biosynthesis. In KT2440, algD-pathway expression is particularly evident under water-limiting conditions, where alginate contributes to hydrated biofilm structure and stress tolerance.</h3>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="FUNCTION: AlgD catalyzes the NAD-dependent oxidation of GDP-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047919" target="_blank" class="term-link">
+                            GDP-mannose 6-dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                alginic acid biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/algD/algD-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20236161" target="_blank" class="term-link">
+                                PMID:20236161
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/algD/algD-deep-research-manual.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">AlgD is directly involved in alginate biosynthesis because it generates GDP-mannuronate, the committed precursor for alginate polymerization.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro domain mappings support the NAD-binding annotation for AlgD.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated sources recover the correct catalytic and pathway-level annotations for AlgD.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/algD/algD-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88NC4 for algD / PP_1288</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AlgD is annotated as GDP-mannose 6-dehydrogenase (EC 1.1.1.132).</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt gives the reaction GDP-mannose plus NAD plus water to GDP-mannuronate plus NADH and protons.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places the protein in glycan biosynthesis, specifically alginate biosynthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein belongs to the UDP-glucose/GDP-mannose dehydrogenase family and contains an NAD(P)-binding Rossmann-like domain.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/algD/algD-deep-research-manual.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual deep research summary for algD in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AlgD has GDP-mannose 6-dehydrogenase activity and supplies GDP-mannuronate for alginate biosynthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 literature supports alginate pathway induction under water limitation but indicates alginate is not the dominant matrix polymer in every biofilm condition.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17601783" target="_blank" class="term-link">
+                            PMID:17601783
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Alginate production by Pseudomonas putida creates a hydrated microenvironment and contributes to biofilm architecture and stress tolerance under water-limiting conditions.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Under water-limiting conditions alginate production increases in P. putida.</div>
+                        
+                        <div class="finding-text">"Total exopolysaccharide (EPS) and alginate production increased with increasing matric, but not solute, stress severity, and alginate was a significant component, but not the major component, of EPS."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">algD mutants show altered biofilm architecture under water limitation.</div>
+                        
+                        <div class="finding-text">"Alginate influenced biofilm architecture, resulting in biofilms that were taller, covered less surface area, and had a thicker EPS layer at the air interface than those formed by an mt-2 algD mutant under water-limiting conditions, properties that could contribute to less evaporative water loss."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alginate deficiency decreases desiccation survival.</div>
+                        
+                        <div class="finding-text">"Alginate deficiency decreased survival of desiccation not only by P. putida but also by Pseudomonas aeruginosa PAO1 and Pseudomonas syringae pv. syringae B728a."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19222541" target="_blank" class="term-link">
+                            PMID:19222541
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Influence of water limitation on endogenous oxidative stress and cell death within unsaturated Pseudomonas putida biofilms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Under water limitation, alginate attenuates dehydration-mediated oxidative stress in P. putida biofilms.</div>
+                        
+                        <div class="finding-text">"Under water-limiting conditions, ROS accumulation is greater in an DeltaalgD mutant compared with the wild type, suggesting that the exopolysaccharide alginate attenuates the extent of dehydration-mediated oxidative stress."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20236161" target="_blank" class="term-link">
+                            PMID:20236161
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transient alginate gene expression by Pseudomonas putida biofilm residents under water-limiting conditions reflects adaptation to the local environment.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">algD operon expression is transiently induced in biofilm residents during dehydration and water limitation.</div>
+                        
+                        <div class="finding-text">"Here we report that during growth under water-limiting conditions and when biofilms become dehydrated most residents transiently express the alginate biosynthesis genes leading to distinct spatial patterns as the biofilm ages."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Alginate production in KT2440 under water limitation helps maintain a hydrated microenvironment.</div>
+                        
+                        <div class="finding-text">"Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21507178" target="_blank" class="term-link">
+                            PMID:21507178
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Influence of putative exopolysaccharide genes on Pseudomonas putida KT2440 biofilm stability.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The alg cluster plays only a minor role in KT2440 biofilm formation and stability under the tested standard conditions.</div>
+                        
+                        <div class="finding-text">"The gene clusters alg and bcs, which code for proteins mediating alginate and cellulose biosynthesis, were found to play minor roles in P. putida KT2440 biofilm formation and stability under the conditions tested."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22138988" target="_blank" class="term-link">
+                            PMID:22138988
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptome dynamics of Pseudomonas putida KT2440 under water stress.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Water stress causes early upregulation of alginate genes in KT2440.</div>
+                        
+                        <div class="finding-text">"Upregulation of alginate genes was notable in this early response."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which environmental and regulatory inputs beyond water limitation most strongly control algD expression in Pseudomonas putida KT2440?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="Q: Which environmental and regulatory inputs beyond w..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> In which habitats or growth states does alginate become a major, rather than minor, matrix component in KT2440 relative to other exopolysaccharides such as Pea and Peb?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="Q: In which habitats or growth states does alginate b..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are there measurable differences in catalytic efficiency or regulation between KT2440 AlgD and the better-studied Pseudomonas aeruginosa homologs?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="Q: Are there measurable differences in catalytic effi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify KT2440 AlgD and measure GDP-mannose to GDP-mannuronate conversion in vitro with NAD+ to obtain direct kinetic evidence for the predicted catalytic activity in this strain.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KT2440 AlgD is an NAD-dependent GDP-mannose 6-dehydrogenase with substrate specificity matching the UniProt-assigned reaction.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Enzyme purification and steady-state kinetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="EXPERIMENT: Purify KT2440 AlgD and measure GDP-mannose to GDP-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare wild type, deltaalgD, and complemented strains under matric versus solute stress while quantifying alginate, biofilm architecture, and desiccation survival.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: algD-dependent alginate production specifically improves fitness under water-limiting conditions more than under purely osmotic stress.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Mutant/complementation biofilm stress assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="EXPERIMENT: Compare wild type, deltaalgD, and complemented str..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use promoter-reporter fusions and RNA-seq in KT2440 across defined hydration states and carbon sources to map the upstream regulatory logic controlling algD expression.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: algD induction is driven by a specific dehydration-responsive regulatory program rather than by generic slowing of metabolism.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: Reporter assay and transcriptomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC4" data-a="EXPERIMENT: Use promoter-reporter fusions and RNA-seq in KT244..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(algD-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NC4" data-a="DOC: Deep Research Manual" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="algd-deep-research-manual-summary">algD Deep Research Manual Summary</h1>
+<h2 id="identification">Identification</h2>
+<p>AlgD in <em>Pseudomonas putida</em> KT2440 (UniProt <code>Q88NC4</code>, locus <code>PP_1288</code>) is annotated in UniProt as GDP-mannose 6-dehydrogenase / GMD, EC 1.1.1.132, a member of the UDP-glucose/GDP-mannose dehydrogenase family with an NAD(P)-binding Rossmann-like domain.</p>
+<h2 id="molecular-function">Molecular Function</h2>
+<p>The most defensible direct function assignment is GDP-mannose 6-dehydrogenase activity. UniProt states that AlgD catalyzes oxidation of GDP-D-mannose to GDP-D-mannuronic acid, matching the specific GO catalytic term and the broader oxidoreductase parent term. The presence of an NAD(P)-binding Rossmann-like domain and annotated NAD(+) binding residues supports the NAD-binding annotation.</p>
+<h2 id="biological-process">Biological Process</h2>
+<p>AlgD is directly involved in alginate biosynthesis because it generates GDP-mannuronate, the committed precursor for alginate polymerization. In KT2440-specific literature, alginate production and alginate-gene expression are most prominent under water-limiting / matric-stress conditions rather than as a uniformly dominant biofilm matrix program across all conditions.</p>
+<p>Chang et al. 2007 showed that alginate production rises under matric stress, that alginate changes biofilm architecture, and that alginate deficiency reduces desiccation survival. Li et al. 2010 found transient induction of alginate biosynthesis genes, including the <code>algD</code> operon context, during dehydration in KT2440 biofilms. Gülez et al. 2012 found early upregulation of alginate genes during water stress. Nilsson et al. 2011, however, found that the <code>alg</code> cluster played only a minor role in KT2440 biofilm formation and stability under their tested standard conditions.</p>
+<h2 id="curation-conclusion">Curation Conclusion</h2>
+<p>The existing GOA annotations are broadly sound:</p>
+<ul>
+<li><code>GO:0047919</code> GDP-mannose 6-dehydrogenase activity: core catalytic function, accept.</li>
+<li><code>GO:0016616</code> oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor: correct mechanistic parent term, accept.</li>
+<li><code>GO:0051287</code> NAD binding: valid cofactor-binding support term, accept.</li>
+<li><code>GO:0042121</code> alginic acid biosynthetic process: accept, but note that the physiological importance of alginate in KT2440 is condition dependent and strongest under water limitation.</li>
+</ul>
+<p>I do not see a strong case for adding broader downstream phenotype/process terms such as generic biofilm formation or stress response as core annotations, because the evidence is contextual and mediated through alginate production rather than a separate direct role for AlgD itself.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Openai</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(algD-deep-research-openai.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NC4" data-a="DOC: Deep Research Openai" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: openai<br />
+model: o3-deep-research-2025-06-26<br />
+cached: false<br />
+start_time: '2026-03-20T23:58:43.129089'<br />
+end_time: '2026-03-21T00:06:16.756221'<br />
+duration_seconds: 453.63<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: algD<br />
+  gene_symbol: algD<br />
+  uniprot_accession: Q88NC4<br />
+  protein_description: 'RecName: Full=GDP-mannose 6-dehydrogenase; Short=GMD; EC=1.1.1.132;'<br />
+  gene_info: Name=algD; OrderedLocusNames=PP_1288;<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the UDP-glucose/GDP-mannose dehydrogenase family.<br />
+  protein_domains: 6-PGluconate_DH-like_C_sf. (IPR008927); GDPman_DH. (IPR028358);<br />
+    NAD(P)-bd_dom_sf. (IPR036291); UDP-Glc/GDP-Man. (IPR017476); UDP-Glc/GDP-Man_DH_C.<br />
+    (IPR014027)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+    max_tokens: 3000<br />
+    top_p: 1.0<br />
+citation_count: 102</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88NC4</li>
+<li><strong>Protein Description:</strong> RecName: Full=GDP-mannose 6-dehydrogenase; Short=GMD; EC=1.1.1.132;</li>
+<li><strong>Gene Information:</strong> Name=algD; OrderedLocusNames=PP_1288;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the UDP-glucose/GDP-mannose dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> 6-PGluconate_DH-like_C_sf. (IPR008927); GDPman_DH. (IPR028358); NAD(P)-bd_dom_sf. (IPR036291); UDP-Glc/GDP-Man. (IPR017476); UDP-Glc/GDP-Man_DH_C. (IPR014027)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "algD" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'algD' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>algD</strong> (gene ID: algD, UniProt: Q88NC4) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<h1 id="functional-annotation-of-algd-in-pseudomonas-putida-kt2440">Functional Annotation of <strong>algD</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="gene-and-enzyme-overview-key-concepts">Gene and Enzyme Overview (Key Concepts)</h2>
+<p>The <strong>algD</strong> gene of <em>P. putida</em> KT2440 encodes <strong>GDP-mannose 6-dehydrogenase (GMD)</strong>, an NAD-dependent enzyme that catalyzes the <strong>irreversible double oxidation</strong> of GDP-mannose to GDP-mannuronic acid (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). This reaction provides the activated sugar acid precursor for alginate biosynthesis and is considered the <strong>committed, rate-regulating step</strong> in the alginate production pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>). GMD belongs to the UDP-glucose/GDP-mannose dehydrogenase family and carries the conserved <strong>Rossmann-fold NAD⁺-binding</strong> domain. Each ~48 kDa GMD monomer has an N-terminal domain that binds GDP-mannose and NAD⁺, and a C-terminal catalytic domain harboring an essential cysteine residue (Cys238) at the active site (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=48%2C000%20Daltons%20molecular%20weight%20polypeptide%2C,swapped%20dimer">pmc.ncbi.nlm.nih.gov</a>). Crystal structure analyses (1.55 Å resolution) have shown that GMD functions as a <strong>domain-swapped dimer</strong>, with two subunits cooperating to form each active site (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=adenine%20dinucleotide%20%28NAD%5E%7B%2B%7D%29%2C%20the%20carboxy,contributing%20to%20each%20active%20site">pmc.ncbi.nlm.nih.gov</a>). Notably, the enzyme’s kinetics exhibit <strong>negative cooperativity</strong> in substrate binding: one high-affinity site (K_M ~13 μM) and a second lower-affinity interaction (~3 mM) have been observed (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=strains%20exhibits%20strong%20negative%20cooperativity,mannose%20dehydrogenase%20inhibition">pmc.ncbi.nlm.nih.gov</a>). This suggests GMD operates with allosteric regulation, performing two sequential oxidation steps without releasing an intermediate (a transient hemiacetal form remains enzyme-bound) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=strains%20exhibits%20strong%20negative%20cooperativity,mannose%20dehydrogenase%20inhibition">pmc.ncbi.nlm.nih.gov</a>). Overall, the AlgD-encoded GMD is a <strong>key cytosolic enzyme</strong> that commits mannose from central metabolism into alginate biosynthesis, effectively controlling flux into polymer production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>). In <em>P. putida</em>, <strong>algD</strong> (locus <em>PP_1288</em>) is the first gene of the alginate operon (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>), and its product’s activity is indispensable for supplying alginate precursors.  </p>
+<p>Alginate itself is a high-molecular-weight <strong>exopolysaccharide (EPS)</strong> composed of β-1,4-linked <strong>D-mannuronic acid (M)</strong> and its C5-epimer L-guluronic acid (G) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=to%20produce%20alginate%2C%20a%20major,to%20alleviate%20the%20effect%20of">pmc.ncbi.nlm.nih.gov</a>). The proportions of M and G in the polymer determine its physical properties (viscosity, gel strength), underpinning alginate’s wide use in food, pharmaceutical, and biomedical applications (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=Alginates%20are%20polysaccharides%20composed%20of,GMP.%20This%20regulatory%20network%20links">pmc.ncbi.nlm.nih.gov</a>). Bacterial alginate (sometimes called <em>mucoid polysaccharide</em> in pathogenic contexts) is chemically similar to algal alginate, consisting of M and G blocks often O-acetylated on the M residues (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=infection%20,acetylation%20%5B5%20%2C%208">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). The <strong>algD/GMD enzyme provides GDP-mannuronate</strong>, the immediate building block for polymerization. Because GDP-mannuronic acid is not utilized in other core pathways, the GMD-catalyzed step is essentially a one-way branch committing resources to alginate assembly (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>). Consistent with this role, <strong>genetic and biochemical studies identify AlgD as a crucial control point</strong>: its expression and activity directly impact alginate yield (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>). In summary, <em>algD</em> encodes a GDP-mannose dehydrogenase that is central to alginate biosynthesis – defining the entry of metabolic carbon into alginate and thereby influencing the bacterium’s ability to produce this important polysaccharide.  </p>
+<h2 id="role-in-alginate-biosynthesis-pathway">Role in Alginate Biosynthesis Pathway</h2>
+<p><strong>Alginate biosynthesis</strong> in <em>Pseudomonas</em> involves a pathway of precursor formation, polymerization, and export in which AlgD/GMD is the last cytosolic enzyme. The pathway begins in central metabolism: fructose-6-phosphate is converted to mannose-6-phosphate by phosphomannose isomerase (AlgA) and then to mannose-1-phosphate via phosphomannomutase (AlgC) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). Mannose-1-phosphate is coupled with GTP to yield GDP-mannose (a step carried out by the GDP-mannose pyrophosphorylase domain of AlgA) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). <strong>AlgD (GMD)</strong> then oxidizes GDP-mannose to <strong>GDP-mannuronic acid</strong>, using NAD⁺ as cofactor and producing NADH (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). This AlgD-catalyzed reaction is <strong>irreversible</strong> and supplies GDP-mannuronate (ManA), the activated sugar monomer that will form the alginate polymer (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>After AlgD’s action, the pathway moves to the inner membrane and periplasm. The polymerization of alginate is thought to be initiated by a glycosyltransferase complex at the cytoplasmic membrane: <strong>Alg8</strong>, an inner-membrane polymerase, likely adds GDP-mannuronate units to the growing poly-M chain, with <strong>Alg44</strong> (a c-di-GMP–binding regulatory protein) activating or stabilizing this process (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). The nascent polymannuronate chain is exported across the periplasm and outer membrane through a multicomponent secretory complex. <strong>AlgE</strong>, an outer membrane porin, forms a channel that translocates the polymer out of the cell (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). As the polymer passes through the periplasm, it undergoes modifications: <strong>AlgI, AlgJ, and AlgF</strong> enzymes acetylate some of the mannuronate residues, and <strong>AlgG</strong> (a mannuronan C-5 epimerase) enzymatically converts a fraction of D-mannuronate to L-guluronate, creating the MG-blocks characteristic of alginate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Mannuronate%20is%20believed%20to%20be,7%2C6%20%2C%2014%2C11">pmc.ncbi.nlm.nih.gov</a>). These periplasmic tailoring steps yield mature alginate composed of M and G subunits, which is then released as a viscous <strong>extracellular polysaccharide</strong>. Importantly, AlgD’s product (GDP-mannuronic acid) is the substrate for Alg8; without AlgD activity, no polymer precursor is available for alginate assembly and export. Consistent with this, <em>algD</em> knockout mutants are unable to produce alginate, and accumulation of GDP-mannose (the substrate) or loss of polymerization is observed (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=of%20P,mannuronate">pubmed.ncbi.nlm.nih.gov</a>). Thus, AlgD integrates central carbon metabolism with alginate biosynthesis, acting as the <strong>gateway to alginate production</strong> in the cytoplasm, after which monomers are polymerized and transported outside the cell. AlgD is believed to be the <strong>final enzyme in the cytosol for this pathway</strong>, preceding the membrane-associated polymerization steps (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=GMD%20is%20currently%20believed%20to,of%20the%20integration%20host%20factor">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p><strong>Biological function of alginate:</strong> In bacteria like <em>P. putida</em> and <em>P. aeruginosa</em>, alginate is produced as a <strong>protective extracellular polysaccharide</strong> that aids in stress tolerance and biofilm formation. <em>P. putida</em> (a non-pathogenic soil bacterium) can produce alginate along with other exopolysaccharides (cellulose, and strain-specific EPS called Psl or Pea/Peb) – but alginate is notable for its role in retaining water and structural integrity in biofilms (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=water%20limitation,peb">pmc.ncbi.nlm.nih.gov</a>). Alginate’s highly hydrated gel-like nature helps the bacteria create a localized moist environment, which <strong>alleviates desiccation stress</strong> under low water availability (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=water%20limitation,peb">pmc.ncbi.nlm.nih.gov</a>). Indeed, <em>P. putida</em> genes for alginate synthesis are strongly induced during <strong>water limitation</strong>. For example, under a matric stress of –0.4 MPa (simulating dry soil), <em>algD</em> expression in <em>P. putida</em> KT2440 is significantly upregulated (over an order of magnitude increase in transcript level), reflecting the bacterium’s response to protect itself via alginate production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>). In the absence of alginate, <em>P. putida</em> activates compensatory EPS or other stress responses, but alginate is evidently a primary contributor to surviving osmotic dehydration (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=support%20that%20alginate%20is%20an,other%20tolerance%20mechanisms%20are%20activated">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>In pathogenic <em>P. aeruginosa</em> (notably in cystic fibrosis lung infections), alginate provides an essential <strong>biofilm matrix component</strong> that encapsulates the cells, forming the classic “mucoid” phenotype. This alginate-rich biofilm matrix acts as a <strong>physical shield</strong> against the host immune system and antibiotics (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). Experts describe the biofilm as a protective fortress, with alginate being a major structural and protective element (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). By sequestering the bacteria in an alginate gel, it limits diffusion of antibiotics and prevents immune cells from effectively phagocytosing the bacteria. Thus, <strong>algD-driven alginate synthesis is directly linked to persistence and virulence</strong> of mucoid <em>P. aeruginosa</em>. In <em>P. putida</em>, which is an environmental organism, alginate contributes to biofilm formation on surfaces (e.g. plant roots or soil particles) and can aid in <strong>adhesion and resistance to environmental toxins</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=Alginates%20are%20linear%20biopolymers%20present,10%20N%C3%BA%C3%B1ez">pmc.ncbi.nlm.nih.gov</a>). For instance, alginate and other EPS can bind heavy metals or harmful compounds, reducing their bioavailability and protecting the microbial community (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=Alginates%20are%20linear%20biopolymers%20present,10%20N%C3%BA%C3%B1ez">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=immobilizing%20related%20abundant%20,on%20reducing%20Cd%20availability%20and">www.sciencedirect.com</a>). In summary, through the action of AlgD, bacteria synthesize alginate as an adaptive strategy – whether to survive harsh environmental conditions (dryness, osmotic stress, heavy metal exposure) or, in the case of pathogens, to establish resilient biofilms in hostile host environments. </p>
+<h2 id="regulation-of-algd-expression-and-localization-of-function">Regulation of <strong>algD</strong> Expression and Localization of Function</h2>
+<p><strong>Subcellular localization:</strong> The AlgD enzyme operates in the <strong>cytoplasm</strong>, where its substrate (GDP-mannose) is generated. All precursor steps up to GDP-mannuronate occur in the cytosol (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=The%20biosynthetic%20pathway%20leading%20to,ManA%29%20%28Figure%201">pmc.ncbi.nlm.nih.gov</a>). Once AlgD produces GDP-mannuronate, the subsequent polymerization and processing steps involve membrane-bound and periplasmic proteins, as described above. The alginate polymer is synthesized at the <strong>inner membrane</strong> (by Alg8) and then moves through the periplasm to the <strong>outer membrane</strong> for secretion via AlgE (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). The modifications (acetylation, epimerization) by AlgI/J/F/G occur in the <strong>periplasmic space</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Mannuronate%20is%20believed%20to%20be,7%2C6%20%2C%2014%2C11">pmc.ncbi.nlm.nih.gov</a>). Thus, AlgD’s <strong>functional context is cytoplasmic</strong> – it supplies soluble precursors that are quickly converted into a polymer that spans the cell envelope and is exported outside. AlgD itself is not exported; it lacks signal peptides and remains in the cytosol, tightly associated with NAD⁺/NADH turnover during the precursor oxidation. The <strong>product of AlgD (GDP-mannuronate)</strong> is likely handed off to the membrane-localized Alg8/Alg44 complex soon after formation. This compartmentalized workflow ensures that alginate biosynthesis is efficiently channeled: the pathway culminates with a <strong>secreted exopolysaccharide outside the cell</strong>, whereas the enzymatic steps from AlgA through AlgD reside in the cytoplasm or inner membrane. </p>
+<p><strong>Gene regulation:</strong> The expression of the <em>algD</em> gene is under complex control, integrating multiple environmental and cellular signals. In <em>P. aeruginosa</em>, <em>algD</em> transcription is tightly regulated by the <strong>AlgU (AlgT) sigma factor and a two-component system</strong>. AlgU (an alternative σ^E factor) is normally sequestered by an anti-sigma factor (MucA); under stress conditions (e.g. cell wall stress or mutation in mucA), AlgU is released and induces the alginate operon (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=Interestingly%2C%20alginate%20synthesis%20regulatory%20genes,in%20the%20alginate%20synthesis%20operon">pmc.ncbi.nlm.nih.gov</a>). Activated AlgU drives the expression of regulatory proteins AlgR and AlgB (response regulators), which in turn <strong>activate the algD promoter</strong> cooperatively (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=Interestingly%2C%20alginate%20synthesis%20regulatory%20genes,in%20the%20alginate%20synthesis%20operon">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=GMD%20is%20currently%20believed%20to,of%20the%20integration%20host%20factor">pmc.ncbi.nlm.nih.gov</a>). Studies in <em>P. aeruginosa</em> show that <strong>AlgB is required for full algD transcription</strong>, and AlgR (once phosphorylated by its sensor kinase AlgZ/AlgQ) binds upstream of the <em>algD</em> promoter to enhance transcription (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=GMD%20is%20currently%20believed%20to,of%20the%20integration%20host%20factor">pmc.ncbi.nlm.nih.gov</a>). Furthermore, global regulators like the <strong>integration host factor (IHF)</strong> and the cAMP receptor protein (CRP) assist by bending DNA and enhancing the promoter open-complex formation (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=transcription%20of%20the%20algD%20gene,19%20%2C%2025%2C21%20%2C%2027">pmc.ncbi.nlm.nih.gov</a>). This elaborate control ensures <em>algD</em> is expressed strongly only under appropriate conditions – for example, in <strong>mucoid strains</strong>, the <em>algD</em> promoter is highly active due to constitutive AlgU and associated regulator activity (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=GMD%20is%20currently%20believed%20to,of%20the%20integration%20host%20factor">pmc.ncbi.nlm.nih.gov</a>). Consistently, <em>P. aeruginosa</em> isolates from cystic fibrosis lungs (mucoid phenotype) show <strong>dramatically elevated algD expression</strong> compared to non-mucoid strains (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=GMD%20is%20currently%20believed%20to,of%20the%20integration%20host%20factor">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>Environmental signals also play a pivotal role. A variety of stresses and signals can induce the alginate pathway. Laboratory studies indicate that <strong>high osmolarity</strong> in the medium is one trigger that activates <em>algD</em> expression and alginate production (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=High%20osmolarity%20of%20the%20external,23">pmc.ncbi.nlm.nih.gov</a>). Additionally, exposure to certain <strong>antibiotics</strong> can induce the alginate operon, suggesting that <em>P. aeruginosa</em> upregulates alginate synthesis as a defensive response when threatened by antimicrobial agents (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=High%20osmolarity%20of%20the%20external,23">pmc.ncbi.nlm.nih.gov</a>). In <em>P. putida</em>, as discussed, <strong>water stress (low water availability)</strong> is a potent inducer of <em>algD</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>). Other signals like nitrogen limitation and oxygen levels can influence alginate production indirectly by affecting regulatory networks (for instance, in <em>Azotobacter</em>, low oxygen tension elevates c-di-GMP and leads to alginate with different properties (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=nitrogen%20and%20its%20high%20respiratory,Insights%20into%20these">pmc.ncbi.nlm.nih.gov</a>)). A central messenger in regulating bacterial exopolysaccharide synthesis is <strong>c-di-GMP</strong> – a secondary signaling molecule that promotes biofilm formation. In the alginate system, c-di-GMP binds to Alg44, and high intracellular c-di-GMP levels are associated with activation of polymer synthesis and secretion machinery (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Synthetic%20scheme%20of%20alginate%20biosynthesis,triphosphate%2C%20NAD%E2%80%94Nicotinamide%20adenine%20dinucleotide%2C%20LPS%E2%80%94Lipopolysaccharide">pmc.ncbi.nlm.nih.gov</a>). Thus, conditions that raise c-di-GMP (surface attachment, nutrient cues, etc.) tend to stimulate alginate production. Conversely, when bacteria are in planktonic or favorable conditions, <em>algD</em> expression is low (e.g., <em>P. aeruginosa</em> in non-stress conditions does not invest in alginate). In <em>P. putida KT2440</em>, deletion of <em>algD</em> (and the alginate operon) has been shown to de-repress some other stress response pathways, indicating that normally alginate production is a prioritized response to certain stresses (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=and%20bcs%20genes%20may%20contribute,that%20Bcs%20and%20alginate%2C%20but">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=However%2C%20algA%20deletion%20seems%20to,the%20mutants%20was%20asnB%20gene">pmc.ncbi.nlm.nih.gov</a>). </p>
+<p>In summary, the <em>algD</em> gene is <strong>tightly regulated</strong> by a hierarchy of alginate-specific regulators (AlgU, AlgR/AlgB) and global stress-response systems. Its expression is <strong>switched on by environmental triggers</strong> such as osmotic stress, desiccation, and presence of toxic compounds or antibiotics. The localization of AlgD’s activity in the cytoplasm and the subsequent export of its product ensure that alginate biosynthesis is spatially organized, allowing the cell to quickly deploy a protective EPS externally when needed. </p>
+<h2 id="recent-research-and-developments-20232024">Recent Research and Developments (2023–2024)</h2>
+<p>Research in the past two years has advanced our understanding of AlgD/GMD’s mechanism and explored new ways to modulate its activity. <strong>Mechanistic insights were highlighted in a 2023 study by Hulen et al.</strong>, which purified GMD from mucoid <em>P. aeruginosa</em> strains and characterized its kinetics and inhibition (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=strains%20exhibits%20strong%20negative%20cooperativity,mannose%20dehydrogenase%20inhibition">pmc.ncbi.nlm.nih.gov</a>). This study confirmed that the enzyme operates via a <strong>two-step oxidation mechanism</strong>: after one oxidation, the intermediate (thought to be GDP-6-dehydro-mannose in hemiacetal form) remains bound to the enzyme until the second oxidation completes, yielding GDP-mannuronate (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=strains%20exhibits%20strong%20negative%20cooperativity,mannose%20dehydrogenase%20inhibition">pmc.ncbi.nlm.nih.gov</a>). The authors provided evidence of a <strong>tightly bound nucleotide</strong> co-factor in the enzyme, supporting this internal two-step mechanism (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=strains%20exhibits%20strong%20negative%20cooperativity,mannose%20dehydrogenase%20inhibition">pmc.ncbi.nlm.nih.gov</a>). Furthermore, GMD was found to have unusual allosteric behavior (negative cooperativity), as mentioned, which is somewhat rare for a dehydrogenase of this size. Together, these findings refine the model of how AlgD performs catalysis and suggest that the enzyme’s activity might be modulated by subtle changes in subunit interactions or effector binding. </p>
+<p>One of the most significant recent developments is the renewed focus on <strong>inhibiting AlgD/GMD as a therapeutic strategy</strong>. Because mucoid <em>P. aeruginosa</em> relies on alginate for its antibiotic resistance, blocking alginate production is an attractive approach to weaken biofilms. Hulen et al. (2023) tested a series of <strong>substrate analog inhibitors</strong> designed to mimic GDP-mannose. Notably, one analog – a GDP-mannose derivative with an alkynyl modification on the mannose C6 and an <strong>amino-sulfonyl-guanosine moiety</strong> – showed potent inhibitory effects (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=only%20one%20site%20for%20substrate,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>). At 0.5 mM, this analog <strong>inhibited 90% of GMD activity</strong> in vitro (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=only%20one%20site%20for%20substrate,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>). Previous experiments by the same group had demonstrated that such GMD inhibitors, when added to mucoid <em>P. aeruginosa</em>, significantly <strong>restored sensitivity to antibiotics</strong> like aminoglycosides (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=carbon%206%20of%20the%20mannose,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>). This is a promising finding: it suggests that co-administration of a GMD inhibitor could disrupt the protective alginate matrix and allow conventional antibiotics to more effectively eradicate biofilm bacteria. As antibiotic resistance in biofilms is a major clinical challenge, this line of inquiry is a notable 2023 development. It represents an “old and new” strategy – targeting an enzyme known since the 1980s to be crucial for alginate synthesis, but now with modern chemical biology approaches to design specific inhibitors (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=only%20one%20site%20for%20substrate,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>). Ongoing research is likely focusing on improving the potency and delivery of such inhibitors, and evaluating their efficacy in vivo (e.g. in infection models). </p>
+<p>Recent structural biology efforts also merit mention. While the high-resolution crystal structure of AlgD was solved in the early 2000s (Snook et al. 2003), <strong>new structural analyses and models</strong> are integrating AlgD into the larger context of the alginate biosynthesis complex. For instance, a 2023 review by Gheorghita <em>et al.</em> combined experimentally determined structures and AlphaFold predictions for many alginate-related proteins, shedding light on how AlgD might physically interact with the polymerization machinery (<a href="https://pubmed.ncbi.nlm.nih.gov/37884397/#:~:text=alginate%20biosynthetic%20complex%20colour%20coded,2014%29%2C%20AlgF%20%28PDB%3A%206D10">pubmed.ncbi.nlm.nih.gov</a>). The AlgD crystal structures (PDB 1MFZ, 1MUU, 1MV8) confirm the enzyme’s dimeric configuration and active site geometry (<a href="https://pubmed.ncbi.nlm.nih.gov/37884397/#:~:text=alginate%20biosynthetic%20complex%20colour%20coded,2014%29%2C%20AlgF%20%28PDB%3A%206D10">pubmed.ncbi.nlm.nih.gov</a>). By overlaying AlgD with other components, researchers can better understand substrate channeling – how GDP-mannuronate might be transferred from AlgD’s active site to Alg8 at the membrane, for example. These sophisticated models are a <strong>2023 development</strong> that provides a more holistic view of alginate biosynthesis, beyond just the biochemical steps. The insights from such studies could guide engineering of the pathway or identification of protein-protein interaction targets to disrupt alginate production. </p>
+<p>On the microbiology front, <strong>new roles for alginate in the environment</strong> have been illuminated by very recent research. An intriguing study (published in 2026, building on 2023–2024 data) examined a <em>P. putida</em> strain used in plant growth promotion and its impact on heavy metal uptake by plants (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=In%20this%20study%2C%20the%20effects,Furthermore">www.sciencedirect.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=revealed%20negative%20relationships%20between%20the,contaminated%20soils">www.sciencedirect.com</a>). This work found that alginate production by <em>P. putida</em> has a direct environmental benefit: it helps <strong>immobilize toxic metals in soil</strong>. In the study, an <em>algD</em> deletion mutant of <em>P. putida</em> (strain XMS-1) was compared to the wild type for cadmium (Cd) sequestration. The results were striking – the <em>algD</em> mutant, which cannot produce alginate, left <strong>57% more Cd in soluble form</strong> in the soil solution, and showed a 44–57% decrease in cell-associated (bound or internalized) Cd, relative to the wild strain over 36 hours (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=mechanisms%20involved%20in%20the%20contaminated,Furthermore">www.sciencedirect.com</a>). Consequently, lettuce plants grown in soil with the <em>algD</em> mutant accumulated significantly higher Cd in their leaves, whereas the wild-type <em>P. putida</em> (alginate-producing) strain was able to reduce plant Cd uptake and improved plant biomass (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=mechanisms%20involved%20in%20the%20contaminated,Furthermore">www.sciencedirect.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=biomass%2C%20iron%2Fmanganese%20oxide,and%20exopolysaccharide%20production%20in%20the">www.sciencedirect.com</a>). This reveals a novel aspect of AlgD’s significance: beyond its classical role in biofilm matrices, <strong>alginate can function as a biopolymer that traps heavy metal ions</strong>, contributing to bioremediation and plant protection. The study concluded that <em>algD</em> (alginate production) is crucial for forming a stable soil organic matter matrix that locks up Cd, and suggested leveraging alginate-producing bacteria to mitigate heavy metal contamination in agriculture (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=revealed%20negative%20relationships%20between%20the,contaminated%20soils">www.sciencedirect.com</a>). While this particular work will be formally published in 2026, it showcases the <strong>ongoing research (as of 2023–2024) into new applications of alginate</strong> in environmental biotechnology. It also underscores that the function of AlgD is not only of academic interest but has practical implications for environmental health. </p>
+<p>In summary, recent research has: (1) deepened our mechanistic understanding of AlgD (e.g. allostery and reaction intermediate binding), (2) begun to exploit AlgD as a drug target for anti-biofilm therapy, and (3) expanded the recognized importance of AlgD-mediated alginate production to novel contexts like heavy metal sequestration. These developments from 2023–2024 reflect a vibrant interest in both the fundamental biochemistry of AlgD and its potential uses in medicine and industry.</p>
+<h2 id="current-applications-and-real-world-implications">Current Applications and Real-World Implications</h2>
+<p><strong>AlgD and alginate production have diverse applications</strong> ranging from medical interventions to environmental technology and industrial bioprocessing:</p>
+<ul>
+<li>
+<p><strong>Medical/Biotech (Anti-biofilm therapy):</strong> The role of <em>algD</em> in antibiotic resistance has made it a focal point for drug development. Because alginate-rich biofilm renders infections difficult to eradicate, inhibiting AlgD offers a strategy to <strong>disrupt biofilms in diseases</strong> like cystic fibrosis lung infection. The recent inhibitor studies (Hulen et al. 2023) demonstrated that blocking GMD can dramatically reduce alginate synthesis, thereby <strong>sensitizing bacteria to antibiotics</strong> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=only%20one%20site%20for%20substrate,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>). Although no AlgD inhibitor is yet in clinical use, this approach is a proof-of-concept that could translate into adjuvant therapies for chronic <em>P. aeruginosa</em> infections. Additionally, engineered bacteria or enzymes based on AlgD could be used to modulate alginate production in situ – for example, an AlgD inhibitor or an alginate-degrading enzyme (alginate lyase) might be delivered to break down biofilms. In biotechnology, understanding AlgD also enables <strong>controlled biosynthesis of alginate polymers</strong> with tailored properties. Researchers can manipulate <em>algD</em> expression or enzyme activity in production strains to influence alginate yield and composition. For instance, in <strong>industrial fermentation</strong> with <em>Azotobacter vinelandii</em> (a bacterium used as a safe alginate producer), regulating oxygen levels and thereby AlgD activity can optimize polymer molecular weight and guluronate content (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=nitrogen%20and%20its%20high%20respiratory,Insights%20into%20these">pmc.ncbi.nlm.nih.gov</a>). High alginate outputs (enhanced by strong AlgD flux) are desired for productivity, whereas altering growth conditions can increase the G:M ratio for <strong>medical-grade alginate</strong> (useful in wound dressings, drug delivery gels, tissue engineering scaffolds, etc.) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=modification%2C%20and%20secretion%2C%20which%20are,research%20with%20industrial%20applications%20and">pmc.ncbi.nlm.nih.gov</a>). Thus, AlgD is a key leverage point in bioprocessing strategies to manufacture alginate with specific viscosities and gel strengths.</p>
+</li>
+<li>
+<p><strong>Environmental Applications (Bioremediation and Agriculture):</strong> As highlighted by recent findings, <em>algD</em> has implications in environmental remediation. Alginate’s ability to chelate and bind metals means that alginate-producing bacteria can stabilize heavy metals in contaminated soils. In practical terms, a <em>P. putida</em> strain with an active alginate pathway (<strong>algD^+</strong>) can be introduced to polluted soil to reduce the mobility and uptake of toxic metals like cadmium by crop plants (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=mechanisms%20involved%20in%20the%20contaminated,Furthermore">www.sciencedirect.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=revealed%20negative%20relationships%20between%20the,contaminated%20soils">www.sciencedirect.com</a>). The real-world benefit is safer food production – for example, co-cultivation of such bacteria with crops could lower heavy metal accumulation in edible parts, as shown by reduced Cd in lettuce when <em>algD</em> was present (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=mechanisms%20involved%20in%20the%20contaminated,Furthermore">www.sciencedirect.com</a>). This concept opens avenues for developing <strong>bioaugmentation approaches</strong> using alginate-producing bacteria to remediate heavy metal pollution or even to stabilize soils (since alginate improves soil aggregation and water retention). More broadly, AlgD-mediated EPS production facilitates the formation of soil microenvironments that support beneficial microbial communities. The 2026 study noted that wild-type <em>P. putida</em> (with alginate) enriched a community of metal-immobilizing microbes in the rhizosphere, whereas the <em>algD</em> mutant did not (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=the%20exchange%20of%20Cd%20and,These%20findings%20suggest">www.sciencedirect.com</a>). This suggests a cascading ecological impact: AlgD contributes not only to the bacterium’s survival but also to ecosystem services like detoxification of soils and promotion of plant health. Environmental biotech companies are interested in harnessing such traits; for instance, formulating seed coatings or soil inoculants that include alginate-producing pseudomonads could become a strategy to protect plants from drought and heavy metals naturally. </p>
+</li>
+<li>
+<p><strong>Industrial and Material Science:</strong> Alginate is a commercially valuable biopolymer (traditionally extracted from brown seaweed), and bacterial alginate production provides a renewable manufacturing route with unique advantages. Through metabolic engineering, <em>P. putida</em> or <em>A. vinelandii</em> strains with overexpressed <em>algD</em> (and other alg genes) can potentially produce alginate at scale in bioreactors. One real-world implementation has been the use of <em>A. vinelandii</em> fermentation to produce alginate with tailored viscosity for specialty applications (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=industries.%20Azotobacter%20vinelandii%2C%20a%20Gram,the%20synthesis%20of%20alginate%20with">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=cellular%20respiration%20with%20alginate%20yield,the%20biotechnological%20and%20medical%20fields">pmc.ncbi.nlm.nih.gov</a>). By adjusting <em>algD</em> expression or the culture conditions, producers can influence the polymer chain length and composition (for example, <strong>high O₂ supply</strong> increases overall alginate titer, while <strong>low O₂</strong> can yield alginate with higher G content and molecular weight) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=nitrogen%20and%20its%20high%20respiratory,Insights%20into%20these">pmc.ncbi.nlm.nih.gov</a>). These parameters are critical for alginate’s performance as a <strong>thickener, gelling agent, or encapsulant</strong>. Industries are exploring bacterial alginates for making <strong>microencapsulation matrices</strong>, wound healing hydrogels, and cell-immobilization beads, since fermentation allows more control over polymer attributes than harvesting from seaweed. <em>P. putida</em> KT2440 itself is a popular chassis for metabolic engineering; while it natively produces alginate only under stress, researchers can imagine re-routing carbon flux in this strain (which is GRAS-safe) to produce alginate constitutively by manipulating regulators like AlgU and enhancing <em>algD</em> expression. This could turn <em>P. putida</em> into a robust alginate biofactory. In summary, AlgD is central to <strong>industrial biotechnology efforts to biosynthesize alginate</strong>, offering a way to produce a biopolymer that has global market importance (from food additives to biomedical implants). As our understanding of AlgD improves, so does our ability to engineer its activity for higher yields or novel monomer compositions not easily obtained from natural sources.</p>
+</li>
+</ul>
+<h2 id="expert-perspectives-and-conclusions">Expert Perspectives and Conclusions</h2>
+<p>Experts widely recognize <em>algD</em> (GDP-mannose dehydrogenase) as a pivotal gene in pseudomonad biology, and recent authoritative sources emphasize its importance from medical, environmental, and biotechnological viewpoints. <strong>Clinically, alginate has been called a crucial factor in the “fortress-like” biofilm matrix</strong> of <em>P. aeruginosa</em>. As noted by Hulen (2023), alginate production enables mucoid strains to resist antibiotics and evade immune defenses, making AlgD a prime target to dismantle this protection (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>). Pseudomonas biofilm researchers Wozniak and Parsek likewise highlight that alginate is one of three key exopolysaccharides in <em>P. aeruginosa</em>, each conferring specific advantages in infection contexts (alginate being chiefly responsible for the mucoid, immune-evasive phenotype) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pubmed.ncbi.nlm.nih.gov/37884397/#:~:text=including%20water%2C%20lipids%2C%20proteins%2C%20extracellular,give%20us%20insight%20into%20the">pubmed.ncbi.nlm.nih.gov</a>). Reflecting this, there is consensus that interventions at the level of <em>algD</em> or its product could significantly impact chronic infection outcomes. Microbiologists Deretic and colleagues, in classic studies, described <em>algD</em> as the <strong>master switch for alginate synthesis</strong>, whose activation is necessary to turn a non-mucoid strain into a mucoid, alginate-producing form (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>). This underscores a long-held view that controlling <em>algD</em> expression is synonymous with controlling alginate production in pseudomonads.</p>
+<p>From an environmental and ecological perspective, experts also see alginate as a vital factor. Environmental microbiology studies (e.g. Halverson 2009, Gulez <em>et al.</em> 2014) have shown that <strong>alginate is indispensable for soil bacteria under drought conditions</strong>, allowing them to retain moisture and form stable biofilms (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=water%20limitation,peb">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=support%20that%20alginate%20is%20an,other%20tolerance%20mechanisms%20are%20activated">pmc.ncbi.nlm.nih.gov</a>). In line with this, a 2012 transcriptomic analysis and a 2014 follow-up study on <em>P. putida</em> KT2440 concluded that <em>algD</em> and its operon are among the most responsive genes to water limitation, directly contributing to the bacterium’s stress tolerance (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=putida%20mt,showed%20a%20transient%20expression%20of">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>). Researchers commented that in <em>P. putida</em>, <em>“alginate is an important exopolysaccharide under water limitation and, in its absence, other tolerance mechanisms are activated”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=match%20at%20L138%20support%20that,other%20tolerance%20mechanisms%20are%20activated">pmc.ncbi.nlm.nih.gov</a>) – a statement highlighting alginate’s primary role in such conditions. Similarly, in a 2025 review on alginate biosynthesis, Ponce <em>et al.</em> point out that bacteria produce alginate in response to <strong>surface attachment and exposure to cytotoxins</strong> as well (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=Alginates%20are%20linear%20biopolymers%20present,10%20N%C3%BA%C3%B1ez">pmc.ncbi.nlm.nih.gov</a>). This aligns with the observation that <em>P. putida</em> uses alginate to mitigate heavy metal stress; indeed, the authors of the 2026 cadmium study conclude that <em>algD</em> is <em>“crucial for reducing Cd availability and accumulation in lettuce…laying a foundation for the use of alginate-producing bacteria to ensure safe vegetable production in Cd-contaminated soils”</em> (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=revealed%20negative%20relationships%20between%20the,contaminated%20soils">www.sciencedirect.com</a>). Such expert analysis illustrates a broadening appreciation that AlgD-mediated alginate synthesis is not just a biofilm polymerization step, but a core part of how bacteria interact with their environment and protect ecosystem health.</p>
+<p>In biotechnology and industry, <strong>alginate’s value is well recognized</strong>, and experts foresee enhanced production through genetic and process engineering. Ponce <em>et al.</em> (2025) discuss how understanding the regulatory networks (e.g. the role of c-di-GMP and oxygen on <em>algD</em> and alginate yield) enables <em>“scalable production of high-quality alginate, bridging laboratory research with industrial applications”</em> (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=nitrogen%20and%20its%20high%20respiratory,Insights%20into%20these">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=cellular%20respiration%20with%20alginate%20yield,the%20biotechnological%20and%20medical%20fields">pmc.ncbi.nlm.nih.gov</a>). This perspective underlines that advances in fundamental knowledge of AlgD/GMD – its regulation, activity, and optimization – are now translating into tangible innovations. For example, by manipulating <em>algD</em> expression levels or enzyme activity, manufacturers can tweak polymer chain length and composition to suit specific applications (soft gels for drug delivery versus sturdier gels for food). The <strong>consensus in the field</strong> is that AlgD occupies a leverage point in metabolism: it can be modulated to either enhance alginate production (for beneficial uses) or suppressed/inhibited to prevent alginate (in case of combating bacterial pathogens). </p>
+<p>In conclusion, the gene <em>algD</em> encodes an enzyme that is <strong>central to alginate biosynthesis and bacterial adaptation</strong>. Current understanding defines AlgD as the enzyme catalyzing the critical step that commits resources to alginate, with a well-characterized mechanism and structure. Recent research (2023–2024) has expanded our knowledge of AlgD’s kinetics and provided new tools (inhibitors) to influence its activity. Applications of this knowledge range from developing novel <strong>antibiofilm therapies</strong> to employing alginate-producing bacteria in <strong>environmental remediation</strong> and enhancing <strong>industrial biopolymer production</strong>. Authoritative analyses from the literature reinforce the importance of <em>algD</em>: it is often described as a <strong>key regulatory node</strong> in pseudomonad physiology and a promising target for technological exploitation. With ongoing studies, we can expect further refinements in the functional annotation of <em>algD</em> – illuminating how this gene’s product can be manipulated for the benefit of medicine, industry, and environmental sustainability. </p>
+<p><strong>References:</strong> Publications supporting this annotation include Hulen <em>et al.</em>, 2023 (Antibiotics, Basel) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=Alginates%20play%20an%20important%20role,that%20the%20substrate%20oxidation%20reaction">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10740432/#:~:text=only%20one%20site%20for%20substrate,mannose%20dehydrogenase">pmc.ncbi.nlm.nih.gov</a>), Tatnell <em>et al.</em>, 1994 (Microbiology) (<a href="https://pubmed.ncbi.nlm.nih.gov/7521247/#:~:text=The%20Pseudomonas%20aeruginosa%20enzyme%20GDP,of%20the%20key%20metabolites%20GDP">pubmed.ncbi.nlm.nih.gov</a>), Gulez <em>et al.</em>, 2014 (MicrobiologyOpen) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=no%20genes%20except%20galU%20were,gene%2C%20annotated%20as%20asparagine%20synthetase">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4287175/#:~:text=water%20limitation,peb">pmc.ncbi.nlm.nih.gov</a>), Gheorghita <em>et al.</em>, 2023 (FEMS Microbiol. Rev) (<a href="https://pubmed.ncbi.nlm.nih.gov/37884397/#:~:text=including%20water%2C%20lipids%2C%20proteins%2C%20extracellular,give%20us%20insight%20into%20the">pubmed.ncbi.nlm.nih.gov</a>), Ponce <em>et al.</em>, 2025 (Front. Bioeng. Biotech.) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=nitrogen%20and%20its%20high%20respiratory,Insights%20into%20these">pmc.ncbi.nlm.nih.gov</a>) (<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC12350332/#:~:text=Alginates%20are%20linear%20biopolymers%20present,10%20N%C3%BA%C3%B1ez">pmc.ncbi.nlm.nih.gov</a>), and Yang <em>et al.</em>, 2026 (Microbiol. Research) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=mechanisms%20involved%20in%20the%20contaminated,Furthermore">www.sciencedirect.com</a>) (<a href="https://www.sciencedirect.com/science/article/abs/pii/S0944501326000273#:~:text=revealed%20negative%20relationships%20between%20the,contaminated%20soils">www.sciencedirect.com</a>), among others. These sources provide detailed evidence of AlgD’s enzymatic function, regulatory control, and roles in various contexts, as summarized above.</p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(algD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NC4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="algd-notes">algD Notes</h1>
+<h2 id="identity-and-direct-biochemical-role">Identity and direct biochemical role</h2>
+<ul>
+<li><code>algD</code> in <em>Pseudomonas putida</em> KT2440 encodes GDP-mannose 6-dehydrogenase / GMD, EC 1.1.1.132 [file:PSEPK/algD/algD-uniprot.txt "Full=GDP-mannose 6-dehydrogenase;" and "EC=1.1.1.132;"].</li>
+<li>UniProt assigns the direct reaction as oxidation of GDP-mannose to GDP-mannuronate, placing AlgD in alginate biosynthesis [file:PSEPK/algD/algD-uniprot.txt "Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization." and "PATHWAY: Glycan biosynthesis; alginate biosynthesis."].</li>
+<li>The protein belongs to the UDP-glucose/GDP-mannose dehydrogenase family and contains an NAD(P)-binding Rossmann-like domain, consistent with GO MF terms for GDP-mannose 6-dehydrogenase activity and NAD binding [file:PSEPK/algD/algD-uniprot.txt "Belongs to the UDP-glucose/GDP-mannose dehydrogenase" and "NAD(P)-binding Rossmann-like Domain"].</li>
+</ul>
+<h2 id="kt2440-specific-biology">KT2440-specific biology</h2>
+<ul>
+<li>Under matric stress / water limitation, alginate production increases in <em>P. putida</em> and alginate shapes biofilm properties [PMID:17601783 "Total exopolysaccharide (EPS) and alginate production increased with increasing matric, but not solute, stress severity, and alginate was a significant component, but not the major component, of EPS." and "Alginate influenced biofilm architecture, resulting in biofilms that were taller, covered less surface area, and had a thicker EPS layer at the air interface than those formed by an mt-2 algD mutant under water-limiting conditions"].</li>
+<li><code>algD</code> expression itself is induced in this context: reporters showed that most residents transiently express alginate biosynthesis genes during dehydration, and transcriptomics found early alginate-gene upregulation [PMID:20236161 "Here we report that during growth under water-limiting conditions and when biofilms become dehydrated most residents transiently express the alginate biosynthesis genes leading to distinct spatial patterns as the biofilm ages." and PMID:22138988 "Upregulation of alginate genes was notable in this early response."].</li>
+<li>Alginate contributes to stress protection under water limitation: loss of <code>algD</code> increases dehydration-associated oxidative stress and alginate deficiency decreases desiccation survival [PMID:19222541 "Under water-limiting conditions, ROS accumulation is greater in an DeltaalgD mutant compared with the wild type, suggesting that the exopolysaccharide alginate attenuates the extent of dehydration-mediated oxidative stress." and PMID:17601783 "Alginate deficiency decreased survival of desiccation not only by P. putida but also by Pseudomonas aeruginosa PAO1 and Pseudomonas syringae pv. syringae B728a."].</li>
+</ul>
+<h2 id="curation-implications">Curation implications</h2>
+<ul>
+<li>The catalytic MF <code>GDP-mannose 6-dehydrogenase activity</code> is the clearest core function; the broader mechanistic parent term <code>oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</code> is also correct.</li>
+<li><code>alginic acid biosynthetic process</code> is appropriate because AlgD performs the committed precursor-forming step for alginate biosynthesis and KT2440-specific studies show <code>algD</code> induction and alginate-dependent phenotypes under water limitation.</li>
+<li>Important nuance: in KT2440, alginate is context dependent rather than the dominant EPS in every assay. Under the conditions tested in Nilsson et al. 2011, the <code>alg</code> cluster played only a minor role in standard biofilm formation/stability <a href="https://pubmed.ncbi.nlm.nih.gov/21507178" title="The gene clusters alg and bcs, which code for proteins mediating alginate and cellulose biosynthesis, were found to play minor roles in P. putida KT2440 biofilm formation and stability under the conditions tested.">PMID:21507178</a>.</li>
+<li>I do not currently see a strong case for adding broader process terms such as generic biofilm formation or stress-response annotations to the core review, because the phenotype evidence is environmental-context dependent and mediated through the exopolysaccharide product rather than a direct signaling role for AlgD.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NC4
+gene_symbol: algD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: AlgD is the GDP-mannose 6-dehydrogenase that converts GDP-mannose to
+  GDP-mannuronate, the committed precursor-forming step in alginate biosynthesis.
+  In Pseudomonas putida KT2440, alginate production and algD expression are most
+  prominent under water-limiting conditions, where alginate contributes to hydrated
+  biofilm microenvironments and protection from dehydration-associated stress, while
+  playing a comparatively minor role in standard biofilm stability assays.
+existing_annotations:
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP
+      as acceptor
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This mechanistic parent term is correct for AlgD. The enzyme oxidizes
+      the CH-OH group of GDP-mannose using NAD+ as electron acceptor to generate GDP-mannuronate.
+      It is less specific than GO:0047919 but still accurately describes the reaction chemistry.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;Reaction=GDP-alpha-D-mannose + 2 NAD(+) + H2O = GDP-alpha-D-mannuronate&#39;
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization.&#39;
+    - reference_id: file:PSEPK/algD/algD-deep-research-manual.md
+      supporting_text: &#39;The most defensible direct function assignment is GDP-mannose 6-dehydrogenase activity.&#39;
+- term:
+    id: GO:0042121
+    label: alginic acid biosynthetic process
+  qualifier: involved_in
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This annotation is correct and captures the direct pathway role of AlgD.
+      AlgD generates GDP-mannuronate, the committed precursor for alginate synthesis.
+      KT2440 literature shows alginate production and algD-pathway expression under
+      water-limiting conditions, although alginate is not the dominant exopolysaccharide
+      in every biofilm assay.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;PATHWAY: Glycan biosynthesis; alginate biosynthesis.&#39;
+    - reference_id: PMID:20236161
+      supporting_text: &#39;Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment.&#39;
+    - reference_id: PMID:22138988
+      supporting_text: &#39;Upregulation of alginate genes was notable in this early response.&#39;
+    - reference_id: file:PSEPK/algD/algD-deep-research-manual.md
+      supporting_text: &#39;AlgD is directly involved in alginate biosynthesis because it generates GDP-mannuronate, the committed precursor for alginate polymerization.&#39;
+- term:
+    id: GO:0047919
+    label: GDP-mannose 6-dehydrogenase activity
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the most specific and best supported molecular function term
+      for AlgD. The UniProt record identifies the protein as GDP-mannose 6-dehydrogenase
+      and gives the expected NAD-dependent oxidation of GDP-mannose to GDP-mannuronate.
+      This is the core catalytic activity of the gene product.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;Full=GDP-mannose 6-dehydrogenase;&#39;
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;Reaction=GDP-alpha-D-mannose + 2 NAD(+) + H2O = GDP-alpha-D-mannuronate&#39;
+    - reference_id: file:PSEPK/algD/algD-deep-research-manual.md
+      supporting_text: &#39;The most defensible direct function assignment is GDP-mannose 6-dehydrogenase activity.&#39;
+- term:
+    id: GO:0051287
+    label: NAD binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This annotation is correct as a supporting molecular function. AlgD
+      is an NAD-dependent dehydrogenase with an N-terminal Rossmann-like nucleotide-binding
+      domain, and the UniProt record lists multiple NAD(+) binding residues. This
+      term is less informative than the catalytic activity term but remains valid.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;NAD(P)-binding Rossmann-like Domain&#39;
+    - reference_id: file:PSEPK/algD/algD-uniprot.txt
+      supporting_text: &#39;ligand=&#34;NAD(+)&#34;&#39;
+    - reference_id: file:PSEPK/algD/algD-deep-research-manual.md
+      supporting_text: &#39;The presence of an NAD(P)-binding Rossmann-like domain and annotated NAD(+) binding residues supports the NAD-binding annotation.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings:
+  - statement: InterPro domain mappings support the NAD-binding annotation for AlgD.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings:
+  - statement: Combined automated sources recover the correct catalytic and pathway-level
+      annotations for AlgD.
+- id: file:PSEPK/algD/algD-uniprot.txt
+  title: UniProt entry Q88NC4 for algD / PP_1288
+  findings:
+  - statement: AlgD is annotated as GDP-mannose 6-dehydrogenase (EC 1.1.1.132).
+  - statement: UniProt gives the reaction GDP-mannose plus NAD plus water to GDP-mannuronate
+      plus NADH and protons.
+  - statement: UniProt places the protein in glycan biosynthesis, specifically alginate
+      biosynthesis.
+  - statement: The protein belongs to the UDP-glucose/GDP-mannose dehydrogenase
+      family and contains an NAD(P)-binding Rossmann-like domain.
+- id: file:PSEPK/algD/algD-deep-research-manual.md
+  title: Manual deep research summary for algD in Pseudomonas putida KT2440
+  findings:
+  - statement: AlgD has GDP-mannose 6-dehydrogenase activity and supplies GDP-mannuronate
+      for alginate biosynthesis.
+  - statement: KT2440 literature supports alginate pathway induction under water limitation
+      but indicates alginate is not the dominant matrix polymer in every biofilm condition.
+- id: PMID:17601783
+  title: Alginate production by Pseudomonas putida creates a hydrated microenvironment
+    and contributes to biofilm architecture and stress tolerance under water-limiting
+    conditions.
+  findings:
+  - statement: Under water-limiting conditions alginate production increases in P. putida.
+    supporting_text: &#39;Total exopolysaccharide (EPS) and alginate production increased with increasing matric, but not solute, stress severity, and alginate was a significant component, but not the major component, of EPS.&#39;
+  - statement: algD mutants show altered biofilm architecture under water limitation.
+    supporting_text: &#39;Alginate influenced biofilm architecture, resulting in biofilms that were taller, covered less surface area, and had a thicker EPS layer at the air interface than those formed by an mt-2 algD mutant under water-limiting conditions, properties that could contribute to less evaporative water loss.&#39;
+  - statement: Alginate deficiency decreases desiccation survival.
+    supporting_text: &#39;Alginate deficiency decreased survival of desiccation not only by P. putida but also by Pseudomonas aeruginosa PAO1 and Pseudomonas syringae pv. syringae B728a.&#39;
+- id: PMID:19222541
+  title: Influence of water limitation on endogenous oxidative stress and cell death
+    within unsaturated Pseudomonas putida biofilms.
+  findings:
+  - statement: Under water limitation, alginate attenuates dehydration-mediated oxidative
+      stress in P. putida biofilms.
+    supporting_text: &#39;Under water-limiting conditions, ROS accumulation is greater in an DeltaalgD mutant compared with the wild type, suggesting that the exopolysaccharide alginate attenuates the extent of dehydration-mediated oxidative stress.&#39;
+- id: PMID:20236161
+  title: Transient alginate gene expression by Pseudomonas putida biofilm residents
+    under water-limiting conditions reflects adaptation to the local environment.
+  findings:
+  - statement: algD operon expression is transiently induced in biofilm residents
+      during dehydration and water limitation.
+    supporting_text: &#39;Here we report that during growth under water-limiting conditions and when biofilms become dehydrated most residents transiently express the alginate biosynthesis genes leading to distinct spatial patterns as the biofilm ages.&#39;
+  - statement: Alginate production in KT2440 under water limitation helps maintain
+      a hydrated microenvironment.
+    supporting_text: &#39;Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment.&#39;
+- id: PMID:21507178
+  title: Influence of putative exopolysaccharide genes on Pseudomonas putida KT2440
+    biofilm stability.
+  findings:
+  - statement: The alg cluster plays only a minor role in KT2440 biofilm formation
+      and stability under the tested standard conditions.
+    supporting_text: &#39;The gene clusters alg and bcs, which code for proteins mediating alginate and cellulose biosynthesis, were found to play minor roles in P. putida KT2440 biofilm formation and stability under the conditions tested.&#39;
+- id: PMID:22138988
+  title: Transcriptome dynamics of Pseudomonas putida KT2440 under water stress.
+  findings:
+  - statement: Water stress causes early upregulation of alginate genes in KT2440.
+    supporting_text: &#39;Upregulation of alginate genes was notable in this early response.&#39;
+core_functions:
+- description: AlgD catalyzes the NAD-dependent oxidation of GDP-mannose to GDP-mannuronate,
+    the committed precursor-forming step in alginate biosynthesis. In KT2440, algD-pathway
+    expression is particularly evident under water-limiting conditions, where alginate
+    contributes to hydrated biofilm structure and stress tolerance.
+  molecular_function:
+    id: GO:0047919
+    label: GDP-mannose 6-dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0042121
+    label: alginic acid biosynthetic process
+  supported_by:
+  - reference_id: file:PSEPK/algD/algD-uniprot.txt
+    supporting_text: &#39;Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization.&#39;
+  - reference_id: PMID:20236161
+    supporting_text: &#39;Under water-limiting conditions Pseudomonas putida produces the exopolysaccharide alginate, which influences biofilm development and facilitates maintaining a hydrated microenvironment.&#39;
+  - reference_id: file:PSEPK/algD/algD-deep-research-manual.md
+    supporting_text: &#39;AlgD is directly involved in alginate biosynthesis because it generates GDP-mannuronate, the committed precursor for alginate polymerization.&#39;
+proposed_new_terms: []
+suggested_questions:
+- question: Which environmental and regulatory inputs beyond water limitation most
+    strongly control algD expression in Pseudomonas putida KT2440?
+- question: In which habitats or growth states does alginate become a major, rather
+    than minor, matrix component in KT2440 relative to other exopolysaccharides such
+    as Pea and Peb?
+- question: Are there measurable differences in catalytic efficiency or regulation
+    between KT2440 AlgD and the better-studied Pseudomonas aeruginosa homologs?
+suggested_experiments:
+- description: Purify KT2440 AlgD and measure GDP-mannose to GDP-mannuronate conversion
+    in vitro with NAD+ to obtain direct kinetic evidence for the predicted catalytic
+    activity in this strain.
+  experiment_type: Enzyme purification and steady-state kinetics
+  hypothesis: KT2440 AlgD is an NAD-dependent GDP-mannose 6-dehydrogenase with substrate
+    specificity matching the UniProt-assigned reaction.
+- description: Compare wild type, deltaalgD, and complemented strains under matric
+    versus solute stress while quantifying alginate, biofilm architecture, and desiccation
+    survival.
+  experiment_type: Mutant/complementation biofilm stress assay
+  hypothesis: algD-dependent alginate production specifically improves fitness under
+    water-limiting conditions more than under purely osmotic stress.
+- description: Use promoter-reporter fusions and RNA-seq in KT2440 across defined
+    hydration states and carbon sources to map the upstream regulatory logic controlling
+    algD expression.
+  experiment_type: Reporter assay and transcriptomics
+  hypothesis: algD induction is driven by a specific dehydration-responsive regulatory
+    program rather than by generic slowing of metabolism.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

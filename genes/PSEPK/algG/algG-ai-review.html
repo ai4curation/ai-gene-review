@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>algG - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>algG</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NC9" target="_blank" class="term-link">
+                        Q88NC9
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1283</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "algG";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NC9" data-a="DESCRIPTION: AlgG is the periplasmic alginate-modifying enzyme ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>AlgG is the periplasmic alginate-modifying enzyme in the KT2440 alginate biosynthesis cluster. By strong orthology to experimentally characterized Pseudomonas AlgG proteins, it epimerizes beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization, thereby helping generate the characteristic polymannuronate/MG-block architecture of Pseudomonas alginate. Direct KT2440 biochemistry is limited, but the reviewed UniProt entry, conserved cluster context, signal peptide, and ortholog literature support a confident assignment to periplasmic alginate biosynthesis. Ortholog studies also indicate that AlgG has a second non-catalytic role in the periplasmic secretion/protection complex that limits AlgL-mediated degradation of the polymer.
+</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>mannuronan C5-epimerase activity</h3>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="mannuronan C5-epimerase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Catalysis of the polymer-level epimerization of beta-D-mannuronate residues in alginate to alpha-L-guluronate residues.
+</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO currently has alginic acid biosynthetic process and broad epimerase terms, but it lacks a specific molecular function term for the defining AlgG reaction (EC 5.1.3.37). This forces curators to use the generic carbohydrate epimerase parent and loses the polymer-level substrate specificity that distinguishes AlgG from small-molecule epimerases.
+</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016857" target="_blank" class="term-link">
+                    racemase and epimerase activity, acting on carbohydrates and derivatives
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:PSEPK/algG/algG-deep-research-falcon.md
+                    
+                    
+                    : AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+                    
+                </li>
+                
+                <li>
+                    
+                    file:PSEPK/algG/algG-deep-research-falcon.md
+                    
+                    
+                    : GO currently misses the core molecular function of AlgG.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC9" data-a="GO:0042597" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization is well supported. AlgG carries an N-terminal signal peptide and lacks any mature transmembrane segment, and the experimentally characterized Pseudomonas AlgG orthologs function on the alginate polymer after it enters the periplasm.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing term is appropriately specific for a soluble or periplasm-associated catalytic step in alginate maturation. There is no evidence that AlgG itself is an inner-membrane enzyme.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The mature enzyme is periplasmic: UniProt annotates a signal peptide at residues 1-25 and the catalytic chain from 26-519.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                    GO:0042121
+                                </a>
+                            </span>
+                            <span class="term-label">alginic acid biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC9" data-a="GO:0042121" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This process annotation should be retained. AlgG is the periplasmic modification enzyme that introduces guluronate residues into alginate and is part of the conserved alginate biosynthesis apparatus in Pseudomonas.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Even though direct KT2440 biochemistry is limited, ortholog studies and the reviewed UniProt entry clearly place AlgG within alginate biosynthesis rather than in a generic carbohydrate-isomerase pathway.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AlgG sits in the conserved alginate biosynthesis cluster of KT2440 and is the most plausible source of guluronate formation during alginate production.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016857" target="_blank" class="term-link">
+                                    GO:0016857
+                                </a>
+                            </span>
+                            <span class="term-label">racemase and epimerase activity, acting on carbohydrates and derivatives</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:PSEPK/algG/algG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC9" data-a="GO:0016857" data-r="file:PSEPK/algG/algG-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GOA currently misses the core molecular function of AlgG. The exact activity is mannuronan C5-epimerization at the polymer level; this broad carbohydrate epimerase term is the closest existing GO molecular function and should be added as a new annotation until GO contains a specific AlgG term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt assigns EC 5.1.3.37 and ortholog biochemistry defines the reaction precisely, but GO lacks a corresponding specific molecular function term for polymer-level mannuronan C5 epimerization.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Pseudomonas syringae AlgG structure shows a right-handed parallel beta-helix with a conserved DPHD motif, and His319 plus Arg345 are critical for catalysis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/algG/algG-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">For KT2440 specifically, direct biochemical characterization is limited; functional assignment is based on strong orthology to experimentally characterized Pseudomonas AlgG proteins and conserved gene-cluster context.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Best available existing GO representation of AlgG&#39;s core function. AlgG is the periplasmic polymer-level mannuronan C5-epimerase that converts mannuronate residues in nascent alginate to guluronate during alginate biosynthesis.
+</h3>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="FUNCTION: Best available existing GO representation of AlgG&#39;..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016857" target="_blank" class="term-link">
+                            racemase and epimerase activity, acting on carbohydrates and derivatives
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                alginic acid biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/algG/algG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/algG/algG-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The mature enzyme is periplasmic: UniProt annotates a signal peptide at residues 1-25 and the catalytic chain from 26-519.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88NC9
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB/Swiss-Prot reviewed entry for ALGG_PSEPK (Q88NC9)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviewed entry identifies AlgG as mannuronan C5-epimerase (EC 5.1.3.37)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Signal peptide residues 1-25 and mature chain residues 26-519 support periplasmic localization</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places AlgG in alginate biosynthesis and notes protection of nascent alginate from AlgL</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes PP_1283 as the KT2440 algG locus in the genome sequence</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12775688" target="_blank" class="term-link">
+                            PMID:12775688
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Pseudomonas fluorescens AlgG protein, but not its mannuronan C-5-epimerase activity, is needed for alginate polymer formation</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">algG deletion caused AlgL-dependent degradation products instead of normal polymer</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Catalytically inactive AlgG could still support polymer formation, implying a structural role in the biosynthetic complex</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24398681" target="_blank" class="term-link">
+                            PMID:24398681
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Catalytic Mechanism and Mode of Action of the Periplasmic Alginate Epimerase AlgG</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural and mutational analysis identified His319 and Arg345 as key catalytic residues</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">AlgG is a processive periplasmic polymer-level epimerase with an electropositive substrate-binding groove</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/algG/algG-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research fallback report for algG</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 assignment is supported by strong orthology and conserved gene-cluster context</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Periplasmic localization and alginate-biosynthetic role are the strongest defensible GO claims for KT2440</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How important is AlgG&#39;s non-catalytic scaffolding role in KT2440 relative to its epimerase activity during native alginate production?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Svein Valla, Dennis E. Ohman</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="Q: How important is AlgG&#39;s non-catalytic scaffolding ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which physiological conditions does KT2440 deploy AlgG-dependent alginate remodeling most strongly?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: P. Lynne Howell, Martin Gimmestad</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="Q: Under which physiological conditions does KT2440 d..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Create an algG deletion strain and catalytic-site mutants in the DPHD motif, then compare polymer yield and uronate composition under alginate-inducing conditions.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Catalytic-dead mutants will separate guluronate formation from the structural role of AlgG in polymer protection/export.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="EXPERIMENT: Create an algG deletion strain and catalytic-site ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure secreted alginate composition by NMR or linkage-sensitive enzymology in wild type, algG-null, and complemented strains.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: KT2440 AlgG introduces guluronate and MG patterning into alginate rather than producing long guluronate blocks.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="EXPERIMENT: Measure secreted alginate composition by NMR or li..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test physical or genetic interactions between AlgG and AlgK, AlgX, AlgE, and AlgL in KT2440.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: AlgG participates in a periplasmic biosynthetic complex that channels alginate away from AlgL during export.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88NC9" data-a="EXPERIMENT: Test physical or genetic interactions between AlgG..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(algG-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NC9" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:55:09.103069'<br />
+end_time: '2026-03-21T14:07:38.002538'<br />
+duration_seconds: 748.9<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: algG<br />
+  gene_symbol: algG<br />
+  uniprot_accession: Q88NC9<br />
+  protein_description: 'RecName: Full=Mannuronan C5-epimerase {ECO:0000250|UniProtKB:Q51371};<br />
+    EC=5.1.3.37 {ECO:0000250|UniProtKB:Q51371}; AltName: Full=Poly(beta-D-mannuronate)<br />
+    C5 epimerase {ECO:0000250|UniProtKB:Q51371}; Flags: Precursor;'<br />
+  gene_info: Name=algG; OrderedLocusNames=PP_1283;<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the D-mannuronate C5-epimerase family.<br />
+  protein_domains: Beta_helix. (IPR039448); Carb-bd_sugar_hydrolysis-dom. (IPR006633);<br />
+    Mannuronan_C5-epimerase. (IPR053409); Para_beta_helix_rpt-2. (IPR022441); PbH1.<br />
+    (IPR006626)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 32</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88NC9</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mannuronan C5-epimerase {ECO:0000250|UniProtKB:Q51371}; EC=5.1.3.37 {ECO:0000250|UniProtKB:Q51371}; AltName: Full=Poly(beta-D-mannuronate) C5 epimerase {ECO:0000250|UniProtKB:Q51371}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=algG; OrderedLocusNames=PP_1283;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the D-mannuronate C5-epimerase family.</li>
+<li><strong>Key Domains:</strong> Beta_helix. (IPR039448); Carb-bd_sugar_hydrolysis-dom. (IPR006633); Mannuronan_C5-epimerase. (IPR053409); Para_beta_helix_rpt-2. (IPR022441); PbH1. (IPR006626)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "algG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'algG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>algG</strong> (gene ID: algG, UniProt: Q88NC9) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88NC9</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mannuronan C5-epimerase {ECO:0000250|UniProtKB:Q51371}; EC=5.1.3.37 {ECO:0000250|UniProtKB:Q51371}; AltName: Full=Poly(beta-D-mannuronate) C5 epimerase {ECO:0000250|UniProtKB:Q51371}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=algG; OrderedLocusNames=PP_1283;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the D-mannuronate C5-epimerase family.</li>
+<li><strong>Key Domains:</strong> Beta_helix. (IPR039448); Carb-bd_sugar_hydrolysis-dom. (IPR006633); Mannuronan_C5-epimerase. (IPR053409); Para_beta_helix_rpt-2. (IPR022441); PbH1. (IPR006626)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "algG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'algG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>algG</strong> (gene ID: algG, UniProt: Q88NC9) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-algg-uniprot-q88nc9-locus-pp_1283-in-pseudomonas-putida-kt2440">Functional annotation research report: <strong>algG</strong> (UniProt <strong>Q88NC9</strong>; locus <strong>PP_1283</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="executive-summary-verified-target-identity">Executive summary (verified target identity)</h2>
+<blockquote>
+<p>UniProt Q88NC9 matches <strong>AlgG</strong>, a predicted <strong>mannuronan C5-epimerase</strong> (EC 5.1.3.37) from <strong>Pseudomonas putida KT2440</strong>; KT2440-specific literature also identifies <strong>algG as PP_1283</strong> within the alginate biosynthetic cluster and reports its transcriptional induction under water-limiting conditions. However, no direct biochemical characterization of <strong>Q88NC9/KT2440 AlgG</strong> was found in the retrieved papers. Accordingly, the functional annotation for this protein is best scoped as a <strong>KT2440 locus supported by strain-specific transcriptomic evidence</strong>, with enzyme reaction, periplasmic localization, and pathway role inferred from closely related <strong>Pseudomonas</strong> AlgG ortholog studies rather than from a direct KT2440 enzyme assay (gulez2014colonymorphologyand pages 6-8, nilsson2011influenceofputative pages 1-2, franklin1994pseudomonasaeruginosaalgg pages 1-2, jain2003thedualroles pages 1-2, lynne2014catalyticmechanismand pages 1-2).</p>
+</blockquote>
+<p><em>Blockquote: This blockquote verifies that Q88NC9 corresponds to P. putida KT2440 AlgG/PP_1283 and clearly distinguishes direct KT2440 evidence from orthology-based functional inference. It is useful for preventing overstatement in the final annotation.</em></p>
+<p><strong>Primary functional assignment:</strong> AlgG is a <strong>polymer-level mannuronan C5-epimerase</strong> (EC <strong>5.1.3.37</strong>) that converts <strong>β-D-mannuronate (M)</strong> residues to <strong>α-L-guluronate (G)</strong> residues in the nascent alginate polymer during periplasmic transit, shaping alginate monomer composition and block structure. This activity is central to the <strong>alginate modification/export complex</strong> in pseudomonads and is strongly modulated by <strong>O-acetylation state</strong> of the substrate. (franklin1994pseudomonasaeruginosaalgg pages 1-2, jain2003thedualroles pages 1-2, lynne2014catalyticmechanismand pages 1-2)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-alginate-and-why-epimerization-matters">1.1 Alginate and why epimerization matters</h3>
+<p>Alginate is a linear, 1→4-linked copolymer of <strong>β-D-mannuronic acid (M)</strong> and its C5 epimer <strong>α-L-guluronic acid (G)</strong>. In pseudomonads, alginate is synthesized initially as a polymannuronate (poly-M) chain and is subsequently modified in the periplasm by epimerization (AlgG) and acetylation (AlgF/AlgI/AlgJ/AlgX), with composition and substitutions affecting polymer properties and interactions (e.g., hydration, viscosity, gel behavior with cations). (ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2, roblesprice2004algxisa pages 2-3, wang2023strategytocombat pages 2-3)</p>
+<h3 id="12-reaction-chemistry-catalyzed-by-algg">1.2 Reaction chemistry catalyzed by AlgG</h3>
+<p>AlgG catalyzes <strong>C5-epimerization</strong> at the uronic acid C5 stereocenter in polymeric alginate:</p>
+<p><strong>poly(β-D-mannuronate) → poly(β-D-mannuronate/α-L-guluronate)</strong></p>
+<p>Genetic and biochemical evidence from <em>Pseudomonas aeruginosa</em> shows <strong>algG mutants produce alginate lacking G residues</strong>, and expression of algG restores G incorporation, establishing AlgG as the enzyme introducing G residues into pseudomonad alginate. (franklin1994pseudomonasaeruginosaalgg pages 1-2, franklin1994pseudomonasaeruginosaalgg pages 7-7)</p>
+<h3 id="13-algg-vs-alge-type-extracellular-epimerases-important-distinction">1.3 AlgG vs AlgE-type extracellular epimerases (important distinction)</h3>
+<p>A central definitional distinction is that pseudomonads typically use a <strong>single periplasmic AlgG</strong> that introduces <strong>limited, patterned epimerization</strong> (predominantly M and alternating MG regions), whereas <em>Azotobacter</em> species encode multiple <strong>secreted AlgE family</strong> epimerases that can generate <strong>guluronate-rich G-blocks</strong> and are widely exploited for in vitro alginate tailoring. (lynne2014catalyticmechanismand pages 1-2, lynne2014catalyticmechanismand pages 10-12, tøndervik2020exploitingmannuronanc5 pages 1-3)</p>
+<h2 id="2-geneprotein-context-in-p-putida-kt2440-psepk">2. Gene/protein context in <em>P. putida</em> KT2440 (PSEPK)</h2>
+<h3 id="21-operongenetic-context-and-expression-in-kt2440">2.1 Operon/genetic context and expression in KT2440</h3>
+<p>In <em>P. putida</em> KT2440, an alginate biosynthesis gene cluster spanning <strong>PP1277–PP1288</strong> has been described, and algG is identified within this locus as <strong>PP_1283</strong>. (nilsson2011influenceofputative pages 1-2, gulez2014colonymorphologyand pages 6-8)</p>
+<p>Under water limitation, whole-transcriptome profiling showed induction of multiple alginate genes in KT2440; specifically, <strong>algG (PP_1283)</strong> exhibited a <strong>log2 fold change of ~+0.44</strong> in the wild type under water-limited versus water-replete conditions (reported as “alginate-C5-mannuronan-epimerase AlgG, putative”). (gulez2014colonymorphologyand pages 6-8)</p>
+<h3 id="22-biological-role-of-alginate-in-p-putida-ecology-hydration-and-stress">2.2 Biological role of alginate in <em>P. putida</em> ecology (hydration and stress)</h3>
+<p>Work in a closely related <em>P. putida</em> strain (mt-2) established that alginate is induced by <strong>matric (water-limiting) stress</strong>, where it contributes to a hydrated microenvironment and alters biofilm architecture; glycosyl composition analysis under matric stress detected mannuronic acid in EPS (consistent with alginate production) in wild type but not in an algD mutant. (chang2007alginateproductionby pages 1-2, chang2007alginateproductionby pages 4-5)</p>
+<h2 id="3-molecular-function-substrate-specificity-mechanism-and-localization">3. Molecular function: substrate specificity, mechanism, and localization</h2>
+<h3 id="31-substrate-specificity-and-acetylation-sensitivity">3.1 Substrate specificity and acetylation sensitivity</h3>
+<p>Biochemical assays show AlgG acts on <strong>polymeric poly-M substrates</strong> (“polymer-level” epimerase), and that <strong>O-acetylation of mannuronate residues strongly inhibits AlgG activity</strong>; chemical deacetylation of poly-M was required to detect strong epimerization, producing a <strong>nearly 10-fold increase</strong> in reactivity with a G-specific lyase readout compared with control reactions. (franklin1994pseudomonasaeruginosaalgg pages 7-8, franklin1994pseudomonasaeruginosaalgg pages 7-7)</p>
+<p>This interplay is consistent with broader pathway understanding that acetylation during periplasmic transit can protect residues from epimerization and from certain alginate lyases, impacting both polymer composition and susceptibility to enzymatic remodeling. (ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2, ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7)</p>
+<h3 id="32-subcellular-localization-where-algg-acts">3.2 Subcellular localization (where AlgG acts)</h3>
+<p>Direct localization evidence in <em>P. aeruginosa</em> indicates AlgG is synthesized as a <strong>signal-peptide-containing precursor</strong> (~60 kDa) and processed to a mature form (~55 kDa) that localizes to the <strong>periplasm</strong>. (franklin1994pseudomonasaeruginosaalgg pages 1-2)</p>
+<p>Mechanistic synthesis and pathway models place AlgG as a periplasmic modifier acting on the polymer as it transits from the inner-membrane polymerase toward outer-membrane export. (roblesprice2004algxisa pages 2-3, ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4)</p>
+<h3 id="33-mode-of-action-and-product-pattern-block-structure">3.3 Mode of action and product pattern (block structure)</h3>
+<p>Structural/mechanistic work on periplasmic AlgG in <em>Pseudomonas</em> indicates:<br />
+- A single AlgG can epimerize roughly <strong>22–44%</strong> of mannuronate residues in vivo in pseudomonads, producing polymers with <strong>polymannuronate segments and alternating MG sequences</strong>, rather than long G-blocks. (lynne2014catalyticmechanismand pages 1-2)<br />
+- AlgG requires relatively long substrates; a minimum of <strong>~9 residues</strong> has been reported, with weak binding to a nonamer characterized by <strong>Ka ≈ 5.0 × 10^5 M−1</strong>. (lynne2014catalyticmechanismand pages 12-13)<br />
+- A <strong>processive/sliding</strong> mechanism and active-site geometry support the observation that pseudomonad alginate lacks G–G doublets in vivo (favoring alternating patterns). (lynne2014catalyticmechanismand pages 12-13)</p>
+<h3 id="34-catalytic-mechanism-expert-structural-inference">3.4 Catalytic mechanism (expert structural inference)</h3>
+<p>Structural analysis supports a catalytic architecture in which a histidine (e.g., <strong>His319</strong>) is proposed as a catalytic base, <strong>Arg345</strong> contributes to carboxylate neutralization (contrasting with Ca2+-mediated neutralization in many secreted AlgE enzymes), and water/solvent is implicated as the proton donor with possible positioning by <strong>Tyr314</strong>; a conserved <strong>DPHD</strong> motif is noted for AlgG-family periplasmic enzymes. (lynne2014catalyticmechanismand pages 1-2, lynne2014catalyticmechanismand pages 10-12, ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7)</p>
+<h2 id="4-pathway-integration-alginate-polymerization-modification-and-export">4. Pathway integration: alginate polymerization, modification, and export</h2>
+<h3 id="41-algg-in-the-synthase-dependent-secretion-system">4.1 AlgG in the synthase-dependent secretion system</h3>
+<p>In the pseudomonad model, Alg8 and Alg44 are implicated in polymerization, and the nascent chain is modified and routed through a periplasmic scaffold/complex involving AlgG, AlgX, and AlgK, and exits via the outer-membrane pore AlgE; the periplasmic lyase AlgL is co-expressed and implicated in clearing mislocalized polymer (and can degrade polymer if not properly shielded). (roblesprice2004algxisa pages 2-3, ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4)</p>
+<p>A useful schematic model of this multi-protein system is shown in the retrieved figure. (ertesva¥g2015alginatemodifyingenzymesbiological media 3908e58c)</p>
+<h3 id="42-dual-functional-roles-epimerization-and-secretionprotection">4.2 Dual functional roles: epimerization and secretion/protection</h3>
+<p>Genetic analysis in <em>P. aeruginosa</em> supports a <strong>dual role</strong> for AlgG: (i) epimerization (M→G) and (ii) assisting productive secretion by <strong>protecting the polymer from periplasmic AlgL-mediated degradation</strong>, potentially together with AlgK as part of a periplasmic scaffold guiding polymers to AlgE. (jain2003thedualroles pages 1-2)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2023-algg-framed-as-a-determinant-of-alginate-functional-properties-relevant-to-anti-biofilm-strategies">5.1 2023: AlgG framed as a determinant of alginate functional properties relevant to anti-biofilm strategies</h3>
+<p>A 2023 review on enzymatic biofilm dispersal highlights AlgG as the enzyme that epimerizes mannuronic to guluronic acid, affecting ManA/GulA composition and functional properties of alginate. It also compiles a wide reported range of alginate <strong>acetylation rates (4%–57%)</strong>, emphasizing acetylation and epimer composition as determinants of cation-mediated gel behavior and material properties—parameters directly relevant to therapeutic biofilm disruption and biomaterials design. (wang2023strategytocombat pages 2-3)</p>
+<h3 id="52-2024-p-putida-process-implementationreducing-biofilmfoam-for-fermentation">5.2 2024: <em>P. putida</em> process implementation—reducing biofilm/foam for fermentation</h3>
+<p>A 2024 fermentation-oriented study engineered <em>P. putida</em> by deleting alginate-associated algA (among other genes), showing that targeting alginate production can reduce biofilm formation and improve cultivation characteristics. The engineered strain showed <strong>40% lower biofilm formation after 72 h</strong> and increased cell densities in small bioreactors: <strong>1.39×10^10 vs 6.4×10^9 CFU/mL</strong> (rich medium) and <strong>6.11×10^9 vs 1.36×10^9 CFU/mL</strong> (mineral medium) for mutant versus wild type. While not specific to algG, the work explicitly lists algG among alginate pathway genes and demonstrates real-world process relevance of alginate-pathway engineering. (frolov2024constructionofthe pages 1-2)</p>
+<h3 id="53-2024-expanding-the-enzyme-toolkitepimerase-activity-in-non-canonical-folds-preprint">5.3 2024: expanding the enzyme toolkit—epimerase activity in non-canonical folds (preprint)</h3>
+<p>A 2024 preprint reports detectable M→G epimerase side-activity in a gut bacterial alginate lyase with an (α/α)7-barrel fold, contrasting with the parallel β-helix folds typical of AlgG/AlgE epimerases. While this does not change AlgG’s annotation, it is relevant to “latest research” in that it suggests epimerization chemistry may be more widespread than previously recognized and may appear in enzymes annotated as lyases, expanding the search space for alginate-modifying enzymes. (tandrup2024theswissarmy pages 20-23)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-biofilm-control-and-therapeutics">6.1 Biofilm control and therapeutics</h3>
+<p>Because alginate contributes to biofilm mechanical properties and antibiotic tolerance in pseudomonads, enzymatic strategies (e.g., exogenous polysaccharide-degrading enzymes) are used to weaken EPS matrices and sensitize bacteria; the 2023 review emphasizes extracellular enzymes as anti-biofilm tools due to accessibility and reduced reliance on cellular uptake. AlgG is indirectly relevant as the enzyme that sets alginate composition and thus influences matrix properties and response to enzymatic dispersal. (wang2023strategytocombat pages 2-3)</p>
+<h3 id="62-industrial-and-biomaterials-tailoring-of-alginate-composition">6.2 Industrial and biomaterials tailoring of alginate composition</h3>
+<p>A practical approach to controlling alginate material properties is to tune guluronate content and block structure using epimerases. For example, applying <em>Azotobacter</em> mannuronan C5-epimerases increased G content from <strong>32% to as high as 81%</strong>, and the G-rich oligomer drug candidate OligoG CF-5/20 is described as <strong>&gt;85% G</strong> with <strong>DPn ~15–17</strong>, linking epimerization control to biomedical functionality (e.g., mucus rheology and biofilm disruption). While AlgG itself is periplasmic and not generally used as an extracellular processing enzyme, these data contextualize why the AlgG-catalyzed reaction is a key lever in alginate functional engineering. (tøndervik2020exploitingmannuronanc5 pages 1-3)</p>
+<h3 id="63-environmental-and-soil-microbiology-implementations-stress-resilience">6.3 Environmental and soil microbiology implementations (stress resilience)</h3>
+<p>In <em>P. putida</em> (mt-2), alginate production under matric stress is positioned as an adaptive mechanism in water-limited habitats (soil-like conditions), shaping biofilm architecture and hydration microenvironments. This supports interpreting KT2440 alginate/algG induction under water limitation as part of a broader ecological stress-response strategy. (chang2007alginateproductionby pages 1-2, chang2007alginateproductionby pages 4-5, gulez2014colonymorphologyand pages 6-8)</p>
+<h2 id="7-expert-opinions-and-authoritative-synthesis">7. Expert opinions and authoritative synthesis</h2>
+<p>An authoritative 2015 review synthesizes the prevailing model that bacterial alginate is synthesized as polymannuronate and then modified by periplasmic enzymes, with <strong>AlgG and AlgX</strong> described as integral components of a <strong>polymerization/export complex</strong>, and acetylation described as a key determinant of viscosity/water binding and as a protective modification against lyases and further epimerization. This view supports annotating AlgG not only as an epimerase but also as a component functionally coupled to secretion and periplasmic quality control. (ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2, ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4)</p>
+<h2 id="8-quantitative-evidence-highlights-selected">8. Quantitative evidence highlights (selected)</h2>
+<p>Key quantitative findings relevant to AlgG and alginate properties include:<br />
+- <strong>KT2440 expression:</strong> algG (PP_1283) <strong>log2 fold change ~+0.44</strong> under water limitation (WT). (gulez2014colonymorphologyand pages 6-8)<br />
+- <strong>In vivo epimerization extent (Pseudomonas spp.):</strong> <strong>22–44%</strong> of mannuronate residues epimerized by periplasmic AlgG. (lynne2014catalyticmechanismand pages 1-2)<br />
+- <strong>Biochemical assay (P. aeruginosa strains):</strong> FRD1 (AlgG+) <strong>1.38 U</strong> vs algG mutant FRD462 <strong>0.28 U</strong>; complementation FRD462(pMF18) <strong>1.46 U</strong> (units as A530-based readout after lyase assay). (franklin1994pseudomonasaeruginosaalgg pages 7-7)<br />
+- <strong>Acetylation range (compiled 2023 review):</strong> alginate acetylation reported <strong>4%–57%</strong>. (wang2023strategytocombat pages 2-3)<br />
+- <strong>Substrate requirements (AlgG structural/mechanistic):</strong> minimum <strong>~9 residues</strong>; <strong>Ka ≈ 5.0×10^5 M−1</strong> for nonamer binding. (lynne2014catalyticmechanismand pages 12-13)<br />
+- <strong>Process implementation (2024 fermentation):</strong> engineered <em>P. putida</em> deletion strain showed <strong>40% lower biofilm</strong> after 72 h and increased CFU/mL (rich: <strong>1.39×10^10 vs 6.4×10^9</strong>; mineral: <strong>6.11×10^9 vs 1.36×10^9</strong>). (frolov2024constructionofthe pages 1-2)</p>
+<h2 id="9-evidence-summary-table">9. Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/topic</th>
+<th>Key finding</th>
+<th>Organism/strain studied</th>
+<th>Evidence type</th>
+<th>Citation (paper + year + DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Reaction catalyzed</td>
+<td>AlgG is a polymer-level mannuronan C5-epimerase that converts β-D-mannuronate (M) residues in alginate to α-L-guluronate (G) residues during alginate biosynthesis.</td>
+<td><em>Pseudomonas aeruginosa</em></td>
+<td>Genetic + biochemical</td>
+<td>Franklin et al., 1994, https://doi.org/10.1128/jb.176.7.1821-1830.1994 (franklin1994pseudomonasaeruginosaalgg pages 1-2, franklin1994pseudomonasaeruginosaalgg pages 7-8)</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>AlgG acts on polymeric polymannuronate/poly-M rather than monomers; activity is detected on deacetylated polymer substrate.</td>
+<td><em>P. aeruginosa</em></td>
+<td>Biochemical</td>
+<td>Franklin et al., 1994, https://doi.org/10.1128/jb.176.7.1821-1830.1994 (franklin1994pseudomonasaeruginosaalgg pages 7-8, franklin1994pseudomonasaeruginosaalgg pages 7-7)</td>
+</tr>
+<tr>
+<td>Effect of acetylation on substrate use</td>
+<td>O-acetylation strongly inhibits AlgG activity; chemical deacetylation of poly-M caused a nearly 10-fold increase in reactivity with a G-specific lyase after AlgG treatment.</td>
+<td><em>P. aeruginosa</em></td>
+<td>Biochemical</td>
+<td>Franklin et al., 1994, https://doi.org/10.1128/jb.176.7.1821-1830.1994 (franklin1994pseudomonasaeruginosaalgg pages 7-8, franklin1994pseudomonasaeruginosaalgg pages 7-7)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>AlgG is synthesized with an N-terminal signal peptide, processed from an approximately 60-kDa precursor to an approximately 55-kDa mature protein, and localizes to the periplasm.</td>
+<td><em>P. aeruginosa</em></td>
+<td>Protein localization + sequence analysis</td>
+<td>Franklin et al., 1994, https://doi.org/10.1128/jb.176.7.1821-1830.1994 (franklin1994pseudomonasaeruginosaalgg pages 1-2, franklin1994pseudomonasaeruginosaalgg pages 4-4)</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>In the Pseudomonas alginate biosynthesis/export complex, AlgG is a periplasmic modifier acting on nascent alginate as it passes from the inner-membrane polymerase machinery toward the outer-membrane export pore.</td>
+<td><em>Pseudomonas</em> spp. / <em>P. aeruginosa</em> model</td>
+<td>Structural + pathway review</td>
+<td>Ertesvåg, 2015, https://doi.org/10.3389/fmicb.2015.00523 (ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4, ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2); Robles-Price et al., 2004, https://doi.org/10.1128/jb.186.21.7369-7377.2004 (roblesprice2004algxisa pages 2-3, roblesprice2004algxisa pages 1-2)</td>
+</tr>
+<tr>
+<td>Polymerization/export complex context</td>
+<td>Alg8 and Alg44 are implicated in polymerization; AlgG, AlgX, and AlgK are periplasmic components; AlgE is the outer-membrane export pore; AlgL is a periplasmic lyase that degrades mislocalized polymer. Mutants lacking AlgG/AlgX/AlgK release degraded oligomers instead of polymer.</td>
+<td><em>P. aeruginosa</em> / Pseudomonas model</td>
+<td>Genetic + review</td>
+<td>Robles-Price et al., 2004, https://doi.org/10.1128/jb.186.21.7369-7377.2004 (roblesprice2004algxisa pages 2-3, roblesprice2004algxisa pages 1-2); Ertesvåg, 2015, https://doi.org/10.3389/fmicb.2015.00523 (ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4)</td>
+</tr>
+<tr>
+<td>Dual functional role</td>
+<td>Beyond epimerization, AlgG also helps protect nascent alginate from periplasmic AlgL-mediated degradation and supports productive secretion/polymer formation.</td>
+<td><em>P. aeruginosa</em></td>
+<td>Genetic</td>
+<td>Jain et al., 2003, https://doi.org/10.1046/j.1365-2958.2003.03361.x (jain2003thedualroles pages 1-2)</td>
+</tr>
+<tr>
+<td>Product composition in vivo</td>
+<td>In Pseudomonas, a single periplasmic AlgG modifies about 22–44% of mannuronate residues, yielding polymers enriched in M and alternating MG regions rather than long G-blocks.</td>
+<td><em>Pseudomonas</em> spp.</td>
+<td>Structural/mechanistic synthesis</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 1-2)</td>
+</tr>
+<tr>
+<td>Block structure constraint</td>
+<td>Processive action and active-site geometry imply that at most every other mannuronate can be epimerized, explaining alternating MG patterns and the absence of G-G doublets in vivo.</td>
+<td><em>Pseudomonas</em> spp.</td>
+<td>Structural + mechanistic</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 12-13)</td>
+</tr>
+<tr>
+<td>Quantitative genetic/biochemical rescue</td>
+<td>G-specific lyase assay values were 1.38 activity units for wild type FRD1, 0.28 for the algG mutant FRD462, and 1.46 for complemented FRD462(pMF18), demonstrating loss and restoration of G incorporation.</td>
+<td><em>P. aeruginosa</em> strains FRD1 / FRD462</td>
+<td>Genetic complementation + biochemical assay</td>
+<td>Franklin et al., 1994, https://doi.org/10.1128/jb.176.7.1821-1830.1994 (franklin1994pseudomonasaeruginosaalgg pages 7-7)</td>
+</tr>
+<tr>
+<td>Minimum substrate length</td>
+<td>Structural/mechanistic analysis indicates AlgG requires relatively long substrates, with a reported minimum of about 9 mannuronate residues for productive interaction.</td>
+<td><em>Pseudomonas</em> spp. (AlgG structural model from <em>P. syringae</em>)</td>
+<td>Structural + mechanistic</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 12-13)</td>
+</tr>
+<tr>
+<td>Binding affinity</td>
+<td>AlgG binds a nonamer weakly, with reported association constant Ka approximately 5.0 × 10^5 M−1.</td>
+<td><em>Pseudomonas</em> spp. (AlgG structural model from <em>P. syringae</em>)</td>
+<td>Structural + mechanistic</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 12-13)</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td>Proposed catalytic residues include His319 as catalytic base, Arg345 for carboxylate neutralization, and a solvent-derived proton donor coordinated by Tyr314; AlgG carries a DPHD motif.</td>
+<td><em>Pseudomonas syringae</em> AlgG / Pseudomonas periplasmic AlgG family</td>
+<td>Structural + mutational/mechanistic</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 1-2, lynne2014catalyticmechanismand pages 10-12, ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7)</td>
+</tr>
+<tr>
+<td>Distinction from AlgE-type epimerases</td>
+<td>AlgG is a single periplasmic Pseudomonas enzyme acting on nascent, largely unacetylated polymer and does not generate long G-block alginate in vivo; AlgE-type enzymes are extracellular/secreted, often multiple, Ca2+-dependent, and associated with G-block formation.</td>
+<td><em>Pseudomonas</em> vs <em>Azotobacter</em> / extracellular epimerase systems</td>
+<td>Comparative structural + review</td>
+<td>Lynne et al., 2014, publication URL not available in retrieved context (lynne2014catalyticmechanismand pages 1-2, lynne2014catalyticmechanismand pages 10-12); Ertesvåg, 2015, https://doi.org/10.3389/fmicb.2015.00523 (ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7)</td>
+</tr>
+<tr>
+<td>Acetylation interplay</td>
+<td>Acetylation by AlgF/AlgI/AlgJ during periplasmic transit increases water binding and viscosity and protects alginate from many lyases and from further epimerization, limiting accessible AlgG/epimerase targets.</td>
+<td>Pseudomonads / bacterial alginate systems</td>
+<td>Review</td>
+<td>Ertesvåg, 2015, https://doi.org/10.3389/fmicb.2015.00523 (ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2, ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7, ertesva¥g2015alginatemodifyingenzymesbiological pages 2-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest functional-annotation evidence for AlgG as a periplasmic mannuronan C5-epimerase in Pseudomonas alginate biosynthesis. It highlights reaction chemistry, substrate requirements, localization, pathway context, mechanism, and quantitative findings useful for annotating the PSEPK protein Q88NC9 by orthology-aware inference.</em></p>
+<h2 id="10-conclusions-for-annotating-p-putida-kt2440-algg-q88nc9">10. Conclusions for annotating <em>P. putida</em> KT2440 AlgG (Q88NC9)</h2>
+<ol>
+<li><strong>Molecular function:</strong> annotate as <strong>mannuronan C5-epimerase (EC 5.1.3.37)</strong> acting on polymeric alginate to generate guluronate residues (M→G), with activity sensitive to O-acetylation state of the substrate. (franklin1994pseudomonasaeruginosaalgg pages 1-2, franklin1994pseudomonasaeruginosaalgg pages 7-8)</li>
+<li><strong>Cellular compartment:</strong> <strong>periplasmic enzyme</strong>, likely secreted via an N-terminal signal peptide and processed to a mature periplasmic form (direct evidence in <em>P. aeruginosa</em> AlgG; inferred for KT2440 ortholog). (franklin1994pseudomonasaeruginosaalgg pages 1-2)</li>
+<li><strong>Biological process:</strong> part of the <strong>alginate biosynthesis/modification/export system</strong>, working alongside AlgX/AlgK and coordinated with polymerization (Alg8/Alg44), acetylation (AlgF/I/J/X), periplasmic lyase quality control (AlgL), and outer-membrane export (AlgE). (roblesprice2004algxisa pages 2-3, ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4)</li>
+<li><strong>KT2440-specific support:</strong> algG is present as <strong>PP_1283</strong> in the KT2440 alg locus and is induced (modestly) under water limitation, consistent with alginate’s role in hydration and stress tolerance in <em>P. putida</em> lineages. (gulez2014colonymorphologyand pages 6-8, nilsson2011influenceofputative pages 1-2)</li>
+</ol>
+<h2 id="limitations-of-the-current-evidence-base">Limitations of the current evidence base</h2>
+<p>Within the retrieved corpus, there is <strong>no direct biochemical characterization of KT2440 AlgG (Q88NC9)</strong> (e.g., purified enzyme kinetics or structure). Therefore, mechanistic residues, binding constants, and localization are <strong>best treated as orthology-based inference</strong> from closely related <em>Pseudomonas</em> AlgG studies, while KT2440-specific claims should be limited to locus context and expression/phenotype studies. (gulez2014colonymorphologyand pages 6-8, franklin1994pseudomonasaeruginosaalgg pages 1-2, lynne2014catalyticmechanismand pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gulez2014colonymorphologyand pages 6-8): Gamze Gulez, Ali Altıntaş, Mustafa Fazli, Arnaud Dechesne, Christopher T. Workman, Tim Tolker‐Nielsen, and Barth F. Smets. Colony morphology and transcriptome profiling of pseudomonas putida kt2440 and its mutants deficient in alginate or all eps synthesis under controlled matric potentials. MicrobiologyOpen, 3:457-469, Jun 2014. URL: https://doi.org/10.1002/mbo3.180, doi:10.1002/mbo3.180. This article has 33 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nilsson2011influenceofputative pages 1-2): Martin Nilsson, Wen‐Chi Chiang, Mustafa Fazli, Morten Gjermansen, Michael Givskov, and Tim Tolker‐Nielsen. Influence of putative exopolysaccharide genes on pseudomonas putida kt2440 biofilm stability. Environmental microbiology, 13 5:1357-69, May 2011. URL: https://doi.org/10.1111/j.1462-2920.2011.02447.x, doi:10.1111/j.1462-2920.2011.02447.x. This article has 122 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(franklin1994pseudomonasaeruginosaalgg pages 1-2): Michael J. Franklin, E. 'CHETAN, Chitnis, Peter, Gacesa, Anders, Sonesson, David C. White, E. Dennis, and Ohman. Pseudomonas aeruginosa algg is a polymer level alginate c5-mannuronan epimerase. Journal of Bacteriology, 176:1821-1830, Apr 1994. URL: https://doi.org/10.1128/jb.176.7.1821-1830.1994, doi:10.1128/jb.176.7.1821-1830.1994. This article has 276 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jain2003thedualroles pages 1-2): Sumita Jain, Michael J. Franklin, Helga Ertesvåg, Svein Valla, and Dennis E. Ohman. The dual roles of algg in c‐5‐epimerization and secretion of alginate polymers in pseudomonas aeruginosa. Molecular Microbiology, 47:1123-1133, Feb 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03361.x, doi:10.1046/j.1365-2958.2003.03361.x. This article has 116 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lynne2014catalyticmechanismand pages 1-2): Catalytic mechanism and mode of action of the periplasmic alginate epimerase AlgG This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ertesva¥g2015alginatemodifyingenzymesbiological pages 1-2): Helga ErtesvÃ¥g. Alginate-modifying enzymes: biological roles and biotechnological uses. Frontiers in Microbiology, May 2015. URL: https://doi.org/10.3389/fmicb.2015.00523, doi:10.3389/fmicb.2015.00523. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roblesprice2004algxisa pages 2-3): Antonette Robles-Price, Thiang Yian Wong, Håvard Sletta, Svein Valla, and Neal L. Schiller. Algx is a periplasmic protein required for alginate biosynthesis in pseudomonas aeruginosa. Journal of Bacteriology, 186:7369-7377, Nov 2004. URL: https://doi.org/10.1128/jb.186.21.7369-7377.2004, doi:10.1128/jb.186.21.7369-7377.2004. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2023strategytocombat pages 2-3): Shaochi Wang, Yanteng Zhao, Alexandra P. Breslawec, Tingting Liang, Zhifen Deng, Laura L. Kuperman, and Qiuning Yu. Strategy to combat biofilms: a focus on biofilm dispersal enzymes. NPJ Biofilms and Microbiomes, Sep 2023. URL: https://doi.org/10.1038/s41522-023-00427-y, doi:10.1038/s41522-023-00427-y. This article has 204 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(franklin1994pseudomonasaeruginosaalgg pages 7-7): Michael J. Franklin, E. 'CHETAN, Chitnis, Peter, Gacesa, Anders, Sonesson, David C. White, E. Dennis, and Ohman. Pseudomonas aeruginosa algg is a polymer level alginate c5-mannuronan epimerase. Journal of Bacteriology, 176:1821-1830, Apr 1994. URL: https://doi.org/10.1128/jb.176.7.1821-1830.1994, doi:10.1128/jb.176.7.1821-1830.1994. This article has 276 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lynne2014catalyticmechanismand pages 10-12): Catalytic mechanism and mode of action of the periplasmic alginate epimerase AlgG This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tøndervik2020exploitingmannuronanc5 pages 1-3): Anne Tøndervik, Olav A. Aarstad, Randi Aune, Susan Maleki, Philip D. Rye, Arne Dessen, Gudmund Skjåk-Bræk, and Håvard Sletta. Exploiting mannuronan c-5 epimerases in commercial alginate production. Marine Drugs, 18:565, Nov 2020. URL: https://doi.org/10.3390/md18110565, doi:10.3390/md18110565. This article has 23 citations.</p>
+</li>
+<li>
+<p>(chang2007alginateproductionby pages 1-2): Woo-Suk Chang, Martijn van de Mortel, Lindsey Nielsen, Gabriela Nino de Guzman, Xiaohong Li, and Larry J. Halverson. Alginate production by <i>pseudomonas putida</i> creates a hydrated microenvironment and contributes to biofilm architecture and stress tolerance under water-limiting conditions. Nov 2007. URL: https://doi.org/10.1128/jb.00727-07, doi:10.1128/jb.00727-07. This article has 441 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2007alginateproductionby pages 4-5): Woo-Suk Chang, Martijn van de Mortel, Lindsey Nielsen, Gabriela Nino de Guzman, Xiaohong Li, and Larry J. Halverson. Alginate production by <i>pseudomonas putida</i> creates a hydrated microenvironment and contributes to biofilm architecture and stress tolerance under water-limiting conditions. Nov 2007. URL: https://doi.org/10.1128/jb.00727-07, doi:10.1128/jb.00727-07. This article has 441 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(franklin1994pseudomonasaeruginosaalgg pages 7-8): Michael J. Franklin, E. 'CHETAN, Chitnis, Peter, Gacesa, Anders, Sonesson, David C. White, E. Dennis, and Ohman. Pseudomonas aeruginosa algg is a polymer level alginate c5-mannuronan epimerase. Journal of Bacteriology, 176:1821-1830, Apr 1994. URL: https://doi.org/10.1128/jb.176.7.1821-1830.1994, doi:10.1128/jb.176.7.1821-1830.1994. This article has 276 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ertesva¥g2015alginatemodifyingenzymesbiological pages 6-7): Helga ErtesvÃ¥g. Alginate-modifying enzymes: biological roles and biotechnological uses. Frontiers in Microbiology, May 2015. URL: https://doi.org/10.3389/fmicb.2015.00523, doi:10.3389/fmicb.2015.00523. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ertesva¥g2015alginatemodifyingenzymesbiological pages 3-4): Helga ErtesvÃ¥g. Alginate-modifying enzymes: biological roles and biotechnological uses. Frontiers in Microbiology, May 2015. URL: https://doi.org/10.3389/fmicb.2015.00523, doi:10.3389/fmicb.2015.00523. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lynne2014catalyticmechanismand pages 12-13): Catalytic mechanism and mode of action of the periplasmic alginate epimerase AlgG This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ertesva¥g2015alginatemodifyingenzymesbiological media 3908e58c): Helga ErtesvÃ¥g. Alginate-modifying enzymes: biological roles and biotechnological uses. Frontiers in Microbiology, May 2015. URL: https://doi.org/10.3389/fmicb.2015.00523, doi:10.3389/fmicb.2015.00523. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frolov2024constructionofthe pages 1-2): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.</p>
+</li>
+<li>
+<p>(tandrup2024theswissarmy pages 20-23): Tobias Tandrup, José Pablo Rivas-Fernández, Mikkel Madsen, Mette E. Rønne, Agnes B. Petersen, Leesa J. Klau, Anne Tøndervik, Casper Wilkens, Finn L. Aachmann, Carme Rovira, and Birte Svensson. The swiss army knife of alginate manipulation – a gut bacterium alginate lyase with diverse catalytic activities. bioRxiv, Dec 2024. URL: https://doi.org/10.1101/2024.12.11.627697, doi:10.1101/2024.12.11.627697. This article has 0 citations.</p>
+</li>
+<li>
+<p>(franklin1994pseudomonasaeruginosaalgg pages 4-4): Michael J. Franklin, E. 'CHETAN, Chitnis, Peter, Gacesa, Anders, Sonesson, David C. White, E. Dennis, and Ohman. Pseudomonas aeruginosa algg is a polymer level alginate c5-mannuronan epimerase. Journal of Bacteriology, 176:1821-1830, Apr 1994. URL: https://doi.org/10.1128/jb.176.7.1821-1830.1994, doi:10.1128/jb.176.7.1821-1830.1994. This article has 276 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roblesprice2004algxisa pages 1-2): Antonette Robles-Price, Thiang Yian Wong, Håvard Sletta, Svein Valla, and Neal L. Schiller. Algx is a periplasmic protein required for alginate biosynthesis in pseudomonas aeruginosa. Journal of Bacteriology, 186:7369-7377, Nov 2004. URL: https://doi.org/10.1128/jb.186.21.7369-7377.2004, doi:10.1128/jb.186.21.7369-7377.2004. This article has 124 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ertesva¥g2015alginatemodifyingenzymesbiological pages 2-3): Helga ErtesvÃ¥g. Alginate-modifying enzymes: biological roles and biotechnological uses. Frontiers in Microbiology, May 2015. URL: https://doi.org/10.3389/fmicb.2015.00523, doi:10.3389/fmicb.2015.00523. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gulez2014colonymorphologyand pages 6-8</li>
+<li>franklin1994pseudomonasaeruginosaalgg pages 1-2</li>
+<li>lynne2014catalyticmechanismand pages 1-2</li>
+<li>lynne2014catalyticmechanismand pages 12-13</li>
+<li>jain2003thedualroles pages 1-2</li>
+<li>wang2023strategytocombat pages 2-3</li>
+<li>frolov2024constructionofthe pages 1-2</li>
+<li>tandrup2024theswissarmy pages 20-23</li>
+<li>franklin1994pseudomonasaeruginosaalgg pages 7-7</li>
+<li>nilsson2011influenceofputative pages 1-2</li>
+<li>roblesprice2004algxisa pages 2-3</li>
+<li>lynne2014catalyticmechanismand pages 10-12</li>
+<li>chang2007alginateproductionby pages 1-2</li>
+<li>chang2007alginateproductionby pages 4-5</li>
+<li>franklin1994pseudomonasaeruginosaalgg pages 7-8</li>
+<li>franklin1994pseudomonasaeruginosaalgg pages 4-4</li>
+<li>roblesprice2004algxisa pages 1-2</li>
+<li>https://doi.org/10.1128/jb.176.7.1821-1830.1994</li>
+<li>https://doi.org/10.3389/fmicb.2015.00523</li>
+<li>https://doi.org/10.1128/jb.186.21.7369-7377.2004</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03361.x</li>
+<li>https://doi.org/10.1002/mbo3.180,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2011.02447.x,</li>
+<li>https://doi.org/10.1128/jb.176.7.1821-1830.1994,</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03361.x,</li>
+<li>https://doi.org/10.3389/fmicb.2015.00523,</li>
+<li>https://doi.org/10.1128/jb.186.21.7369-7377.2004,</li>
+<li>https://doi.org/10.1038/s41522-023-00427-y,</li>
+<li>https://doi.org/10.3390/md18110565,</li>
+<li>https://doi.org/10.1128/jb.00727-07,</li>
+<li>https://doi.org/10.3390/fermentation10120606,</li>
+<li>https://doi.org/10.1101/2024.12.11.627697,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NC9
+gene_symbol: algG
+product_type: PROTEIN
+status: DRAFT
+aliases:
+  - PP_1283
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;
+  AlgG is the periplasmic alginate-modifying enzyme in the KT2440 alginate
+  biosynthesis cluster. By strong orthology to experimentally characterized
+  Pseudomonas AlgG proteins, it epimerizes beta-D-mannuronate residues in
+  nascent alginate to alpha-L-guluronate after polymerization, thereby helping
+  generate the characteristic polymannuronate/MG-block architecture of
+  Pseudomonas alginate. Direct KT2440 biochemistry is limited, but the reviewed
+  UniProt entry, conserved cluster context, signal peptide, and ortholog
+  literature support a confident assignment to periplasmic alginate
+  biosynthesis. Ortholog studies also indicate that AlgG has a second
+  non-catalytic role in the periplasmic secretion/protection complex that limits
+  AlgL-mediated degradation of the polymer.
+existing_annotations:
+  - term:
+      id: GO:0042597
+      label: periplasmic space
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: &gt;
+        This localization is well supported. AlgG carries an N-terminal signal
+        peptide and lacks any mature transmembrane segment, and the
+        experimentally characterized Pseudomonas AlgG orthologs function on the
+        alginate polymer after it enters the periplasm.
+      action: ACCEPT
+      reason: &gt;
+        The existing term is appropriately specific for a soluble or
+        periplasm-associated catalytic step in alginate maturation. There is no
+        evidence that AlgG itself is an inner-membrane enzyme.
+      supported_by:
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: &#34;The mature enzyme is periplasmic: UniProt annotates a signal peptide at residues 1-25 and the catalytic chain from 26-519.&#34;
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+  - term:
+      id: GO:0042121
+      label: alginic acid biosynthetic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000041
+    review:
+      summary: &gt;
+        This process annotation should be retained. AlgG is the periplasmic
+        modification enzyme that introduces guluronate residues into alginate and
+        is part of the conserved alginate biosynthesis apparatus in Pseudomonas.
+      action: ACCEPT
+      reason: &gt;
+        Even though direct KT2440 biochemistry is limited, ortholog studies and
+        the reviewed UniProt entry clearly place AlgG within alginate
+        biosynthesis rather than in a generic carbohydrate-isomerase pathway.
+      supported_by:
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: AlgG sits in the conserved alginate biosynthesis cluster of KT2440 and is the most plausible source of guluronate formation during alginate production.
+  - term:
+      id: GO:0016857
+      label: racemase and epimerase activity, acting on carbohydrates and derivatives
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+    review:
+      summary: &gt;
+        GOA currently misses the core molecular function of AlgG. The exact
+        activity is mannuronan C5-epimerization at the polymer level; this broad
+        carbohydrate epimerase term is the closest existing GO molecular
+        function and should be added as a new annotation until GO contains a
+        specific AlgG term.
+      action: NEW
+      reason: &gt;
+        UniProt assigns EC 5.1.3.37 and ortholog biochemistry defines the
+        reaction precisely, but GO lacks a corresponding specific molecular
+        function term for polymer-level mannuronan C5 epimerization.
+      supported_by:
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: The Pseudomonas syringae AlgG structure shows a right-handed parallel beta-helix with a conserved DPHD motif, and His319 plus Arg345 are critical for catalysis.
+        - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+          supporting_text: For KT2440 specifically, direct biochemical characterization is limited; functional assignment is based on strong orthology to experimentally characterized Pseudomonas AlgG proteins and conserved gene-cluster context.
+core_functions:
+  - molecular_function:
+      id: GO:0016857
+      label: racemase and epimerase activity, acting on carbohydrates and derivatives
+    directly_involved_in:
+      - id: GO:0042121
+        label: alginic acid biosynthetic process
+    locations:
+      - id: GO:0042597
+        label: periplasmic space
+    description: &gt;
+      Best available existing GO representation of AlgG&#39;s core function. AlgG is
+      the periplasmic polymer-level mannuronan C5-epimerase that converts
+      mannuronate residues in nascent alginate to guluronate during alginate
+      biosynthesis.
+    supported_by:
+      - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+        supporting_text: AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+      - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+        supporting_text: &#34;The mature enzyme is periplasmic: UniProt annotates a signal peptide at residues 1-25 and the catalytic chain from 26-519.&#34;
+proposed_new_terms:
+  - proposed_name: mannuronan C5-epimerase activity
+    proposed_definition: &gt;
+      Catalysis of the polymer-level epimerization of beta-D-mannuronate residues
+      in alginate to alpha-L-guluronate residues.
+    justification: &gt;
+      GO currently has alginic acid biosynthetic process and broad epimerase
+      terms, but it lacks a specific molecular function term for the defining
+      AlgG reaction (EC 5.1.3.37). This forces curators to use the generic
+      carbohydrate epimerase parent and loses the polymer-level substrate
+      specificity that distinguishes AlgG from small-molecule epimerases.
+    proposed_parent:
+      id: GO:0016857
+      label: racemase and epimerase activity, acting on carbohydrates and derivatives
+    supported_by:
+      - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+        supporting_text: AlgG converts beta-D-mannuronate residues in nascent alginate to alpha-L-guluronate after polymerization at the inner membrane.
+      - reference_id: file:PSEPK/algG/algG-deep-research-falcon.md
+        supporting_text: GO currently misses the core molecular function of AlgG.
+suggested_questions:
+  - question: How important is AlgG&#39;s non-catalytic scaffolding role in KT2440 relative to its epimerase activity during native alginate production?
+    experts:
+      - Svein Valla
+      - Dennis E. Ohman
+  - question: Under which physiological conditions does KT2440 deploy AlgG-dependent alginate remodeling most strongly?
+    experts:
+      - P. Lynne Howell
+      - Martin Gimmestad
+suggested_experiments:
+  - description: Create an algG deletion strain and catalytic-site mutants in the DPHD motif, then compare polymer yield and uronate composition under alginate-inducing conditions.
+    hypothesis: Catalytic-dead mutants will separate guluronate formation from the structural role of AlgG in polymer protection/export.
+  - description: Measure secreted alginate composition by NMR or linkage-sensitive enzymology in wild type, algG-null, and complemented strains.
+    hypothesis: KT2440 AlgG introduces guluronate and MG patterning into alginate rather than producing long guluronate blocks.
+  - description: Test physical or genetic interactions between AlgG and AlgK, AlgX, AlgE, and AlgL in KT2440.
+    hypothesis: AlgG participates in a periplasmic biosynthetic complex that channels alginate away from AlgL during export.
+references:
+  - id: GO_REF:0000041
+    title: Gene Ontology annotation based on UniPathway vocabulary mapping
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: UniProt:Q88NC9
+    title: UniProtKB/Swiss-Prot reviewed entry for ALGG_PSEPK (Q88NC9)
+    findings:
+      - statement: Reviewed entry identifies AlgG as mannuronan C5-epimerase (EC 5.1.3.37)
+      - statement: Signal peptide residues 1-25 and mature chain residues 26-519 support periplasmic localization
+      - statement: UniProt places AlgG in alginate biosynthesis and notes protection of nascent alginate from AlgL
+  - id: PMID:12534463
+    title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+    full_text_unavailable: true
+    findings:
+      - statement: Establishes PP_1283 as the KT2440 algG locus in the genome sequence
+  - id: PMID:12775688
+    title: The Pseudomonas fluorescens AlgG protein, but not its mannuronan C-5-epimerase activity, is needed for alginate polymer formation
+    full_text_unavailable: true
+    findings:
+      - statement: algG deletion caused AlgL-dependent degradation products instead of normal polymer
+      - statement: Catalytically inactive AlgG could still support polymer formation, implying a structural role in the biosynthetic complex
+  - id: PMID:24398681
+    title: Catalytic Mechanism and Mode of Action of the Periplasmic Alginate Epimerase AlgG
+    full_text_unavailable: true
+    findings:
+      - statement: Structural and mutational analysis identified His319 and Arg345 as key catalytic residues
+      - statement: AlgG is a processive periplasmic polymer-level epimerase with an electropositive substrate-binding groove
+  - id: file:PSEPK/algG/algG-deep-research-falcon.md
+    title: Falcon deep research fallback report for algG
+    findings:
+      - statement: KT2440 assignment is supported by strong orthology and conserved gene-cluster context
+      - statement: Periplasmic localization and alginate-biosynthetic role are the strongest defensible GO claims for KT2440
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cmd-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cmd-1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O16305" target="_blank" class="term-link">
+                        O16305
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cmd-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O16305" data-a="DESCRIPTION: cmd-1 encodes the single Caenorhabditis elegans ca..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>cmd-1 encodes the single Caenorhabditis elegans calmodulin, a small EF-hand calcium sensor with four functional calcium-binding sites. The conserved core function is calcium-dependent binding and regulation of target proteins, including enzymes and spindle-associated factors. Experimental work in worms additionally places CMD-1 at spindle poles, centrosomes, the interphase nuclear membrane, and cell-cell boundaries in early embryos, and supports context-specific roles in meiotic spindle orientation, embryonic morphogenesis, apoptosis-related phenotypes, and neuronal chemotaxis. Current GOA for cmd-1 contains no ISO annotations; the transfer-style annotations are IBA/IEA rather than ISO, so this ISO-focused pass mainly evaluates whether those orthology- derived calls are appropriately conservative.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0005509" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This phylogenetically inferred annotation matches the defining biochemical property of calmodulin family proteins. cmd-1 is the sole worm calmodulin, UniProt records four functional calcium-binding sites, and no conflicting evidence exists.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Calcium ion binding is a conserved and central calmodulin activity, so the orthology-based transfer is well supported and represents core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/cmd-1/cmd-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">This protein has four functional calcium-binding sites.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is consistent with cmd-1 being a broadly acting soluble calcium sensor. Experimental work in embryos also places CMD-1 on spindle/centrosomal structures and other non-nuclear sites, which is compatible with a general cytoplasmic annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is a correct high-level cellular location for calmodulin and is sufficiently general to retain as a core localization term.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/cmd-1/cmd-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   GO; GO:0005737; C:cytoplasm; IBA:GO_Central.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030234" target="_blank" class="term-link">
+                                    GO:0030234
+                                </a>
+                            </span>
+                            <span class="term-label">enzyme regulator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0030234" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Calmodulin-Ca2+ complexes regulate multiple enzyme classes, including kinases and phosphatases, and UniProt explicitly describes cmd-1 as a mediator of enzyme control. The term is broad, but it captures a genuine conserved molecular role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Although general, enzyme regulator activity is an appropriate conserved summary term for calmodulin and reflects core function rather than a lineage-specific phenotype.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/cmd-1/cmd-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Calmodulin mediates the control of a large number of enzymes, ion channels and other proteins by Ca(2+).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000226" target="_blank" class="term-link">
+                                    GO:0000226
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule cytoskeleton organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0000226" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The transfer is plausible because worm experiments support CMD-1 roles in spindle organization and spindle orientation. However, the specific evidence is tied to cell-division contexts rather than to a universally defining calmodulin function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain the annotation as valid but non-core because it reflects a real, experimentally supported spindle phenotype without being the central conserved biochemical identity of the gene.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                                        PMID:19219036
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle organization</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-derived calcium ion binding agrees with the IBA call and with the well-established EF-hand architecture of calmodulin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a correct electronic annotation for a canonical EF-hand calcium- binding protein and matches core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:worm/cmd-1/cmd-1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">This protein has four functional calcium-binding sites.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072686" target="_blank" class="term-link">
+                                    GO:0072686
+                                </a>
+                            </span>
+                            <span class="term-label">mitotic spindle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0072686" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ARBA localization is consistent with direct experimental embryo data showing CMD-1 accumulation on spindle structures. It is a correct but context-specific localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Mitotic spindle localization is supported, but it is not a universal core localization for calmodulin across all contexts.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34499028" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34499028
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuronal calmodulin levels are controlled by CAMTA transcrip...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0010629" data-r="PMID:34499028" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:34499028 supports a specific autoregulatory loop in which high CMD-1 levels repress expression from the cmd-1 promoter through CAMT-1. That is more limited than generic negative regulation of gene expression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The paper supports context-specific feedback on cmd-1 transcription, not a broad generic role in repressing gene expression across targets.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34499028" target="_blank" class="term-link">
+                                        PMID:34499028
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">high levels of CMD-1 can repress expression from the cmd-1 promoter</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050918" target="_blank" class="term-link">
+                                    GO:0050918
+                                </a>
+                            </span>
+                            <span class="term-label">positive chemotaxis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34499028" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34499028
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuronal calmodulin levels are controlled by CAMTA transcrip...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0050918" data-r="PMID:34499028" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Neuronal reduction of cmd-1 contributes to chemotaxis defects, and supplementing neuronal CMD-1 rescues attraction to several cues in the CAMT-1 regulatory context examined in the paper.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phenotype is real but represents a specialized neuronal/behavioral context rather than the core conserved role of calmodulin.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34499028" target="_blank" class="term-link">
+                                        PMID:34499028
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">restored normal chemotaxis toward salt, benzaldehyde, and diacetyl</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009792" target="_blank" class="term-link">
+                                    GO:0009792
+                                </a>
+                            </span>
+                            <span class="term-label">embryo development ending in birth or egg hatching</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14703012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of the single calmodulin gene in the nem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0009792" data-r="PMID:14703012" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cmd-1 RNAi causes severe embryonic lethality with disturbed morphogenesis, so the gene clearly contributes to successful embryogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This broad developmental phenotype is supported experimentally, but it is a pleiotropic consequence of depleting a global calcium sensor and should not be treated as core function.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link">
+                                        PMID:14703012
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RNAi microinjection approach results in a severe embryonic lethal phenotype</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005813" target="_blank" class="term-link">
+                                    GO:0005813
+                                </a>
+                            </span>
+                            <span class="term-label">centrosome</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17716666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17716666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinesis is not controlled by calmodulin or myosin light ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0005813" data-r="PMID:17716666" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Full-text evidence from PMID:17716666 shows GFP-tagged CMD-1 accumulation at centrosomes in early embryos.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The localization is directly observed and valid, but it is a cell-division context rather than a core pan-context localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17716666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17716666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinesis is not controlled by calmodulin or myosin light ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0031965" data-r="PMID:17716666" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The same embryo localization study reports CMD-1 at the interphase nuclear membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is experimentally supported but context-specific and not a primary summary of calmodulin function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071944" target="_blank" class="term-link">
+                                    GO:0071944
+                                </a>
+                            </span>
+                            <span class="term-label">cell periphery</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17716666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17716666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinesis is not controlled by calmodulin or myosin light ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0071944" data-r="PMID:17716666" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:17716666 reports CMD-1 at the borders of abutting cells in embryos, which justifies a general cell periphery term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct localization supports the term, but this is again a non-core, context-dependent localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072686" target="_blank" class="term-link">
+                                    GO:0072686
+                                </a>
+                            </span>
+                            <span class="term-label">mitotic spindle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17716666" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17716666
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinesis is not controlled by calmodulin or myosin light ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0072686" data-r="PMID:17716666" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows CMD-1 on spindle structures and not at the cleavage furrow in early embryos.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct experimental localization, but specialized to embryonic cell division rather than a core location.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19219036
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0005515" data-r="PMID:19219036" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:19219036 places CMD-1 in an ASPM-1/LIN-5 spindle-pole complex, so a physical interaction claim is credible. However, protein binding is too generic for calmodulin and loses the informative calcium-dependent nature of its target interactions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The interaction evidence should be retained, but the annotation should use a more informative calmodulin-appropriate term rather than generic protein binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048306" target="_blank" class="term-link">
+                                    calcium-dependent protein binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032880" target="_blank" class="term-link">
+                                    GO:0032880
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein localization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19219036
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0032880" data-r="PMID:19219036" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The meiosis study shows CMD-1 promotes accumulation of LIN-5 at meiotic and mitotic spindle poles, which is an experimentally grounded protein localization phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This process annotation is valid but reflects a specific spindle-pole context, not cmd-1&#39;s central conserved biochemical identity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                                        PMID:19219036
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">promotes meiotic spindle organization and the accumulation of LIN-5 at meiotic and mitotic spindle poles</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051296" target="_blank" class="term-link">
+                                    GO:0051296
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of meiotic spindle orientation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19219036
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0051296" data-r="PMID:19219036" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The paper directly concludes that LIN-5, ASPM-1, CMD-1 and dynein are required for spindle rotation during maternal meiosis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Strong experimental support exists, but the process is specialized rather than core to calmodulin across contexts.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                                        PMID:19219036
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spindle rotation during maternal meiosis is independent of GPR-1/2 and Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051296" target="_blank" class="term-link">
+                                    GO:0051296
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of meiotic spindle orientation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19219036
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote me...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0051296" data-r="PMID:19219036" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The genetic interaction-based version of the same process annotation is consistent with the paper&#39;s functional dissection of the spindle-pole complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retain as non-core for the same reason as the IMP entry: direct support, but specialized biology.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                                        PMID:19219036
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Spindle rotation during maternal meiosis is independent of GPR-1/2 and Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016477" target="_blank" class="term-link">
+                                    GO:0016477
+                                </a>
+                            </span>
+                            <span class="term-label">cell migration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14703012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of the single calmodulin gene in the nem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0016477" data-r="PMID:14703012" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cmd-1 RNAi embryos show aberrant cell migration patterns according to the abstract, supporting a migration-related phenotype.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a pleiotropic developmental phenotype observed after strong loss of a global calcium sensor, so it should be retained only as non-core.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link">
+                                        PMID:14703012
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Embryos show disturbed morphogenesis, aberrant cell migration patterns</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042981" target="_blank" class="term-link">
+                                    GO:0042981
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of apoptotic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14703012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of the single calmodulin gene in the nem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0042981" data-r="PMID:14703012" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The abstract reports multiple defects in apoptosis after cmd-1 depletion, which supports involvement in apoptosis-related regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phenotype is supported, but it is broad and likely pleiotropic rather than a core defining function of calmodulin.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link">
+                                        PMID:14703012
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">multiple defects in apoptosis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043277" target="_blank" class="term-link">
+                                    GO:0043277
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic cell clearance</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14703012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of the single calmodulin gene in the nem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0043277" data-r="PMID:14703012" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The accessible abstract supports apoptosis defects, but it does not clearly distinguish cell corpse clearance/engulfment from upstream apoptosis defects.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This specific term may be correct, but the currently accessible evidence is insufficiently specific to review it confidently.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051726" target="_blank" class="term-link">
+                                    GO:0051726
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14703012
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of the single calmodulin gene in the nem...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O16305" data-a="GO:0051726" data-r="PMID:14703012" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Hyperproliferation in cmd-1 RNAi embryos is consistent with cell-cycle dysregulation after depletion of calmodulin.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phenotype is experimentally supported, but it is a broad developmental consequence rather than a core molecular role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link">
+                                        PMID:14703012
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a striking hyperproliferation of cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Primary EF-hand calcium sensor that binds calcium ions through four conserved sites and acts as the biochemical core of worm calmodulin function.</h3>
+                <span class="vote-buttons" data-g="O16305" data-a="FUNCTION: Primary EF-hand calcium sensor that binds calcium ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                            calcium ion binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:worm/cmd-1/cmd-1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">This protein has four functional calcium-binding sites.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calcium-loaded CMD-1 binds target proteins and mediates their regulation; this includes conserved Ca2+/CaM target binding across the worm proteome and spindle-pole associated interactions in embryos.</h3>
+                <span class="vote-buttons" data-g="O16305" data-a="FUNCTION: Calcium-loaded CMD-1 binds target proteins and med..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048306" target="_blank" class="term-link">
+                            calcium-dependent protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17854888" target="_blank" class="term-link">
+                                PMID:17854888
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Calmodulin (CaM) is the primary Ca(2+)-sensor that regulates a wide variety of cellular processes in eukaryotes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                                PMID:19219036
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle organization and the accumulation of LIN-5 at meiotic and mitotic spindle poles.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Calmodulin-Ca2+ acts as a broad enzyme regulator, stimulating downstream kinase and phosphatase targets rather than serving as an enzyme itself.</h3>
+                <span class="vote-buttons" data-g="O16305" data-a="FUNCTION: Calmodulin-Ca2+ acts as a broad enzyme regulator, ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030234" target="_blank" class="term-link">
+                            enzyme regulator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:worm/cmd-1/cmd-1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Calmodulin mediates the control of a large number of enzymes, ion channels and other proteins by Ca(2+).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro family mapping supports the calcium ion binding annotation for EF-hand calmodulin proteins.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cmd-1 has no current ISO annotations in GOA; the orthology-style transfer set for this gene is IBA rather than ISO.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The IBA annotations capture conserved calmodulin properties such as calcium ion binding, cytoplasmic localization, and broad enzyme-regulatory function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ARBA assigns mitotic spindle localization, which is consistent with direct embryo localization data.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14703012" target="_blank" class="term-link">
+                            PMID:14703012
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional analysis of the single calmodulin gene in the nematode Caenorhabditis elegans by RNA interference and 4-D microscopy.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cmd-1 RNAi causes severe embryonic lethality with disturbed morphogenesis.</div>
+                        
+                        <div class="finding-text">"RNAi microinjection approach results in a severe embryonic lethal phenotype. Embryos show disturbed morphogenesis"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cmd-1 RNAi embryos show aberrant cell migration patterns, hyperproliferation, and multiple defects in apoptosis.</div>
+                        
+                        <div class="finding-text">"Embryos show disturbed morphogenesis, aberrant cell migration patterns, a striking hyperproliferation of cells and multiple defects in apoptosis."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17716666" target="_blank" class="term-link">
+                            PMID:17716666
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cytokinesis is not controlled by calmodulin or myosin light chain kinase in the Caenorhabditis elegans early embryo.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cmd-1 depletion does not block cytokinesis in early embryos.</div>
+                        
+                        <div class="finding-text">"RNA mediated interference against C. elegans calmodulin and candidate MLCKs had no effect on cytokinesis in wild-type or RhoK mutant embryos"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19219036" target="_blank" class="term-link">
+                            PMID:19219036
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote meiotic spindle rotation independently of cortical LIN-5/GPR/Galpha.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CMD-1 works with ASPM-1 and LIN-5 in a spindle-pole complex.</div>
+                        
+                        <div class="finding-text">"ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle organization and the accumulation of LIN-5 at meiotic and mitotic spindle poles."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CMD-1 promotes meiotic spindle organization and spindle rotation during maternal meiosis.</div>
+                        
+                        <div class="finding-text">"Spindle rotation during maternal meiosis is independent of GPR-1/2 and Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CMD-1 promotes accumulation of LIN-5 at meiotic and mitotic spindle poles.</div>
+                        
+                        <div class="finding-text">"ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle organization and the accumulation of LIN-5 at meiotic and mitotic spindle poles."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34499028" target="_blank" class="term-link">
+                            PMID:34499028
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Neuronal calmodulin levels are controlled by CAMTA transcription factors.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">cmd-1 expression is reduced across multiple neuronal cell types in camt-1 mutants.</div>
+                        
+                        <div class="finding-text">"cmd-1 was one of only two genes whose expression was reduced in all four neural profiles relative to WT controls."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">High CMD-1 levels can repress expression from the cmd-1 promoter, indicating autoregulatory feedback.</div>
+                        
+                        <div class="finding-text">"high levels of CMD-1 can repress expression from the cmd-1 promoter"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Supplementing neuronal CMD-1 rescues chemotaxis and neuronal calcium-signaling defects in the CAMT-1 regulatory context.</div>
+                        
+                        <div class="finding-text">"restored normal chemotaxis toward salt, benzaldehyde, and diacetyl"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17854888" target="_blank" class="term-link">
+                            PMID:17854888
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Ca(2+)/Calmodulin-binding proteins from the C. elegans proteome.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Calmodulin is described as the primary calcium sensor that regulates a wide variety of cellular processes in eukaryotes.</div>
+                        
+                        <div class="finding-text">"Calmodulin (CaM) is the primary Ca(2+)-sensor that regulates a wide variety of cellular processes in eukaryotes."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The study identified multiple Ca2+/calmodulin-binding proteins from the C. elegans proteome, reinforcing CMD-1&#39;s role as a broad calcium- dependent target binder.</div>
+                        
+                        <div class="finding-text">"The method allowed the identification of 9 known and 47 previously uncharacterized Ca(2+)-dependent CaM-binding proteins from the adult worm proteome."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:worm/cmd-1/cmd-1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for C. elegans cmd-1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records four functional calcium-binding sites in CMD-1.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt states that calmodulin mediates control of many enzymes, ion channels, and other proteins by Ca2+.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which direct CMD-1 target proteins at spindle poles are most important for the meiotic spindle orientation phenotype in embryos?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="Q: Which direct CMD-1 target proteins at spindle pole..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which apoptosis and cell-migration phenotypes after cmd-1 depletion are direct CMD-1-dependent processes versus secondary consequences of broad calcium signaling collapse?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="Q: Which apoptosis and cell-migration phenotypes afte..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should calmodulin-family curation in nematodes explicitly add calcium-dependent protein binding where older annotations still use generic protein binding?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="Q: Should calmodulin-family curation in nematodes exp..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Endogenous tagged CMD-1 affinity purification or proximity labeling under Ca2+-bound and Ca2+-free conditions to define direct embryo and neuronal target proteins.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="EXPERIMENT: Endogenous tagged CMD-1 affinity purification or p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Rescue cmd-1 loss with EF-hand calcium-binding mutants to separate calcium sensing from possible scaffolding/localization roles at spindle poles.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="EXPERIMENT: Rescue cmd-1 loss with EF-hand calcium-binding mut..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Tissue-specific depletion or rescue in embryos versus neurons to distinguish direct spindle and chemotaxis functions from pleiotropic systemic effects.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="O16305" data-a="EXPERIMENT: Tissue-specific depletion or rescue in embryos ver..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cmd-1-deep-research-bioreason.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16305" data-a="DOC: Deep Research Bioreason" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 01:20 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Caenorhabditis elegans</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MADQLTEEQIAEFKEAFSLFDKDGDGTITTKELGTVMRSLGQNPTEAELQDMINEVDADGNGTIDFPEFLTMMARKMKDTDSEEEIREAFRVFDKDGNGFISAAELRHVMTNLGEKLTDEEVDEMIREADIDGDGQVNYEEFVTMMTTK
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin by dissecting the InterPro architecture. The sequence is dominated by calcium-sensing EF-hand modules: IPR011992 (EF-hand domain pair, residues 2–147) indicates two paired helix–loop–helix units that coordinate Ca2+ and undergo concerted conformational switching. This is reinforced by IPR002048 (EF-hand domain, residues 8–149), which maps nearly the entire polypeptide to canonical EF-hand folds, and by IPR018247 (EF-Hand 1, calcium-binding site, residues 21–142), which flags multiple Ca2+-ligating loops distributed through the core. The family-level assignment IPR050230 (Calmodulin/Myosin light chain/Troponin C-like, residues 2–148) situates the protein within the classical Ca2+-sensor clade that transduces Ca2+ binding into protein–protein interaction events rather than enzymatic catalysis. The architecture—an EF-hand pair spanning essentially the full length—is characteristic of calmodulin-like sensors that switch between apo and Ca2+-bound states to regulate diverse targets.</p>
+<p>This EF-hand array dictates molecular function. The repeated EF-hands and their cooperative binding loops cause high-affinity calcium ion binding, which in turn exposes hydrophobic target-recognition surfaces that drive Ca2+-dependent regulatory interactions. This mechanistic logic directly supports GO:0005509 calcium ion binding as the core molecular function.</p>
+<p>From this Ca2+-responsive binding mechanism, I infer the biological process. EF-hand sensor systems act as hubs that decode transient Ca2+ spikes and propagate signals to enzymes, channels, and cytoskeletal assemblies. Such coupling of Ca2+ sensing to effector regulation is the defining currency of intracellular signaling cascades. Therefore, the EF-hand-driven switching behavior compels a role in calcium-mediated signaling, aligning with the concept formalized as GO:0019722 calcium-mediated signaling.</p>
+<p>Cellular location follows from the absence of transmembrane segments and the soluble EF-hand scaffold: these sensors typically operate in the cytoplasm where Ca2+ transients are decoded and relayed. The soluble, full-length EF-hand composition and lack of targeting signals support a cytoplasmic residence, consistent with GO:0005737 cytoplasm.</p>
+<p>Mechanistically, I hypothesize that Ca2+ binding across the EF-hand pair triggers a conformational rearrangement that exposes hydrophobic grooves and amphipathic helices, enabling transient capture of basic amphipathic target peptides. In Caenorhabditis elegans, likely partners include Ca2+/calmodulin-dependent kinases and phosphatases, myosin light chain pathways and actin–myosin assemblies, and other Ca2+-regulated channels or pumps. Through these interactions, the protein would tune cytoskeletal dynamics and phosphorylation states in response to Ca2+ signals, coordinating cytoplasmic signaling circuits with motility and stress responses.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A cytoplasmic calcium-sensing regulator that uses paired EF-hand motifs to bind Ca2+ and undergo conformational switching, thereby exposing target-recognition surfaces that modulate diverse effector proteins. By decoding transient calcium signals, it tunes kinase and phosphatase activities and cytoskeletal assemblies to propagate intracellular signaling in the cytoplasm of Caenorhabditis elegans.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Calmodulin mediates the control of a large number of enzymes, ion channels, and other proteins by Ca(2+).</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>EF-hand domain pair</strong> (<code>IPR011992</code>, homologous_superfamily) — residues 2-147</li>
+<li><strong>Calmodulin/Myosin light chain/Troponin C-like</strong> (<code>IPR050230</code>, family) — residues 2-148</li>
+<li><strong>EF-hand domain</strong> (<code>IPR002048</code>, domain) — residues 8-149</li>
+<li><strong>EF-Hand 1, calcium-binding site</strong> (<code>IPR018247</code>, binding_site) — residues 21-142</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), binding (<code>GO:0005488</code>), protein binding (<code>GO:0005515</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), locomotion (<code>GO:0040011</code>), biological regulation (<code>GO:0065007</code>), localization (<code>GO:0051179</code>), response to stimulus (<code>GO:0050896</code>), regulation of biological process (<code>GO:0050789</code>), reproductive process (<code>GO:0022414</code>), developmental process (<code>GO:0032502</code>), cellular process (<code>GO:0009987</code>), negative regulation of biological process (<code>GO:0048519</code>), reproduction (<code>GO:0000003</code>), multicellular organismal process (<code>GO:0032501</code>), response to external stimulus (<code>GO:0009605</code>), cellular localization (<code>GO:0051641</code>), anatomical structure development (<code>GO:0048856</code>), multicellular organism development (<code>GO:0007275</code>), cell motility (<code>GO:0048870</code>), response to chemical (<code>GO:0042221</code>), establishment or maintenance of cell polarity (<code>GO:0007163</code>), meiotic cell cycle (<code>GO:0051321</code>), regulation of metabolic process (<code>GO:0019222</code>), taxis (<code>GO:0042330</code>), cell cycle process (<code>GO:0022402</code>), regulation of localization (<code>GO:0032879</code>), regulation of cellular process (<code>GO:0050794</code>), cell cycle (<code>GO:0007049</code>), establishment of localization (<code>GO:0051234</code>), cellular component organization or biogenesis (<code>GO:0071840</code>), meiotic cell cycle process (<code>GO:1903046</code>), microtubule-based process (<code>GO:0007017</code>), organelle localization (<code>GO:0051640</code>), negative regulation of metabolic process (<code>GO:0009892</code>), regulation of cell cycle (<code>GO:0051726</code>), establishment of cell polarity (<code>GO:0030010</code>), regulation of cell death (<code>GO:0010941</code>), spindle localization (<code>GO:0051653</code>), establishment of organelle localization (<code>GO:0051656</code>), negative regulation of macromolecule metabolic process (<code>GO:0010605</code>), regulation of cellular localization (<code>GO:0060341</code>), transport (<code>GO:0006810</code>), establishment of localization in cell (<code>GO:0051649</code>), regulation of macromolecule metabolic process (<code>GO:0060255</code>), cellular component organization (<code>GO:0016043</code>), embryo development (<code>GO:0009790</code>), microtubule cytoskeleton organization (<code>GO:0000226</code>), cell migration (<code>GO:0016477</code>), chemotaxis (<code>GO:0006935</code>), establishment of spindle localization (<code>GO:0051293</code>), regulation of programmed cell death (<code>GO:0043067</code>), positive chemotaxis (<code>GO:0050918</code>), vesicle-mediated transport (<code>GO:0016192</code>), regulation of protein localization (<code>GO:0032880</code>), establishment of spindle orientation (<code>GO:0051294</code>), organelle organization (<code>GO:0006996</code>), negative regulation of gene expression (<code>GO:0010629</code>), regulation of gene expression (<code>GO:0010468</code>), embryo development ending in birth or egg hatching (<code>GO:0009792</code>), cytoskeleton organization (<code>GO:0007010</code>), regulation of apoptotic process (<code>GO:0042981</code>), phagocytosis (<code>GO:0006909</code>), apoptotic cell clearance (<code>GO:0043277</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), cellular anatomical entity (<code>GO:0110165</code>), microtubule organizing center (<code>GO:0005815</code>), intracellular anatomical structure (<code>GO:0005622</code>), organelle (<code>GO:0043226</code>), envelope (<code>GO:0031975</code>), membrane (<code>GO:0016020</code>), cell periphery (<code>GO:0071944</code>), endomembrane system (<code>GO:0012505</code>), organelle membrane (<code>GO:0031090</code>), organelle envelope (<code>GO:0031967</code>), nuclear envelope (<code>GO:0005635</code>), centrosome (<code>GO:0005813</code>), intracellular organelle (<code>GO:0043229</code>), membrane-bounded organelle (<code>GO:0043227</code>), non-membrane-bounded organelle (<code>GO:0043228</code>), nuclear membrane (<code>GO:0031965</code>), intracellular membrane-bounded organelle (<code>GO:0043231</code>), intracellular non-membrane-bounded organelle (<code>GO:0043232</code>), cytoskeleton (<code>GO:0005856</code>), spindle (<code>GO:0005819</code>), nucleus (<code>GO:0005634</code>), mitotic spindle (<code>GO:0072686</code>), microtubule cytoskeleton (<code>GO:0015630</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Rl</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cmd-1-deep-research-bioreason-rl.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16305" data-a="DOC: Deep Research Bioreason Rl" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-chat-export">BioReason Chat Export</h1>
+<p><em>Exported on March 22, 2026 at 01:20 AM</em></p>
+<hr />
+<p><strong>Organism:</strong> Caenorhabditis elegans</p>
+<p><strong>Sequence:</strong></p>
+<div class="codehilite"><pre><span></span><code>MADQLTEEQIAEFKEAFSLFDKDGDGTITTKELGTVMRSLGQNPTEAELQDMINEVDADGNGTIDFPEFLTMMARKMKDTDSEEEIREAFRVFDKDGNGFISAAELRHVMTNLGEKLTDEEVDEMIREADIDGDGQVNYEEFVTMMTTK
+</code></pre></div>
+
+<h3 id="thinking-trace">Thinking Trace</h3>
+<p>I begin by dissecting the InterPro architecture. The sequence is dominated by calcium-sensing EF-hand modules: IPR011992 (EF-hand domain pair, residues 2–147) indicates two paired helix–loop–helix units that coordinate Ca2+ and undergo concerted conformational switching. This is reinforced by IPR002048 (EF-hand domain, residues 8–149), which maps nearly the entire polypeptide to canonical EF-hand folds, and by IPR018247 (EF-Hand 1, calcium-binding site, residues 21–142), which flags multiple Ca2+-ligating loops distributed through the core. The family-level assignment IPR050230 (Calmodulin/Myosin light chain/Troponin C-like, residues 2–148) situates the protein within the classical Ca2+-sensor clade that transduces Ca2+ binding into protein–protein interaction events rather than enzymatic catalysis. The architecture—an EF-hand pair spanning essentially the full length—is characteristic of calmodulin-like sensors that switch between apo and Ca2+-bound states to regulate diverse targets.</p>
+<p>This EF-hand array dictates molecular function. The repeated EF-hands and their cooperative binding loops cause high-affinity calcium ion binding, which in turn exposes hydrophobic target-recognition surfaces that drive Ca2+-dependent regulatory interactions. This mechanistic logic directly supports GO:0005509 calcium ion binding as the core molecular function.</p>
+<p>From this Ca2+-responsive binding mechanism, I infer the biological process. EF-hand sensor systems act as hubs that decode transient Ca2+ spikes and propagate signals to enzymes, channels, and cytoskeletal assemblies. Such coupling of Ca2+ sensing to effector regulation is the defining currency of intracellular signaling cascades. Therefore, the EF-hand-driven switching behavior compels a role in calcium-mediated signaling, aligning with the concept formalized as GO:0019722 calcium-mediated signaling.</p>
+<p>Cellular location follows from the absence of transmembrane segments and the soluble EF-hand scaffold: these sensors typically operate in the cytoplasm where Ca2+ transients are decoded and relayed. The soluble, full-length EF-hand composition and lack of targeting signals support a cytoplasmic residence, consistent with GO:0005737 cytoplasm.</p>
+<p>Mechanistically, I hypothesize that Ca2+ binding across the EF-hand pair triggers a conformational rearrangement that exposes hydrophobic grooves and amphipathic helices, enabling transient capture of basic amphipathic target peptides. In Caenorhabditis elegans, likely partners include Ca2+/calmodulin-dependent kinases and phosphatases, myosin light chain pathways and actin–myosin assemblies, and other Ca2+-regulated channels or pumps. Through these interactions, the protein would tune cytoskeletal dynamics and phosphorylation states in response to Ca2+ signals, coordinating cytoplasmic signaling circuits with motility and stress responses.</p>
+<h3 id="functional-summary">Functional Summary</h3>
+<p>A cytoplasmic calcium-sensing regulator that uses paired EF-hand motifs to bind Ca2+ and undergo conformational switching, thereby exposing target-recognition surfaces that modulate diverse effector proteins. By decoding transient calcium signals, it tunes kinase and phosphatase activities and cytoskeletal assemblies to propagate intracellular signaling in the cytoplasm of Caenorhabditis elegans.</p>
+<h3 id="uniprot-summary">UniProt Summary</h3>
+<p>Calmodulin mediates the control of a large number of enzymes, ion channels, and other proteins by Ca(2+).</p>
+<h3 id="interpro-domains">InterPro Domains</h3>
+<ul>
+<li><strong>EF-hand domain pair</strong> (<code>IPR011992</code>, homologous_superfamily) — residues 2-147</li>
+<li><strong>Calmodulin/Myosin light chain/Troponin C-like</strong> (<code>IPR050230</code>, family) — residues 2-148</li>
+<li><strong>EF-hand domain</strong> (<code>IPR002048</code>, domain) — residues 8-149</li>
+<li><strong>EF-Hand 1, calcium-binding site</strong> (<code>IPR018247</code>, binding_site) — residues 21-142</li>
+</ul>
+<h3 id="go-terms">GO Terms</h3>
+<p><strong>Molecular Function:</strong> molecular_function (<code>GO:0003674</code>), binding (<code>GO:0005488</code>), protein binding (<code>GO:0005515</code>)</p>
+<p><strong>Biological Process:</strong> biological_process (<code>GO:0008150</code>), locomotion (<code>GO:0040011</code>), biological regulation (<code>GO:0065007</code>), localization (<code>GO:0051179</code>), response to stimulus (<code>GO:0050896</code>), regulation of biological process (<code>GO:0050789</code>), reproductive process (<code>GO:0022414</code>), developmental process (<code>GO:0032502</code>), cellular process (<code>GO:0009987</code>), negative regulation of biological process (<code>GO:0048519</code>), reproduction (<code>GO:0000003</code>), multicellular organismal process (<code>GO:0032501</code>), response to external stimulus (<code>GO:0009605</code>), cellular localization (<code>GO:0051641</code>), anatomical structure development (<code>GO:0048856</code>), multicellular organism development (<code>GO:0007275</code>), cell motility (<code>GO:0048870</code>), response to chemical (<code>GO:0042221</code>), establishment or maintenance of cell polarity (<code>GO:0007163</code>), meiotic cell cycle (<code>GO:0051321</code>), regulation of metabolic process (<code>GO:0019222</code>), taxis (<code>GO:0042330</code>), cell cycle process (<code>GO:0022402</code>), regulation of localization (<code>GO:0032879</code>), regulation of cellular process (<code>GO:0050794</code>), cell cycle (<code>GO:0007049</code>), establishment of localization (<code>GO:0051234</code>), cellular component organization or biogenesis (<code>GO:0071840</code>), meiotic cell cycle process (<code>GO:1903046</code>), microtubule-based process (<code>GO:0007017</code>), organelle localization (<code>GO:0051640</code>), negative regulation of metabolic process (<code>GO:0009892</code>), regulation of cell cycle (<code>GO:0051726</code>), establishment of cell polarity (<code>GO:0030010</code>), regulation of cell death (<code>GO:0010941</code>), spindle localization (<code>GO:0051653</code>), establishment of organelle localization (<code>GO:0051656</code>), negative regulation of macromolecule metabolic process (<code>GO:0010605</code>), regulation of cellular localization (<code>GO:0060341</code>), transport (<code>GO:0006810</code>), establishment of localization in cell (<code>GO:0051649</code>), regulation of macromolecule metabolic process (<code>GO:0060255</code>), cellular component organization (<code>GO:0016043</code>), embryo development (<code>GO:0009790</code>), microtubule cytoskeleton organization (<code>GO:0000226</code>), cell migration (<code>GO:0016477</code>), chemotaxis (<code>GO:0006935</code>), establishment of spindle localization (<code>GO:0051293</code>), regulation of programmed cell death (<code>GO:0043067</code>), positive chemotaxis (<code>GO:0050918</code>), vesicle-mediated transport (<code>GO:0016192</code>), regulation of protein localization (<code>GO:0032880</code>), establishment of spindle orientation (<code>GO:0051294</code>), organelle organization (<code>GO:0006996</code>), negative regulation of gene expression (<code>GO:0010629</code>), regulation of gene expression (<code>GO:0010468</code>), embryo development ending in birth or egg hatching (<code>GO:0009792</code>), cytoskeleton organization (<code>GO:0007010</code>), regulation of apoptotic process (<code>GO:0042981</code>), phagocytosis (<code>GO:0006909</code>), apoptotic cell clearance (<code>GO:0043277</code>)</p>
+<p><strong>Cellular Component:</strong> cellular_component (<code>GO:0005575</code>), cellular anatomical entity (<code>GO:0110165</code>), microtubule organizing center (<code>GO:0005815</code>), intracellular anatomical structure (<code>GO:0005622</code>), organelle (<code>GO:0043226</code>), envelope (<code>GO:0031975</code>), membrane (<code>GO:0016020</code>), cell periphery (<code>GO:0071944</code>), endomembrane system (<code>GO:0012505</code>), organelle membrane (<code>GO:0031090</code>), organelle envelope (<code>GO:0031967</code>), nuclear envelope (<code>GO:0005635</code>), centrosome (<code>GO:0005813</code>), intracellular organelle (<code>GO:0043229</code>), membrane-bounded organelle (<code>GO:0043227</code>), non-membrane-bounded organelle (<code>GO:0043228</code>), nuclear membrane (<code>GO:0031965</code>), intracellular membrane-bounded organelle (<code>GO:0043231</code>), intracellular non-membrane-bounded organelle (<code>GO:0043232</code>), cytoskeleton (<code>GO:0005856</code>), spindle (<code>GO:0005819</code>), nucleus (<code>GO:0005634</code>), mitotic spindle (<code>GO:0072686</code>), microtubule cytoskeleton (<code>GO:0015630</code>)</p>
+<hr />
+<p><em>Generated by <a href="https://bioreason.net">BioReason</a></em></p>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cmd-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16305" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cmd-1-notes">cmd-1 notes</h1>
+<h2 id="2026-03-19-iso-focused-review-pass">2026-03-19 ISO-focused review pass</h2>
+<ul>
+<li>GOA snapshot after <code>just fetch-gene worm cmd-1</code>: 21 annotations total. There are no current <code>ISO</code> evidence-code annotations for <code>cmd-1</code>; the transfer-style set is <code>IBA</code> plus <code>IEA</code>, so the ISO-focused review mainly evaluates whether those orthology/electronic calls are conservative enough.</li>
+<li><code>cmd-1</code> is the single C. elegans calmodulin. UniProt describes it as a 149 aa calmodulin with four functional calcium-binding sites and broad Ca2+-dependent regulation of enzymes, ion channels, and other proteins [PMID:17854888 Ca(2+)/Calmodulin-binding proteins from the C. elegans proteome., "Calmodulin (CaM) is the primary Ca(2+)-sensor that regulates a wide variety of cellular processes in eukaryotes."].</li>
+<li>The 2003 RNAi study supports broad developmental phenotypes but not a narrow mechanistic process model: <code>cmd-1</code> knockdown caused embryonic lethality, disturbed morphogenesis, aberrant cell migration, hyperproliferation, and apoptosis defects [PMID:14703012 Functional analysis of the single calmodulin gene in the nematode Caenorhabditis elegans by RNA interference and 4-D microscopy., "Embryos show disturbed morphogenesis, aberrant cell migration patterns, a striking hyperproliferation of cells and multiple defects in apoptosis."].</li>
+<li>The 2007 early embryo paper is important because it separates localization from function in cytokinesis: CMD-1 is not required for cytokinesis, but GFP-tagged CMD-1 localizes to spindle/centrosomal and membrane-associated structures [PMID:17716666 Cytokinesis is not controlled by calmodulin or myosin light chain kinase in the Caenorhabditis elegans early embryo., "GFP-tagged CMD-1 does not accumulate at the furrow, but does accumulate on the spindle and centrosomes (as well as to the interphase nuclear membrane and the borders of abutting cells)"].</li>
+<li>The 2009 spindle paper supports the strongest specific non-core process annotation: CMD-1 participates in a spindle-pole complex with ASPM-1/LIN-5 and is required for meiotic spindle organization/orientation [PMID:19219036 NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote meiotic spindle rotation independently of cortical LIN-5/GPR/Galpha., "ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle organization and the accumulation of LIN-5 at meiotic and mitotic spindle poles."].</li>
+<li>The 2021 CAMTA paper supports a context-specific transcriptional feedback loop and neuronal behavioral phenotypes, not a general gene-expression role [PMID:34499028 Neuronal calmodulin levels are controlled by CAMTA transcription factors., "high levels of CMD-1 can repress expression from the cmd-1 promoter"] [PMID:34499028 Neuronal calmodulin levels are controlled by CAMTA transcription factors., "Supplementing CMD-1 in the nervous system ... restored normal chemotaxis toward salt, benzaldehyde, and diacetyl"].</li>
+</ul>
+<h2 id="curation-take">Curation take</h2>
+<ul>
+<li>Keep <code>calcium ion binding</code>, <code>cytoplasm</code>, and <code>enzyme regulator activity</code> as core.</li>
+<li>Keep spindle/pole localizations and spindle-orientation annotations as valid but non-core.</li>
+<li>Treat the <code>IBA</code> microtubule organization term as plausible but non-core rather than as a defining calmodulin function.</li>
+<li><code>protein binding</code> is too generic for calmodulin; preferred replacement is <code>GO:0048306 calcium-dependent protein binding</code>.</li>
+<li><code>negative regulation of gene expression</code> is over-annotated relative to the specific cmd-1 autoregulatory feedback described in PMID:34499028.</li>
+<li><code>apoptotic cell clearance</code> remains the weakest call because the accessible abstract for PMID:14703012 supports apoptosis defects generally, but not clearly corpse clearance specifically.</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Rl Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cmd-1-bioreason-rl-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O16305" data-a="DOC: Bioreason Rl Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-rl-review-cmd-1-c-elegans">BioReason-Pro RL Review: cmd-1 (C. elegans)</h1>
+<p>Source: cmd-1-deep-research-bioreason-rl.md</p>
+<ul>
+<li><strong>Correctness</strong>: 5/5</li>
+<li><strong>Completeness</strong>: 4/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary states:</p>
+<blockquote>
+<p>A cytoplasmic calcium-sensing regulator that uses paired EF-hand motifs to bind Ca2+ and undergo conformational switching, thereby exposing target-recognition surfaces that modulate diverse effector proteins. By decoding transient calcium signals, it tunes kinase and phosphatase activities and cytoskeletal assemblies to propagate intracellular signaling in the cytoplasm of Caenorhabditis elegans.</p>
+</blockquote>
+<p>This is an accurate and well-constructed summary. The curated review confirms that cmd-1 encodes the sole C. elegans calmodulin with four functional calcium-binding sites, and its core functions are calcium ion binding (GO:0005509), calcium-dependent protein binding (GO:0048306), and enzyme regulator activity (GO:0030234). The BioReason summary captures all three of these core molecular activities:</p>
+<ul>
+<li>Calcium binding via EF-hand motifs -- correct and matches GO:0005509</li>
+<li>Conformational switching that exposes target-recognition surfaces -- accurately describes the calcium-dependent protein binding mechanism</li>
+<li>Modulation of kinases, phosphatases, and cytoskeletal assemblies -- aligns with the enzyme regulator activity annotation and the spindle-related phenotypes</li>
+</ul>
+<p>The cytoplasmic localization call is correct (GO:0005737 is accepted in the curated review).</p>
+<p>The summary is slightly incomplete in that it does not mention the specific C. elegans biology: CMD-1's roles at spindle poles and centrosomes during cell division, meiotic spindle orientation, and the neuronal chemotaxis phenotype. However, since these are classified as non-core functions in the curated review, the omission is minor.</p>
+<p>Comparison with interpro2go:</p>
+<p>The interpro2go annotation (GO_REF:0000002) assigns GO:0005509 (calcium ion binding). BioReason correctly reproduces this but goes meaningfully beyond it by describing the calcium-dependent conformational switching and effector modulation, which corresponds to GO:0048306 (calcium-dependent protein binding) and GO:0030234 (enzyme regulator activity) -- terms from IBA annotations, not interpro2go. This shows genuine added value over pure domain-based annotation.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The trace provides a clean mechanistic chain from EF-hand architecture to calcium binding to effector regulation. The reasoning about calmodulin-like sensor behavior and the hypothesis about CaM-dependent kinases and phosphatases as interaction partners are well-calibrated.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O16305
+gene_symbol: cmd-1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  cmd-1 encodes the single Caenorhabditis elegans calmodulin, a small EF-hand
+  calcium sensor with four functional calcium-binding sites. The conserved core
+  function is calcium-dependent binding and regulation of target proteins,
+  including enzymes and spindle-associated factors. Experimental work in worms
+  additionally places CMD-1 at spindle poles, centrosomes, the interphase
+  nuclear membrane, and cell-cell boundaries in early embryos, and supports
+  context-specific roles in meiotic spindle orientation, embryonic morphogenesis,
+  apoptosis-related phenotypes, and neuronal chemotaxis. Current GOA for cmd-1
+  contains no ISO annotations; the transfer-style annotations are IBA/IEA rather
+  than ISO, so this ISO-focused pass mainly evaluates whether those orthology-
+  derived calls are appropriately conservative.
+existing_annotations:
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      This phylogenetically inferred annotation matches the defining biochemical
+      property of calmodulin family proteins. cmd-1 is the sole worm calmodulin,
+      UniProt records four functional calcium-binding sites, and no conflicting
+      evidence exists.
+    action: ACCEPT
+    reason: &gt;-
+      Calcium ion binding is a conserved and central calmodulin activity, so the
+      orthology-based transfer is well supported and represents core function.
+    supported_by:
+    - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+      supporting_text: This protein has four functional calcium-binding sites.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Cytoplasmic localization is consistent with cmd-1 being a broadly acting
+      soluble calcium sensor. Experimental work in embryos also places CMD-1 on
+      spindle/centrosomal structures and other non-nuclear sites, which is
+      compatible with a general cytoplasmic annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Cytoplasm is a correct high-level cellular location for calmodulin and is
+      sufficiently general to retain as a core localization term.
+    supported_by:
+    - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+      supporting_text: &#39;DR   GO; GO:0005737; C:cytoplasm; IBA:GO_Central.&#39;
+- term:
+    id: GO:0030234
+    label: enzyme regulator activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Calmodulin-Ca2+ complexes regulate multiple enzyme classes, including
+      kinases and phosphatases, and UniProt explicitly describes cmd-1 as a
+      mediator of enzyme control. The term is broad, but it captures a genuine
+      conserved molecular role.
+    action: ACCEPT
+    reason: &gt;-
+      Although general, enzyme regulator activity is an appropriate conserved
+      summary term for calmodulin and reflects core function rather than a
+      lineage-specific phenotype.
+    supported_by:
+    - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+      supporting_text: &gt;-
+        Calmodulin mediates the control of a large number of enzymes, ion
+        channels and other proteins by Ca(2+).
+- term:
+    id: GO:0000226
+    label: microtubule cytoskeleton organization
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      The transfer is plausible because worm experiments support CMD-1 roles in
+      spindle organization and spindle orientation. However, the specific
+      evidence is tied to cell-division contexts rather than to a universally
+      defining calmodulin function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain the annotation as valid but non-core because it reflects a real,
+      experimentally supported spindle phenotype without being the central
+      conserved biochemical identity of the gene.
+    supported_by:
+    - reference_id: PMID:19219036
+      supporting_text: &gt;-
+        ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle
+        organization
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      InterPro-derived calcium ion binding agrees with the IBA call and with the
+      well-established EF-hand architecture of calmodulin.
+    action: ACCEPT
+    reason: &gt;-
+      This is a correct electronic annotation for a canonical EF-hand calcium-
+      binding protein and matches core function.
+    supported_by:
+    - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+      supporting_text: This protein has four functional calcium-binding sites.
+- term:
+    id: GO:0072686
+    label: mitotic spindle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      The ARBA localization is consistent with direct experimental embryo data
+      showing CMD-1 accumulation on spindle structures. It is a correct but
+      context-specific localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mitotic spindle localization is supported, but it is not a universal core
+      localization for calmodulin across all contexts.
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:34499028
+  review:
+    summary: &gt;-
+      PMID:34499028 supports a specific autoregulatory loop in which high CMD-1
+      levels repress expression from the cmd-1 promoter through CAMT-1. That is
+      more limited than generic negative regulation of gene expression.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The paper supports context-specific feedback on cmd-1 transcription, not a
+      broad generic role in repressing gene expression across targets.
+    supported_by:
+    - reference_id: PMID:34499028
+      supporting_text: high levels of CMD-1 can repress expression from the cmd-1 promoter
+- term:
+    id: GO:0050918
+    label: positive chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:34499028
+  review:
+    summary: &gt;-
+      Neuronal reduction of cmd-1 contributes to chemotaxis defects, and
+      supplementing neuronal CMD-1 rescues attraction to several cues in the
+      CAMT-1 regulatory context examined in the paper.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The phenotype is real but represents a specialized neuronal/behavioral
+      context rather than the core conserved role of calmodulin.
+    supported_by:
+    - reference_id: PMID:34499028
+      supporting_text: restored normal chemotaxis toward salt, benzaldehyde, and diacetyl
+- term:
+    id: GO:0009792
+    label: embryo development ending in birth or egg hatching
+  evidence_type: IMP
+  original_reference_id: PMID:14703012
+  review:
+    summary: &gt;-
+      cmd-1 RNAi causes severe embryonic lethality with disturbed morphogenesis,
+      so the gene clearly contributes to successful embryogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This broad developmental phenotype is supported experimentally, but it is a
+      pleiotropic consequence of depleting a global calcium sensor and should not
+      be treated as core function.
+    supported_by:
+    - reference_id: PMID:14703012
+      supporting_text: RNAi microinjection approach results in a severe embryonic lethal phenotype
+- term:
+    id: GO:0005813
+    label: centrosome
+  evidence_type: IDA
+  original_reference_id: PMID:17716666
+  review:
+    summary: &gt;-
+      Full-text evidence from PMID:17716666 shows GFP-tagged CMD-1 accumulation
+      at centrosomes in early embryos.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The localization is directly observed and valid, but it is a cell-division
+      context rather than a core pan-context localization.
+- term:
+    id: GO:0031965
+    label: nuclear membrane
+  evidence_type: IDA
+  original_reference_id: PMID:17716666
+  review:
+    summary: &gt;-
+      The same embryo localization study reports CMD-1 at the interphase nuclear
+      membrane.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation is experimentally supported but context-specific and not a
+      primary summary of calmodulin function.
+- term:
+    id: GO:0071944
+    label: cell periphery
+  evidence_type: IDA
+  original_reference_id: PMID:17716666
+  review:
+    summary: &gt;-
+      PMID:17716666 reports CMD-1 at the borders of abutting cells in embryos,
+      which justifies a general cell periphery term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Direct localization supports the term, but this is again a non-core,
+      context-dependent localization.
+- term:
+    id: GO:0072686
+    label: mitotic spindle
+  evidence_type: IDA
+  original_reference_id: PMID:17716666
+  review:
+    summary: &gt;-
+      Direct imaging shows CMD-1 on spindle structures and not at the cleavage
+      furrow in early embryos.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct experimental localization, but specialized to embryonic cell
+      division rather than a core location.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19219036
+  review:
+    summary: &gt;-
+      PMID:19219036 places CMD-1 in an ASPM-1/LIN-5 spindle-pole complex, so a
+      physical interaction claim is credible. However, protein binding is too
+      generic for calmodulin and loses the informative calcium-dependent nature
+      of its target interactions.
+    action: MODIFY
+    reason: &gt;-
+      The interaction evidence should be retained, but the annotation should use
+      a more informative calmodulin-appropriate term rather than generic protein
+      binding.
+    proposed_replacement_terms:
+    - id: GO:0048306
+      label: calcium-dependent protein binding
+- term:
+    id: GO:0032880
+    label: regulation of protein localization
+  evidence_type: IMP
+  original_reference_id: PMID:19219036
+  review:
+    summary: &gt;-
+      The meiosis study shows CMD-1 promotes accumulation of LIN-5 at meiotic and
+      mitotic spindle poles, which is an experimentally grounded protein
+      localization phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This process annotation is valid but reflects a specific spindle-pole
+      context, not cmd-1&#39;s central conserved biochemical identity.
+    supported_by:
+    - reference_id: PMID:19219036
+      supporting_text: &gt;-
+        promotes meiotic spindle organization and the accumulation of LIN-5 at
+        meiotic and mitotic spindle poles
+- term:
+    id: GO:0051296
+    label: establishment of meiotic spindle orientation
+  evidence_type: IMP
+  original_reference_id: PMID:19219036
+  review:
+    summary: &gt;-
+      The paper directly concludes that LIN-5, ASPM-1, CMD-1 and dynein are
+      required for spindle rotation during maternal meiosis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Strong experimental support exists, but the process is specialized rather
+      than core to calmodulin across contexts.
+    supported_by:
+    - reference_id: PMID:19219036
+      supporting_text: &gt;-
+        Spindle rotation during maternal meiosis is independent of GPR-1/2 and
+        Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein
+- term:
+    id: GO:0051296
+    label: establishment of meiotic spindle orientation
+  evidence_type: IGI
+  original_reference_id: PMID:19219036
+  review:
+    summary: &gt;-
+      The genetic interaction-based version of the same process annotation is
+      consistent with the paper&#39;s functional dissection of the spindle-pole
+      complex.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as non-core for the same reason as the IMP entry: direct support,
+      but specialized biology.
+    supported_by:
+    - reference_id: PMID:19219036
+      supporting_text: &gt;-
+        Spindle rotation during maternal meiosis is independent of GPR-1/2 and
+        Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein
+- term:
+    id: GO:0016477
+    label: cell migration
+  evidence_type: IMP
+  original_reference_id: PMID:14703012
+  review:
+    summary: &gt;-
+      cmd-1 RNAi embryos show aberrant cell migration patterns according to the
+      abstract, supporting a migration-related phenotype.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a pleiotropic developmental phenotype observed after strong loss of
+      a global calcium sensor, so it should be retained only as non-core.
+    supported_by:
+    - reference_id: PMID:14703012
+      supporting_text: Embryos show disturbed morphogenesis, aberrant cell migration patterns
+- term:
+    id: GO:0042981
+    label: regulation of apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:14703012
+  review:
+    summary: &gt;-
+      The abstract reports multiple defects in apoptosis after cmd-1 depletion,
+      which supports involvement in apoptosis-related regulation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The phenotype is supported, but it is broad and likely pleiotropic rather
+      than a core defining function of calmodulin.
+    supported_by:
+    - reference_id: PMID:14703012
+      supporting_text: multiple defects in apoptosis
+- term:
+    id: GO:0043277
+    label: apoptotic cell clearance
+  evidence_type: IMP
+  original_reference_id: PMID:14703012
+  review:
+    summary: &gt;-
+      The accessible abstract supports apoptosis defects, but it does not clearly
+      distinguish cell corpse clearance/engulfment from upstream apoptosis
+      defects.
+    action: UNDECIDED
+    reason: &gt;-
+      This specific term may be correct, but the currently accessible evidence is
+      insufficiently specific to review it confidently.
+- term:
+    id: GO:0051726
+    label: regulation of cell cycle
+  evidence_type: IMP
+  original_reference_id: PMID:14703012
+  review:
+    summary: &gt;-
+      Hyperproliferation in cmd-1 RNAi embryos is consistent with cell-cycle
+      dysregulation after depletion of calmodulin.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The phenotype is experimentally supported, but it is a broad developmental
+      consequence rather than a core molecular role.
+    supported_by:
+    - reference_id: PMID:14703012
+      supporting_text: a striking hyperproliferation of cells
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro family mapping supports the calcium ion binding annotation
+      for EF-hand calmodulin proteins.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: cmd-1 has no current ISO annotations in GOA; the orthology-style
+      transfer set for this gene is IBA rather than ISO.
+  - statement: The IBA annotations capture conserved calmodulin properties such as
+      calcium ion binding, cytoplasmic localization, and broad enzyme-regulatory
+      function.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings:
+  - statement: ARBA assigns mitotic spindle localization, which is consistent with
+      direct embryo localization data.
+- id: PMID:14703012
+  title: Functional analysis of the single calmodulin gene in the nematode Caenorhabditis
+    elegans by RNA interference and 4-D microscopy.
+  findings:
+  - statement: cmd-1 RNAi causes severe embryonic lethality with disturbed morphogenesis.
+    supporting_text: &gt;-
+      RNAi microinjection approach results in a severe embryonic lethal phenotype.
+      Embryos show disturbed morphogenesis
+  - statement: cmd-1 RNAi embryos show aberrant cell migration patterns,
+      hyperproliferation, and multiple defects in apoptosis.
+    supporting_text: &gt;-
+      Embryos show disturbed morphogenesis, aberrant cell migration patterns, a
+      striking hyperproliferation of cells and multiple defects in apoptosis.
+- id: PMID:17716666
+  title: Cytokinesis is not controlled by calmodulin or myosin light chain kinase
+    in the Caenorhabditis elegans early embryo.
+  findings:
+  - statement: cmd-1 depletion does not block cytokinesis in early embryos.
+    supporting_text: &gt;-
+      RNA mediated interference against C. elegans calmodulin and candidate MLCKs
+      had no effect on cytokinesis in wild-type or RhoK mutant embryos
+- id: PMID:19219036
+  title: NuMA-related LIN-5, ASPM-1, calmodulin and dynein promote meiotic spindle
+    rotation independently of cortical LIN-5/GPR/Galpha.
+  findings:
+  - statement: CMD-1 works with ASPM-1 and LIN-5 in a spindle-pole complex.
+    supporting_text: &gt;-
+      ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle
+      organization and the accumulation of LIN-5 at meiotic and mitotic spindle
+      poles.
+  - statement: CMD-1 promotes meiotic spindle organization and spindle rotation
+      during maternal meiosis.
+    supporting_text: &gt;-
+      Spindle rotation during maternal meiosis is independent of GPR-1/2 and
+      Galpha, yet requires LIN-5, ASPM-1, CMD-1 and dynein.
+  - statement: CMD-1 promotes accumulation of LIN-5 at meiotic and mitotic spindle
+      poles.
+    supporting_text: &gt;-
+      ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle
+      organization and the accumulation of LIN-5 at meiotic and mitotic spindle
+      poles.
+- id: PMID:34499028
+  title: Neuronal calmodulin levels are controlled by CAMTA transcription factors.
+  findings:
+  - statement: cmd-1 expression is reduced across multiple neuronal cell types in
+      camt-1 mutants.
+    supporting_text: &gt;-
+      cmd-1 was one of only two genes whose expression was reduced in all four
+      neural profiles relative to WT controls.
+  - statement: High CMD-1 levels can repress expression from the cmd-1 promoter,
+      indicating autoregulatory feedback.
+    supporting_text: high levels of CMD-1 can repress expression from the cmd-1 promoter
+  - statement: Supplementing neuronal CMD-1 rescues chemotaxis and neuronal
+      calcium-signaling defects in the CAMT-1 regulatory context.
+    supporting_text: restored normal chemotaxis toward salt, benzaldehyde, and diacetyl
+- id: PMID:17854888
+  title: Ca(2+)/Calmodulin-binding proteins from the C. elegans proteome.
+  findings:
+  - statement: Calmodulin is described as the primary calcium sensor that regulates
+      a wide variety of cellular processes in eukaryotes.
+    supporting_text: &gt;-
+      Calmodulin (CaM) is the primary Ca(2+)-sensor that regulates a wide variety
+      of cellular processes in eukaryotes.
+  - statement: The study identified multiple Ca2+/calmodulin-binding proteins from
+      the C. elegans proteome, reinforcing CMD-1&#39;s role as a broad calcium-
+      dependent target binder.
+    supporting_text: &gt;-
+      The method allowed the identification of 9 known and 47 previously
+      uncharacterized Ca(2+)-dependent CaM-binding proteins from the adult worm
+      proteome.
+- id: file:worm/cmd-1/cmd-1-uniprot.txt
+  title: UniProt record for C. elegans cmd-1
+  findings:
+  - statement: UniProt records four functional calcium-binding sites in CMD-1.
+  - statement: UniProt states that calmodulin mediates control of many enzymes, ion
+      channels, and other proteins by Ca2+.
+core_functions:
+- description: &gt;-
+    Primary EF-hand calcium sensor that binds calcium ions through four conserved
+    sites and acts as the biochemical core of worm calmodulin function.
+  molecular_function:
+    id: GO:0005509
+    label: calcium ion binding
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+    supporting_text: This protein has four functional calcium-binding sites.
+- description: &gt;-
+    Calcium-loaded CMD-1 binds target proteins and mediates their regulation;
+    this includes conserved Ca2+/CaM target binding across the worm proteome and
+    spindle-pole associated interactions in embryos.
+  molecular_function:
+    id: GO:0048306
+    label: calcium-dependent protein binding
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:17854888
+    supporting_text: &gt;-
+      Calmodulin (CaM) is the primary Ca(2+)-sensor that regulates a wide variety
+      of cellular processes in eukaryotes.
+  - reference_id: PMID:19219036
+    supporting_text: &gt;-
+      ASPM-1, together with calmodulin (CMD-1), promotes meiotic spindle
+      organization and the accumulation of LIN-5 at meiotic and mitotic spindle
+      poles.
+- description: &gt;-
+    Calmodulin-Ca2+ acts as a broad enzyme regulator, stimulating downstream
+    kinase and phosphatase targets rather than serving as an enzyme itself.
+  molecular_function:
+    id: GO:0030234
+    label: enzyme regulator activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:worm/cmd-1/cmd-1-uniprot.txt
+    supporting_text: &gt;-
+      Calmodulin mediates the control of a large number of enzymes, ion channels
+      and other proteins by Ca(2+).
+proposed_new_terms: []
+suggested_questions:
+- question: Which direct CMD-1 target proteins at spindle poles are most important
+    for the meiotic spindle orientation phenotype in embryos?
+- question: Which apoptosis and cell-migration phenotypes after cmd-1 depletion are
+    direct CMD-1-dependent processes versus secondary consequences of broad calcium
+    signaling collapse?
+- question: Should calmodulin-family curation in nematodes explicitly add
+    calcium-dependent protein binding where older annotations still use generic
+    protein binding?
+suggested_experiments:
+- description: Endogenous tagged CMD-1 affinity purification or proximity labeling
+    under Ca2+-bound and Ca2+-free conditions to define direct embryo and neuronal
+    target proteins.
+- description: Rescue cmd-1 loss with EF-hand calcium-binding mutants to separate
+    calcium sensing from possible scaffolding/localization roles at spindle poles.
+- description: Tissue-specific depletion or rescue in embryos versus neurons to
+    distinguish direct spindle and chemotaxis functions from pleiotropic systemic
+    effects.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

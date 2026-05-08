@@ -1,0 +1,2597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>gacS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>gacS</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88MC3" target="_blank" class="term-link">
+                        Q88MC3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "gacS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88MC3" data-a="DESCRIPTION: GacS is a membrane-associated hybrid sensor histid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GacS is a membrane-associated hybrid sensor histidine kinase of the GacS/GacA global regulatory system. Its domain architecture indicates a two-pass inner-membrane sensor with HAMP, histidine kinase, receiver, and HPt domains, consistent with multistep phosphorelay signaling. In Pseudomonas putida KT2440, genetic studies link GacS to broad lifestyle control, including surface attachment and positive regulation of the K1 type VI secretion system, so its core role is signal sensing and phosphorelay rather than a pathway-specific metabolic function.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                                    GO:0000155
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay sensor kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0000155" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best existing molecular-function annotation for GacS. UniProt and domain architecture identify a membrane-bound hybrid sensor histidine kinase with histidine kinase, receiver, and HPt modules, exactly the architecture expected for a phosphorelay sensor kinase.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0000155 captures the core biochemical role of GacS more precisely than the generic parent terms for histidine kinase or phosphorus-group transferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88MC3
+                                    
+                                </span>
+                                
+                                <div class="support-text">-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacS/gacS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The core molecular role is phosphorelay sensor kinase activity at the membrane.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004673" target="_blank" class="term-link">
+                                    GO:0004673
+                                </a>
+                            </span>
+                            <span class="term-label">protein histidine kinase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0004673" data-r="GO_REF:0000003" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GacS does perform protein histidine kinase chemistry, but this annotation is less informative than GO:0000155 for a hybrid sensory phosphorelay protein. The sensor-kinase context is the biologically important distinction here.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This parent term is biochemically correct but redundant once GO:0000155 phosphorelay sensor kinase activity is present.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016772" target="_blank" class="term-link">
+                                    GO:0016772
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring phosphorus-containing groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0016772" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a very broad ancestral parent of histidine kinase activity. It does not add useful information beyond the much more specific phosphorelay sensor kinase annotation already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The term is correct only at a very high level and should not be treated as a core annotation for a well-characterized hybrid sensor kinase.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0000160" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the correct process-level abstraction for GacS. In KT2440, GacS is part of the GacS/GacA phosphorelay that controls downstream programs such as surface attachment and K1 type VI secretion system expression.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GacS is a membrane hybrid sensor kinase whose core biological role is initiating phosphorelay signaling, with adhesion and secretion phenotypes representing downstream outputs of that regulatory cascade.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacS/gacS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Process terms should center on phosphorelay signal transduction; the documented adhesion and T6SS phenotypes are downstream outputs of that global signaling role rather than separate direct molecular activities.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/gacS/gacS-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440, expression of the K1 type VI secretion system gene cluster is positively regulated by the GacS-GacA two-component system and repressed by RetS.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0007165" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GacS certainly participates in signal transduction, but GO:0007165 is too broad for a protein whose signaling mode is already captured by GO:0000160 phosphorelay signal transduction system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The more specific phosphorelay term should carry the biology here; the generic parent adds little value.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GacS is a transmembrane sensor located in the bacterial inner membrane. In bacterial GO usage, plasma membrane is the appropriate cellular-component term for this localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Membrane localization is essential to GacS function because it senses external/periplasmic cues and transmits them through a membrane-embedded signaling architecture.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:Q88MC3
+                                    
+                                </span>
+                                
+                                <div class="support-text">-!- SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000256|ARBA:ARBA00004429}; Multi-pass membrane protein {ECO:0000256|ARBA:ARBA00004429}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88MC3" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is correct but unnecessarily general because the protein is already localized more specifically to the plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0005886 plasma membrane is the more informative and appropriate cellular-component annotation for GacS.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GacS is a membrane-spanning hybrid sensor histidine kinase that initiates the GacS/GacA phosphorelay in Pseudomonas putida KT2440. Its core role is signal sensing and phosphotransfer at the membrane, while organism-specific downstream outputs documented in this strain include control of surface attachment and activation of the K1 type VI secretion system.</h3>
+                <span class="vote-buttons" data-g="Q88MC3" data-a="FUNCTION: GacS is a membrane-spanning hybrid sensor histidin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000155" target="_blank" class="term-link">
+                            phosphorelay sensor kinase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:Q88MC3
+                            
+                        </span>
+                        
+                        <div class="finding-text">-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/gacS/gacS-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440, expression of the K1 type VI secretion system gene cluster is positively regulated by the GacS-GacA two-component system and repressed by RetS.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:Q88MC3
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB Q88MC3 histidine kinase entry</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GacS is a membrane-associated histidine kinase</div>
+                        
+                        <div class="finding-text">"-!- SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000256|ARBA:ARBA00004429}; Multi-pass membrane protein {ECO:0000256|ARBA:ARBA00004429}."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GacS is annotated with histidine kinase catalytic activity</div>
+                        
+                        <div class="finding-text">"-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22458445" target="_blank" class="term-link">
+                            PMID:22458445
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of reciprocal adhesion genes in pathogenic and non-pathogenic Pseudomonas.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">gacS mutants are defective in attachment-related phenotypes in KT2440</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36748579" target="_blank" class="term-link">
+                            PMID:36748579
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional organization and regulation of the Pseudomonas putida K1 type VI secretion system gene cluster.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">GacS-GacA positively regulates the KT2440 K1 type VI secretion system</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31931111" target="_blank" class="term-link">
+                            PMID:31931111
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Engineering glucose metabolism for enhanced muconic acid production in Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of gacS can improve engineered growth and muconate production in KT2440</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39701409" target="_blank" class="term-link">
+                            PMID:39701409
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Adaptive laboratory evolution and genetic engineering improved terephthalate utilization in Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Converged loss-of-function mutations in gacS and gacA improve engineered TPA utilization</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/gacS/gacS-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curated notes on gacS in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The core molecular role is membrane phosphorelay sensor kinase activity</div>
+                        
+                        <div class="finding-text">"The core molecular role is phosphorelay sensor kinase activity at the membrane."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Adhesion and K1-T6SS regulation are downstream outputs of global GacS signaling</div>
+                        
+                        <div class="finding-text">"Process terms should center on phosphorelay signal transduction; the documented adhesion and T6SS phenotypes are downstream outputs of that global signaling role rather than separate direct molecular activities."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What signal or signals are detected directly by the periplasmic sensor region of GacS in KT2440?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Patricia Bernal, María A. Llamas</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88MC3" data-a="Q: What signal or signals are detected directly by th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which small RNAs and Rsm-family effectors mediate the adhesion versus K1-T6SS branches downstream of GacS/GacA in KT2440?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Patricia Bernal, Estrella Duque, Juan-Luis Ramos</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88MC3" data-a="Q: Which small RNAs and Rsm-family effectors mediate ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Build phosphosite mutants in the predicted receiver Asp718 and HPt His863 modules, then test phosphotransfer to GacA in vitro and with in vivo transcriptional reporters for Gac-dependent outputs.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GacS uses its hybrid receiver and HPt modules to relay phosphate to GacA in a defined multistep order.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: phosphotransfer biochemistry plus reporter genetics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88MC3" data-a="EXPERIMENT: Build phosphosite mutants in the predicted receive..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare RNA-seq and promoter-reporter responses in wild type, delta-gacS, and sensor-domain or relay-module mutants during surface growth and stationary phase to separate direct GacS outputs from secondary physiological effects.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The adhesion and K1-T6SS outputs reflect distinct downstream branches of the same GacS/GacA signaling pathway.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: comparative transcriptomics and promoter-reporter analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88MC3" data-a="EXPERIMENT: Compare RNA-seq and promoter-reporter responses in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gacS-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MC3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T14:04:56.756532'<br />
+end_time: '2026-03-21T14:15:08.088860'<br />
+duration_seconds: 611.32<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: gacS<br />
+  gene_symbol: gacS<br />
+  uniprot_accession: Q88MC3<br />
+  protein_description: 'RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438};<br />
+    EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};'<br />
+  gene_info: Name=gacS {ECO:0000313|EMBL:AAN67271.1}; OrderedLocusNames=PP_1650 {ECO:0000313|EMBL:AAN67271.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: CheY-like_superfamily. (IPR011006); HAMP_dom. (IPR003660); HATPase_C_sf.<br />
+    (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom. (IPR005467)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 34</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88MC3</li>
+<li><strong>Protein Description:</strong> RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> Name=gacS {ECO:0000313|EMBL:AAN67271.1}; OrderedLocusNames=PP_1650 {ECO:0000313|EMBL:AAN67271.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CheY-like_superfamily. (IPR011006); HAMP_dom. (IPR003660); HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom. (IPR005467)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "gacS" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'gacS' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>gacS</strong> (gene ID: gacS, UniProt: Q88MC3) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88MC3</li>
+<li><strong>Protein Description:</strong> RecName: Full=histidine kinase {ECO:0000256|ARBA:ARBA00012438}; EC=2.7.13.3 {ECO:0000256|ARBA:ARBA00012438};</li>
+<li><strong>Gene Information:</strong> Name=gacS {ECO:0000313|EMBL:AAN67271.1}; OrderedLocusNames=PP_1650 {ECO:0000313|EMBL:AAN67271.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> CheY-like_superfamily. (IPR011006); HAMP_dom. (IPR003660); HATPase_C_sf. (IPR036890); HATPase_dom. (IPR003594); His_kinase_dom. (IPR005467)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "gacS" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'gacS' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>gacS</strong> (gene ID: gacS, UniProt: Q88MC3) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-gacs-uniprot-q88mc3-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>gacS</strong> (UniProt Q88MC3) in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-required-disambiguation">0) Target verification (required disambiguation)</h3>
+<p>The literature reviewed here concerns the <strong>GacS</strong> sensor histidine kinase of the canonical <strong>GacS/GacA two-component system (TCS)</strong> upstream of the <strong>Gac/Rsm</strong> post-transcriptional regulatory cascade in pseudomonads. GacS is consistently described as an <strong>inner/plasma membrane-localized</strong> sensor kinase that phosphorylates the cytosolic response regulator <strong>GacA</strong> via a multi-step phosphorelay (latour2020theevanescentgacs pages 3-5, gallegos2024smallregulatoryrnas pages 4-6). This is consistent with the UniProt entry provided for <strong>Q88MC3 (gacS; PP_1650) in <em>P. putida</em> KT2440</strong>, including predicted membrane localization and the expected sensor-HK architecture and signaling domains (HAMP, His kinase catalytic modules, and receiver-like modules) (latour2020theevanescentgacs pages 3-5).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-two-component-systems-and-hybrid-histidine-kinases">1.1 Two-component systems and hybrid histidine kinases</h4>
+<p>A bacterial TCS typically comprises a <strong>sensor histidine kinase (HK)</strong> and a <strong>response regulator (RR)</strong>. In the Gac system, <strong>GacS</strong> is the sensor HK and <strong>GacA</strong> is the RR (latour2020theevanescentgacs pages 1-3, ferreiro2021distinctivefeaturesof pages 1-4). In pseudomonads, GacS is often described as a <strong>hybrid / non-orthodox HK</strong>, because its signaling can include additional phosphorelay steps (receiver and Hpt modules) before phosphate reaches the terminal RR (GacA) (ferreiro2021distinctivefeaturesof pages 6-9, latour2020theevanescentgacs pages 3-5).</p>
+<h4 id="12-the-gacrsm-cascade-transcriptional-activation-of-srnas-and-post-transcriptional-control">1.2 The Gac/Rsm cascade: transcriptional activation of sRNAs and post-transcriptional control</h4>
+<p>In the Gac/Rsm cascade, phosphorylated <strong>GacA</strong> functions as a transcription factor that activates transcription of <strong>small regulatory RNAs (sRNAs)</strong> of the <strong>rsmX/rsmY/rsmZ families</strong> by binding a conserved upstream activation sequence (the <strong>Gac-box</strong>) (gallegos2024smallregulatoryrnas pages 4-6, ferreiro2021distinctivefeaturesof pages 1-4). The 2024 review summarizes the <strong>Gac-box consensus</strong> as <strong>TGTAAGN6CTTACA</strong> (gallegos2024smallregulatoryrnas pages 4-6).</p>
+<p>These Rsm sRNAs then act as <strong>“sponge” RNAs</strong>: they sequester (titrate) RNA-binding proteins of the <strong>Rsm/CsrA family</strong>, relieving translational repression of many target mRNAs and enabling large lifestyle transitions (e.g., motile↔sessile and primary↔secondary metabolism) (gallegos2024smallregulatoryrnas pages 4-6, latour2020theevanescentgacs pages 1-3).</p>
+<h3 id="2-gene-product-gacs-q88mc3-molecular-function-domains-and-localization">2) Gene product: GacS (Q88MC3) — molecular function, domains, and localization</h3>
+<h4 id="21-protein-architecture-and-localization">2.1 Protein architecture and localization</h4>
+<p>A detailed architecture is summarized in Latour (2020) (publication date: Nov 2020; URL https://doi.org/10.3390/microorganisms8111746). GacS is a <strong>homodimeric inner-membrane sensor kinase</strong> in which each monomer contains:<br />
+- an <strong>N-terminal transmembrane (TM) helix</strong>,<br />
+- a <strong>periplasmic detector domain</strong>,<br />
+- a <strong>second TM helix</strong>, and<br />
+- a large <strong>cytoplasmic region</strong> containing a <strong>HAMP domain</strong> and the <strong>histidine kinase catalytic core</strong> (HisKA + ATPase-like subdomain) (latour2020theevanescentgacs pages 3-5).</p>
+<p>The periplasmic detector domain contains a <strong>putative ligand-binding pocket</strong> formed near a conserved flexible loop and a network of basic residues; residue-level functional mapping in <em>P. aeruginosa</em> implicated histidyl residues in this region in signal perception, and comparative analysis suggests divergence among <em>Pseudomonas</em> lineages (latour2020theevanescentgacs pages 3-5).</p>
+<p><strong>Cellular localization:</strong> the TM helices anchor GacS in the <strong>inner (plasma) membrane</strong>, positioning the detector domain in the <strong>periplasm</strong> and the regulatory/catalytic domains in the <strong>cytoplasm</strong> (latour2020theevanescentgacs pages 3-5, gallegos2024smallregulatoryrnas pages 4-6).</p>
+<h4 id="22-enzymatic-activity-and-reaction-ec-27133">2.2 Enzymatic activity and reaction (EC 2.7.13.3)</h4>
+<p>GacS is a <strong>histidine kinase</strong> (EC 2.7.13.3). Functionally, it converts an input signal into a phosphorylation state change by:<br />
+1) <strong>autophosphorylation</strong> on a conserved <strong>histidine</strong> within the HK domain (ATP-dependent), and<br />
+2) <strong>phosphotransfer</strong> through an internal phosphorelay to ultimately phosphorylate <strong>GacA</strong> on a conserved <strong>aspartate</strong> (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9).</p>
+<p>Latour (2020) further notes that GacS autophosphorylation likely occurs <strong>in trans</strong> within the GacS homodimer, and that deletion of the <strong>HAMP</strong> domain can cause <strong>signal-independent activation</strong> of the downstream cascade (latour2020theevanescentgacs pages 3-5).</p>
+<h4 id="23-signalstimulus-what-activates-gacs">2.3 Signal/stimulus: what activates GacS?</h4>
+<p>A key limitation in current knowledge is that <strong>the activating ligand(s) for GacS remain unknown</strong>. Latour (2020) synthesizes evidence suggesting the signal is likely a <strong>low-molecular-weight, relatively simple, moderately apolar metabolite</strong> and proposes that it may reflect nutritional stress/competition at high cell density (latour2020theevanescentgacs pages 1-3, latour2020theevanescentgacs pages 5-6). Ferreiro &amp; Gallegos (2021) similarly emphasize that <strong>the activating environmental signal remains unidentified</strong> (ferreiro2021distinctivefeaturesof pages 6-9).</p>
+<h4 id="24-network-integration-modulators-of-gacs-signaling">2.4 Network integration: modulators of GacS signaling</h4>
+<p>In pseudomonads, GacS output can be modulated by additional membrane kinases:<br />
+- <strong>LadS</strong> can stimulate GacS signaling by shuttling phosphate into the GacS phosphorelay (Hpt module) (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9).<br />
+- <strong>RetS</strong> inhibits GacS via several mechanisms (phosphate siphoning, dephosphorylation of internal modules, and physical blockage of the catalytic histidine region) (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9).<br />
+- <strong>PA1611</strong> (in <em>P. aeruginosa</em>) can antagonize RetS inhibition (latour2020theevanescentgacs pages 3-5).</p>
+<p>These components are best established in <em>P. aeruginosa</em> models and should be treated as mechanistic analogs unless validated directly in <em>P. putida</em> KT2440 (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9).</p>
+<h3 id="3-downstream-pathway-in-p-putida-kt2440-rsm-proteins-srnas-and-controlled-processes">3) Downstream pathway in <em>P. putida</em> KT2440: Rsm proteins, sRNAs, and controlled processes</h3>
+<h4 id="31-rsm-proteins-in-kt2440-direct-evidence">3.1 Rsm proteins in KT2440 (direct evidence)</h4>
+<p>Huertas-Rosales et al. (2016) (publication date: Sep 2016; URL https://doi.org/10.1128/AEM.01724-16) established that <em>P. putida</em> KT2440 encodes three CsrA/Rsm-family RNA-binding proteins:<br />
+- <strong>RsmI (PP_1746)</strong>,<br />
+- <strong>RsmE (PP_3832)</strong>,<br />
+- <strong>RsmA (PP_4472)</strong>,<br />
+with reported lengths and similarities (e.g., RsmA 62 aa; RsmE 65 aa; RsmI 59 aa) and pairwise identity relationships (huertasrosales2016selfregulationandinterplay pages 9-11).</p>
+<p>Mechanistically, the same study situates these Rsm proteins within the GacS/GacA-controlled cascade: the Rsm family proteins and their cognate small RNAs in <em>Pseudomonas</em> are described as part of the GacS/GacA pathway, where GacS phosphorylates GacA and GacA activates rsmX/Y/Z-family sRNAs (huertasrosales2016selfregulationandinterplay pages 3-5).</p>
+<h4 id="32-kt2440-rsm-regulon-size-and-composition-quantitative-direct-evidence">3.2 KT2440 Rsm regulon size and composition (quantitative; direct evidence)</h4>
+<p>Huertas-Rosales et al. (2021) (publication date: Feb 2021; URL https://doi.org/10.3389/fmolb.2021.624061) performed in vivo affinity purification of Rsm-associated RNAs coupled to sequencing. Key quantitative outcomes:<br />
+- <strong>437 unique RNA molecules</strong> were identified as in vivo Rsm-associated targets,<br />
+- <strong>75 targets</strong> were common to all three Rsm proteins, and<br />
+- under the tested conditions, <strong>at least 12% of transcripts</strong> in KT2440 were bound in vivo by Rsm proteins (huertasrosales2021genomewideanalysisof pages 1-2, huertasrosales2021genomewideanalysisof pages 5-7).</p>
+<p>These targets span metabolism, transport/secretion, stress responses, and multiple regulatory nodes, including c-di-GMP turnover and secretion system components (e.g., Type VI secretion system targets among common sets) (huertasrosales2021genomewideanalysisof pages 5-7).</p>
+<h4 id="33-biofilm-and-c-di-gmp-as-a-prominent-functional-axis-downstream-of-gacrsm-in-kt2440">3.3 Biofilm and c-di-GMP as a prominent functional axis downstream of Gac/Rsm in KT2440</h4>
+<p>Huertas-Rosales et al. (2016) demonstrated that Rsm proteins modulate KT2440 lifestyles: a <strong>triple rsm mutant</strong> displayed <strong>reduced swimming and swarming</strong> and <strong>increased biofilm formation</strong>, while <strong>overexpression of RsmE or RsmI reduced attachment</strong>. The authors also observed surface-dependent biofilm properties (glass vs plastic) indicating altered extracellular matrix composition/timing (huertasrosales2016selfregulationandinterplay pages 1-3).</p>
+<p>Huertas-Rosales et al. (2021) further connected Rsm regulation to biofilm via c-di-GMP circuitry and adhesins (e.g., lapA), and provided a schematic pathway model integrating regulators (RpoS, FleQ), c-di-GMP enzymes, and matrix components (huertasrosales2021genomewideanalysisof pages 9-11). The requested corroborating figure is available (huertasrosales2021genomewideanalysisof media 3d0e1063).</p>
+<h4 id="34-evidence-for-gacsgaca-phenotypic-coupling-in-kt2440">3.4 Evidence for gacS/gacA phenotypic coupling in KT2440</h4>
+<p>A plant-associated <em>Pseudomonas</em> review compiles KT2440 observations that perturbations in <strong>gacS/gacA</strong> are associated with increased expression of <strong>lapA, lapF, rpoS and cfcR</strong> and increased biofilm formation, and that overexpression of rsmA/E/I decreases swimming/swarming (ferreiro2021distinctivefeaturesof pages 28-29). This provides KT2440-relevant directionality for the GacS→Rsm→biofilm/motility axis, though the review table does not provide fold changes (ferreiro2021distinctivefeaturesof pages 28-29).</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-2024-updated-synthesis-of-rsm-clan-srnas-authoritative-review">4.1 2024: Updated synthesis of Rsm-clan sRNAs (authoritative review)</h4>
+<p>Gallegos et al. (2024) (publication date: Sep 2024; URL https://doi.org/10.1111/mmi.15313) provides an up-to-date review and large comparative analysis of Rsm sRNAs in <em>Pseudomonas</em>. Key points relevant to functional annotation:<br />
+- GacS is described as a membrane histidine kinase sensing a periplasmic stimulus and activating GacA (gallegos2024smallregulatoryrnas pages 4-6).<br />
+- The review compiles <strong>genus-wide statistics</strong> from <strong>245 complete chromosomes</strong>: rsmY and rsmZ appear broadly conserved (245 alleles each in their dataset), while rsmX is more variable (259 alleles; often multi-copy) and allele sizes average ~121 nt (rsmY), ~132 nt (rsmZ), ~113 nt (rsmX) (gallegos2024smallregulatoryrnas pages 8-11).<br />
+- Typical Rsm sRNAs carry multiple protein-binding motifs (often 4–7 binding sites) supporting their sponge role (gallegos2024smallregulatoryrnas pages 4-6).</p>
+<p>These updates strengthen confidence that the GacS/GacA→Rsm sRNA→Rsm protein architecture is a conserved “core logic” while allowing KT2440-specific elaborations in the composition of Rsm proteins and sRNAs.</p>
+<h4 id="42-2023-translational-regulatory-crosstalk-can-rewire-gacrsm-linked-behavior">4.2 2023: Translational regulatory “crosstalk” can rewire Gac/Rsm-linked behavior</h4>
+<p>Thompson et al. (2023) (publication date: Feb 14, 2023; URL https://doi.org/10.1371/journal.pbio.3001988) showed that a plasmid-encoded translational regulator (<strong>RsmQ</strong>) can cause large-scale <strong>proteome</strong> remodeling in <em>Pseudomonas fluorescens</em> by interfering with the host’s translational regulatory network connected to Gac/Rsm. Under their conditions, deletion of rsmQ altered abundance of <strong>581 proteins (≥2-fold increased)</strong> and <strong>203 proteins (≥2-fold decreased)</strong> (thompson2023plasmidsmanipulatebacterial pages 8-10). While not in KT2440, this is a recent, high-profile demonstration that the Gac/Rsm post-transcriptional layer is an interaction hub that can be manipulated by mobile elements—relevant to strain engineering and stability considerations.</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-agricultural-biocontrol-and-rhizosphere-colonization">5.1 Agricultural biocontrol and rhizosphere colonization</h4>
+<p>The Gac/Rsm cascade is repeatedly linked to production of extracellular/secondary metabolites and behaviors critical for <strong>plant-associated fitness and biocontrol</strong>, including antibiotics, lipopeptide surfactants, and enzymes, as well as motility/biofilm traits (ferreiro2021distinctivefeaturesof pages 11-14, ferreiro2021distinctivefeaturesof pages 14-16). Ferreiro &amp; Gallegos (2021) specifically notes Gac/Rsm control of <strong>putisolvins</strong> in <em>P. putida</em> PCL1445 (lipopeptide surfactants) and a role in biofilm formation and other plant-associated traits in <em>P. putida</em> (ferreiro2021distinctivefeaturesof pages 11-14).</p>
+<p>In an applied biocontrol organism (<em>P. chlororaphis</em> O6), the Gac/Rsm system coordinates beneficial metabolite expression during root colonization; a quantitative colonization statistic reported is recovery at approximately <strong>10^7–10^8 CFU per gram of root</strong> after seed inoculation (anderson2017thegacrsmsignaling pages 1-3). This illustrates that Gac/Rsm-controlled traits can be deployed in real agricultural contexts.</p>
+<h4 id="52-engineeringmonitoring-considerations-for-applications">5.2 Engineering/monitoring considerations for applications</h4>
+<p>Ferreiro &amp; Gallegos (2021) emphasizes that <strong>spontaneous gacS/gacA variants can arise</strong> and may alter biocontrol performance and survival; therefore, monitoring for Gac/Rsm functionality (e.g., rapid surfactant/siderophore phenotyping) is relevant in practical strain development and deployment (ferreiro2021distinctivefeaturesof pages 14-16).</p>
+<h3 id="6-expert-interpretation-and-analysis-authoritative-synthesis">6) Expert interpretation and analysis (authoritative synthesis)</h3>
+<p>1) <strong>Central role, but unknown primary signal.</strong> Across authoritative reviews, the upstream “sensor” role of GacS is clear, but <strong>the identity of the activating ligand remains a major unresolved problem</strong>, limiting precise mapping of environmental inputs to regulatory outputs in KT2440 (latour2020theevanescentgacs pages 1-3, ferreiro2021distinctivefeaturesof pages 6-9).</p>
+<p>2) <strong>GacS is best annotated as a global regulatory hub rather than a pathway-specific enzyme.</strong> The phosphorelay is biochemically well defined (HK autophosphorylation and transfer to GacA), but the biological meaning is expressed through Rsm sRNAs/proteins controlling broad regulons and lifestyle transitions (latour2020theevanescentgacs pages 3-5, gallegos2024smallregulatoryrnas pages 4-6).</p>
+<p>3) <strong>In KT2440, downstream Rsm post-transcriptional control appears extensive and mechanistically grounded.</strong> The KT2440 Rsm binding datasets (hundreds of direct RNA interactions; ≥12% of transcripts bound) support that many pleiotropic phenotypes of gacS/gacA perturbation plausibly arise through Rsm-dependent translational/post-transcriptional reprogramming and c-di-GMP/biofilm control nodes (huertasrosales2021genomewideanalysisof pages 1-2, huertasrosales2021genomewideanalysisof pages 9-11).</p>
+<h3 id="7-key-statistics-and-data-points-recent-andor-directly-relevant">7) Key statistics and data points (recent and/or directly relevant)</h3>
+<ul>
+<li><strong>KT2440 direct Rsm targets:</strong> 437 unique RNA targets; 75 common to all three Rsm proteins; ≥12% of transcripts bound in vivo (Huertas-Rosales 2021) (huertasrosales2021genomewideanalysisof pages 1-2, huertasrosales2021genomewideanalysisof pages 5-7).</li>
+<li><strong>Genus-wide Rsm sRNA census (2024):</strong> among 245 complete <em>Pseudomonas</em> chromosomes, rsmY and rsmZ each had 245 alleles; rsmX had 259 alleles; average sizes 121 nt (rsmY), 132 nt (rsmZ), 113 nt (rsmX); rsmX multi-copy is common (gallegos2024smallregulatoryrnas pages 8-11).</li>
+<li><strong>Proteome remodeling by translational crosstalk (2023):</strong> ΔrsmQ changed abundance of 581 proteins (≥2-fold increased) and 203 proteins (≥2-fold decreased) in <em>P. fluorescens</em> SBW25 (thompson2023plasmidsmanipulatebacterial pages 8-10).</li>
+<li><strong>Applied colonization:</strong> <em>P. chlororaphis</em> O6 recovered at ~10^7–10^8 CFU/g root in colonization assays relevant to biofertilizer/biocontrol deployment (anderson2017thegacrsmsignaling pages 1-3).</li>
+</ul>
+<h3 id="8-consolidated-evidence-table">8) Consolidated evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Component/claim</th>
+<th>Evidence summary</th>
+<th>Organism/strain</th>
+<th>Quantitative detail</th>
+<th>Source (with DOI URL and year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GacS identity, domains, localization</td>
+<td>GacS is the membrane/inner-membrane sensor histidine kinase upstream of the Gac/Rsm cascade; described as a homodimer with N-terminal TM helix, periplasmic detector domain, second TM helix, cytoplasmic HAMP domain, HK (HisKA + ATPase) core, internal receiver (REC/RR) and Hpt modules characteristic of a hybrid/non-orthodox HK (latour2020theevanescentgacs pages 3-5)</td>
+<td>Pseudomonas spp.; applicable to <em>P. putida</em> KT2440</td>
+<td>2 TM helices; homodimeric sensor</td>
+<td>Latour 2020, DOI: https://doi.org/10.3390/microorganisms8111746</td>
+</tr>
+<tr>
+<td>GacS→GacA phosphorelay mechanism</td>
+<td>Ligand-triggered conformational change is transmitted through HAMP to the HK domain, causing autophosphorylation on conserved His, followed by phosphorelay through REC and Hpt domains to a conserved Asp on GacA; autophosphorylation likely occurs in trans within the dimer (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9)</td>
+<td>Pseudomonas spp.</td>
+<td>Multi-step His→Asp phosphorelay; terminal transfer to GacA Asp</td>
+<td>Latour 2020, DOI: https://doi.org/10.3390/microorganisms8111746; Ferreiro &amp; Gallegos 2021, DOI: https://doi.org/10.1111/1462-2920.15558</td>
+</tr>
+<tr>
+<td>GacS signal and modulation</td>
+<td>The direct activating ligand of GacS remains unknown; reviews describe it as likely a low-molecular-weight, moderately apolar metabolite. GacS output is modulated by LadS (stimulatory phosphotransfer into GacS Hpt) and RetS (inhibitory phosphate siphoning/heterointerference), with PA1611 counteracting RetS in some pseudomonads (latour2020theevanescentgacs pages 1-3, latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9)</td>
+<td>Pseudomonas spp.</td>
+<td>Signal unresolved as of 2020–2024</td>
+<td>Latour 2020, DOI: https://doi.org/10.3390/microorganisms8111746; Ferreiro &amp; Gallegos 2021, DOI: https://doi.org/10.1111/1462-2920.15558</td>
+</tr>
+<tr>
+<td>GacA target promoter motif (Gac-box)</td>
+<td>Activated GacA binds a conserved upstream activation sequence/Gac-box to induce transcription of Rsm sRNAs (gallegos2024smallregulatoryrnas pages 4-6, ferreiro2021distinctivefeaturesof pages 1-4)</td>
+<td>Pseudomonas spp.</td>
+<td>Consensus TGTAAGN6CTTACA</td>
+<td>Gallegos et al. 2024, DOI: https://doi.org/10.1111/mmi.15313; Ferreiro &amp; Gallegos 2021, DOI: https://doi.org/10.1111/1462-2920.15558</td>
+</tr>
+<tr>
+<td>rsmX/rsmY/rsmZ sRNAs function</td>
+<td>Rsm sRNAs are induced by GacS/GacA and act as “sponge” RNAs that sequester Rsm/Csr proteins, relieving translational repression of target mRNAs and enabling lifestyle/metabolic transitions (gallegos2024smallregulatoryrnas pages 4-6, latour2020theevanescentgacs pages 1-3, huertasrosales2016selfregulationandinterplay pages 3-5)</td>
+<td>Pseudomonas spp.; <em>P. putida</em> KT2440 pathway context</td>
+<td>Typical size range ~100–130 nt; usually 4–7 Rsm-binding motifs in Pseudomonas sRNAs</td>
+<td>Gallegos et al. 2024, DOI: https://doi.org/10.1111/mmi.15313; Latour 2020, DOI: https://doi.org/10.3390/microorganisms8111746</td>
+</tr>
+<tr>
+<td>Distribution of Rsm sRNAs in the genus</td>
+<td>Comparative 2024 analysis found broad conservation of rsmY and rsmZ and patchier distribution of rsmX across <em>Pseudomonas</em> genomes, supporting conserved core Gac/Rsm logic with lineage-specific expansions (gallegos2024smallregulatoryrnas pages 8-11)</td>
+<td>245 complete <em>Pseudomonas</em> chromosomes</td>
+<td>245 rsmZ alleles, 245 rsmY alleles, 259 rsmX alleles; average sizes: rsmZ 132 nt, rsmY 121 nt, rsmX 113 nt</td>
+<td>Gallegos et al. 2024, DOI: https://doi.org/10.1111/mmi.15313</td>
+</tr>
+<tr>
+<td><em>P. putida</em> KT2440 Rsm proteins</td>
+<td>KT2440 encodes three CsrA/Rsm-family proteins: RsmI (PP_1746), RsmE (PP_3832), and RsmA (PP_4472); they are small RNA-binding proteins involved in post-transcriptional control downstream of GacS/GacA (huertasrosales2016selfregulationandinterplay pages 9-11, huertasrosales2016selfregulationandinterplay pages 3-5)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Identities to <em>E. coli</em> CsrA: 46% (RsmI), 70% (RsmE), 75% (RsmA); lengths 59, 65, and 62 aa</td>
+<td>Huertas-Rosales et al. 2016, DOI: https://doi.org/10.1128/AEM.01724-16</td>
+</tr>
+<tr>
+<td>KT2440 Rsm-regulon size</td>
+<td>In vivo affinity purification + RNA-seq identified a large direct Rsm target set in KT2440, including regulatory, metabolic, transport, stress, c-di-GMP and secretion-related RNAs; rsmY itself and rsmE were among common targets (huertasrosales2021genomewideanalysisof pages 1-2, huertasrosales2021genomewideanalysisof pages 5-7)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>437 unique RNA targets total; 75 common to all three Rsm proteins; at least 12% of transcripts bound in vivo under tested conditions</td>
+<td>Huertas-Rosales et al. 2021, DOI: https://doi.org/10.3389/fmolb.2021.624061</td>
+</tr>
+<tr>
+<td>KT2440 downstream pathway links to biofilm/c-di-GMP</td>
+<td>Rsm proteins directly or indirectly control c-di-GMP signaling and biofilm determinants through targets including cfcA/cfcR-related circuitry, lapA, cellulose/EPS loci, and other regulators; schematic pathway integration was presented in Figure 4 (huertasrosales2021genomewideanalysisof pages 9-11, huertasrosales2021genomewideanalysisof media 3d0e1063)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>cfcR RsmA FE values reported below cutoff at 1.82 and 1.88 in vivo; multiple c-di-GMP regulators identified among targets</td>
+<td>Huertas-Rosales et al. 2021, DOI: https://doi.org/10.3389/fmolb.2021.624061</td>
+</tr>
+<tr>
+<td>KT2440 Rsm mutant phenotypes</td>
+<td>The triple rsm mutant shows reduced swimming and swarming and increased biofilm formation; biofilms on glass are more labile/easily detached, while overexpression of RsmE or RsmI reduces attachment, indicating dosage-sensitive control of sessile behavior (huertasrosales2016selfregulationandinterplay pages 1-3)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>3 Rsm proteins analyzed via single/double/triple mutants and overexpression</td>
+<td>Huertas-Rosales et al. 2016, DOI: https://doi.org/10.1128/AEM.01724-16</td>
+</tr>
+<tr>
+<td>KT2440 gacS/gacA-linked phenotypes</td>
+<td>Reviews compiling KT2440 studies report that gacS/gacA mutants increase expression of lapA, lapF, rpoS and cfcR and enhance biofilm formation and use of L-lysine, arginine, and histidine; overexpression of rsmA/E/I decreases swimming and swarming (ferreiro2021distinctivefeaturesof pages 28-29)</td>
+<td><em>P. putida</em> KT2440</td>
+<td>Directional effects reported; no fold-change values given in reviewed table</td>
+<td>Ferreiro &amp; Gallegos 2021, DOI: https://doi.org/10.1111/1462-2920.15558</td>
+</tr>
+<tr>
+<td>Broader pathway output</td>
+<td>Gac/Rsm controls major lifestyle switches including motile↔sessile behavior, primary↔secondary metabolism, stress tolerance, secretion, and biofilm traits; in plant-associated pseudomonads it can affect ~10% of genes in some strains (ferreiro2021distinctivefeaturesof pages 14-16, latour2020theevanescentgacs pages 1-3)</td>
+<td>Plant-associated <em>Pseudomonas</em> spp.</td>
+<td>“About 10% of genes” in some cases; high-density activation associated with metabolic switch</td>
+<td>Ferreiro &amp; Gallegos 2021, DOI: https://doi.org/10.1111/1462-2920.15558; Latour 2020, DOI: https://doi.org/10.3390/microorganisms8111746</td>
+</tr>
+<tr>
+<td>Recent development: 2024 Rsm sRNA synthesis</td>
+<td>A 2024 authoritative review updated the phylogeny, structure, nomenclature and mechanistic understanding of Rsm-clan sRNAs, reinforcing the central place of GacS/GacA-controlled sRNAs in <em>Pseudomonas</em> regulation (gallegos2024smallregulatoryrnas pages 4-6, gallegos2024smallregulatoryrnas pages 8-11)</td>
+<td><em>Pseudomonas</em> genus</td>
+<td>Dataset of 245 complete chromosomes; 70 candidate novel rsm-family loci</td>
+<td>Gallegos et al. 2024, DOI: https://doi.org/10.1111/mmi.15313</td>
+</tr>
+<tr>
+<td>Recent development: 2023 translational crosstalk</td>
+<td>A 2023 study showed plasmid-encoded RsmQ rewires the host Gac/Rsm-linked translational network, including interaction with RsmY/RsmZ and altered abundance of RetS/Hfq-linked outputs, illustrating new layers of post-transcriptional crosstalk relevant to Gac/Rsm biology (thompson2023plasmidsmanipulatebacterial pages 8-10)</td>
+<td><em>P. fluorescens</em> SBW25</td>
+<td>581 proteins increased and 203 decreased by ≥2-fold in ΔrsmQ comparison; ~50% of affected genes had AnGGA motifs</td>
+<td>Thompson et al. 2023, DOI: https://doi.org/10.1371/journal.pbio.3001988</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the verified identity and mechanism of GacS, the core downstream Gac/Rsm regulatory elements, and the most relevant Pseudomonas putida KT2440-specific findings and quantitative data. It also highlights recent 2023–2024 developments that update understanding of the broader Gac/Rsm network.</em></p>
+<h3 id="9-practical-functional-annotation-summary-for-databases">9) Practical functional annotation summary (for databases)</h3>
+<ul>
+<li><strong>Gene/product:</strong> gacS / GacS histidine kinase (UniProt Q88MC3)</li>
+<li><strong>Molecular function:</strong> ATP-dependent autophosphorylation (His) and phosphorelay to activate response regulator GacA (Asp phosphorylation) (latour2020theevanescentgacs pages 3-5, ferreiro2021distinctivefeaturesof pages 6-9).</li>
+<li><strong>Biological process:</strong> upstream signaling hub of the Gac/Rsm global regulatory cascade controlling transcription of Rsm sRNAs (via GacA) and extensive post-transcriptional regulation via Rsm proteins; impacts lifestyle transitions including motility and biofilm, and links to c-di-GMP regulation and secretion/competition pathways (gallegos2024smallregulatoryrnas pages 4-6, huertasrosales2021genomewideanalysisof pages 9-11).</li>
+<li><strong>Cellular component:</strong> inner/plasma membrane (sensor); periplasmic detector domain; cytosolic catalytic/regulatory domains (latour2020theevanescentgacs pages 3-5).</li>
+<li><strong>Signal input:</strong> environmental cue(s) not yet chemically identified; hypothesized low-MW moderately apolar metabolite(s) linked to nutritional stress/competition (latour2020theevanescentgacs pages 1-3).</li>
+</ul>
+<h3 id="10-evidence-gaps-and-what-remains-to-be-established-in-kt2440">10) Evidence gaps and what remains to be established in KT2440</h3>
+<p>Despite strong pathway-level evidence, two KT2440-specific gaps remain prominent: (i) direct biochemical identification of the <strong>GacS ligand(s)</strong> in KT2440 and (ii) quantitative mapping from defined stimuli to <strong>GacA phosphorylation and rsm sRNA transcription kinetics</strong> in KT2440. These are highlighted as open problems in authoritative reviews (latour2020theevanescentgacs pages 1-3, ferreiro2021distinctivefeaturesof pages 6-9).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(latour2020theevanescentgacs pages 3-5): Xavier Latour. The evanescent gacs signal. Microorganisms, 8:1746, Nov 2020. URL: https://doi.org/10.3390/microorganisms8111746, doi:10.3390/microorganisms8111746. This article has 46 citations.</p>
+</li>
+<li>
+<p>(gallegos2024smallregulatoryrnas pages 4-6): María Trinidad Gallegos, Matías Garavaglia, and Claudio Valverde. Small regulatory rnas of the rsm clan in pseudomonas. Molecular Microbiology, 122:563-582, Sep 2024. URL: https://doi.org/10.1111/mmi.15313, doi:10.1111/mmi.15313. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(latour2020theevanescentgacs pages 1-3): Xavier Latour. The evanescent gacs signal. Microorganisms, 8:1746, Nov 2020. URL: https://doi.org/10.3390/microorganisms8111746, doi:10.3390/microorganisms8111746. This article has 46 citations.</p>
+</li>
+<li>
+<p>(ferreiro2021distinctivefeaturesof pages 1-4): María‐Dolores Ferreiro and María‐Trinidad Gallegos. Distinctive features of the <scp>gac‐rsm</scp> pathway in plant‐associated <i>pseudomonas</i>. Environmental Microbiology, 23:5670-5689, Jun 2021. URL: https://doi.org/10.1111/1462-2920.15558, doi:10.1111/1462-2920.15558. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ferreiro2021distinctivefeaturesof pages 6-9): María‐Dolores Ferreiro and María‐Trinidad Gallegos. Distinctive features of the <scp>gac‐rsm</scp> pathway in plant‐associated <i>pseudomonas</i>. Environmental Microbiology, 23:5670-5689, Jun 2021. URL: https://doi.org/10.1111/1462-2920.15558, doi:10.1111/1462-2920.15558. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(latour2020theevanescentgacs pages 5-6): Xavier Latour. The evanescent gacs signal. Microorganisms, 8:1746, Nov 2020. URL: https://doi.org/10.3390/microorganisms8111746, doi:10.3390/microorganisms8111746. This article has 46 citations.</p>
+</li>
+<li>
+<p>(huertasrosales2016selfregulationandinterplay pages 9-11): Óscar Huertas-Rosales, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Self-regulation and interplay of rsm family proteins modulate the lifestyle of pseudomonas putida. Applied and Environmental Microbiology, 82:5673-5686, Sep 2016. URL: https://doi.org/10.1128/aem.01724-16, doi:10.1128/aem.01724-16. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huertasrosales2016selfregulationandinterplay pages 3-5): Óscar Huertas-Rosales, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Self-regulation and interplay of rsm family proteins modulate the lifestyle of pseudomonas putida. Applied and Environmental Microbiology, 82:5673-5686, Sep 2016. URL: https://doi.org/10.1128/aem.01724-16, doi:10.1128/aem.01724-16. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huertasrosales2021genomewideanalysisof pages 1-2): Óscar Huertas-Rosales, Manuel Romero, Kok-Gan Chan, Kar-Wai Hong, Miguel Cámara, Stephan Heeb, Laura Barrientos-Moreno, María Antonia Molina-Henares, María L. Travieso, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Genome-wide analysis of targets for post-transcriptional regulation by rsm proteins in pseudomonas putida. Frontiers in Molecular Biosciences, Feb 2021. URL: https://doi.org/10.3389/fmolb.2021.624061, doi:10.3389/fmolb.2021.624061. This article has 14 citations.</p>
+</li>
+<li>
+<p>(huertasrosales2021genomewideanalysisof pages 5-7): Óscar Huertas-Rosales, Manuel Romero, Kok-Gan Chan, Kar-Wai Hong, Miguel Cámara, Stephan Heeb, Laura Barrientos-Moreno, María Antonia Molina-Henares, María L. Travieso, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Genome-wide analysis of targets for post-transcriptional regulation by rsm proteins in pseudomonas putida. Frontiers in Molecular Biosciences, Feb 2021. URL: https://doi.org/10.3389/fmolb.2021.624061, doi:10.3389/fmolb.2021.624061. This article has 14 citations.</p>
+</li>
+<li>
+<p>(huertasrosales2016selfregulationandinterplay pages 1-3): Óscar Huertas-Rosales, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Self-regulation and interplay of rsm family proteins modulate the lifestyle of pseudomonas putida. Applied and Environmental Microbiology, 82:5673-5686, Sep 2016. URL: https://doi.org/10.1128/aem.01724-16, doi:10.1128/aem.01724-16. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huertasrosales2021genomewideanalysisof pages 9-11): Óscar Huertas-Rosales, Manuel Romero, Kok-Gan Chan, Kar-Wai Hong, Miguel Cámara, Stephan Heeb, Laura Barrientos-Moreno, María Antonia Molina-Henares, María L. Travieso, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Genome-wide analysis of targets for post-transcriptional regulation by rsm proteins in pseudomonas putida. Frontiers in Molecular Biosciences, Feb 2021. URL: https://doi.org/10.3389/fmolb.2021.624061, doi:10.3389/fmolb.2021.624061. This article has 14 citations.</p>
+</li>
+<li>
+<p>(huertasrosales2021genomewideanalysisof media 3d0e1063): Óscar Huertas-Rosales, Manuel Romero, Kok-Gan Chan, Kar-Wai Hong, Miguel Cámara, Stephan Heeb, Laura Barrientos-Moreno, María Antonia Molina-Henares, María L. Travieso, María Isabel Ramos-González, and Manuel Espinosa-Urgel. Genome-wide analysis of targets for post-transcriptional regulation by rsm proteins in pseudomonas putida. Frontiers in Molecular Biosciences, Feb 2021. URL: https://doi.org/10.3389/fmolb.2021.624061, doi:10.3389/fmolb.2021.624061. This article has 14 citations.</p>
+</li>
+<li>
+<p>(ferreiro2021distinctivefeaturesof pages 28-29): María‐Dolores Ferreiro and María‐Trinidad Gallegos. Distinctive features of the <scp>gac‐rsm</scp> pathway in plant‐associated <i>pseudomonas</i>. Environmental Microbiology, 23:5670-5689, Jun 2021. URL: https://doi.org/10.1111/1462-2920.15558, doi:10.1111/1462-2920.15558. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gallegos2024smallregulatoryrnas pages 8-11): María Trinidad Gallegos, Matías Garavaglia, and Claudio Valverde. Small regulatory rnas of the rsm clan in pseudomonas. Molecular Microbiology, 122:563-582, Sep 2024. URL: https://doi.org/10.1111/mmi.15313, doi:10.1111/mmi.15313. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thompson2023plasmidsmanipulatebacterial pages 8-10): Catriona M. A. Thompson, James P. J. Hall, Govind Chandra, Carlo Martins, Gerhard Saalbach, Supakan Panturat, Susannah M. Bird, Samuel Ford, Richard H. Little, Ainelen Piazza, Ellie Harrison, Robert W. Jackson, Michael A. Brockhurst, and Jacob G. Malone. Plasmids manipulate bacterial behaviour through translational regulatory crosstalk. Feb 2023. URL: https://doi.org/10.1371/journal.pbio.3001988, doi:10.1371/journal.pbio.3001988. This article has 34 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ferreiro2021distinctivefeaturesof pages 11-14): María‐Dolores Ferreiro and María‐Trinidad Gallegos. Distinctive features of the <scp>gac‐rsm</scp> pathway in plant‐associated <i>pseudomonas</i>. Environmental Microbiology, 23:5670-5689, Jun 2021. URL: https://doi.org/10.1111/1462-2920.15558, doi:10.1111/1462-2920.15558. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ferreiro2021distinctivefeaturesof pages 14-16): María‐Dolores Ferreiro and María‐Trinidad Gallegos. Distinctive features of the <scp>gac‐rsm</scp> pathway in plant‐associated <i>pseudomonas</i>. Environmental Microbiology, 23:5670-5689, Jun 2021. URL: https://doi.org/10.1111/1462-2920.15558, doi:10.1111/1462-2920.15558. This article has 42 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(anderson2017thegacrsmsignaling pages 1-3): Anne J. Anderson, Beom Ryong Kang, and Young Cheol Kim. The gac/rsm signaling pathway of a biocontrol bacterium, pseudomonas chlororaphis o6. Radiation Protection Dosimetry, 23:212-227, Sep 2017. URL: https://doi.org/10.5423/rpd.2017.23.3.212, doi:10.5423/rpd.2017.23.3.212. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>latour2020theevanescentgacs pages 3-5</li>
+<li>gallegos2024smallregulatoryrnas pages 4-6</li>
+<li>ferreiro2021distinctivefeaturesof pages 6-9</li>
+<li>huertasrosales2016selfregulationandinterplay pages 9-11</li>
+<li>huertasrosales2016selfregulationandinterplay pages 3-5</li>
+<li>huertasrosales2021genomewideanalysisof pages 5-7</li>
+<li>huertasrosales2016selfregulationandinterplay pages 1-3</li>
+<li>huertasrosales2021genomewideanalysisof pages 9-11</li>
+<li>ferreiro2021distinctivefeaturesof pages 28-29</li>
+<li>gallegos2024smallregulatoryrnas pages 8-11</li>
+<li>thompson2023plasmidsmanipulatebacterial pages 8-10</li>
+<li>ferreiro2021distinctivefeaturesof pages 11-14</li>
+<li>anderson2017thegacrsmsignaling pages 1-3</li>
+<li>ferreiro2021distinctivefeaturesof pages 14-16</li>
+<li>latour2020theevanescentgacs pages 1-3</li>
+<li>ferreiro2021distinctivefeaturesof pages 1-4</li>
+<li>latour2020theevanescentgacs pages 5-6</li>
+<li>huertasrosales2021genomewideanalysisof pages 1-2</li>
+<li>https://doi.org/10.3390/microorganisms8111746</li>
+<li>https://doi.org/10.1128/AEM.01724-16</li>
+<li>https://doi.org/10.3389/fmolb.2021.624061</li>
+<li>https://doi.org/10.1111/mmi.15313</li>
+<li>https://doi.org/10.1371/journal.pbio.3001988</li>
+<li>https://doi.org/10.3390/microorganisms8111746;</li>
+<li>https://doi.org/10.1111/1462-2920.15558</li>
+<li>https://doi.org/10.1111/mmi.15313;</li>
+<li>https://doi.org/10.1111/1462-2920.15558;</li>
+<li>https://doi.org/10.3390/microorganisms8111746,</li>
+<li>https://doi.org/10.1111/mmi.15313,</li>
+<li>https://doi.org/10.1111/1462-2920.15558,</li>
+<li>https://doi.org/10.1128/aem.01724-16,</li>
+<li>https://doi.org/10.3389/fmolb.2021.624061,</li>
+<li>https://doi.org/10.1371/journal.pbio.3001988,</li>
+<li>https://doi.org/10.5423/rpd.2017.23.3.212,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(gacS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88MC3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gacs-gene-review-notes">gacS Gene Review Notes</h1>
+<h2 id="identity-and-architecture">Identity and architecture</h2>
+<ul>
+<li>gacS (PP_1650; UniProt Q88MC3) encodes a membrane-bound hybrid sensor histidine kinase with predicted HAMP, histidine kinase, receiver, and C-terminal HPt domains, consistent with a multistep phosphorelay architecture [UniProt:Q88MC3 "DOMAIN          292..513 /note=\"Histidine kinase\""] [UniProt:Q88MC3 "DOMAIN          669..788 /note=\"Response regulatory\""] [UniProt:Q88MC3 "DOMAIN          824..917 /note=\"HPt\""].</li>
+<li>UniProt places GacS in the inner membrane as a multi-pass membrane protein and annotates histidine kinase catalytic activity [UniProt:Q88MC3 "-!- SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000256|ARBA:ARBA00004429}; Multi-pass membrane protein {ECO:0000256|ARBA:ARBA00004429}."] [UniProt:Q88MC3 "-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L-histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};"].</li>
+</ul>
+<h2 id="organism-specific-functional-evidence">Organism-specific functional evidence</h2>
+<ul>
+<li>In KT2440 attachment screens, gacS mutants showed reduced biofilm formation and impaired attachment to biotic surfaces <a href="https://pubmed.ncbi.nlm.nih.gov/22458445" title="Phenotypic characterization of the mutants showed that 11 of the inactivated proteins were required for attachment to biotic surfaces too. ... including the global regulator RpoN and GacS">PMID:22458445</a>.</li>
+<li>In KT2440, expression of the K1 type VI secretion system gene cluster is positively regulated by the GacS-GacA two-component system and repressed by RetS <a href="https://pubmed.ncbi.nlm.nih.gov/36748579" title="Importantly, expression of the K1-T6SS gene cluster is positively regulated by the GacS-GacA two-component regulatory system (TCS) and repressed by the RetS sensor kinase">PMID:36748579</a>.</li>
+</ul>
+<h2 id="interpretation-for-go-review">Interpretation for GO review</h2>
+<ul>
+<li>The core molecular role is phosphorelay sensor kinase activity at the membrane.</li>
+<li>Process terms should center on phosphorelay signal transduction; the documented adhesion and T6SS phenotypes are downstream outputs of that global signaling role rather than separate direct molecular activities.</li>
+<li>Independent adaptive evolution studies repeatedly recovered loss-of-function gacS/gacA mutations to improve engineered growth or product formation, reinforcing that GacS is a pleiotropic global regulator whose removal rewires many downstream programs <a href="https://pubmed.ncbi.nlm.nih.gov/31931111" title="The genes gntZ and gacS were also disrupted in several evolved clones, and deletion of these genes further improved strain growth and muconate production">PMID:31931111</a> <a href="https://pubmed.ncbi.nlm.nih.gov/39701409" title="Whole-genome re-sequencing identified multiple converged mutations, including loss-of-function mutations to global regulators gacS, gacA, and turA">PMID:39701409</a>.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88MC3
+gene_symbol: gacS
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  GacS is a membrane-associated hybrid sensor histidine kinase of the GacS/GacA
+  global regulatory system. Its domain architecture indicates a two-pass inner-membrane
+  sensor with HAMP, histidine kinase, receiver, and HPt domains, consistent with
+  multistep phosphorelay signaling. In Pseudomonas putida KT2440, genetic studies
+  link GacS to broad lifestyle control, including surface attachment and positive
+  regulation of the K1 type VI secretion system, so its core role is signal sensing
+  and phosphorelay rather than a pathway-specific metabolic function.
+existing_annotations:
+- term:
+    id: GO:0000155
+    label: phosphorelay sensor kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      This is the best existing molecular-function annotation for GacS. UniProt
+      and domain architecture identify a membrane-bound hybrid sensor histidine
+      kinase with histidine kinase, receiver, and HPt modules, exactly the architecture
+      expected for a phosphorelay sensor kinase.
+    action: ACCEPT
+    reason: &gt;-
+      GO:0000155 captures the core biochemical role of GacS more precisely than
+      the generic parent terms for histidine kinase or phosphorus-group transferase
+      activity.
+    supported_by:
+      - reference_id: UniProt:Q88MC3
+        supporting_text: &#34;-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};&#34;
+      - reference_id: file:PSEPK/gacS/gacS-notes.md
+        supporting_text: &#34;The core molecular role is phosphorelay sensor kinase activity at the membrane.&#34;
+- term:
+    id: GO:0004673
+    label: protein histidine kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &gt;-
+      GacS does perform protein histidine kinase chemistry, but this annotation is
+      less informative than GO:0000155 for a hybrid sensory phosphorelay protein.
+      The sensor-kinase context is the biologically important distinction here.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This parent term is biochemically correct but redundant once GO:0000155 phosphorelay
+      sensor kinase activity is present.
+- term:
+    id: GO:0016772
+    label: transferase activity, transferring phosphorus-containing groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This is a very broad ancestral parent of histidine kinase activity. It does
+      not add useful information beyond the much more specific phosphorelay sensor
+      kinase annotation already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term is correct only at a very high level and should not be treated as
+      a core annotation for a well-characterized hybrid sensor kinase.
+- term:
+    id: GO:0000160
+    label: phosphorelay signal transduction system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This is the correct process-level abstraction for GacS. In KT2440, GacS is
+      part of the GacS/GacA phosphorelay that controls downstream programs such as
+      surface attachment and K1 type VI secretion system expression.
+    action: ACCEPT
+    reason: &gt;-
+      GacS is a membrane hybrid sensor kinase whose core biological role is initiating
+      phosphorelay signaling, with adhesion and secretion phenotypes representing
+      downstream outputs of that regulatory cascade.
+    supported_by:
+      - reference_id: file:PSEPK/gacS/gacS-notes.md
+        supporting_text: &#34;Process terms should center on phosphorelay signal transduction; the documented adhesion and T6SS phenotypes are downstream outputs of that global signaling role rather than separate direct molecular activities.&#34;
+      - reference_id: file:PSEPK/gacS/gacS-notes.md
+        supporting_text: &#34;In KT2440, expression of the K1 type VI secretion system gene cluster is positively regulated by the GacS-GacA two-component system and repressed by RetS.&#34;
+- term:
+    id: GO:0007165
+    label: signal transduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      GacS certainly participates in signal transduction, but GO:0007165 is too broad
+      for a protein whose signaling mode is already captured by GO:0000160 phosphorelay
+      signal transduction system.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The more specific phosphorelay term should carry the biology here; the generic
+      parent adds little value.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      GacS is a transmembrane sensor located in the bacterial inner membrane. In bacterial
+      GO usage, plasma membrane is the appropriate cellular-component term for this
+      localization.
+    action: ACCEPT
+    reason: &gt;-
+      Membrane localization is essential to GacS function because it senses external/periplasmic
+      cues and transmits them through a membrane-embedded signaling architecture.
+    supported_by:
+      - reference_id: UniProt:Q88MC3
+        supporting_text: &#34;-!- SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000256|ARBA:ARBA00004429}; Multi-pass membrane protein {ECO:0000256|ARBA:ARBA00004429}.&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      This term is correct but unnecessarily general because the protein is already
+      localized more specifically to the plasma membrane.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0005886 plasma membrane is the more informative and appropriate cellular-component
+      annotation for GacS.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: UniProt:Q88MC3
+  title: UniProtKB Q88MC3 histidine kinase entry
+  findings:
+    - statement: GacS is a membrane-associated histidine kinase
+      supporting_text: &#34;-!- SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000256|ARBA:ARBA00004429}; Multi-pass membrane protein {ECO:0000256|ARBA:ARBA00004429}.&#34;
+    - statement: GacS is annotated with histidine kinase catalytic activity
+      supporting_text: &#34;-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};&#34;
+- id: PMID:22458445
+  title: Identification of reciprocal adhesion genes in pathogenic and non-pathogenic Pseudomonas.
+  findings:
+    - statement: gacS mutants are defective in attachment-related phenotypes in KT2440
+- id: PMID:36748579
+  title: Transcriptional organization and regulation of the Pseudomonas putida K1 type VI secretion system gene cluster.
+  findings:
+    - statement: GacS-GacA positively regulates the KT2440 K1 type VI secretion system
+- id: PMID:31931111
+  title: Engineering glucose metabolism for enhanced muconic acid production in Pseudomonas putida KT2440.
+  findings:
+    - statement: Loss of gacS can improve engineered growth and muconate production in KT2440
+- id: PMID:39701409
+  title: Adaptive laboratory evolution and genetic engineering improved terephthalate utilization in Pseudomonas putida KT2440.
+  findings:
+    - statement: Converged loss-of-function mutations in gacS and gacA improve engineered TPA utilization
+- id: file:PSEPK/gacS/gacS-notes.md
+  title: Curated notes on gacS in Pseudomonas putida KT2440
+  findings:
+    - statement: The core molecular role is membrane phosphorelay sensor kinase activity
+      supporting_text: &#34;The core molecular role is phosphorelay sensor kinase activity at the membrane.&#34;
+    - statement: Adhesion and K1-T6SS regulation are downstream outputs of global GacS signaling
+      supporting_text: &#34;Process terms should center on phosphorelay signal transduction; the documented adhesion and T6SS phenotypes are downstream outputs of that global signaling role rather than separate direct molecular activities.&#34;
+core_functions:
+  - molecular_function:
+      id: GO:0000155
+      label: phosphorelay sensor kinase activity
+    directly_involved_in:
+      - id: GO:0000160
+        label: phosphorelay signal transduction system
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    description: &gt;-
+      GacS is a membrane-spanning hybrid sensor histidine kinase that initiates the
+      GacS/GacA phosphorelay in Pseudomonas putida KT2440. Its core role is signal
+      sensing and phosphotransfer at the membrane, while organism-specific downstream
+      outputs documented in this strain include control of surface attachment and
+      activation of the K1 type VI secretion system.
+    supported_by:
+      - reference_id: UniProt:Q88MC3
+        supporting_text: &#34;-!- CATALYTIC ACTIVITY: Reaction=ATP + protein L-histidine = ADP + protein N-phospho-L- histidine.; EC=2.7.13.3; Evidence={ECO:0000256|ARBA:ARBA00000085};&#34;
+      - reference_id: file:PSEPK/gacS/gacS-notes.md
+        supporting_text: &#34;In KT2440, expression of the K1 type VI secretion system gene cluster is positively regulated by the GacS-GacA two-component system and repressed by RetS.&#34;
+suggested_questions:
+  - question: What signal or signals are detected directly by the periplasmic sensor region of GacS in KT2440?
+    experts:
+      - Patricia Bernal
+      - María A. Llamas
+  - question: Which small RNAs and Rsm-family effectors mediate the adhesion versus K1-T6SS branches downstream of GacS/GacA in KT2440?
+    experts:
+      - Patricia Bernal
+      - Estrella Duque
+      - Juan-Luis Ramos
+suggested_experiments:
+  - hypothesis: GacS uses its hybrid receiver and HPt modules to relay phosphate to GacA in a defined multistep order.
+    description: &gt;-
+      Build phosphosite mutants in the predicted receiver Asp718 and HPt His863 modules,
+      then test phosphotransfer to GacA in vitro and with in vivo transcriptional reporters
+      for Gac-dependent outputs.
+    experiment_type: phosphotransfer biochemistry plus reporter genetics
+  - hypothesis: The adhesion and K1-T6SS outputs reflect distinct downstream branches of the same GacS/GacA signaling pathway.
+    description: &gt;-
+      Compare RNA-seq and promoter-reporter responses in wild type, delta-gacS, and
+      sensor-domain or relay-module mutants during surface growth and stationary phase
+      to separate direct GacS outputs from secondary physiological effects.
+    experiment_type: comparative transcriptomics and promoter-reporter analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

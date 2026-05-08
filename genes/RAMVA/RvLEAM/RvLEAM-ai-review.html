@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RvLEAM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RvLEAM</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A0E4AVP3" target="_blank" class="term-link">
+                        A0A0E4AVP3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Ramazzottius varieornatus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RvLEAM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="DESCRIPTION: Group 3 late-embryogenesis abundant (LEA) protein ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Group 3 late-embryogenesis abundant (LEA) protein targeted to the mitochondrial matrix in the anhydrobiotic tardigrade Ramazzottius varieornatus. RvLEAM contains 9 LEA 11-mer repeat motifs that form amphipathic helices under water-deficient conditions, acting as a molecular shield to prevent undesirable protein aggregation and conformational changes of lipid membranes. A predicted 31-residue mitochondrial transit peptide directs the protein to the mitochondrial matrix. Heterologous expression in human cells improves osmotic tolerance, consistent with a protective role during desiccation stress. RvLEAM belongs to the LEA type 4 family, which is broadly conserved across plants, nematodes, and other anhydrobiotic organisms.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization is strongly supported by multiple lines of evidence in PMID:25675104. Immunohistochemistry confirmed mitochondrial localization in tardigrade cells, and RvLEAM-GFP co-localized with MitoTracker Red in human cells. The IEA annotation to the broad term &#39;mitochondrion&#39; could be refined to &#39;mitochondrial matrix&#39; (GO:0005759) given that the protein is highly hydrophilic (GRAVY score -0.94, no hydrophobic regions), which strongly suggests matrix rather than membrane localization (PMID:25675104). UniProt annotates a mitochondrial transit peptide at residues 1-31.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation to GO:0005739 (mitochondrion) is correct but insufficiently specific. RvLEAM has a predicted mitochondrial transit peptide (residues 1-31) and is highly hydrophilic with no hydrophobic regions, strongly suggesting localization in the mitochondrial matrix rather than the membrane. The more specific term GO:0005759 (mitochondrial matrix) is warranted based on both the experimental localization data and biophysical properties of the protein.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    mitochondrial matrix
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RvLEAM is a group3 LEA protein and immunohistochemistry confirmed its mitochondrial localization in tardigrade cells</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we identified two novel mitochondrial heat-soluble proteins, RvLEAM and MAHS (Mitochondrial Abundant Heat Soluble), as potent mitochondrial protectants from Ramazzottius varieornatus</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                    GO:0009269
+                                </a>
+                            </span>
+                            <span class="term-label">response to desiccation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="GO:0009269" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RvLEAM is a group 3 LEA protein identified from the anhydrobiotic tardigrade R. varieornatus (PMID:25675104). LEA proteins are well-established components of the desiccation tolerance response in plants, nematodes, and other anhydrobiotic organisms. The protein is described as having protective roles in water-deficient environments, and its expression improves hyperosmotic tolerance of human cells. UniProt annotates this protein with the keyword &#34;Stress response&#34; and describes it as acting as a molecular shield in water-deficient conditions.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process annotation that is missing from GOA. RvLEAM is a LEA protein involved in desiccation tolerance, and its expression improves tolerance to water-deficient conditions. The response to desiccation annotation captures the primary biological context of this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Late Embryogenesis Abundant (LEA) proteins are heat-soluble proteins involved in the desiccation tolerance of many anhydrobiotic organisms</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">tardigrade mitochondria contain at least two types of heat-soluble proteins that might have protective roles in water-deficient environments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006970" target="_blank" class="term-link">
+                                    GO:0006970
+                                </a>
+                            </span>
+                            <span class="term-label">response to osmotic stress</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="GO:0006970" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Tanaka et al. (PMID:25675104) directly demonstrated that expression of RvLEAM improved hyperosmotic tolerance of human HEp-2 cells. This provides direct experimental evidence for a role in response to osmotic stress.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence from PMID:25675104 supports this annotation. RvLEAM expression improved hyperosmotic tolerance in human cells, demonstrating the protein functions in the cellular response to osmotic stress. This is the most directly tested biological process for this protein.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we demonstrated that RvLEAM protein as well as MAHS protein improved the hyperosmotic tolerance of human cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25675104
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel mitochondria-targeted heat-soluble proteins identified...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="GO:0051082" data-r="PMID:25675104" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LEA proteins are known to act as molecular shields that interact with other macromolecules to prevent undesirable aggregation under water stress conditions. While this implies interaction with proteins that may become aggregation-prone, direct binding to unfolded proteins was not experimentally demonstrated for RvLEAM specifically in PMID:25675104. The molecular shield mechanism is inferred from the general LEA protein family literature. This annotation captures the likely molecular function but should be considered provisional.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The molecular shield function of LEA proteins involves preventing protein aggregation under stress, which is consistent with unfolded protein binding. However, this is inferred from the general LEA protein literature rather than direct experimental demonstration for RvLEAM. This annotation captures the likely molecular function mechanism but should be considered provisional pending direct binding studies.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                        PMID:25675104
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">tardigrade mitochondria contain at least two types of heat-soluble proteins that might have protective roles in water-deficient environments</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RvLEAM is a group 3 LEA protein that acts as a molecular shield in the mitochondrial matrix during water-deficient conditions. Its 9 LEA 11-mer repeat motifs form amphipathic helices that interact with macromolecules to prevent aggregation and protect lipid membranes. Expression in human cells improves osmotic tolerance (PMID:25675104).</h3>
+                <span class="vote-buttons" data-g="A0A0E4AVP3" data-a="FUNCTION: RvLEAM is a group 3 LEA protein that acts as a mol..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                response to desiccation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                                PMID:25675104
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">tardigrade mitochondria contain at least two types of heat-soluble proteins that might have protective roles in water-deficient environments</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25675104" target="_blank" class="term-link">
+                            PMID:25675104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic Tardigrade improve osmotic tolerance of human cells</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RvLEAM is the first mitochondrial LEA protein identified in tardigrades</div>
+                        
+                        <div class="finding-text">"we identified two novel mitochondrial heat-soluble proteins, RvLEAM and MAHS (Mitochondrial Abundant Heat Soluble), as potent mitochondrial protectants from Ramazzottius varieornatus"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunohistochemistry confirmed mitochondrial localization in tardigrade cells</div>
+                        
+                        <div class="finding-text">"RvLEAM is a group3 LEA protein and immunohistochemistry confirmed its mitochondrial localization in tardigrade cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Expression of RvLEAM improved hyperosmotic tolerance of human cells</div>
+                        
+                        <div class="finding-text">"we demonstrated that RvLEAM protein as well as MAHS protein improved the hyperosmotic tolerance of human cells"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RvLEAM and MAHS have protective roles in water-deficient environments</div>
+                        
+                        <div class="finding-text">"tardigrade mitochondria contain at least two types of heat-soluble proteins that might have protective roles in water-deficient environments"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">LEA proteins are involved in desiccation tolerance</div>
+                        
+                        <div class="finding-text">"Late Embryogenesis Abundant (LEA) proteins are heat-soluble proteins involved in the desiccation tolerance of many anhydrobiotic organisms"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                            PMID:27649274
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells by tardigrade-unique protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequencing of R. varieornatus (YOKOZUNA-1 strain)</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RvLEAM-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A0E4AVP3" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-09T09:51:47.267898'<br />
+end_time: '2026-04-09T10:03:02.848444'<br />
+duration_seconds: 675.58<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: RAMVA<br />
+  gene_id: RvLEAM<br />
+  gene_symbol: RvLEAM<br />
+  uniprot_accession: A0A0E4AVP3<br />
+  protein_description: 'RecName: Full=Group 3 late-embryogenesis abundant protein,<br />
+    mitochondrial {ECO:0000303|PubMed:25675104}; Short=LEAM {ECO:0000303|PubMed:25675104};<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=RvLEAM {ECO:0000303|PubMed:25675104}; ORFNames=RvY_15023;<br />
+  organism_full: Ramazzottius varieornatus (Water bear) (Tardigrade).<br />
+  protein_family: Belongs to the LEA type 4 family. .<br />
+  protein_domains: Not specified in UniProt<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 24</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A0E4AVP3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Group 3 late-embryogenesis abundant protein, mitochondrial {ECO:0000303|PubMed:25675104}; Short=LEAM {ECO:0000303|PubMed:25675104}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=RvLEAM {ECO:0000303|PubMed:25675104}; ORFNames=RvY_15023;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the LEA type 4 family. .</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RvLEAM" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RvLEAM' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RvLEAM</strong> (gene ID: RvLEAM, UniProt: A0A0E4AVP3) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> A0A0E4AVP3</li>
+<li><strong>Protein Description:</strong> RecName: Full=Group 3 late-embryogenesis abundant protein, mitochondrial {ECO:0000303|PubMed:25675104}; Short=LEAM {ECO:0000303|PubMed:25675104}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=RvLEAM {ECO:0000303|PubMed:25675104}; ORFNames=RvY_15023;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the LEA type 4 family. .</li>
+<li><strong>Key Domains:</strong> Not specified in UniProt</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RvLEAM" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RvLEAM' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RvLEAM</strong> (gene ID: RvLEAM, UniProt: A0A0E4AVP3) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-rvleam-uniprot-a0a0e4avp3-from-ramazzottius-varieornatus">Research Report: Functional Annotation of <strong>RvLEAM</strong> (UniProt <strong>A0A0E4AVP3</strong>) from <em>Ramazzottius varieornatus</em></h2>
+<h3 id="1-target-verification-mandatory-disambiguation">1) Target verification (mandatory disambiguation)</h3>
+<p>The target gene/protein in this report is <strong>RvLEAM</strong> from the tardigrade <em>Ramazzottius varieornatus</em> (water bear), matching the UniProt entry <strong>A0A0E4AVP3</strong>, described as a <strong>mitochondrial Group 3 late-embryogenesis abundant (LEA) protein</strong> (often referred to as <strong>LEAM</strong>) (tanaka2015novelmitochondriatargetedheatsoluble pages 2-4). The defining primary paper (peer-reviewed) explicitly names and characterizes <strong>RvLEAM</strong> as a mitochondrial LEA protein from <em>R. varieornatus</em> and provides both native-organism and heterologous localization experiments (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble pages 2-4). No evidence in the retrieved corpus suggests an alternative gene with the same symbol in another organism; thus, the symbol is treated as unambiguous in this context (tanaka2015novelmitochondriatargetedheatsoluble pages 2-4).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-late-embryogenesis-abundant-lea-proteins-and-group-3-lealeam">2.1 Late Embryogenesis Abundant (LEA) proteins and “group 3 LEA/LEAM”</h4>
+<p>LEA proteins are classically described as <strong>highly hydrophilic, stress-associated proteins</strong> that are typically <strong>intrinsically disordered in aqueous conditions</strong> but can acquire <strong>α-helical structure under water deficit</strong>. Mechanistic models emphasize protection of other macromolecules through <strong>molecular shielding/anti-aggregation</strong>, <strong>membrane stabilization</strong>, and contributions to <strong>vitrification/glass-like states</strong> in the dry cytoplasm (hand2018challengesduringdiapause pages 8-8, romeroperez2023whenphasedwithout pages 22-23). A recent high-authority synthesis (Chemical Reviews, 2023) also frames LEA/hydrophilin protection in terms of <strong>hydration-dependent phase/material properties</strong>, including effects on vitrification and protective assemblies (romeroperez2023whenphasedwithout pages 11-12, romeroperez2023whenphasedwithout pages 22-23).</p>
+<p>Group 3 LEA proteins are commonly enriched for <strong>repeated short motifs</strong> and are frequently predicted to form <strong>amphipathic α-helices</strong> under dehydration-like conditions, consistent with “molecular shield” and membrane-protective models (yoshida2022decipheringthebiological pages 4-6, romeroperez2023whenphasedwithout pages 22-23).</p>
+<h4 id="22-mitochondrial-lea-proteins">2.2 Mitochondrial LEA proteins</h4>
+<p>Mitochondria are major sites of stress vulnerability during dehydration/rehydration (bioenergetic collapse, membrane perturbation, ROS). Mitochondria-targeted LEA proteins are therefore hypothesized to provide organelle-localized protection via the same physical-chemical modes (shielding, membrane stabilization, glass modulation) but focused on mitochondrial matrices and membranes (hand2018challengesduringdiapause pages 8-8). In tardigrades, mitochondrial-localized heat-soluble proteins including <strong>RvLEAM</strong> were described as candidate mitochondrial protectants (schill2019environmentaladaptationsdesiccation pages 10-13).</p>
+<h3 id="3-rvleam-sequencefamily-features-and-inferred-molecular-properties">3) RvLEAM: sequence/family features and inferred molecular properties</h3>
+<p>Tanaka et al. (2015) report that RvLEAM shows <strong>sequence similarity to nematode LEA proteins (e-value &lt; 1e−05)</strong> and matches a <strong>LEA-related motif (PTHR23241)</strong>, supporting its assignment as a canonical LEA-family protein rather than a tardigrade-unique disordered protein family (tanaka2015novelmitochondriatargetedheatsoluble pages 4-5). They identify <strong>nine LEA-like 11-mer motifs</strong>, consistent with group 3 LEA architecture and predicted helical repeats (tanaka2015novelmitochondriatargetedheatsoluble pages 4-5).</p>
+<p>Physicochemical predictions show RvLEAM is highly hydrophilic (<strong>GRAVY −0.94</strong>) with no strong hydrophobic segment, consistent with a soluble protein. The absence of a transmembrane region led the authors to infer <strong>mitochondrial matrix localization</strong> rather than membrane insertion (tanaka2015novelmitochondriatargetedheatsoluble pages 4-5). Secondary-structure prediction suggested <strong>long helical regions</strong> and <strong>putative amphipathic helices</strong> (tanaka2015novelmitochondriatargetedheatsoluble pages 4-5), aligning with prevailing LEA models in which amphipathic helices interact with protein or membrane surfaces during dehydration/osmotic stress (yoshida2022decipheringthebiological pages 4-6, romeroperez2023whenphasedwithout pages 22-23).</p>
+<h3 id="4-subcellular-localization-direct-experimental-evidence">4) Subcellular localization: direct experimental evidence</h3>
+<h4 id="41-computational-targeting-predictions">4.1 Computational targeting predictions</h4>
+<p>Multiple predictors (TargetP, WoLF PSORT, MitoProt2) supported mitochondrial targeting; TargetP predicted a <strong>31-aa N-terminal mitochondrial targeting peptide</strong> (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble pages 4-5).</p>
+<h4 id="42-heterologous-localization-human-cells">4.2 Heterologous localization (human cells)</h4>
+<p>In human HEp-2 cells, an <strong>RvLEAM–GFP fusion co-localized with mitochondria</strong> stained by MitoTracker, while GFP alone was diffuse (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7). A cropped figure region showing this co-localization (Figure 1d in the original paper) was retrieved (tanaka2015novelmitochondriatargetedheatsoluble media 470ae241).</p>
+<h4 id="43-native-localization-tardigrade-embryos">4.3 Native localization (tardigrade embryos)</h4>
+<p>Immunohistochemistry in <em>R. varieornatus</em> embryos detected RvLEAM signal broadly across cells and <strong>mostly merged with ATP5A</strong>, a mitochondrial marker, providing direct evidence that RvLEAM localizes to mitochondria in the native organism (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7).</p>
+<h3 id="5-biochemical-properties-heat-solubility-and-implications">5) Biochemical properties: heat solubility and implications</h3>
+<p>A defining biochemical feature reported for RvLEAM is <strong>heat solubility</strong>. Recombinant RvLEAM expressed in bacteria remained largely in the soluble fraction after high-temperature treatment, and purified RvLEAM alone was also heat-soluble (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7). Heat-solubility is consistent with LEA proteins being enriched in disorder and resistant to aggregation during stress, enabling them to function under extreme physicochemical conditions (romeroperez2023whenphasedwithout pages 22-23).</p>
+<h3 id="6-primary-functional-evidence-stress-tolerance-phenotypes-heterologous-system">6) Primary functional evidence: stress tolerance phenotypes (heterologous system)</h3>
+<h4 id="61-hyperosmotic-stress-tolerance-in-human-cells">6.1 Hyperosmotic stress tolerance in human cells</h4>
+<p>Tanaka et al. used stable HEp-2 lines expressing RvLEAM and challenged cells with <strong>100–350 mM sucrose</strong> for <strong>48 h</strong>, using a PrestoBlue reducing-power assay to quantify relative metabolic activity (normalized to 0 mM sucrose; n=3, SEM; Dunnett’s test) (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble pages 4-5). RvLEAM-expressing cells exhibited significantly improved tolerance across conditions, including an approximately <strong>two-fold increase</strong> in metabolic activity at <strong>300 mM sucrose</strong> and at least <strong>~10% improvement</strong> across tested concentrations (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11). A cropped region containing the hyperosmotic tolerance plot (Figure 5) was retrieved (tanaka2015novelmitochondriatargetedheatsoluble media 129a06d0).</p>
+<p><strong>Interpretation:</strong> This experiment provides direct functional evidence that RvLEAM can enhance cellular performance under osmotic/water stress when targeted to mitochondria, consistent with mitochondrial protection being a key bottleneck in anhydrobiotic/cryptobiotic survival (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, hand2018challengesduringdiapause pages 8-8).</p>
+<h3 id="7-pathways-and-biological-role-evidence-based-inference">7) Pathways and biological role (evidence-based + inference)</h3>
+<p>No enzymatic catalytic activity is reported for RvLEAM; instead, evidence supports RvLEAM as a <strong>non-enzymatic, stress-protective, organelle-localized protein</strong>. The best-supported functional model is that RvLEAM contributes to tolerance of water/osmotic stress by <strong>protecting mitochondrial components</strong> (proteins and/or membranes) via LEA-like physical mechanisms (molecular shielding, stabilization of macromolecular assemblies, modulation of dry-state material properties) (hand2018challengesduringdiapause pages 8-8, yoshida2022decipheringthebiological pages 4-6, romeroperez2023whenphasedwithout pages 22-23).</p>
+<p>While RvLEAM itself was not demonstrated to induce gels/condensates (those observations are stronger for tardigrade CAHS-family proteins), broader desiccation biology emphasizes that protective IDPs/LEA proteins can influence <strong>vitrification/glass transition behavior</strong> and <strong>hydration-dependent phase/material transitions</strong>, which may be central to survival in dry states (romeroperez2023whenphasedwithout pages 11-12, romeroperez2023whenphasedwithout pages 22-23). Thus, RvLEAM’s predicted amphipathic helical segments and heat-solubility are consistent with canonical LEA modes of action (tanaka2015novelmitochondriatargetedheatsoluble pages 4-5, romeroperez2023whenphasedwithout pages 22-23).</p>
+<h3 id="8-recent-developments-prioritizing-20232024">8) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="81-2023-updated-mechanistic-framing-biophysicscondensates">8.1 2023: Updated mechanistic framing (biophysics/condensates)</h4>
+<p>A 2023 Chemical Reviews article synthesized modern understanding of desiccation tolerance across biomolecules and <strong>condensate/material-state changes</strong>, discussing how IDPs (including LEA/hydrophilins and tardigrade disordered proteins) can protect through <strong>molecular shielding</strong>, <strong>gelation/solidification</strong>, and <strong>effects on vitrification and diffusion</strong> in drying cells (romeroperez2023whenphasedwithout pages 11-12, romeroperez2023whenphasedwithout pages 22-23). This provides up-to-date conceptual scaffolding for interpreting RvLEAM as a mitochondrial-localized component of a broader stress-protective material strategy.</p>
+<h4 id="82-2024-rvleam-becomes-a-structural-biology-reagent-cryo-em-implementation">8.2 2024: RvLEAM becomes a structural biology reagent (cryo-EM implementation)</h4>
+<p>A major 2024 development is the repurposing of RvLEAM as a <strong>practical additive</strong> for cryo-electron microscopy sample preparation. Abe et al. (Nature Communications, 2024-09-xx) used a truncated construct <strong>RvLEAMshort (~15 kDa)</strong> derived from <em>R. varieornatus</em> RvLEAM to mitigate <strong>air–water interface (AWI) damage</strong> during plunge freezing (abe2024smallleaproteinsa pages 2-3). In reported datasets, adding RvLEAMshort at <strong>1:6 sample:RvLEAMshort</strong> enabled reconstructions at <strong>4.5 Å</strong> (polymerase α-primase) and <strong>3.7 Å</strong> (PRC2) (abe2024smallleaproteinsa pages 2-3, abe2024smallleaproteinsa pages 4-5). </p>
+<p>Quantitatively, in a crosslinked PRC2 control <em>without</em> RvLEAMshort only <strong>~3%</strong> of <strong>~1.7 million</strong> picked particles contributed to the final map, whereas with RvLEAMshort <strong>~14%</strong> of <strong>~2.5 million</strong> picked particles contributed, indicating higher particle usability/retention (abe2024smallleaproteinsa pages 4-5). Orientation isotropy improved substantially (sphericity up to <strong>0.97</strong> with crosslinking + RvLEAMshort) and a <strong>3.1 Å</strong> map was obtained under a 10-min crosslink condition (abe2024smallleaproteinsa pages 5-6, abe2024smallleaproteinsa pages 3-4). </p>
+<p><strong>Relevance to functional annotation:</strong> Although this is an ex vivo application, it strongly supports the concept that LEA proteins (including a tardigrade mitochondrial LEA) can act as <strong>surface-active protective agents</strong> under extreme interfacial stress—consistent with “molecular shielding” and stress stabilization frameworks (abe2024smallleaproteinsa pages 2-3, romeroperez2023whenphasedwithout pages 22-23).</p>
+<h3 id="9-current-applications-and-real-world-implementations">9) Current applications and real-world implementations</h3>
+<p>1) <strong>Cell stress-engineering concept:</strong> RvLEAM expression in human cells improves survival/metabolic activity under hyperosmotic stress (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11). While not yet a deployed clinical/industrial product in the retrieved sources, this is a concrete demonstration of <strong>translational potential</strong> (engineering mitochondrial protectants for cell preservation or stress resilience).</p>
+<p>2) <strong>Structural biology workflow additive (implemented in practice):</strong> RvLEAMshort is used as an <strong>AWI protectant</strong> in cryo-EM grid preparation to enable/accelerate high-resolution structure determination for fragile complexes, with explicit workflow parameters and quantitative improvements in particle retention and orientation distribution (abe2024smallleaproteinsa pages 2-3, abe2024smallleaproteinsa pages 4-5).</p>
+<h3 id="10-expert-opinions-authoritative-analysis">10) Expert opinions / authoritative analysis</h3>
+<p>A tardigrade-focused review of anhydrobiosis genomics emphasizes that LEA proteins are typically <strong>hydrophilic and unstructured</strong>, can form <strong>amphipathic helices under water deficit</strong>, and that mitochondrial-localized examples (including RvLEAM) can improve hyperosmotic tolerance in human cells—supporting the view of RvLEAM as a mitochondria-targeted protectant (yoshida2022decipheringthebiological pages 4-6). More broadly, the Chemical Reviews synthesis highlights that while multiple protective IDP families exist, the <strong>molecular rules remain incompletely resolved</strong>, and dry-state biology likely involves coupled effects on diffusion, glass transitions, and biomolecular phase behavior (romeroperez2023whenphasedwithout pages 11-12).</p>
+<h3 id="11-key-statistics-and-quantitative-data-from-recent-studies">11) Key statistics and quantitative data (from recent studies)</h3>
+<ul>
+<li><strong>Human-cell hyperosmotic tolerance (2015 primary study):</strong> 100–350 mM sucrose exposure for 48 h; RvLEAM expression yields ~<strong>2×</strong> higher metabolic activity at <strong>300 mM sucrose</strong>, with ≥<strong>~10%</strong> improvement across tested conditions (tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble media 129a06d0).</li>
+<li><strong>Cryo-EM AWI protection (2024 Nature Communications):</strong> with RvLEAMshort at <strong>1:6 sample:LEA</strong>, maps at <strong>4.5 Å</strong> (PP) and <strong>3.7 Å</strong> (PRC2) (abe2024smallleaproteinsa pages 2-3, abe2024smallleaproteinsa pages 4-5). With crosslinking + RvLEAMshort: PRC2 <strong>sphericity 0.97</strong> and <strong>3.1 Å</strong> map (abe2024smallleaproteinsa pages 5-6, abe2024smallleaproteinsa pages 3-4). Particle contribution improves from <strong>~3% of 1.7M</strong> (no RvLEAMshort control) to <strong>~14% of 2.5M</strong> (with RvLEAMshort) (abe2024smallleaproteinsa pages 4-5).</li>
+</ul>
+<h3 id="12-limitations-and-evidence-gaps">12) Limitations and evidence gaps</h3>
+<ul>
+<li>Direct <strong>loss-of-function</strong> or <strong>knockdown/knockout</strong> evidence in <em>R. varieornatus</em> demonstrating RvLEAM necessity for anhydrobiosis was not present in the retrieved sources; current functional support is strongest for <strong>localization</strong> and <strong>heterologous protective effects</strong> (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble pages 10-11).</li>
+<li>No direct measurements were retrieved for <strong>RvLEAM structural transitions during dehydration</strong> (e.g., CD/FTIR of RvLEAM itself), nor direct identification of specific <strong>mitochondrial binding partners</strong> or substrates.</li>
+</ul>
+<h3 id="13-evidence-summary-table">13) Evidence summary table</h3>
+<p>The following table consolidates major claims, evidence types, quantitative outcomes, and metadata.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Source (paper, year, journal)</th>
+<th>URL</th>
+<th>Pub date</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>RvLEAM is the <strong>group 3 late-embryogenesis abundant mitochondrial protein</strong> from <strong>Ramazzottius varieornatus</strong>; literature description matches UniProt A0A0E4AVP3 and identifies it as a mitochondrial LEA-family protein from a tardigrade.</td>
+<td>Primary literature synthesis</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em>; Yoshida &amp; Tanaka, 2022, <em>Insects</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272 ; https://doi.org/10.3390/insects13060557</td>
+<td>2015-02 ; 2022-06</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 2-4, yoshida2022decipheringthebiological pages 4-6)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Multiple targeting predictors (TargetP, WoLF PSORT, MitoProt2) supported mitochondrial targeting; TargetP predicted a <strong>31-aa N-terminal mitochondrial targeting peptide</strong>.</td>
+<td>Computational</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble pages 4-5)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td><strong>RvLEAM-GFP co-localized with MitoTracker</strong> in human HEp-2 cells, while GFP alone was diffuse, demonstrating mitochondrial targeting in a heterologous system. Figure support available for mitochondrial localization.</td>
+<td>Heterologous cells</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble media 470ae241)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Immunohistochemistry in tardigrade embryos showed RvLEAM signal in almost all cells and mostly merged with <strong>ATP5A</strong>, a mitochondrial marker, supporting in vivo mitochondrial localization in the native organism.</td>
+<td>In vivo tardigrade</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 5-7)</td>
+</tr>
+<tr>
+<td>Structure/biophysics</td>
+<td>RvLEAM showed similarity to nematode LEA proteins (<strong>e-value &lt; 1e-05</strong>), matched the <strong>LEA-RELATED motif (PTHR23241)</strong>, and contained <strong>9 LEA-like 11-mer motifs</strong>, consistent with a canonical group 3 LEA architecture.</td>
+<td>Computational / sequence analysis</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 4-5)</td>
+</tr>
+<tr>
+<td>Structure/biophysics</td>
+<td>Predicted to be highly hydrophilic (<strong>GRAVY = -0.94</strong>), lacking a clear hydrophobic transmembrane segment, suggesting matrix localization rather than membrane integration. Secondary-structure prediction indicated long helical regions and putative amphipathic helices.</td>
+<td>Computational</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 4-5)</td>
+</tr>
+<tr>
+<td>Biochemical properties</td>
+<td>Recombinant RvLEAM remained largely in the <strong>supernatant after heat treatment</strong>, and purified protein alone was heat-soluble, matching the characteristic heat-solubility of LEA proteins.</td>
+<td>In vitro</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 5-7)</td>
+</tr>
+<tr>
+<td>Functional assays</td>
+<td>In stable human HEp-2 cells, RvLEAM expression increased tolerance to hyperosmotic sucrose challenge (<strong>100-350 mM added sucrose for 48 h</strong>). Reported effects included a <strong>~2-fold increase in metabolic activity at 300 mM sucrose</strong> and <strong>≥10% improvement</strong> across all tested osmotic conditions.</td>
+<td>Heterologous cells</td>
+<td>Tanaka et al., 2015, <em>PLoS ONE</em></td>
+<td>https://doi.org/10.1371/journal.pone.0118272</td>
+<td>2015-02</td>
+<td>(tanaka2015novelmitochondriatargetedheatsoluble pages 10-11, tanaka2015novelmitochondriatargetedheatsoluble media 129a06d0)</td>
+</tr>
+<tr>
+<td>Functional interpretation</td>
+<td>Reviews summarize RvLEAM as a mitochondrial LEA that, like other LEA proteins, is hydrophilic, largely unstructured in water, can adopt amphipathic helices during dehydration, and likely acts as a molecular shield protecting proteins/lipids under water stress.</td>
+<td>Expert review / mechanistic inference</td>
+<td>Yoshida &amp; Tanaka, 2022, <em>Insects</em></td>
+<td>https://doi.org/10.3390/insects13060557</td>
+<td>2022-06</td>
+<td>(yoshida2022decipheringthebiological pages 4-6)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>A truncated construct, <strong>RvLEAMshort (~15 kDa)</strong>, derived from the tardigrade RvLEAM, was used as an additive to protect fragile cryo-EM samples from air-water interface damage during plunge freezing.</td>
+<td>Real-world implementation / biotechnology</td>
+<td>Abe et al., 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-024-52091-1</td>
+<td>2024-09</td>
+<td>(abe2024smallleaproteinsa pages 2-3)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>In cryo-EM, <strong>sample:RvLEAMshort = 1:6</strong> improved particle recovery and enabled reconstructions of <strong>4.5 Å for polymerase α-primase (PP)</strong> and <strong>3.7 Å for PRC2</strong> from single-night data collections.</td>
+<td>Real-world implementation / structural biology</td>
+<td>Abe et al., 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-024-52091-1</td>
+<td>2024-09</td>
+<td>(abe2024smallleaproteinsa pages 2-3, abe2024smallleaproteinsa pages 4-5)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>For PRC2, adding RvLEAMshort plus crosslinking improved orientation isotropy and resolution: sphericity increased from <strong>0.79 (no crosslink)</strong> to <strong>0.83 (2 min crosslink)</strong> and <strong>0.97 (10 min crosslink)</strong>, with a <strong>3.1 Å</strong> map after 10 min crosslinking.</td>
+<td>Real-world implementation / structural biology</td>
+<td>Abe et al., 2024, <em>Nature Communications</em>; Abe &amp; Lim, 2024, <em>bioRxiv</em></td>
+<td>https://doi.org/10.1038/s41467-024-52091-1 ; https://doi.org/10.1101/2024.02.06.579238</td>
+<td>2024-09 ; 2024-02</td>
+<td>(abe2024smallleaproteinsa pages 5-6, abe2024smallleaproteinsa pages 3-4)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>In a crosslinked PRC2 control without RvLEAMshort, only <strong>~3%</strong> of <strong>~1.7 million</strong> picked particles contributed to the final map; with RvLEAMshort, <strong>~14%</strong> of <strong>~2.5 million</strong> picked particles contributed, indicating substantially improved particle usability.</td>
+<td>Real-world implementation / structural biology</td>
+<td>Abe et al., 2024, <em>Nature Communications</em></td>
+<td>https://doi.org/10.1038/s41467-024-52091-1</td>
+<td>2024-09</td>
+<td>(abe2024smallleaproteinsa pages 4-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main experimentally supported and inferred findings for RvLEAM from Ramazzottius varieornatus, including identity verification, mitochondrial localization, structural and biochemical properties, stress-tolerance effects, and recent biotechnology applications.</em></p>
+<h3 id="key-source-urls-with-publication-dates">Key source URLs (with publication dates)</h3>
+<ul>
+<li>Tanaka S. et al. “Novel Mitochondria-Targeted Heat-Soluble Proteins Identified in the Anhydrobiotic Tardigrade Improve Osmotic Tolerance of Human Cells.” <em>PLoS ONE</em> (2015-02). https://doi.org/10.1371/journal.pone.0118272 (tanaka2015novelmitochondriatargetedheatsoluble pages 5-7, tanaka2015novelmitochondriatargetedheatsoluble pages 10-11)</li>
+<li>Abe K.M. et al. “Small LEA proteins mitigate air-water interface damage to fragile cryo-EM samples during plunge freezing.” <em>Nature Communications</em> (2024-09). https://doi.org/10.1038/s41467-024-52091-1 (abe2024smallleaproteinsa pages 2-3, abe2024smallleaproteinsa pages 4-5)</li>
+<li>Romero-Perez P.S. et al. “When Phased without Water: Biophysics of Cellular Desiccation, from Biomolecules to Condensates.” <em>Chemical Reviews</em> (2023-05). https://doi.org/10.1021/acs.chemrev.2c00659 (romeroperez2023whenphasedwithout pages 11-12, romeroperez2023whenphasedwithout pages 22-23)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 2-4): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 5-7): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hand2018challengesduringdiapause pages 8-8): Steven C. Hand, Daniel S. Moore, and Yuvraj Patil. Challenges during diapause and anhydrobiosis: mitochondrial bioenergetics and desiccation tolerance. IUBMB Life, 70:1251-1259, Oct 2018. URL: https://doi.org/10.1002/iub.1953, doi:10.1002/iub.1953. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(romeroperez2023whenphasedwithout pages 22-23): Paulette Sofia Romero-Perez, Yanniv Dorone, Eduardo Flores, Shahar Sukenik, and Steven Boeynaems. When phased without water: biophysics of cellular desiccation, from biomolecules to condensates. Chemical Reviews, 123:9010-9035, May 2023. URL: https://doi.org/10.1021/acs.chemrev.2c00659, doi:10.1021/acs.chemrev.2c00659. This article has 75 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(romeroperez2023whenphasedwithout pages 11-12): Paulette Sofia Romero-Perez, Yanniv Dorone, Eduardo Flores, Shahar Sukenik, and Steven Boeynaems. When phased without water: biophysics of cellular desiccation, from biomolecules to condensates. Chemical Reviews, 123:9010-9035, May 2023. URL: https://doi.org/10.1021/acs.chemrev.2c00659, doi:10.1021/acs.chemrev.2c00659. This article has 75 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoshida2022decipheringthebiological pages 4-6): Yuki Yoshida and Sae Tanaka. Deciphering the biological enigma—genomic evolution underlying anhydrobiosis in the phylum tardigrada and the chironomid polypedilum vanderplanki. Insects, 13:557, Jun 2022. URL: https://doi.org/10.3390/insects13060557, doi:10.3390/insects13060557. This article has 10 citations.</p>
+</li>
+<li>
+<p>(schill2019environmentaladaptationsdesiccation pages 10-13): Ralph O. Schill and Steffen Hengherr. Environmental adaptations: desiccation tolerance. ArXiv, pages 273-293, Jan 2019. URL: https://doi.org/10.1007/978-3-319-95702-9_10, doi:10.1007/978-3-319-95702-9_10. This article has 50 citations.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 4-5): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble media 470ae241): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble pages 10-11): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2015novelmitochondriatargetedheatsoluble media 129a06d0): Sae Tanaka, Junko Tanaka, Yoshihiro Miwa, Daiki D. Horikawa, Toshiaki Katayama, Kazuharu Arakawa, Atsushi Toyoda, Takeo Kubo, and Takekazu Kunieda. Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic tardigrade improve osmotic tolerance of human cells. PLoS ONE, 10:e0118272, Feb 2015. URL: https://doi.org/10.1371/journal.pone.0118272, doi:10.1371/journal.pone.0118272. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abe2024smallleaproteinsa pages 2-3): Kaitlyn M. Abe, Gan Li, Qixiang He, Timothy Grant, and Ci Ji Lim. Small lea proteins mitigate air-water interface damage to fragile cryo-em samples during plunge freezing. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52091-1, doi:10.1038/s41467-024-52091-1. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abe2024smallleaproteinsa pages 4-5): Kaitlyn M. Abe, Gan Li, Qixiang He, Timothy Grant, and Ci Ji Lim. Small lea proteins mitigate air-water interface damage to fragile cryo-em samples during plunge freezing. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52091-1, doi:10.1038/s41467-024-52091-1. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abe2024smallleaproteinsa pages 5-6): Kaitlyn M. Abe, Gan Li, Qixiang He, Timothy Grant, and Ci Ji Lim. Small lea proteins mitigate air-water interface damage to fragile cryo-em samples during plunge freezing. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52091-1, doi:10.1038/s41467-024-52091-1. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abe2024smallleaproteinsa pages 3-4): Kaitlyn M. Abe, Gan Li, Qixiang He, Timothy Grant, and Ci Ji Lim. Small lea proteins mitigate air-water interface damage to fragile cryo-em samples during plunge freezing. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-52091-1, doi:10.1038/s41467-024-52091-1. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 2-4</li>
+<li>hand2018challengesduringdiapause pages 8-8</li>
+<li>schill2019environmentaladaptationsdesiccation pages 10-13</li>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 4-5</li>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 5-7</li>
+<li>romeroperez2023whenphasedwithout pages 22-23</li>
+<li>tanaka2015novelmitochondriatargetedheatsoluble pages 10-11</li>
+<li>abe2024smallleaproteinsa pages 2-3</li>
+<li>abe2024smallleaproteinsa pages 4-5</li>
+<li>yoshida2022decipheringthebiological pages 4-6</li>
+<li>romeroperez2023whenphasedwithout pages 11-12</li>
+<li>abe2024smallleaproteinsa pages 5-6</li>
+<li>abe2024smallleaproteinsa pages 3-4</li>
+<li>https://doi.org/10.1371/journal.pone.0118272</li>
+<li>https://doi.org/10.3390/insects13060557</li>
+<li>https://doi.org/10.1038/s41467-024-52091-1</li>
+<li>https://doi.org/10.1101/2024.02.06.579238</li>
+<li>https://doi.org/10.1021/acs.chemrev.2c00659</li>
+<li>https://doi.org/10.1371/journal.pone.0118272,</li>
+<li>https://doi.org/10.1002/iub.1953,</li>
+<li>https://doi.org/10.1021/acs.chemrev.2c00659,</li>
+<li>https://doi.org/10.3390/insects13060557,</li>
+<li>https://doi.org/10.1007/978-3-319-95702-9_10,</li>
+<li>https://doi.org/10.1038/s41467-024-52091-1,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A0E4AVP3
+gene_symbol: RvLEAM
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:947166
+  label: Ramazzottius varieornatus
+description: &gt;-
+  Group 3 late-embryogenesis abundant (LEA) protein targeted to the mitochondrial matrix
+  in the anhydrobiotic tardigrade Ramazzottius varieornatus. RvLEAM contains 9 LEA 11-mer
+  repeat motifs that form amphipathic helices under water-deficient conditions, acting as
+  a molecular shield to prevent undesirable protein aggregation and conformational changes
+  of lipid membranes. A predicted 31-residue mitochondrial transit peptide directs the
+  protein to the mitochondrial matrix. Heterologous expression in human cells improves
+  osmotic tolerance, consistent with a protective role during desiccation stress. RvLEAM
+  belongs to the LEA type 4 family, which is broadly conserved across plants, nematodes,
+  and other anhydrobiotic organisms.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Mitochondrial localization is strongly supported by multiple lines of evidence in
+      PMID:25675104. Immunohistochemistry confirmed mitochondrial localization in tardigrade
+      cells, and RvLEAM-GFP co-localized with MitoTracker Red in human cells. The IEA
+      annotation to the broad term &#39;mitochondrion&#39; could be refined to &#39;mitochondrial
+      matrix&#39; (GO:0005759) given that the protein is highly hydrophilic (GRAVY score -0.94,
+      no hydrophobic regions), which strongly suggests matrix rather than membrane
+      localization (PMID:25675104). UniProt annotates a mitochondrial transit peptide at
+      residues 1-31.
+    action: MODIFY
+    reason: &gt;-
+      The annotation to GO:0005739 (mitochondrion) is correct but insufficiently specific.
+      RvLEAM has a predicted mitochondrial transit peptide (residues 1-31) and is highly
+      hydrophilic with no hydrophobic regions, strongly suggesting localization in the
+      mitochondrial matrix rather than the membrane. The more specific term GO:0005759
+      (mitochondrial matrix) is warranted based on both the experimental localization
+      data and biophysical properties of the protein.
+    proposed_replacement_terms:
+    - id: GO:0005759
+      label: mitochondrial matrix
+    additional_reference_ids:
+    - PMID:25675104
+    supported_by:
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        RvLEAM is a group3 LEA protein and immunohistochemistry confirmed its
+        mitochondrial localization in tardigrade cells
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        we identified two novel mitochondrial heat-soluble proteins, RvLEAM and MAHS
+        (Mitochondrial Abundant Heat Soluble), as potent mitochondrial protectants from
+        Ramazzottius varieornatus
+
+- term:
+    id: GO:0009269
+    label: response to desiccation
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      RvLEAM is a group 3 LEA protein identified from the anhydrobiotic tardigrade
+      R. varieornatus (PMID:25675104). LEA proteins are well-established components of
+      the desiccation tolerance response in plants, nematodes, and other anhydrobiotic
+      organisms. The protein is described as having protective roles in water-deficient
+      environments, and its expression improves hyperosmotic tolerance of human cells.
+      UniProt annotates this protein with the keyword &#34;Stress response&#34; and describes
+      it as acting as a molecular shield in water-deficient conditions.
+    action: NEW
+    reason: &gt;-
+      This is a core biological process annotation that is missing from GOA. RvLEAM is
+      a LEA protein involved in desiccation tolerance, and its expression improves
+      tolerance to water-deficient conditions. The response to desiccation annotation
+      captures the primary biological context of this protein.
+    additional_reference_ids:
+    - PMID:25675104
+    supported_by:
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        Late Embryogenesis Abundant (LEA) proteins are heat-soluble proteins involved
+        in the desiccation tolerance of many anhydrobiotic organisms
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        tardigrade mitochondria contain at least two types of heat-soluble proteins
+        that might have protective roles in water-deficient environments
+
+- term:
+    id: GO:0006970
+    label: response to osmotic stress
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      Tanaka et al. (PMID:25675104) directly demonstrated that expression of RvLEAM
+      improved hyperosmotic tolerance of human HEp-2 cells. This provides direct
+      experimental evidence for a role in response to osmotic stress.
+    action: NEW
+    reason: &gt;-
+      Direct experimental evidence from PMID:25675104 supports this annotation. RvLEAM
+      expression improved hyperosmotic tolerance in human cells, demonstrating the protein
+      functions in the cellular response to osmotic stress. This is the most directly
+      tested biological process for this protein.
+    additional_reference_ids:
+    - PMID:25675104
+    supported_by:
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        we demonstrated that RvLEAM protein as well as MAHS protein improved the
+        hyperosmotic tolerance of human cells
+
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:25675104
+  review:
+    summary: &gt;-
+      LEA proteins are known to act as molecular shields that interact with other
+      macromolecules to prevent undesirable aggregation under water stress conditions.
+      While this implies interaction with proteins that may become aggregation-prone,
+      direct binding to unfolded proteins was not experimentally demonstrated for
+      RvLEAM specifically in PMID:25675104. The molecular shield mechanism is inferred
+      from the general LEA protein family literature. This annotation captures the
+      likely molecular function but should be considered provisional.
+    action: NEW
+    reason: &gt;-
+      The molecular shield function of LEA proteins involves preventing protein aggregation
+      under stress, which is consistent with unfolded protein binding. However, this is
+      inferred from the general LEA protein literature rather than direct experimental
+      demonstration for RvLEAM. This annotation captures the likely molecular function
+      mechanism but should be considered provisional pending direct binding studies.
+    additional_reference_ids:
+    - PMID:25675104
+    supported_by:
+    - reference_id: PMID:25675104
+      supporting_text: &gt;-
+        tardigrade mitochondria contain at least two types of heat-soluble proteins
+        that might have protective roles in water-deficient environments
+
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:25675104
+  title: &gt;-
+    Novel mitochondria-targeted heat-soluble proteins identified in the anhydrobiotic
+    Tardigrade improve osmotic tolerance of human cells
+  findings:
+  - statement: RvLEAM is the first mitochondrial LEA protein identified in tardigrades
+    supporting_text: &gt;-
+      we identified two novel mitochondrial heat-soluble proteins, RvLEAM and MAHS
+      (Mitochondrial Abundant Heat Soluble), as potent mitochondrial protectants from
+      Ramazzottius varieornatus
+  - statement: Immunohistochemistry confirmed mitochondrial localization in tardigrade cells
+    supporting_text: &gt;-
+      RvLEAM is a group3 LEA protein and immunohistochemistry confirmed its
+      mitochondrial localization in tardigrade cells
+  - statement: Expression of RvLEAM improved hyperosmotic tolerance of human cells
+    supporting_text: &gt;-
+      we demonstrated that RvLEAM protein as well as MAHS protein improved the
+      hyperosmotic tolerance of human cells
+  - statement: RvLEAM and MAHS have protective roles in water-deficient environments
+    supporting_text: &gt;-
+      tardigrade mitochondria contain at least two types of heat-soluble proteins
+      that might have protective roles in water-deficient environments
+  - statement: LEA proteins are involved in desiccation tolerance
+    supporting_text: &gt;-
+      Late Embryogenesis Abundant (LEA) proteins are heat-soluble proteins involved
+      in the desiccation tolerance of many anhydrobiotic organisms
+- id: PMID:27649274
+  title: &gt;-
+    Extremotolerant tardigrade genome and improved radiotolerance of human cultured
+    cells by tardigrade-unique protein
+  findings:
+  - statement: Genome sequencing of R. varieornatus (YOKOZUNA-1 strain)
+
+core_functions:
+- description: &gt;-
+    RvLEAM is a group 3 LEA protein that acts as a molecular shield in the mitochondrial
+    matrix during water-deficient conditions. Its 9 LEA 11-mer repeat motifs form
+    amphipathic helices that interact with macromolecules to prevent aggregation
+    and protect lipid membranes. Expression in human cells improves osmotic tolerance
+    (PMID:25675104).
+  molecular_function:
+    id: GO:0051082
+    label: unfolded protein binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  directly_involved_in:
+  - id: GO:0009269
+    label: response to desiccation
+  supported_by:
+  - reference_id: PMID:25675104
+    supporting_text: &gt;-
+      tardigrade mitochondria contain at least two types of heat-soluble proteins
+      that might have protective roles in water-deficient environments
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
