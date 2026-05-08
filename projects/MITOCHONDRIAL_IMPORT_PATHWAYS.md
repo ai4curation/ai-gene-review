@@ -91,6 +91,10 @@ The project should review key components of each import pathway. Priority genes 
 - [x] Read and understand issue #31711
 - [x] Identify priority genes for review
 - [x] Fetch gene data for all priority genes
-- [ ] Deep research on pathway components and nomenclature
+- [x] Deep research on pathway components and nomenclature
 - [ ] Begin gene reviews
+  - [x] TOMM40 — TOM complex central channel (30 annotations reviewed)
+  - [x] CHCHD4 — MIA40/disulfide relay (31 annotations reviewed)
+  - [x] MTCH2 — metazoan MIM insertase (22 annotations reviewed)
+  - [ ] Remaining genes (TIMM23, TIMM22, SAMM50, GFER, TOMM22, TOMM70, etc.)
 - [ ] Propose GO term hierarchy
