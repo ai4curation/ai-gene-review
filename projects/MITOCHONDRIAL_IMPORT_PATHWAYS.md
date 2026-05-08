@@ -49,10 +49,48 @@ The project should review key components of each import pathway. Priority genes 
 - **Processing**: PMPCB, PMPCA (MPP), XPNPEP3 (Icp55), MIP/MIPEP (Oct1)
 - **Folding**: HSPD1 (Hsp60), HSPE1 (Hsp10)
 
+## Priority Genes (fetched)
+
+### Tier 1 — Core channel/pathway subunits
+| Gene | Complex/Pathway | Annotations |
+|------|----------------|-------------|
+| TOMM40 | TOM complex central channel | 30 |
+| TIMM23 | TIM23 complex channel | 29 |
+| TIMM22 | TIM22 complex channel | 27 |
+| SAMM50 | SAM complex channel | 31 |
+| CHCHD4 | MIA40/disulfide relay | 31 |
+| GFER | Erv1/ALR, disulfide relay partner | 26 |
+| MTCH2 | Metazoan MIM equivalent | 22 |
+
+### Tier 2 — Receptors, regulators, and accessory subunits
+| Gene | Complex/Pathway | Annotations |
+|------|----------------|-------------|
+| TOMM20 | TOM receptor (presequence) | pre-existing |
+| TOMM22 | TOM receptor (cis-binding) | 27 |
+| TOMM70 | TOM receptor (carrier proteins) | 60 |
+| TOMM5 | Small TOM subunit | 11 |
+| TOMM6 | Small TOM subunit | 10 |
+| TOMM7 | Small TOM subunit (quality control) | 20 |
+| TIMM50 | TIM23 receptor | 32 |
+| TIMM44 | PAM complex (tethers mtHsp70) | 24 |
+| TIMM17A | TIM23 core channel | 17 |
+| TIMM21 | TIM23-SORT pathway | 23 |
+| PAM16 | PAM complex (J-protein regulator) | 27 |
+| MTX1 | Metaxin-1, SAM complex partner | 16 |
+| MTX2 | Metaxin-2, SAM complex partner | 20 |
+| HSPA9 | Mortalin/mtHsp70 (PAM motor) | pre-existing |
+
+### Tier 3 — Processing enzymes
+| Gene | Function | Annotations |
+|------|----------|-------------|
+| PMPCA | MPP alpha subunit | 24 |
+| PMPCB | MPP beta subunit (catalytic) | 21 |
+
 ## Status
 
 - [x] Read and understand issue #31711
+- [x] Identify priority genes for review
+- [x] Fetch gene data for all priority genes
 - [ ] Deep research on pathway components and nomenclature
-- [ ] Identify priority genes for review
 - [ ] Begin gene reviews
 - [ ] Propose GO term hierarchy
