@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAHS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SAHS1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/J7MFT5" target="_blank" class="term-link">
+                        J7MFT5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Ramazzottius varieornatus</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SAHS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="J7MFT5" data-a="DESCRIPTION: Secretory abundant heat-soluble protein 1 (SAHS1) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Secretory abundant heat-soluble protein 1 (SAHS1) is a tardigrade-specific secreted protein that functions as a molecular shield under water-deficient conditions, contributing to desiccation tolerance (anhydrobiosis). SAHS1 adopts a beta-barrel fold structurally similar to fatty acid-binding proteins (FABPs), but with unique hydrophilic hydrogen bond networks that provide enhanced tolerance against dehydration. It is one of the most abundantly expressed proteins in Ramazzottius varieornatus and undergoes conformational change from beta-structure to alpha-helical structure upon desiccation. The protein is secreted and proposed to protect extracellular components during desiccation.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="J7MFT5" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SAHS1 is a secretory protein with a signal peptide (residues 1-19) that is cleaved to produce the mature protein. Yamaguchi et al. (2012) demonstrated experimentally that SAHS1-GFP fusion protein was detected in the culture medium rather than cell bodies by immunoblot analysis (PMID:22937162), confirming secretion. UniProt annotates the subcellular location as &#34;Secreted&#34; with experimental evidence (ECO:0000269|PubMed:22937162). The IEA annotation via UniProtKB-SubCell mapping to GO:0005576 (extracellular region) is well-supported.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The extracellular region annotation is strongly supported by experimental evidence. SAHS1 contains a signal peptide and was shown to be secreted into culture medium when expressed as a GFP fusion in mammalian cells (PMID:22937162). This is also consistent with the protein name (Secretory Abundant Heat Soluble). The IEA mapping from UniProtKB-SubCell is accurate.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant Heat Soluble (SAHS) protein families, according to their localization.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008289" target="_blank" class="term-link">
+                                    GO:0008289
+                                </a>
+                            </span>
+                            <span class="term-label">lipid binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="J7MFT5" data-a="GO:0008289" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The lipid binding annotation is inferred electronically from the InterPro FABP domain (IPR000463). Fukuda et al. (2017) solved the crystal structure of SAHS1 (PDB: 5XN9, 5XNA) and confirmed that it adopts a beta-barrel fold similar to FABPs, with two putative ligand-binding sites (PMID:28703282). However, the authors noted that SAHS1 has unique hydrophilic hydrogen bond networks within the barrel that are distinct from canonical FABPs, adapted for desiccation tolerance rather than lipid transport. No experimental evidence of lipid binding has been demonstrated for SAHS1. The structural similarity to FABPs makes the annotation plausible but unconfirmed.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While no direct lipid binding has been experimentally demonstrated for SAHS1, the crystal structure confirms a genuine FABP-like beta-barrel fold with two putative ligand-binding sites that superimpose on those of canonical FABPs (PMID:28703282). The InterPro-based IEA annotation is a reasonable inference from the structural similarity to the FABP family. It is possible that lipid binding is an ancestral function retained or repurposed in SAHS proteins, even though the primary biological role appears to be desiccation protection. The IEA annotation accurately reflects the computational inference and should be retained pending experimental testing.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28703282" target="_blank" class="term-link">
+                                        PMID:28703282
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">RvSAHS1 shows a beta-barrel structure similar to fatty acid-binding proteins (FABPs), in which hydrophilic residues form peculiar hydrogen bond networks, which would provide RvSAHS1 with better tolerance against dehydration.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28703282" target="_blank" class="term-link">
+                                        PMID:28703282
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We identified two putative ligand-binding sites: one that superimposes on those of some FABPs and the other, unique to and conserved in SAHS proteins. These results indicate that SAHS proteins constitute a new FABP family.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant Heat Soluble (SAHS) protein families, according to their localization.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009269" target="_blank" class="term-link">
+                                    GO:0009269
+                                </a>
+                            </span>
+                            <span class="term-label">response to desiccation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22937162
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two novel heat-soluble protein families abundantly expressed...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="J7MFT5" data-a="GO:0009269" data-r="PMID:22937162" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SAHS1 is a major heat-soluble protein identified by proteomics in the anhydrobiotic tardigrade R. varieornatus. It is constitutively and abundantly expressed and undergoes conformational change from beta-structure to alpha-helical structure under water-deficient conditions (PMID:22937162). UniProt describes its function as a &#34;molecular shield in water-deficient condition&#34; (ECO:0000269|PubMed:22937162). The protein is proposed to protect extracellular components during desiccation, acting analogously to LEA proteins in other anhydrobiotic organisms. This biological process annotation is critical for capturing the core function of SAHS1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core biological process for SAHS1. The protein was identified specifically through heat-soluble proteomics aimed at understanding anhydrobiosis (PMID:22937162). It undergoes desiccation-induced conformational changes and is proposed to act as a molecular shield protecting extracellular components during desiccation (PMID:22937162, PMID:27649274). The GO term GO:0009269 (response to desiccation) accurately captures this biological role. This annotation is conspicuously absent from the current GOA set and should be added.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both protein families were conserved among tardigrades, but not found in other phyla. Although CAHS protein was intrinsically unstructured and SAHS protein was rich in beta-structure in the hydrated condition, proteins in both families changed their conformation to an alpha-helical structure in water-deficient conditions as LEA proteins do.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                                        PMID:22937162
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">proteins in both families changed their conformation to an alpha-helical structure in water-deficient conditions as LEA proteins do</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                                        PMID:27649274
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These abundantly expressed proteins included previously identified tardigrade-unique heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after heat treatment and are proposed to be involved in the protection of biomolecules during desiccation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22937162" target="_blank" class="term-link">
+                            PMID:22937162
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SAHS1 identified as major heat-soluble protein by proteomics</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SAHS1 is a secretory protein confirmed by GFP fusion experiments</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Undergoes conformational change to alpha-helix in water-deficient conditions</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Proposed to act as molecular shield protecting extracellular components during desiccation</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27649274" target="_blank" class="term-link">
+                            PMID:27649274
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Extremotolerant tardigrade genome and improved radiotolerance of human cultured cells by tardigrade-unique protein</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome sequencing confirmed 13 SAHS genes in R. varieornatus</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SAHS genes are constitutively and abundantly expressed</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SAHS proteins have low similarity to metazoan fatty acid-binding proteins</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28703282" target="_blank" class="term-link">
+                            PMID:28703282
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural insights into a secretory abundant heat-soluble protein from an anhydrobiotic tardigrade, Ramazzottius varieornatus</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Crystal structure of SAHS1 solved at 1.45 angstrom resolution (PDB 5XN9)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beta-barrel fold similar to FABPs but with unique hydrophilic hydrogen bond networks</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Two putative ligand-binding sites identified</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SAHS proteins constitute a new FABP family adapted for desiccation tolerance</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SAHS1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J7MFT5" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-09T09:51:47.253718'<br />
+end_time: '2026-04-09T10:00:16.857727'<br />
+duration_seconds: 509.6<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: RAMVA<br />
+  gene_id: SAHS1<br />
+  gene_symbol: SAHS1<br />
+  uniprot_accession: J7MFT5<br />
+  protein_description: 'RecName: Full=Secretory-abundant heat soluble protein 1 {ECO:0000303|PubMed:22937162};<br />
+    Short=SAHS1 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically<br />
+    disordered protein SAHS1 {ECO:0000305}; Short=TDP SAHS1 {ECO:0000305}; Flags:<br />
+    Precursor;'<br />
+  gene_info: Name=SAHS1 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_02423;<br />
+  organism_full: Ramazzottius varieornatus (Water bear) (Tardigrade).<br />
+  protein_family: Belongs to the Secretory-abundant heat soluble protein<br />
+  protein_domains: Calycin. (IPR012674); Fatty_acid-bd. (IPR000463)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 30</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> J7MFT5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Secretory-abundant heat soluble protein 1 {ECO:0000303|PubMed:22937162}; Short=SAHS1 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically disordered protein SAHS1 {ECO:0000305}; Short=TDP SAHS1 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SAHS1 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_02423;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the Secretory-abundant heat soluble protein</li>
+<li><strong>Key Domains:</strong> Calycin. (IPR012674); Fatty_acid-bd. (IPR000463)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SAHS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SAHS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SAHS1</strong> (gene ID: SAHS1, UniProt: J7MFT5) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> J7MFT5</li>
+<li><strong>Protein Description:</strong> RecName: Full=Secretory-abundant heat soluble protein 1 {ECO:0000303|PubMed:22937162}; Short=SAHS1 {ECO:0000303|PubMed:22937162}; AltName: Full=Tardigrade-specific intrinsically disordered protein SAHS1 {ECO:0000305}; Short=TDP SAHS1 {ECO:0000305}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=SAHS1 {ECO:0000303|PubMed:22937162}; ORFNames=RvY_02423;</li>
+<li><strong>Organism (full):</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Protein Family:</strong> Belongs to the Secretory-abundant heat soluble protein</li>
+<li><strong>Key Domains:</strong> Calycin. (IPR012674); Fatty_acid-bd. (IPR000463)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "SAHS1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Ramazzottius varieornatus (Water bear) (Tardigrade).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'SAHS1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>SAHS1</strong> (gene ID: SAHS1, UniProt: J7MFT5) in RAMVA.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-sahs1-rvsahs1-uniprot-j7mft5-from-ramazzottius-varieornatus">Research report: SAHS1 (RvSAHS1; UniProt J7MFT5) from <em>Ramazzottius varieornatus</em></h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>Secretory-abundant heat soluble protein 1 (SAHS1; RvSAHS1) is a tardigrade-specific, secreted, heat-soluble protein family member that contributes to desiccation/anhydrobiosis tolerance primarily by protecting <strong>extracellular and membrane-containing structures</strong> during drying. Mechanistically, RvSAHS1 is unusual among “tardigrade disordered proteins” because it adopts an <strong>ordered calycin/fatty-acid-binding-protein (FABP)-like β-barrel</strong> in hydrated conditions, with a large internal cavity and <strong>two putative ligand-binding sites</strong>, and it can undergo <strong>dehydration-associated structural transitions</strong> and higher-order assembly (mesh/filaments) that correlate with protective effects. The most recent (2023–2024) advances include (i) in vivo localization/expression mapping of SAHS1 in tardigrades using the TardiVec toolkit and (ii) demonstration that purified SAHS proteins (including RvSAHS1) can be used as <strong>exogenous stabilizers</strong> to markedly improve desiccation survival of bacteria and preserve liposome integrity, highlighting translational potential for dry preservation. (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 3-5, tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4)</p>
+<h3 id="identity-verification-critical">Identity verification (critical)</h3>
+<p>The literature retrieved consistently uses <strong>SAHS1</strong> to refer to <strong>Secretory Abundant Heat Soluble protein 1</strong> from the eutardigrade <em>Ramazzottius varieornatus</em> (often denoted RvSAHS1). The family was defined as signal-peptide-containing secreted heat-soluble proteins (SAHS) in <em>R. varieornatus</em>; SAHS1 was one of the experimentally analyzed members. Subsequent structural biology papers explicitly determined the structure of <strong>RvSAHS1</strong> and recent functional work assays <strong>RvSAHS1</strong> directly. No conflicting “SAHS1” from other organisms was encountered in the evidence set used here. (yamaguchi2012twonovelheatsoluble pages 3-5, fukuda2017structuralinsightsinto pages 1-4)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="anhydrobiosis-and-desiccation-tolerance">Anhydrobiosis and desiccation tolerance</h4>
+<p>Anhydrobiosis refers to a reversible ametabolic state that permits survival under near-complete water loss; in tardigrades this state is associated with tolerance to multiple stresses encountered during dehydration/rehydration. SAHS proteins were originally proposed as candidate anhydrobiosis factors because they are abundant, heat-soluble, tardigrade-specific, and (critically) localized to secretory/extracellular compartments where dehydration threatens membranes and extracellular structures. (yamaguchi2012twonovelheatsoluble pages 3-5, fukuda2017structuralinsightsinto pages 1-4)</p>
+<h4 id="sahs-proteins-and-tardigrade-specific-protective-proteins">SAHS proteins and “tardigrade-specific protective proteins”</h4>
+<p>SAHS (Secretory Abundant Heat Soluble) proteins were identified alongside CAHS (Cytoplasmic Abundant Heat Soluble) proteins as two novel tardigrade-specific heat-soluble families. While CAHS proteins were characterized as highly unstructured in hydrated conditions, SAHS1 was reported to be <strong>β-structure rich</strong> when hydrated and capable of shifting toward <strong>α-helical</strong> structure under dehydration-mimicking conditions (e.g., TFE). This “structural plasticity” is a recurring motif in desiccation-protective proteins (often discussed by analogy to LEA proteins), but SAHS proteins are distinct from LEA proteins at the sequence level. (yamaguchi2012twonovelheatsoluble pages 3-5)</p>
+<h4 id="calycinfabp-like-fold-and-internal-cavity">Calycin/FABP-like fold and internal cavity</h4>
+<p>High-resolution structures show RvSAHS1 adopts a β-barrel architecture similar to mammalian FABPs (within the calycin superfamily), featuring a portal/entry region and a large internal cavity. This is important for functional annotation because it supports hypotheses involving (i) binding/partitioning of small hydrophobic or amphipathic ligands and/or (ii) cavity water/solute dynamics as a trigger for dehydration-induced conformational change. (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 1-4)</p>
+<h3 id="2-recent-developments-and-latest-research-prioritizing-20232024">2) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="21-in-vivo-expression-and-localization-mapping-enabled-by-tardivec-2023">2.1 In vivo expression and localization mapping enabled by TardiVec (2023)</h4>
+<p>A major barrier in tardigrade cell biology has been reliance on heterologous systems. Tanaka et al. developed <strong>TardiVec</strong>, a plasmid-based transient expression system using promoters from <em>R. varieornatus</em>, enabling live imaging and tissue-specific expression studies. Using SAHS-family promoters and SAHS1 fusion constructs, they reported that SAHS proteins (including SAHS1) are <strong>expressed exclusively in storage cells</strong>—tardigrade-specific free-floating cells in the body cavity—and SAHS1-mEGFP localizes to <strong>vesicle-like structures</strong> in these cells; in some animals signal spread into the <strong>body cavity</strong>, consistent with secretion. Storage-cell RNA-seq showed SAHS-family transcripts enriched by approximately <strong>~5–20×</strong> relative to whole-body samples, supporting cell-type specialization. These results refine localization beyond earlier human-cell secretion assays and argue that SAHS1 action in vivo is linked to storage-cell vesicles and extracellular/body-cavity deployment. (Publication date: Jan 2023; URL: https://doi.org/10.1073/pnas.2216739120) (tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4, tanaka2023invivoexpression pages 2-3)</p>
+<h4 id="22-sahs-proteins-as-practical-desiccation-protectants-for-membranes-and-cells-2024">2.2 SAHS proteins as practical desiccation protectants for membranes and cells (2024)</h4>
+<p>Lim et al. (2024) directly tested SAHS proteins (including RvSAHS1) for protection of <strong>liposomes</strong> and <strong>bacteria</strong> during drying/rehydration. Key quantitative findings include:</p>
+<ul>
+<li><strong>Liposomes:</strong> drying/rehydration of POPC liposomes without excipients increased mean diameter from ~<strong>70 nm</strong> to ~<strong>350 nm</strong>, consistent with fusion/aggregation; with <strong>10 mg/mL SAHS proteins</strong>, fusion was greatly reduced and protection persisted at lower concentrations. Trehalose was comparably protective, while BSA was less protective in these membrane assays. (lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins pages 6-7)</li>
+<li><strong>Bacteria:</strong> extracellular addition of RvSAHS1 produced <strong>&gt;10-fold</strong> improvement in <em>E. coli</em> desiccation survival (with protection still significant at <strong>0.1 mg/mL</strong>). For <em>Rhizobium tropici</em>, SAHS proteins increased survival by about <strong>~40-fold</strong> at <strong>0.5 mg/mL</strong>, compared with <strong>16-fold</strong> for trehalose and <strong>4.2-fold</strong> for BSA. Intracellular expression in <em>E. coli</em> did not clearly enhance survival, supporting an <strong>extracellular</strong> mode of action consistent with secretion. (Publication date: May 2024; URL: https://doi.org/10.1038/s42003-024-06336-w) (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 3-5)</li>
+</ul>
+<p>Mechanistically, Lim et al. propose that dehydration-driven removal of water/solutes from the SAHS cavity destabilizes the β-sheet fold and promotes a structural shift/assembly state that physically protects membrane-containing structures; this connects structural biology (ordered β-barrel) to function (membrane/cell preservation). (lim2024tardigradesecretoryproteins pages 1-3, lim2024tardigradesecretoryproteins pages 6-7)</p>
+<h4 id="23-updated-evolutionary-context-for-sahs-gene-family-2024">2.3 Updated evolutionary context for SAHS gene family (2024)</h4>
+<p>Fleming et al. (2024) generated phylogenies for multiple tardigrade extremotolerance-associated families including SAHS. They report <strong>29 SAHS sequences across 13 genera</strong> and infer extensive lineage-specific duplication histories. In particular, they identify a Ramazzottius SAHS clade (e.g., SAHS2 and SAHS7–12) with <strong>six independent duplications</strong> and note broader patterns of independent duplications and differential retention across families. These analyses support a view that SAHS family diversification is recurrent in tardigrade evolution and potentially tied to independent adaptations to aridity/limnoterrestrial lifestyles; however, internal SAHS phylogenetic resolution remains limited and nomenclature is not yet fully reconciled with phylogeny. (Publication date: Nov 2024; URL: https://doi.org/10.1093/gbe/evad217) (fleming2024theevolutionof pages 1-2, fleming2024theevolutionof pages 7-9)</p>
+<h3 id="3-functional-annotation-of-sahs1-function-processes-and-localization">3) Functional annotation of SAHS1: function, processes, and localization</h3>
+<h4 id="31-cellular-and-organismal-localization">3.1 Cellular and organismal localization</h4>
+<p>Multiple independent approaches support that SAHS1 is secreted and acts in secretory/extracellular compartments:</p>
+<ul>
+<li><strong>Signal peptide / secretion prediction:</strong> SAHS proteins were defined in part by N-terminal secretory signals and TargetP prediction of secretion for SAHS1. (yamaguchi2012twonovelheatsoluble pages 3-5)</li>
+<li><strong>Heterologous secretion assay (human cells):</strong> SAHS1-GFP was detected by immunoblot in the <strong>culture medium</strong>, with minimal intracellular accumulation (interpreted as transient retention in ER/Golgi). (yamaguchi2012twonovelheatsoluble pages 3-5)</li>
+<li><strong>In vivo localization in tardigrades (TardiVec):</strong> SAHS promoters drive expression <strong>exclusively in storage cells</strong>; SAHS1-mEGFP localizes to vesicle-like structures and can appear in the <strong>body cavity</strong>, consistent with deployment as a secretory product. (tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4, tanaka2023invivoexpression pages 2-3)</li>
+</ul>
+<p>Collectively, these findings support a primary biological role in <strong>extracellular/body-cavity protection</strong> and/or protection of <strong>secretory vesicles/organelles</strong>, rather than cytosolic or nuclear protection (which is more typical of CAHS proteins). (yamaguchi2012twonovelheatsoluble pages 3-5, tanaka2023invivoexpression pages 3-4)</p>
+<h4 id="32-structure-domains-and-defining-molecular-features">3.2 Structure, domains, and defining molecular features</h4>
+<p>Fukuda et al. solved crystal structures of RvSAHS1 and found:</p>
+<ul>
+<li>A <strong>calycin/FABP-like β-barrel</strong> architecture with a helix-turn-helix “lid” region and portal loops that show flexibility (B-factors), implicating dynamic control of cavity access. (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 6-9)</li>
+<li>Distinctive <strong>hydrophilic, bulky residues</strong> within/near the barrel forming hydrogen-bond networks (e.g., interactions among H72/H83/Y117/Y141/Y152/R161), proposed to contribute to <strong>heat solubility</strong> and structural preservation under dehydrating conditions. (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 6-9)</li>
+<li>Evidence for oligomerization behavior in solution (SEC and SDS-PAGE peaks interpreted as monomer/dimer/oligomer states). (fukuda2017structuralinsightsinto pages 11-14)</li>
+</ul>
+<p>This ordered fold is consistent with SAHS1 being assigned to calycin/fatty-acid binding domain families in protein-domain databases (as also echoed by comparative analyses in later work). (fukuda2017structuralinsightsinto pages 1-4, lim2024tardigradesecretoryproteins pages 1-3)</p>
+<h4 id="33-ligand-binding-current-evidence-and-limits">3.3 Ligand binding: current evidence and limits</h4>
+<p>RvSAHS1 contains <strong>two putative ligand-binding sites</strong>:</p>
+<ul>
+<li>In the dimeric structure, crystallographic electron density near a Mg ion was tentatively modeled as <strong>heptanoic acid</strong> (and acetate), consistent with the notion that recombinant FABPs can co-purify with endogenous fatty acids in <em>E. coli</em>. The authors emphasize that these may represent parts of longer fatty acids and that identification of physiological ligands remains future work. (fukuda2017structuralinsightsinto pages 6-9)</li>
+<li>Conserved residues around binding sites include <strong>R161/Y163</strong> and <strong>K150</strong>, and additional conserved residues suggest a second conserved site (LBS2). (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 11-14)</li>
+</ul>
+<p>However, the most recent comparative sequence analysis indicates substantial <strong>variation in cavity-forming residues</strong> across the 13 <em>R. varieornatus</em> SAHS paralogs, which argues against a single, universally shared ligand (e.g., “a fatty acid”) across all SAHS proteins, although some retain carboxyl-interacting residues typical of FABPs. Thus, ligand binding remains a plausible but not yet fully resolved aspect of SAHS1 function. (lim2024tardigradesecretoryproteins pages 6-7)</p>
+<h4 id="34-dehydration-linked-structural-transitions-and-assembly">3.4 Dehydration-linked structural transitions and assembly</h4>
+<p>Evidence for dehydration-associated conformational/assembly behavior includes:</p>
+<ul>
+<li><strong>CD spectroscopy (family discovery):</strong> SAHS1 is β-rich when hydrated (CD minimum near 215 nm) and shifts toward α-helical spectra under water-deficit mimic (TFE). (yamaguchi2012twonovelheatsoluble pages 3-5)</li>
+<li><strong>CD + MD + EM (2024):</strong> SAHS proteins showed increasing α-helical content with increasing TFE, with reported helical content increasing from ~10% to ~40%. MD simulations of RvSAHS1 under desolvation conditions show β-content dropping (~50%→~3%) and helix content increasing (~7%→~20%). Dried SAHS1 can form fibrous mesh/filament-like structures, consistent with formation of a protective matrix in low-water environments. (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 6-7)</li>
+</ul>
+<p>These results support a model in which the β-barrel structure is stable in hydrated conditions but can reorganize under dehydration into conformations/assemblies that physically stabilize membranes and extracellular structures. (lim2024tardigradesecretoryproteins pages 1-3, lim2024tardigradesecretoryproteins pages 6-7)</p>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<p>The most concrete “real-world” application demonstrated to date is <strong>dry preservation/stabilization</strong> of biological structures using purified SAHS proteins:</p>
+<ul>
+<li><strong>Membrane stabilization:</strong> SAHS proteins reduce drying-induced liposome fusion/aggregation, preserving nanoscale size distribution after rehydration; this suggests potential use in stabilizing liposomal formulations or membrane-based biologics during drying or storage. (lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins media 7cd986d1)</li>
+<li><strong>Cell preservation:</strong> Extracellular SAHS application boosts desiccation survival of bacteria (<em>E. coli</em>, <em>R. tropici</em>) with fold-improvements exceeding common protein controls (BSA) and comparable or better than trehalose under some conditions, suggesting utility in dry storage of microbial inoculants or engineered strains. (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins media 7cd986d1, lim2024tardigradesecretoryproteins media caaecc4a)</li>
+</ul>
+<p>Importantly, intracellular expression in <em>E. coli</em> was not clearly beneficial in these assays, which is consistent with SAHS proteins’ predicted/observed secretory localization and implies that applications should focus on <strong>extracellular formulations</strong> rather than cytosolic engineering in bacteria (unless co-engineered secretion/localization systems are implemented). (lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins pages 6-7)</p>
+<h3 id="5-expert-opinions-and-analysis-authoritative-sources">5) Expert opinions and analysis (authoritative sources)</h3>
+<ul>
+<li><strong>Original functional framing (2012):</strong> SAHS proteins were defined as secretory proteins and proposed to protect extracellular components/secretory compartments. The authors explicitly noted that SAHS1 did not accumulate around plasma membranes in human-cell expression assays, interpreting this as low membrane affinity and suggesting membrane protection might not be the primary role—an early view that is now partially revised by later functional data showing strong membrane-structure protection in vitro when SAHS is provided extracellularly at sufficient concentration. (yamaguchi2012twonovelheatsoluble pages 5-6, lim2024tardigradesecretoryproteins pages 3-5)</li>
+<li><strong>Structural interpretation (2017):</strong> The RvSAHS1 structure supports classification as a <strong>new FABP-like family</strong> with unique cavity chemistry (hydrophilic/bulky residues and H-bond networks) and portal-region features (short αII; fewer basic residues) consistent with a diffusion-mediated ligand transfer mechanism rather than collisional membrane transfer, implying that ligand binding/partitioning may occur without strong membrane association. (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 6-9)</li>
+<li><strong>Mechanism-to-application synthesis (2024):</strong> Lim et al. explicitly connect cavity desolvation and β→α transitions to membrane/cell protection, and propose that diversification across 13 SAHS paralogs in <em>R. varieornatus</em> could provide graded stability thresholds across dehydration severities—an evolutionary/biophysical rationale for gene-family expansion beyond simple redundancy. (lim2024tardigradesecretoryproteins pages 6-7)</li>
+</ul>
+<h3 id="6-statistics-and-quantitative-data-recent-studies-emphasized">6) Statistics and quantitative data (recent studies emphasized)</h3>
+<p>Key quantitative results relevant for functional annotation and application include:</p>
+<ul>
+<li><strong>Storage-cell enrichment of SAHS transcripts:</strong> ~<strong>5–20×</strong> enrichment in storage-cell RNA-seq vs whole-body (TardiVec study). (tanaka2023invivoexpression pages 3-4)</li>
+<li><strong>Liposome protection:</strong> mean diameter change upon drying/rehydration from ~<strong>70 nm</strong> to ~<strong>350 nm</strong> without protectant; <strong>10 mg/mL SAHS</strong> greatly reduced fusion (DLS). (lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins media 7cd986d1)</li>
+<li><strong>Bacterial desiccation survival:</strong> RvSAHS1 provides <strong>&gt;10-fold</strong> <em>E. coli</em> survival improvement; SAHS proteins provide <strong>~40-fold</strong> <em>R. tropici</em> survival improvement at <strong>0.5 mg/mL</strong>, versus <strong>16-fold</strong> for trehalose and <strong>4.2-fold</strong> for BSA; protection detectable at <strong>0.1 mg/mL</strong>. (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins media caaecc4a)</li>
+<li><strong>Secondary structure changes under dehydration mimic:</strong> helical content reported increasing from ~<strong>10% to ~40%</strong> with TFE (CD) and MD showing β decreasing ~<strong>50%→~3%</strong> and helix increasing ~<strong>7%→~20%</strong> in simulation. (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 6-7)</li>
+<li><strong>Gene family size:</strong> <em>R. varieornatus</em> encodes <strong>13 SAHS proteins (RvSAHS1–13)</strong>. (lim2024tardigradesecretoryproteins pages 6-7)</li>
+<li><strong>Broader family sampling:</strong> <strong>29 SAHS sequences</strong> across <strong>13 genera</strong> in recent phylogenetic analysis, with inferred multiple independent duplications (e.g., six independent duplications in a Ramazzottius clade). (fleming2024theevolutionof pages 1-2, fleming2024theevolutionof pages 7-9)</li>
+</ul>
+<h3 id="figure-based-evidence-quantitative">Figure-based evidence (quantitative)</h3>
+<p>Lim et al. provide direct quantitative plots for both liposome stabilization and bacterial survival improvements with SAHS proteins, including RvSAHS1. These figures are key visual evidence supporting the claim that SAHS1 is an effective extracellular desiccation protectant for membrane-containing structures. (lim2024tardigradesecretoryproteins media 7cd986d1, lim2024tardigradesecretoryproteins media caaecc4a)</p>
+<h3 id="evidence-map-summary-table">Evidence map (summary table)</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings</th>
+<th>Evidence type (experiment vs inference)</th>
+<th>Key source(s) with year/venue/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>SAHS1 in this report corresponds to <strong>RvSAHS1 / Secretory-abundant heat soluble protein 1</strong> from <strong>Ramazzottius varieornatus</strong>; SAHS proteins are tardigrade-specific, heat-soluble, signal-peptide-containing proteins. SAHS1-GFP secretion into medium supports the “secretory” designation. UniProt J7MFT5 annotation (SAHS family; calycin/FABP-like) is consistent with the primary literature (yamaguchi2012twonovelheatsoluble pages 3-5, fukuda2017structuralinsightsinto pages 1-4).</td>
+<td>Experiment + database-supported inference</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209; Fukuda et al. 2017, <em>FEBS Letters</em>, https://doi.org/10.1002/1873-3468.12752 (yamaguchi2012twonovelheatsoluble pages 3-5, fukuda2017structuralinsightsinto pages 1-4)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td><strong>Secreted/extracellular</strong> localization is supported by N-terminal signal peptide prediction, TargetP secretory assignment, and detection of <strong>SAHS1-GFP in culture medium</strong> after expression in human cells; weak residual intracellular signal was interpreted as ER/Golgi transit. In tardigrades, <strong>SAHS1-mEGFP localizes to vesicle-like structures in storage cells</strong> and in some animals spreads into the <strong>body cavity</strong>; storage-cell RNA-seq showed SAHS-family transcripts enriched by <strong>~5–20×</strong> vs whole-body samples (tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4, yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 5-6, tanaka2023invivoexpression pages 6-7).</td>
+<td>Direct experiment (prediction + GFP fusion + immunoblot + microscopy + transgenesis)</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209; Tanaka et al. 2023, <em>PNAS</em>, https://doi.org/10.1073/pnas.2216739120 (tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4, yamaguchi2012twonovelheatsoluble pages 3-5, yamaguchi2012twonovelheatsoluble pages 5-6, tanaka2023invivoexpression pages 6-7)</td>
+</tr>
+<tr>
+<td>Structure/domain</td>
+<td>Crystal structures show RvSAHS1 is a <strong>~16.2 kDa</strong> protein with a <strong>calycin/FABP-like β-barrel</strong> and a helix-turn-helix lid over a portal region; this is a <strong>structured, ordered</strong> SAHS protein rather than a classic highly disordered LEA-like protein. The barrel contains unusual <strong>hydrophilic bulky residues</strong> and hydrogen-bond networks proposed to support heat solubility/dehydration tolerance (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 1-4, lim2024tardigradesecretoryproteins pages 1-3).</td>
+<td>Direct experiment (X-ray crystallography, biophysics) + mechanistic inference</td>
+<td>Fukuda et al. 2017, <em>FEBS Letters</em>, https://doi.org/10.1002/1873-3468.12752; Lim et al. 2024, <em>Communications Biology</em>, https://doi.org/10.1038/s42003-024-06336-w (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 1-4, lim2024tardigradesecretoryproteins pages 1-3)</td>
+</tr>
+<tr>
+<td>Ligand binding</td>
+<td>Two putative ligand-binding sites were identified: <strong>LBS1</strong> near conserved <strong>R161/Y163</strong> and <strong>LBS2</strong> around <strong>K150</strong>. Electron density in crystals was interpreted as a bound fatty-acid-like ligand/HA at LBS1 and acetate at LBS2 under crystallization conditions. Structural similarity to FABPs suggests binding of <strong>hydrophobic ligands/fatty acids</strong>, but <strong>direct physiological ligand identity and binding constants for SAHS1 remain unconfirmed</strong>. Recent analyses note cavity residues vary among paralogs, arguing against one universally shared ligand (fukuda2017structuralinsightsinto pages 9-11, lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins pages 3-5).</td>
+<td>Direct structural observation + inference; limited direct biochemical validation</td>
+<td>Fukuda et al. 2017, <em>FEBS Letters</em>, https://doi.org/10.1002/1873-3468.12752; Lim et al. 2024, <em>Communications Biology</em>, https://doi.org/10.1038/s42003-024-06336-w (fukuda2017structuralinsightsinto pages 9-11, lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins pages 3-5)</td>
+</tr>
+<tr>
+<td>Dehydration structural transition</td>
+<td>In hydrated conditions, SAHS1 is <strong>β-rich</strong> with CD minimum near <strong>215 nm</strong>. Under dehydration-mimicking TFE, SAHS proteins shift toward <strong>α-helical</strong> structure; reported helical content rises from <strong>~10% to ~40%</strong>. MD simulations support desolvation-driven rearrangement, with β-content dropping from <strong>~50% to ~3%</strong> and α-helix increasing from <strong>~7% to ~20%</strong> over simulation. Dried SAHS1 can form <strong>filamentous/mesh-like fibrous networks</strong> (yamaguchi2012twonovelheatsoluble pages 3-5, lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 6-7).</td>
+<td>Direct experiment (CD, EM) + computational simulation</td>
+<td>Yamaguchi et al. 2012, <em>PLoS ONE</em>, https://doi.org/10.1371/journal.pone.0044209; Lim et al. 2024, <em>Communications Biology</em>, https://doi.org/10.1038/s42003-024-06336-w (yamaguchi2012twonovelheatsoluble pages 3-5, lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 6-7)</td>
+</tr>
+<tr>
+<td>Protective phenotypes/applications</td>
+<td>Extracellularly applied RvSAHS1 protects membranes and cells during drying. In liposome assays, unprotected liposomes increased from <strong>~70 nm to ~350 nm</strong> after drying/rehydration, while SAHS reduced fusion/aggregation. In bacterial assays, extracellular RvSAHS1 gave <strong>&gt;10-fold</strong> protection to <strong>E. coli</strong> and SAHS proteins increased <strong>Rhizobium tropici</strong> survival by <strong>~40-fold at 0.5 mg/mL</strong>, compared with <strong>16-fold</strong> for trehalose and <strong>4.2-fold</strong> for BSA. Protection remained detectable at <strong>0.1 mg/mL</strong>. Intracellular expression in E. coli did <strong>not</strong> clearly improve survival. Potential application: dry preservation/stabilization of cells and membrane-based biologics (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 1-3, lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins media 7cd986d1).</td>
+<td>Direct experiment + translational inference</td>
+<td>Lim et al. 2024, <em>Communications Biology</em>, https://doi.org/10.1038/s42003-024-06336-w (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 1-3, lim2024tardigradesecretoryproteins pages 6-7, lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins media 7cd986d1)</td>
+</tr>
+<tr>
+<td>Evolution/copy number</td>
+<td>SAHS is a <strong>tardigrade/eutardigrade-specific</strong> family with affinity to metazoan FABPs but distinct sequence/features. <strong>R. varieornatus encodes 13 SAHS proteins (RvSAHS1–13)</strong>. Broader phylogenetic analysis identified <strong>29 SAHS sequences across 13 tardigrade genera</strong>, with evidence for multiple independent duplications; one Ramazzottius SAHS clade was inferred to show <strong>six independent duplications</strong>. Internal SAHS phylogeny remains only partly resolved, so nomenclature/paralogy relationships are still being refined (fleming2024theevolutionof pages 1-2, fleming2024theevolutionof pages 7-9, lim2024tardigradesecretoryproteins pages 5-6, fleming2024theevolutionof pages 6-7, lim2024tardigradesecretoryproteins pages 6-7).</td>
+<td>Comparative genomics/phylogenetics + inference</td>
+<td>Fleming et al. 2024, <em>Genome Biology and Evolution</em>, https://doi.org/10.1093/gbe/evad217; Lim et al. 2024, <em>Communications Biology</em>, https://doi.org/10.1038/s42003-024-06336-w (fleming2024theevolutionof pages 1-2, fleming2024theevolutionof pages 7-9, lim2024tardigradesecretoryproteins pages 5-6, fleming2024theevolutionof pages 6-7, lim2024tardigradesecretoryproteins pages 6-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main functional annotation evidence for Ramazzottius varieornatus SAHS1 (UniProt J7MFT5), integrating localization, structure, ligand-binding hypotheses, dehydration behavior, protective phenotypes, and evolutionary context. It is designed as a compact evidence map distinguishing direct experiments from inference.</em></p>
+<h3 id="gaps-and-recommended-next-experiments-limits-of-current-knowledge">Gaps and recommended next experiments (limits of current knowledge)</h3>
+<ul>
+<li><strong>Physiological ligand identity and binding constants</strong> for RvSAHS1 remain unresolved: crystallography suggests carboxylate-containing ligands can occupy cavity sites, but the physiological ligand(s) and binding affinities have not been conclusively determined in the evidence reviewed here. (fukuda2017structuralinsightsinto pages 6-9, lim2024tardigradesecretoryproteins pages 6-7)</li>
+<li><strong>In vivo SAHS1-specific necessity/sufficiency</strong> in <em>R. varieornatus</em> remains incompletely established: the strongest direct functional demonstrations are currently exogenous protection assays; genetic loss-of-function in <em>R. varieornatus</em> specifically would more directly connect SAHS1 to organismal anhydrobiosis. (fukuda2017structuralinsightsinto pages 1-4, lim2024tardigradesecretoryproteins pages 3-5)</li>
+</ul>
+<h3 id="key-references-publication-date-url">Key references (publication date + URL)</h3>
+<ul>
+<li>Yamaguchi A. et al. (Aug 2012). “Two Novel Heat-Soluble Protein Families Abundantly Expressed in an Anhydrobiotic Tardigrade.” <em>PLoS ONE</em>. https://doi.org/10.1371/journal.pone.0044209 (yamaguchi2012twonovelheatsoluble pages 3-5)</li>
+<li>Fukuda Y. et al. (Aug 2017). “Structural insights into a secretory abundant heat‐soluble protein from an anhydrobiotic tardigrade, <em>Ramazzottius varieornatus</em>.” <em>FEBS Letters</em>. https://doi.org/10.1002/1873-3468.12752 (fukuda2017structuralinsightsinto pages 9-11, fukuda2017structuralinsightsinto pages 6-9)</li>
+<li>Tanaka S. et al. (Jan 2023). “In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in Eutardigrada.” <em>PNAS</em>. https://doi.org/10.1073/pnas.2216739120 (tanaka2023invivoexpression pages 4-6, tanaka2023invivoexpression pages 3-4, tanaka2023invivoexpression pages 2-3)</li>
+<li>Lim S. et al. (May 2024). “Tardigrade secretory proteins protect biological structures from desiccation.” <em>Communications Biology</em>. https://doi.org/10.1038/s42003-024-06336-w (lim2024tardigradesecretoryproteins pages 5-6, lim2024tardigradesecretoryproteins pages 3-5, lim2024tardigradesecretoryproteins media 7cd986d1)</li>
+<li>Fleming JF. et al. (Nov 2024). “The Evolution of Temperature and Desiccation-Related Protein Families in Tardigrada Reveals a Complex Acquisition of Extremotolerance.” <em>Genome Biology and Evolution</em>. https://doi.org/10.1093/gbe/evad217 (fleming2024theevolutionof pages 1-2, fleming2024theevolutionof pages 7-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(lim2024tardigradesecretoryproteins pages 5-6): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2024tardigradesecretoryproteins pages 3-5): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2023invivoexpression pages 4-6): Sae Tanaka, Kazuhiro Aoki, and Kazuharu Arakawa. In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in eutardigrada. Proceedings of the National Academy of Sciences, Jan 2023. URL: https://doi.org/10.1073/pnas.2216739120, doi:10.1073/pnas.2216739120. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2023invivoexpression pages 3-4): Sae Tanaka, Kazuhiro Aoki, and Kazuharu Arakawa. In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in eutardigrada. Proceedings of the National Academy of Sciences, Jan 2023. URL: https://doi.org/10.1073/pnas.2216739120, doi:10.1073/pnas.2216739120. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 3-5): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukuda2017structuralinsightsinto pages 1-4): Yohta Fukuda, Yoshimasa Miura, Eiichi Mizohata, and Tsuyoshi Inoue. Structural insights into a secretory abundant heat‐soluble protein from an anhydrobiotic tardigrade, ramazzottius varieornatus. FEBS Letters, 591:2458-2469, Aug 2017. URL: https://doi.org/10.1002/1873-3468.12752, doi:10.1002/1873-3468.12752. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukuda2017structuralinsightsinto pages 9-11): Yohta Fukuda, Yoshimasa Miura, Eiichi Mizohata, and Tsuyoshi Inoue. Structural insights into a secretory abundant heat‐soluble protein from an anhydrobiotic tardigrade, ramazzottius varieornatus. FEBS Letters, 591:2458-2469, Aug 2017. URL: https://doi.org/10.1002/1873-3468.12752, doi:10.1002/1873-3468.12752. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2023invivoexpression pages 2-3): Sae Tanaka, Kazuhiro Aoki, and Kazuharu Arakawa. In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in eutardigrada. Proceedings of the National Academy of Sciences, Jan 2023. URL: https://doi.org/10.1073/pnas.2216739120, doi:10.1073/pnas.2216739120. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2024tardigradesecretoryproteins pages 6-7): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2024tardigradesecretoryproteins pages 1-3): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 1-2): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 7-9): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukuda2017structuralinsightsinto pages 6-9): Yohta Fukuda, Yoshimasa Miura, Eiichi Mizohata, and Tsuyoshi Inoue. Structural insights into a secretory abundant heat‐soluble protein from an anhydrobiotic tardigrade, ramazzottius varieornatus. FEBS Letters, 591:2458-2469, Aug 2017. URL: https://doi.org/10.1002/1873-3468.12752, doi:10.1002/1873-3468.12752. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukuda2017structuralinsightsinto pages 11-14): Yohta Fukuda, Yoshimasa Miura, Eiichi Mizohata, and Tsuyoshi Inoue. Structural insights into a secretory abundant heat‐soluble protein from an anhydrobiotic tardigrade, ramazzottius varieornatus. FEBS Letters, 591:2458-2469, Aug 2017. URL: https://doi.org/10.1002/1873-3468.12752, doi:10.1002/1873-3468.12752. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2024tardigradesecretoryproteins media 7cd986d1): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lim2024tardigradesecretoryproteins media caaecc4a): Samuel Lim, Charles B. Reilly, Zeina Barghouti, Benedetto Marelli, Jeffrey C. Way, and Pamela A. Silver. Tardigrade secretory proteins protect biological structures from desiccation. Communications Biology, May 2024. URL: https://doi.org/10.1038/s42003-024-06336-w, doi:10.1038/s42003-024-06336-w. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamaguchi2012twonovelheatsoluble pages 5-6): Ayami Yamaguchi, Sae Tanaka, Shiho Yamaguchi, Hirokazu Kuwahara, Chizuko Takamura, Shinobu Imajoh-Ohmi, Daiki D. Horikawa, Atsushi Toyoda, Toshiaki Katayama, Kazuharu Arakawa, Asao Fujiyama, Takeo Kubo, and Takekazu Kunieda. Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic tardigrade. PLoS ONE, 7:e44209, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0044209, doi:10.1371/journal.pone.0044209. This article has 195 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tanaka2023invivoexpression pages 6-7): Sae Tanaka, Kazuhiro Aoki, and Kazuharu Arakawa. In vivo expression vector derived from anhydrobiotic tardigrade genome enables live imaging in eutardigrada. Proceedings of the National Academy of Sciences, Jan 2023. URL: https://doi.org/10.1073/pnas.2216739120, doi:10.1073/pnas.2216739120. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fleming2024theevolutionof pages 6-7): James F Fleming, Davide Pisani, and Kazuharu Arakawa. The evolution of temperature and desiccation-related protein families in tardigrada reveals a complex acquisition of extremotolerance. Genome Biology and Evolution, Nov 2024. URL: https://doi.org/10.1093/gbe/evad217, doi:10.1093/gbe/evad217. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>yamaguchi2012twonovelheatsoluble pages 3-5</li>
+<li>fukuda2017structuralinsightsinto pages 11-14</li>
+<li>fukuda2017structuralinsightsinto pages 6-9</li>
+<li>lim2024tardigradesecretoryproteins pages 6-7</li>
+<li>tanaka2023invivoexpression pages 3-4</li>
+<li>lim2024tardigradesecretoryproteins pages 5-6</li>
+<li>lim2024tardigradesecretoryproteins pages 3-5</li>
+<li>tanaka2023invivoexpression pages 4-6</li>
+<li>fukuda2017structuralinsightsinto pages 1-4</li>
+<li>fukuda2017structuralinsightsinto pages 9-11</li>
+<li>tanaka2023invivoexpression pages 2-3</li>
+<li>lim2024tardigradesecretoryproteins pages 1-3</li>
+<li>fleming2024theevolutionof pages 1-2</li>
+<li>fleming2024theevolutionof pages 7-9</li>
+<li>yamaguchi2012twonovelheatsoluble pages 5-6</li>
+<li>tanaka2023invivoexpression pages 6-7</li>
+<li>fleming2024theevolutionof pages 6-7</li>
+<li>https://doi.org/10.1073/pnas.2216739120</li>
+<li>https://doi.org/10.1038/s42003-024-06336-w</li>
+<li>https://doi.org/10.1093/gbe/evad217</li>
+<li>https://doi.org/10.1371/journal.pone.0044209;</li>
+<li>https://doi.org/10.1002/1873-3468.12752</li>
+<li>https://doi.org/10.1002/1873-3468.12752;</li>
+<li>https://doi.org/10.1093/gbe/evad217;</li>
+<li>https://doi.org/10.1371/journal.pone.0044209</li>
+<li>https://doi.org/10.1038/s42003-024-06336-w,</li>
+<li>https://doi.org/10.1073/pnas.2216739120,</li>
+<li>https://doi.org/10.1371/journal.pone.0044209,</li>
+<li>https://doi.org/10.1002/1873-3468.12752,</li>
+<li>https://doi.org/10.1093/gbe/evad217,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: J7MFT5
+gene_symbol: SAHS1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:947166
+  label: Ramazzottius varieornatus
+description: &gt;-
+  Secretory abundant heat-soluble protein 1 (SAHS1) is a tardigrade-specific secreted protein
+  that functions as a molecular shield under water-deficient conditions, contributing to
+  desiccation tolerance (anhydrobiosis). SAHS1 adopts a beta-barrel fold structurally similar
+  to fatty acid-binding proteins (FABPs), but with unique hydrophilic hydrogen bond networks
+  that provide enhanced tolerance against dehydration. It is one of the most abundantly expressed
+  proteins in Ramazzottius varieornatus and undergoes conformational change from beta-structure
+  to alpha-helical structure upon desiccation. The protein is secreted and proposed to protect
+  extracellular components during desiccation.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      SAHS1 is a secretory protein with a signal peptide (residues 1-19) that is cleaved
+      to produce the mature protein. Yamaguchi et al. (2012) demonstrated experimentally
+      that SAHS1-GFP fusion protein was detected in the culture medium rather than cell
+      bodies by immunoblot analysis (PMID:22937162), confirming secretion. UniProt annotates
+      the subcellular location as &#34;Secreted&#34; with experimental evidence (ECO:0000269|PubMed:22937162).
+      The IEA annotation via UniProtKB-SubCell mapping to GO:0005576 (extracellular region)
+      is well-supported.
+    action: ACCEPT
+    reason: &gt;-
+      The extracellular region annotation is strongly supported by experimental evidence.
+      SAHS1 contains a signal peptide and was shown to be secreted into culture medium
+      when expressed as a GFP fusion in mammalian cells (PMID:22937162). This is also
+      consistent with the protein name (Secretory Abundant Heat Soluble). The IEA mapping
+      from UniProtKB-SubCell is accurate.
+    supported_by:
+      - reference_id: PMID:22937162
+        supporting_text: &gt;-
+          We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant
+          Heat Soluble (SAHS) protein families, according to their localization.
+- term:
+    id: GO:0008289
+    label: lipid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      The lipid binding annotation is inferred electronically from the InterPro FABP domain
+      (IPR000463). Fukuda et al. (2017) solved the crystal structure of SAHS1 (PDB: 5XN9,
+      5XNA) and confirmed that it adopts a beta-barrel fold similar to FABPs, with two
+      putative ligand-binding sites (PMID:28703282). However, the authors noted that SAHS1
+      has unique hydrophilic hydrogen bond networks within the barrel that are distinct from
+      canonical FABPs, adapted for desiccation tolerance rather than lipid transport.
+      No experimental evidence of lipid binding has been demonstrated for SAHS1. The
+      structural similarity to FABPs makes the annotation plausible but unconfirmed.
+    action: ACCEPT
+    reason: &gt;-
+      While no direct lipid binding has been experimentally demonstrated for SAHS1, the
+      crystal structure confirms a genuine FABP-like beta-barrel fold with two putative
+      ligand-binding sites that superimpose on those of canonical FABPs (PMID:28703282).
+      The InterPro-based IEA annotation is a reasonable inference from the structural
+      similarity to the FABP family. It is possible that lipid binding is an ancestral
+      function retained or repurposed in SAHS proteins, even though the primary biological
+      role appears to be desiccation protection. The IEA annotation accurately reflects
+      the computational inference and should be retained pending experimental testing.
+    supported_by:
+      - reference_id: PMID:28703282
+        supporting_text: &gt;-
+          RvSAHS1 shows a beta-barrel structure similar to fatty acid-binding proteins
+          (FABPs), in which hydrophilic residues form peculiar hydrogen bond networks,
+          which would provide RvSAHS1 with better tolerance against dehydration.
+      - reference_id: PMID:28703282
+        supporting_text: &gt;-
+          We identified two putative ligand-binding sites: one that superimposes on those
+          of some FABPs and the other, unique to and conserved in SAHS proteins. These
+          results indicate that SAHS proteins constitute a new FABP family.
+      - reference_id: PMID:22937162
+        supporting_text: &gt;-
+          We named them Cytoplasmic Abundant Heat Soluble (CAHS) and Secretory Abundant
+          Heat Soluble (SAHS) protein families, according to their localization.
+- term:
+    id: GO:0009269
+    label: response to desiccation
+  evidence_type: IDA
+  original_reference_id: PMID:22937162
+  review:
+    summary: &gt;-
+      SAHS1 is a major heat-soluble protein identified by proteomics in the anhydrobiotic
+      tardigrade R. varieornatus. It is constitutively and abundantly expressed and undergoes
+      conformational change from beta-structure to alpha-helical structure under water-deficient
+      conditions (PMID:22937162). UniProt describes its function as a &#34;molecular shield in
+      water-deficient condition&#34; (ECO:0000269|PubMed:22937162). The protein is proposed to
+      protect extracellular components during desiccation, acting analogously to LEA proteins
+      in other anhydrobiotic organisms. This biological process annotation is critical for
+      capturing the core function of SAHS1.
+    action: NEW
+    reason: &gt;-
+      This is the core biological process for SAHS1. The protein was identified specifically
+      through heat-soluble proteomics aimed at understanding anhydrobiosis (PMID:22937162).
+      It undergoes desiccation-induced conformational changes and is proposed to act as a
+      molecular shield protecting extracellular components during desiccation
+      (PMID:22937162, PMID:27649274). The GO term GO:0009269 (response to desiccation)
+      accurately captures this biological role. This annotation is conspicuously absent from
+      the current GOA set and should be added.
+    supported_by:
+      - reference_id: PMID:22937162
+        supporting_text: &gt;-
+          Both protein families were conserved among tardigrades, but not found in other
+          phyla. Although CAHS protein was intrinsically unstructured and SAHS protein was
+          rich in beta-structure in the hydrated condition, proteins in both families changed
+          their conformation to an alpha-helical structure in water-deficient conditions as
+          LEA proteins do.
+      - reference_id: PMID:22937162
+        supporting_text: &gt;-
+          proteins in both families changed their conformation to an alpha-helical structure
+          in water-deficient conditions as LEA proteins do
+      - reference_id: PMID:27649274
+        supporting_text: &gt;-
+          These abundantly expressed proteins included previously identified tardigrade-unique
+          heat-soluble proteins, CAHS and SAHS, both of which maintain solubility even after
+          heat treatment and are proposed to be involved in the protection of biomolecules
+          during desiccation
+references:
+- id: PMID:22937162
+  title: Two novel heat-soluble protein families abundantly expressed in an anhydrobiotic
+    tardigrade
+  findings:
+    - statement: SAHS1 identified as major heat-soluble protein by proteomics
+    - statement: SAHS1 is a secretory protein confirmed by GFP fusion experiments
+    - statement: Undergoes conformational change to alpha-helix in water-deficient conditions
+    - statement: Proposed to act as molecular shield protecting extracellular components during desiccation
+- id: PMID:27649274
+  title: Extremotolerant tardigrade genome and improved radiotolerance of human cultured
+    cells by tardigrade-unique protein
+  findings:
+    - statement: Genome sequencing confirmed 13 SAHS genes in R. varieornatus
+    - statement: SAHS genes are constitutively and abundantly expressed
+    - statement: SAHS proteins have low similarity to metazoan fatty acid-binding proteins
+- id: PMID:28703282
+  title: Structural insights into a secretory abundant heat-soluble protein from an
+    anhydrobiotic tardigrade, Ramazzottius varieornatus
+  findings:
+    - statement: Crystal structure of SAHS1 solved at 1.45 angstrom resolution (PDB 5XN9)
+    - statement: Beta-barrel fold similar to FABPs but with unique hydrophilic hydrogen bond networks
+    - statement: Two putative ligand-binding sites identified
+    - statement: SAHS proteins constitute a new FABP family adapted for desiccation tolerance
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

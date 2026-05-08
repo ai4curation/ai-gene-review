@@ -1,0 +1,4 @@
+# NaBBL2_candidate_FOX1_2 Notes
+
+- The full preprint makes **BBLa/NicGS** a mechanistically defined late-pathway enzyme that drives stereoselective nicotine formation, with both structural and dropout support. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "BBLa = NicGS, an (S)-nicotine glucoside synthase that drives pathway stereoselectivity"; "removing BBL/NicGS reduces nicotine and leaves residual racemic product"]
+- That strengthens the existing choice to keep **FOX1_2** as the best current BBL2-like anchor, while still leaving exact NICAT BBL paralog resolution open. [file:projects/NICOTINE_BIOSYNTHESIS/biorxiv-nicotine-glucosylation-notes.md "For the NICAT project, this paper is therefore strongest for pathway-role assignment and weakest for exact paralog/accession resolution."]

@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rlmC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rlmC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P75817" target="_blank" class="term-link">
+                        P75817
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Escherichia coli (strain K12)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rlmC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P75817" data-a="DESCRIPTION: RlmC (formerly RumB/YbjF) is a 23S rRNA (uracil(74..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RlmC (formerly RumB/YbjF) is a 23S rRNA (uracil(747)-C(5))-methyltransferase (EC 2.1.1.189) in E. coli K12 that catalyzes the formation of 5-methyluridine at position 747 (m5U747) in 23S rRNA using S-adenosyl-L-methionine as methyl donor. It belongs to the COG2265 cluster of RNA m5U methyltransferases, which in E. coli includes three paralogs with distinct specificities: TrmA (tRNA U54), RlmC (23S rRNA U747), and RlmD/RumA (23S rRNA U1939). Function was established in vivo by Madsen et al. (2003, PMID:12907714) using a ybjF knockout strain, which specifically lacked only the m5U747 modification. RlmC contains an N-terminal [4Fe-4S] cluster (predicted by HAMAP based on the conserved CX5CGGC motif established in the paralog RumA/RlmD) and a C-terminal SAM-dependent methyltransferase fold with a catalytic cysteine (Cys334) that forms a covalent Michael adduct with the target uracil during catalysis. In some Gram-positive bacteria such as B. subtilis, a single enzyme (RlmCD) performs both the U747 and U1939 modifications, suggesting evolutionary specialization of the COG2265 paralogs in E. coli.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070041" target="_blank" class="term-link">
+                                    GO:0070041
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (uridine-C5-)-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0070041" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for rRNA (uridine-C5-)-methyltransferase activity based on phylogenetic inference (PANTHER). This is the most specific molecular function term for RlmC and is strongly supported by the in vivo knockout evidence from Madsen et al. 2003 (PMID:12907714), which showed loss of m5U747 modification specifically in the ybjF/rlmC deletion strain.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct and most specific molecular function annotation for RlmC. The IBA inference from PANTHER is well supported by experimental IMP evidence (PMID:12907714) demonstrating that RlmC specifically methylates U747 at C5 in 23S rRNA.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ECOLI/rlmC/rlmC-deep-research-bioreason-sft.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">BioReason domain architecture analysis confirms RlmC family assignment (IPR011825) and the TrmA-like catalytic mechanism, consistent with rRNA (uridine-C5-)-methyltransferase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                    GO:0070475
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA base methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0070475" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation for rRNA base methylation based on phylogenetic inference (PANTHER). Correct biological process for RlmC. The m5U747 modification is a base methylation on 23S rRNA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurately describes the biological process: RlmC catalyzes methylation of a base (uracil C5) in rRNA. Supported by in vivo evidence from PMID:12907714.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0005506" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for iron ion binding based on UniRule (UR000100395). RlmC contains a predicted [4Fe-4S] cluster coordinated by Cys3, Cys11, Cys14, and Cys87 (HAMAP-Rule:MF_01012). The [4Fe-4S] cluster has been experimentally demonstrated in the paralog RumA/RlmD (PMID:15181002, PMID:15016356) and the cysteine motif CX5CGGC is conserved in RlmC. While iron ion binding is technically correct, a more precise term would be 4 iron, 4 sulfur cluster binding (GO:0051539), which is already annotated in the UniProt DR lines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Iron ion binding is too general. The iron is bound as part of a [4Fe-4S] cluster, not as free iron ions. GO:0051539 (4 iron, 4 sulfur cluster binding) is a more precise and informative annotation. The [4Fe-4S] cluster is well-established in this enzyme family (PMID:15181002).
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link">
+                                    4 iron, 4 sulfur cluster binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15181002" target="_blank" class="term-link">
+                                        PMID:15181002
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Sequence data base searches revealed that RumA homologs are widespread in various kingdoms of life and contain a conserved and unique iron-sulfur cluster binding motif, CX(5)CGGC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006396" target="_blank" class="term-link">
+                                    GO:0006396
+                                </a>
+                            </span>
+                            <span class="term-label">RNA processing</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0006396" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for RNA processing based on combined automated methods (InterPro:IPR010280). RNA processing is overly broad for what RlmC does. RlmC performs a specific chemical modification (methylation) of rRNA, not processing in the sense of cleavage, splicing, or end-maturation. The more appropriate term is rRNA methylation (GO:0031167) or rRNA base methylation (GO:0070475), both of which are already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RNA processing is too general and somewhat misleading for a methyltransferase. Methylation is a modification, not processing. The correct biological process terms (rRNA methylation, rRNA base methylation) are already present.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031167" target="_blank" class="term-link">
+                                    rRNA methylation
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">here we determine the functions of these candidate methyltransferases using MALDI mass spectrometry</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008173" target="_blank" class="term-link">
+                                    GO:0008173
+                                </a>
+                            </span>
+                            <span class="term-label">RNA methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0008173" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for RNA methyltransferase activity. This is correct but less specific than GO:0070041 (rRNA (uridine-C5-)-methyltransferase activity) and GO:0016436 (rRNA (uridine) methyltransferase activity), both of which are already annotated. This is a valid parent term but redundant when the more specific child terms are present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but redundant with the more specific terms GO:0070041 and GO:0016436 that are already annotated. Keeping as non-core since it adds no information beyond what the more specific terms provide.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008757" target="_blank" class="term-link">
+                                    GO:0008757
+                                </a>
+                            </span>
+                            <span class="term-label">S-adenosylmethionine-dependent methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0008757" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for SAM-dependent methyltransferase activity based on ARBA machine learning. Correct: RlmC uses S-adenosyl-L-methionine as methyl donor. The catalytic reaction is well-defined (Rhea:RHEA:42628). However, this is a general parent term and less specific than GO:0070041.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct cofactor usage but a general parent of the more specific rRNA methyltransferase terms already present. The SAM-dependent mechanism is confirmed by the UniProt catalytic activity annotation and the family membership in COG2265 SAM-dependent RNA m5U methyltransferases.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Two open reading frames, YbjF and YgcA, are approximately 30% identical to TrmA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009451" target="_blank" class="term-link">
+                                    GO:0009451
+                                </a>
+                            </span>
+                            <span class="term-label">RNA modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0009451" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for RNA modification based on ARBA. Correct but very general. More specific child terms (rRNA base methylation GO:0070475, rRNA methylation GO:0031167) are already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but very general parent of more specific biological process terms already annotated. Redundant with GO:0070475 and GO:0031167.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016070" target="_blank" class="term-link">
+                                    GO:0016070
+                                </a>
+                            </span>
+                            <span class="term-label">RNA metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0016070" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for RNA metabolic process based on InterPro (IPR011825). Extremely broad term. While technically true, this is uninformative given the much more specific annotations already present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Extremely broad parent term. Redundant with more specific biological process annotations (rRNA base methylation, rRNA methylation). Provides no additional functional insight.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016436" target="_blank" class="term-link">
+                                    GO:0016436
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (uridine) methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0016436" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for rRNA (uridine) methyltransferase activity based on InterPro (IPR011825). This is a correct molecular function annotation at an intermediate specificity level. GO:0070041 (rRNA (uridine-C5-)-methyltransferase activity) is more specific and also annotated. Since the evidence from PMID:12907714 specifically demonstrates C5 methylation, the more specific term is preferred.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The evidence supports the more specific term GO:0070041 (rRNA (uridine-C5-)- methyltransferase activity), which specifies the C5 position. Consistent with the action for the IMP-evidenced annotation of the same term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070041" target="_blank" class="term-link">
+                                    rRNA (uridine-C5-)-methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031167" target="_blank" class="term-link">
+                                    GO:0031167
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0031167" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for rRNA methylation based on UniRule (UR000100395). This is an appropriate biological process term for RlmC. It is a parent of GO:0070475 (rRNA base methylation), which is already annotated with experimental (IMP) evidence. Keeping as non-core since the more specific child term is present.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct but parent of the more specific GO:0070475 (rRNA base methylation) which is annotated with IMP evidence.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070041" target="_blank" class="term-link">
+                                    GO:0070041
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (uridine-C5-)-methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0070041" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for rRNA (uridine-C5-)-methyltransferase activity based on UniRule (UR000100395). Duplicate of the IBA annotation with the same GO term from GO_REF:0000033. Both are correct; this IEA provides independent computational support.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and most specific molecular function term. Independent computational support for the IBA annotation from PANTHER.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                    GO:0070475
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA base methylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12907714
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identifying the methyltransferases for m(5)U747 and m(5)U193...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0070475" data-r="PMID:12907714" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for rRNA base methylation from Madsen et al. 2003. This is the key experimental evidence for RlmC function, based on comparison of methylation patterns between wild-type and ybjF knockout strains using MALDI mass spectrometry. The knockout specifically lost m5U747 methylation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core experimental evidence (IMP) demonstrating that RlmC is required for rRNA base methylation in vivo. The MALDI-MS analysis directly showed loss of m5U747 in the knockout strain. This is the most informative biological process annotation with direct experimental support.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016436" target="_blank" class="term-link">
+                                    GO:0016436
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA (uridine) methyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12907714
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identifying the methyltransferases for m(5)U747 and m(5)U193...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P75817" data-a="GO:0016436" data-r="PMID:12907714" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation for rRNA (uridine) methyltransferase activity from Madsen et al. 2003. Based on the same knockout experiment that demonstrated loss of m5U747 in the ybjF- strain. While IMP (inferred from mutant phenotype) is technically the correct evidence code for this knockout study, a more specific MF term GO:0070041 would be preferred.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The evidence from PMID:12907714 supports the more specific term GO:0070041 (rRNA (uridine-C5-)-methyltransferase activity) since the study specifically demonstrated C5 methylation of uridine. Upgrading to the more specific term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070041" target="_blank" class="term-link">
+                                    rRNA (uridine-C5-)-methyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                        PMID:12907714
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">There are three sites of m(5)U modification in Escherichia coli stable RNAs</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RlmC catalyzes the SAM-dependent methylation of uracil at position 747 in 23S rRNA, producing 5-methyluridine (m5U747). This is its sole known enzymatic activity. The catalytic mechanism involves a nucleophilic cysteine (Cys334) that forms a covalent Michael adduct at the uracil C6 position, enabling electrophilic methyl transfer from SAM to C5. The enzyme contains a [4Fe-4S] cluster that serves a structural rather than catalytic role.</h3>
+                <span class="vote-buttons" data-g="P75817" data-a="FUNCTION: RlmC catalyzes the SAM-dependent methylation of ur..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070041" target="_blank" class="term-link">
+                            rRNA (uridine-C5-)-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070475" target="_blank" class="term-link">
+                                rRNA base methylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                                PMID:12907714
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" target="_blank" class="term-link">
+                            PMID:12907714
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identifying the methyltransferases for m(5)U747 and m(5)U1939 in 23S rRNA using MALDI mass spectrometry.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">YbjF (now RlmC/RumB) is responsible for m5U747 methylation in 23S rRNA, as demonstrated by in vivo knockout showing specific loss of this modification.</div>
+                        
+                        <div class="finding-text">"Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant YbjF/RlmC could not be obtained in an active form in vitro, so function was established by in vivo knockout analysis.</div>
+                        
+                        <div class="finding-text">"We were unable to generate a recombinant version of YbjF that retained in vitro activity, so the function of this enzyme was defined in vivo by engineering a ybjF knockout strain"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The three E. coli m5U RNA methyltransferases are: TrmA (tRNA U54), YbjF/RumB/RlmC (23S rRNA U747), and YgcA/RumA/RlmD (23S rRNA U1939).</div>
+                        
+                        <div class="finding-text">"With this report, the functions of all the E.coli m(5)U RNA methyltransferases are identified"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21824914" target="_blank" class="term-link">
+                            PMID:21824914
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A single methyltransferase YefA (RlmCD) catalyses both m5U747 and m5U1939 modifications in Bacillus subtilis 23S rRNA.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In B. subtilis, a single COG2265 enzyme (YefA/RlmCD) catalyzes both m5U747 and m5U1939 modifications, whereas E. coli uses separate enzymes RlmC and RlmD for these two sites.</div>
+                        
+                        <div class="finding-text">"methylation of U747 and U1939 in B. subtilis rRNA is catalysed by a single enzyme, YefA that is a COG2265 member"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21051506" target="_blank" class="term-link">
+                            PMID:21051506
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Specificity shifts in the rRNA and tRNA nucleotide targets of archaeal and bacterial m5U methyltransferases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RNA m5U methyltransferases arose in Bacteria and spread to Archaea and Eukaryota by horizontal gene transfer. The COG2265 enzymes have undergone target specificity shifts during evolution.</div>
+                        
+                        <div class="finding-text">"The RNA m(5)U methyltransferases appear to have arisen in Bacteria and were then dispersed by horizontal transfer of an rlmD-type gene to the Archaea and Eukaryota"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30388185" target="_blank" class="term-link">
+                            PMID:30388185
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Unveiling the structural features that determine the dual methyltransferase activities of Streptococcus pneumoniae RlmCD.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Structural analysis of S. pneumoniae RlmCD in complex with U747-containing and U1939-containing RNA substrates reveals how the dual-specificity enzyme discriminates between the two substrates, providing insight into the dedicated specificity of E. coli RlmC for U747.</div>
+                        
+                        <div class="finding-text">"RlmC is the dedicated enzyme for m5U747 in Escherichia coli"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15181002" target="_blank" class="term-link">
+                            PMID:15181002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Redox reactions of the iron-sulfur cluster in a ribosomal RNA methyltransferase, RumA.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RumA/RlmD homologs (including RlmC) contain a conserved [4Fe-4S] cluster with a CX5CGGC binding motif. The cluster is structural rather than catalytic since the methyltransferase reaction does not involve a redox step.</div>
+                        
+                        <div class="finding-text">"Sequence data base searches revealed that RumA homologs are widespread in various kingdoms of life and contain a conserved and unique iron-sulfur cluster binding motif, CX(5)CGGC"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17459887" target="_blank" class="term-link">
+                            PMID:17459887
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Amino acid residues of the Escherichia coli tRNA(m5U54)methyltransferase (TrmA) critical for stability, covalent binding of tRNA and enzymatic activity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Conserved residues in the COG2265 catalytic domain are shared across TrmA, RumA/RlmD, and RumB/RlmC, supporting modular evolution with a conserved catalytic domain combined with different RNA-binding domains.</div>
+                        
+                        <div class="finding-text">"the amino acids F188, Q190, G220, D299, R302, C324 and E358, conserved in the C-terminal catalytic domain of several RNA(m5U)methyltransferases of the COG2265 family, are important for the formation of the TrmA-tRNA intermediate and/or the enzymatic activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the m5U747 modification for ribosome assembly or translational fidelity? The original knockout study (PMID:12907714) did not report growth phenotypes.</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P75817" data-a="Q: What is the functional significance of the m5U747 ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Has the [4Fe-4S] cluster in RlmC been experimentally verified, or is this inference based solely on sequence conservation with RumA/RlmD?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P75817" data-a="Q: Has the [4Fe-4S] cluster in RlmC been experimental..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why could recombinant RlmC not be obtained in active form in vitro (PMID:12907714)? Is this related to [4Fe-4S] cluster assembly or protein folding requirements?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P75817" data-a="Q: Why could recombinant RlmC not be obtained in acti..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Phenotypic characterization of an rlmC deletion strain under stress conditions (e.g., sublethal antibiotic concentrations, temperature stress, competitive growth). The original study (PMID:12907714) focused on biochemical identification of the modification rather than phenotypic consequences.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of m5U747 may confer subtle growth disadvantages under stress conditions or when combined with loss of other rRNA modifications.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P75817" data-a="EXPERIMENT: Phenotypic characterization of an rlmC deletion st..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Spectroscopic characterization (UV-vis, EPR) of purified RlmC to directly demonstrate the presence of a [4Fe-4S] cluster, analogous to the studies performed on RumA/RlmD (PMID:15181002).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: RlmC contains a [4Fe-4S] cluster coordinated by Cys3, Cys11, Cys14, and Cys87, analogous to the cluster in RumA/RlmD.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P75817" data-a="EXPERIMENT: Spectroscopic characterization (UV-vis, EPR) of pu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Bioreason Sft</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rlmC-deep-research-bioreason-sft.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P75817" data-a="DOC: Deep Research Bioreason Sft" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <div class="codehilite"><pre><span></span><code><span class="o">---</span>
+<span class="n">provider</span><span class="p">:</span><span class="w"> </span><span class="n">bioreason</span><span class="o">-</span><span class="n">pro</span>
+<span class="n">model</span><span class="p">:</span><span class="w"> </span><span class="n">SFT</span>
+<span class="n">source</span><span class="p">:</span><span class="w"> </span><span class="n">huggingface</span><span class="o">.</span><span class="n">co</span><span class="o">/</span><span class="n">datasets</span><span class="o">/</span><span class="n">wanglab</span><span class="o">/</span><span class="n">protein_catalogue</span>
+<span class="n">date</span><span class="p">:</span><span class="w"> </span><span class="s1">&#39;2026-04-04&#39;</span>
+<span class="n">uniprot_id</span><span class="p">:</span><span class="w"> </span><span class="n">B1X800</span>
+<span class="n">gene</span><span class="p">:</span><span class="w"> </span><span class="n">rlmC</span>
+<span class="n">organism</span><span class="p">:</span><span class="w"> </span><span class="n">Escherichia</span><span class="w"> </span><span class="n">coli</span><span class="w"> </span><span class="p">(</span><span class="n">strain</span><span class="w"> </span><span class="n">K12</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">DH10B</span><span class="p">)</span>
+<span class="o">---</span>
+
+<span class="c1">## Thinking Trace</span>
+
+<span class="n">I</span><span class="w"> </span><span class="n">begin</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">architecture</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">sequence</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">saturated</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">signatures</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">TrmA</span><span class="o">/</span><span class="n">RlmC</span><span class="w"> </span><span class="n">clade</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">C5</span><span class="o">-</span><span class="n">uracil</span><span class="w"> </span><span class="n">methyltransferases</span><span class="o">.</span><span class="w"> </span><span class="n">IPR011825</span><span class="w"> </span><span class="p">(</span><span class="mi">23</span><span class="n">S</span><span class="w"> </span><span class="n">rRNA</span><span class="w"> </span><span class="p">(</span><span class="n">uracil</span><span class="p">(</span><span class="mi">747</span><span class="p">)</span><span class="o">-</span><span class="n">C5</span><span class="p">)</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">RlmC</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">1</span><span class="err">–</span><span class="mi">375</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">its</span><span class="w"> </span><span class="n">near</span><span class="o">-</span><span class="n">complete</span><span class="w"> </span><span class="n">overlap</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">IPR010280</span><span class="w"> </span><span class="p">((</span><span class="n">Uracil</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">family</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">2</span><span class="err">–</span><span class="mi">373</span><span class="o">/</span><span class="mi">12</span><span class="err">–</span><span class="mi">375</span><span class="o">/</span><span class="mi">208</span><span class="err">–</span><span class="mi">374</span><span class="p">)</span><span class="w"> </span><span class="n">define</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">enzyme</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">substrate</span><span class="w"> </span><span class="k">class</span><span class="p">:</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">uracil</span><span class="o">-</span><span class="n">directed</span><span class="w"> </span><span class="n">C5</span><span class="o">-</span><span class="n">specific</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="o">.</span><span class="w"> </span><span class="n">Two</span><span class="w"> </span><span class="n">superfamily</span><span class="o">-</span><span class="n">level</span><span class="w"> </span><span class="n">envelopes</span><span class="p">,</span><span class="w"> </span><span class="n">IPR029063</span><span class="w"> </span><span class="p">(</span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">3</span><span class="err">–</span><span class="mi">374</span><span class="o">/</span><span class="mi">14</span><span class="err">–</span><span class="mi">368</span><span class="p">),</span><span class="w"> </span><span class="n">indicate</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">Rossmann</span><span class="o">-</span><span class="n">like</span><span class="w"> </span><span class="n">AdoMet</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">fold</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">donates</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="n">group</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">core</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">pinpointed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">IPR030390</span><span class="w"> </span><span class="p">(</span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">TrmA</span><span class="p">,</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">307</span><span class="err">–</span><span class="mi">338</span><span class="p">)</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">IPR030391</span><span class="w"> </span><span class="p">(</span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">TrmA</span><span class="p">,</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">residues</span><span class="w"> </span><span class="mi">357</span><span class="err">–</span><span class="mi">367</span><span class="p">),</span><span class="w"> </span><span class="n">which</span><span class="w"> </span><span class="n">together</span><span class="w"> </span><span class="n">mark</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">hallmark</span><span class="w"> </span><span class="n">TrmA</span><span class="o">/</span><span class="n">RlmC</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">constellation</span><span class="p">:</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">nucleophilic</span><span class="w"> </span><span class="n">cysteine</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">forms</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">covalent</span><span class="w"> </span><span class="n">adduct</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">uracil</span><span class="w"> </span><span class="n">C6</span><span class="w"> </span><span class="n">position</span><span class="p">,</span><span class="w"> </span><span class="n">enabling</span><span class="w"> </span><span class="n">electrophilic</span><span class="w"> </span><span class="n">substitution</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">C5</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">basic</span><span class="w"> </span><span class="n">residue</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">activates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">target</span><span class="w"> </span><span class="n">N1</span><span class="o">/</span><span class="n">C5</span><span class="w"> </span><span class="n">region</span><span class="o">.</span><span class="w"> </span><span class="n">The</span><span class="w"> </span><span class="n">ordered</span><span class="w"> </span><span class="n">layout</span><span class="err">—</span><span class="n">AdoMet</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="n">spanning</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">full</span><span class="w"> </span><span class="n">length</span><span class="p">,</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">embedded</span><span class="w"> </span><span class="n">TrmA</span><span class="o">/</span><span class="n">RlmC</span><span class="w"> </span><span class="n">active</span><span class="o">-</span><span class="n">site</span><span class="w"> </span><span class="n">motifs</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">terminal</span><span class="w"> </span><span class="n">half</span><span class="err">—</span><span class="n">causes</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="n">reaction</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">C5</span><span class="w"> </span><span class="n">position</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">uracil</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="n">within</span><span class="w"> </span><span class="n">structured</span><span class="w"> </span><span class="n">rRNA</span><span class="o">.</span>
+</code></pre></div>
+
+<p>This domain architecture dictates the molecular function as rRNA (uracil-C5)-specific methyltransferase activity (GO:0070043). The RlmC family assignment (IPR011825) narrows the substrate to 23S rRNA and the target nucleotide to U747, so the enzyme catalyzes formation of m5U747. The chemistry proceeds by AdoMet binding via the Rossmann-like fold (IPR029063), nucleophilic attack by the TrmA-like cysteine (IPR030390) to form a covalent Michael adduct at U747 C6, methyl transfer to C5, and beta-elimination to release m5U747, regenerating the active cysteine.</p>
+<p>Installing m5U747 is a specific instance of rRNA base methylation (GO:0070475). This modification stabilizes local rRNA structure in the large subunit and tunes functional centers during ribosome assembly and translation, thereby contributing to robust ribosome biogenesis and performance. Because the enzyme acts on 23S rRNA within assembling 50S particles, its activity integrates into the maturation pathway rather than late-stage translation.</p>
+<p>The absence of transmembrane segments and the soluble Rossmann-like fold, together with the need to access pre-50S assembly intermediates, place the enzyme in the cytosol (GO:0005829). In bacteria, 50S subunits assemble in the cytosol; thus the enzyme operates where pre-ribosomal particles are available.</p>
+<p>Mechanistically, the enzyme likely recognizes a conserved structural context around U747 in 23S rRNA, using the TrmA-like active-site pocket to dock the helix bearing U747 and flip the base into the catalytic pocket. It should transiently associate with 50S assembly intermediates and accessory factors that present or stabilize the relevant helix. Plausible partners include 50S ribosomal proteins positioned near the 70S-binding region (e.g., L3 and L4) that help present the helix, and 23S rRNA chaperones or assembly factors (e.g., the ObgE GTPase and the RbgA GTPase) that coordinate maturation states. Because catalysis consumes S-adenosyl-L-methionine, coupling to local SAM supply is also likely, but the primary functional network centers on pre-50S particles and their maturation GTPases.</p>
+<div class="codehilite"><pre><span></span><code><span class="err">##</span><span class="w"> </span><span class="n">Functional</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">A</span><span class="w"> </span><span class="n">cytosolic</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">E</span><span class="p">.</span><span class="w"> </span><span class="n">coli</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">installs</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="mi">5</span><span class="o">-</span><span class="n">methyl</span><span class="w"> </span><span class="k">group</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">uracil</span><span class="w"> </span><span class="mi">747</span><span class="w"> </span><span class="k">within</span><span class="w"> </span><span class="mi">23</span><span class="n">S</span><span class="w"> </span><span class="n">rRNA</span><span class="w"> </span><span class="n">during</span><span class="w"> </span><span class="k">large</span><span class="o">-</span><span class="n">subunit</span><span class="w"> </span><span class="n">assembly</span><span class="p">.</span><span class="w"> </span><span class="n">It</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="p">,</span><span class="w"> </span><span class="n">flips</span><span class="w"> </span><span class="n">U747</span><span class="w"> </span><span class="k">into</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">TrmA</span><span class="o">-</span><span class="ow">like</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">uses</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">cysteine</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">transient</span><span class="w"> </span><span class="n">covalent</span><span class="w"> </span><span class="n">adduct</span><span class="w"> </span><span class="n">that</span><span class="w"> </span><span class="n">enables</span><span class="w"> </span><span class="n">methyl</span><span class="w"> </span><span class="n">transfer</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="n">C5</span><span class="p">,</span><span class="w"> </span><span class="n">thereby</span><span class="w"> </span><span class="n">stabilizing</span><span class="w"> </span><span class="k">local</span><span class="w"> </span><span class="n">rRNA</span><span class="w"> </span><span class="k">structure</span><span class="w"> </span><span class="ow">and</span><span class="w"> </span><span class="n">supporting</span><span class="w"> </span><span class="n">efficient</span><span class="w"> </span><span class="n">ribosome</span><span class="w"> </span><span class="n">biogenesis</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">UniProt</span><span class="w"> </span><span class="n">Summary</span>
+
+<span class="n">Specifically</span><span class="w"> </span><span class="n">methylates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">uracil</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="k">at</span><span class="w"> </span><span class="k">position</span><span class="w"> </span><span class="mi">747</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="mi">23</span><span class="n">S</span><span class="w"> </span><span class="n">rRNA</span><span class="p">.</span>
+
+<span class="err">##</span><span class="w"> </span><span class="n">InterPro</span><span class="w"> </span><span class="n">Domains</span>
+
+<span class="w">    </span><span class="o">-</span><span class="w"> </span><span class="nl">IPR011825</span><span class="p">:</span><span class="w"> </span><span class="mi">23</span><span class="n">S</span><span class="w"> </span><span class="n">rRNA</span><span class="w"> </span><span class="p">(</span><span class="n">uracil</span><span class="p">(</span><span class="mi">747</span><span class="p">)</span><span class="o">-</span><span class="n">C</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">RlmC</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">1-375</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR010280</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">Uracil</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-373</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR011825</span><span class="p">:</span><span class="w"> </span><span class="mi">23</span><span class="n">S</span><span class="w"> </span><span class="n">rRNA</span><span class="w"> </span><span class="p">(</span><span class="n">uracil</span><span class="p">(</span><span class="mi">747</span><span class="p">)</span><span class="o">-</span><span class="n">C</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">RlmC</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">2-374</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR029063</span><span class="p">:</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">3-374</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR010280</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">Uracil</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">12-375</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR029063</span><span class="p">:</span><span class="w"> </span><span class="n">S</span><span class="o">-</span><span class="n">adenosyl</span><span class="o">-</span><span class="n">L</span><span class="o">-</span><span class="n">methionine</span><span class="o">-</span><span class="n">dependent</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">superfamily</span><span class="w"> </span><span class="p">(</span><span class="n">homologous_superfamily</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">14-368</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR010280</span><span class="p">:</span><span class="w"> </span><span class="p">(</span><span class="n">Uracil</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="o">-</span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">family</span><span class="w"> </span><span class="p">(</span><span class="n">family</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">208-374</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR030390</span><span class="p">:</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">TrmA</span><span class="p">,</span><span class="w"> </span><span class="n">active</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">active_site</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">307-338</span><span class="o">]</span>
+<span class="o">-</span><span class="w"> </span><span class="nl">IPR030391</span><span class="p">:</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">methyltransferase</span><span class="w"> </span><span class="n">TrmA</span><span class="p">,</span><span class="w"> </span><span class="n">conserved</span><span class="w"> </span><span class="n">site</span><span class="w"> </span><span class="p">(</span><span class="n">conserved_site</span><span class="p">)</span><span class="w"> </span><span class="o">[</span><span class="n">357-367</span><span class="o">]</span>
+
+<span class="err">##</span><span class="w"> </span><span class="k">GO</span><span class="w"> </span><span class="n">Term</span><span class="w"> </span><span class="n">Predictions</span>
+
+<span class="err">###</span><span class="w"> </span><span class="n">Molecular</span><span class="w"> </span><span class="k">Function</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Biological</span><span class="w"> </span><span class="n">Process</span>
+
+
+<span class="err">###</span><span class="w"> </span><span class="n">Cellular</span><span class="w"> </span><span class="n">Component</span>
+</code></pre></div>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rlmC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P75817" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rlmc-rumbybjf-research-notes">rlmC (RumB/YbjF) - Research Notes</h1>
+<h2 id="gene-identity">Gene Identity</h2>
+<ul>
+<li><strong>UniProt (reviewed)</strong>: P75817 (RLMC_ECOLI, E. coli K12/MG1655)</li>
+<li><strong>UniProt (unreviewed)</strong>: B1X800 (E. coli K12/DH10B) -- same protein, different strain</li>
+<li><strong>Synonyms</strong>: rumB, ybjF</li>
+<li><strong>EC</strong>: 2.1.1.189</li>
+<li><strong>Gene</strong>: b0859 / JW0843</li>
+<li><strong>Full name</strong>: 23S rRNA (uracil(747)-C(5))-methyltransferase RlmC</li>
+</ul>
+<h2 id="core-function">Core Function</h2>
+<p>RlmC catalyzes the formation of 5-methyluridine at position 747 (m5U747) in 23S rRNA, using S-adenosyl-L-methionine (SAM/AdoMet) as the methyl donor.</p>
+<h2 id="key-literature">Key Literature</h2>
+<h3 id="pmid12907714-madsen-et-al-2003-nucleic-acids-res-314738-4746">PMID:12907714 - Madsen et al. 2003, Nucleic Acids Res 31:4738-4746</h3>
+<p>"Identifying the methyltransferases for m(5)U747 and m(5)U1939 in 23S rRNA using MALDI mass spectrometry."</p>
+<p>This is the definitive paper establishing the function of RlmC (then called YbjF). Key findings:<br />
+- Three m5U sites in E. coli stable RNAs: U54 in tRNA (TrmA), U747 in 23S rRNA (YbjF/RumB/RlmC), and U1939 in 23S rRNA (YgcA/RumA/RlmD)<br />
+- YbjF function was defined in vivo by engineering a ybjF knockout strain <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" title="the function of this enzyme was defined in vivo by engineering a ybjF knockout strain">PMID:12907714</a><br />
+- YbjF(-) strains showed ONLY the loss of m5U747 modification <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" title="Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-) strains showed that the latter differed only in the lack of the m(5)U747 modification">PMID:12907714</a><br />
+- Could not get recombinant YbjF to retain in vitro activity <a href="https://pubmed.ncbi.nlm.nih.gov/12907714" title="We were unable to generate a recombinant version of YbjF that retained in vitro activity">PMID:12907714</a><br />
+- Proposed the name RumB (RNA uridine methyltransferase B)</p>
+<h3 id="pmid21824914-desmolaize-et-al-2011-nucleic-acids-res-399368-75">PMID:21824914 - Desmolaize et al. 2011, Nucleic Acids Res 39:9368-75</h3>
+<p>"A single methyltransferase YefA (RlmCD) catalyses both m5U747 and m5U1939 modifications in Bacillus subtilis 23S rRNA."</p>
+<p>Key comparative finding:<br />
+- In E. coli: three separate COG2265 paralogs (TrmA, RlmC, RlmD) for three m5U sites<br />
+- In B. subtilis: a single enzyme YefA/RlmCD handles both m5U747 and m5U1939<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/21824914" title="methylation of U747 and U1939 in B. subtilis rRNA is catalysed by a single enzyme, YefA that is a COG2265 member">PMID:21824914</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/21824914" title="These enzymes belong to the COG2265 cluster, and the Gram-negative bacterium Escherichia coli possesses three paralogues">PMID:21824914</a><br />
+- Suggests evolutionary specialization of COG2265 paralogs</p>
+<h3 id="pmid21051506-auxilien-et-al-2011-rna-1745-53">PMID:21051506 - Auxilien et al. 2011, RNA 17:45-53</h3>
+<p>"Specificity shifts in the rRNA and tRNA nucleotide targets of archaeal and bacterial m5U methyltransferases."</p>
+<p>Key evolutionary findings:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/21051506" title="The RNA m(5)U methyltransferases appear to have arisen in Bacteria and were then dispersed by horizontal transfer of an rlmD-type gene to the Archaea and Eukaryota">PMID:21051506</a><br />
+- RlmC (formerly RumB) specifically modifies m5U747 in 23S rRNA<br />
+- In Pyrococcus abyssi, PAB0760 has RlmC-like activity despite being more closely related to RlmD in sequence</p>
+<h3 id="pmid30388185-jiang-et-al-2018-plos-pathog-14e1007379">PMID:30388185 - Jiang et al. 2018, PLoS Pathog 14:e1007379</h3>
+<p>"Unveiling the structural features that determine the dual methyltransferase activities of Streptococcus pneumoniae RlmCD."</p>
+<ul>
+<li>Structure of S. pneumoniae RlmCD in complex with RNA substrate containing U747 or U1939</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/30388185" title="RlmC is the dedicated enzyme for m5U747 in Escherichia coli">PMID:30388185</a></li>
+<li>F145 side-chain rearrangement discriminates between U747- and U1939-containing substrates</li>
+</ul>
+<h3 id="pmid15016356-lee-et-al-2004-structure-12397-407">PMID:15016356 - Lee et al. 2004, Structure 12:397-407</h3>
+<p>"Crystal structure of RumA, an iron-sulfur cluster containing E. coli ribosomal RNA 5-methyluridine methyltransferase."</p>
+<ul>
+<li>Structure of the paralog RumA (RlmD) -- relevant by homology to RlmC</li>
+<li>Three domains: N-terminal TRAM domain, central [4Fe-4S] cluster domain, C-terminal SAM-dependent MTase domain</li>
+<li>The [4Fe-4S] cluster is coordinated by four conserved cysteines in a CX5CGGC motif</li>
+</ul>
+<h3 id="pmid15181002-agarwalla-et-al-2004-j-biol-chem-27934123-9">PMID:15181002 - Agarwalla et al. 2004, J Biol Chem 279:34123-9</h3>
+<p>"Redox reactions of the iron-sulfur cluster in a ribosomal RNA methyltransferase, RumA."</p>
+<ul>
+<li>The [4Fe-4S] cluster in RumA/RlmD is redox-active but the methyltransferase reaction does not involve a redox step</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15181002" title="Sequence data base searches revealed that RumA homologs are widespread in various kingdoms of life and contain a conserved and unique iron-sulfur cluster binding motif, CX(5)CGGC">PMID:15181002</a></li>
+<li>Oxidation of the cluster leads to decomposition -- potential regulatory mechanism under oxidative stress</li>
+</ul>
+<h3 id="pmid12003490-agarwalla-et-al-2002-j-biol-chem-2778835-8840">PMID:12003490 - Agarwalla et al. 2002, J Biol Chem 277:8835-8840</h3>
+<p>Initial characterization of RumA, establishing the presence of a [4Fe-4S] cluster in this family.</p>
+<h3 id="pmid10369764-gregory-dahlberg-1999-j-mol-biol-289827-34">PMID:10369764 - Gregory &amp; Dahlberg 1999, J Mol Biol 289:827-34</h3>
+<p>"Erythromycin resistance mutations in ribosomal proteins L22 and L4 perturb the higher order structure of 23 S ribosomal RNA."</p>
+<ul>
+<li>L22 mutation influences modification at m5U747 position</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10369764" title="The L22 mutation influences modification in domain II at positions m5U747, G748, and A1268">PMID:10369764</a></li>
+<li>This indicates that m5U747 is in domain II of 23S rRNA and its accessibility is influenced by ribosomal protein L22</li>
+</ul>
+<h3 id="pmid17459887-urbonavicius-et-al-2007-nucleic-acids-res-353297-305">PMID:17459887 - Urbonavicius et al. 2007, Nucleic Acids Res 35:3297-305</h3>
+<p>"Amino acid residues of the E. coli tRNA(m5U54)methyltransferase (TrmA) critical for stability, covalent binding of tRNA and enzymatic activity."</p>
+<ul>
+<li>Establishes conserved residues across COG2265 family (TrmA, RumA/RlmD, RumB/RlmC)</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17459887" title="the amino acids F188, Q190, G220, D299, R302, C324 and E358, conserved in the C-terminal catalytic domain of several RNA(m5U)methyltransferases of the COG2265 family">PMID:17459887</a></li>
+<li>Supports modular evolution model: conserved catalytic domain + different RNA-binding domains</li>
+</ul>
+<h2 id="domain-architecture-from-uniprot-and-interpro">Domain Architecture (from UniProt and InterPro)</h2>
+<ul>
+<li>N-terminal region: [4Fe-4S] cluster binding (Cys3, Cys11, Cys14, Cys87) -- HAMAP prediction</li>
+<li>Central/C-terminal: SAM-dependent methyltransferase fold (Rossmann-like)</li>
+<li>Active site: Cys334 (nucleophile for covalent Michael adduct at uracil C6)</li>
+<li>SAM binding: residues 212, 241, 262, 307</li>
+</ul>
+<h2 id="catalytic-mechanism">Catalytic Mechanism</h2>
+<p>The TrmA/RlmC/RlmD family uses a common mechanism:<br />
+1. Nucleophilic Cys attacks C6 of the target uracil, forming a covalent Michael adduct<br />
+2. This activates C5 for electrophilic methyl transfer from SAM<br />
+3. Beta-elimination releases the methylated product (m5U) and regenerates the Cys</p>
+<h2 id="the-4fe-4s-cluster-question">The [4Fe-4S] Cluster Question</h2>
+<p>UniProt lists RlmC as containing a [4Fe-4S] cluster based on HAMAP rule MF_01012. The binding motif CX5CGGC is present in the N-terminal region (Cys3, Cys11, Cys14, Cys87). This is well-established for the paralog RumA/RlmD (PMID:12003490, PMID:15016356, PMID:15181002) but has not been directly demonstrated experimentally for RlmC. The annotation is based on sequence conservation and is likely correct given the high conservation of the cysteine motif. The role of the [4Fe-4S] cluster is structural rather than catalytic -- the methyltransferase reaction does not involve a redox step (PMID:15181002).</p>
+<h2 id="biological-significance">Biological Significance</h2>
+<ul>
+<li>m5U747 is in domain II of 23S rRNA, near the peptidyl transferase center region</li>
+<li>The modification is phylogenetically conserved across bacteria</li>
+<li>In B. subtilis, both m5U747 and m5U1939 are present (catalyzed by a single enzyme RlmCD)</li>
+<li>Loss of m5U747 alone (ybjF/rlmC knockout) was demonstrated without reported growth defects in the original Madsen et al. 2003 study, though detailed phenotypic analysis was not the focus</li>
+<li>The modification likely contributes to local rRNA structural stability and ribosome function</li>
+</ul>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioreason Sft Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rlmC-bioreason-sft-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P75817" data-a="DOC: Bioreason Sft Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bioreason-pro-sft-review-rlmc-escherichia-coli-k12">BioReason-Pro SFT Review: rlmC (Escherichia coli K12)</h1>
+<p>Source: rlmC-deep-research-bioreason-sft.md</p>
+<ul>
+<li><strong>Correctness</strong>: 4/5</li>
+<li><strong>Completeness</strong>: 3/5</li>
+</ul>
+<h2 id="functional-summary-review">Functional Summary Review</h2>
+<p>The BioReason functional summary describes rlmC as:</p>
+<blockquote>
+<p>A cytosolic RNA methyltransferase in E. coli that installs a 5-methyl group on uracil 747 within 23S rRNA during large-subunit assembly. It binds S-adenosyl-L-methionine, flips U747 into a TrmA-like active site, and uses a catalytic cysteine to form a transient covalent adduct that enables methyl transfer at C5, thereby stabilizing local rRNA structure and supporting efficient ribosome biogenesis.</p>
+</blockquote>
+<p>This is a largely accurate summary. The core enzymatic function is correct: SAM-dependent C5 methylation of U747 in 23S rRNA via a catalytic cysteine forming a covalent Michael adduct. The identification of RlmC as a member of the TrmA/RlmC/RlmD family (COG2265) and the mechanism involving the nucleophilic cysteine are well supported.</p>
+<p><strong>Correctness issues:</strong></p>
+<ol>
+<li>
+<p>The claim that RlmC acts "during large-subunit assembly" is plausible but unverified for RlmC specifically. There is no published evidence establishing when in the 50S assembly pathway RlmC acts. The BioReason thinking trace speculates about interaction with "pre-50S assembly intermediates and accessory factors" and names "ObgE GTPase and RbgA GTPase" as plausible partners, but none of these interactions have been demonstrated for RlmC. This is extrapolation presented as established fact.</p>
+</li>
+<li>
+<p>The claim about "stabilizing local rRNA structure" is a reasonable inference but has not been experimentally demonstrated for the m5U747 modification specifically. The original knockout study (Madsen et al. 2003, PMID:12907714, <a href="https://doi.org/10.1093/nar/gkg657">DOI</a>) focused on biochemical identification of the modification and did not report phenotypic consequences of m5U747 loss.</p>
+</li>
+<li>
+<p>The description of base-flipping ("flips U747 into a TrmA-like active site") is mechanistically plausible based on structural work on the homologous S. pneumoniae RlmCD in complex with RNA (Jiang et al. 2018, PMID:30388185, <a href="https://doi.org/10.1371/journal.ppat.1007379">DOI</a>), but has not been structurally demonstrated for E. coli RlmC itself, which has no solved crystal structure.</p>
+</li>
+<li>
+<p>The thinking trace states RlmC operates in "the cytosol (GO:0005829)." While cytoplasmic localization is reasonable for a bacterial enzyme acting on rRNA, no experimental localization data exist for RlmC specifically (unlike other E. coli proteins with proteomics-based IDA evidence). The GO annotations do not include a cellular component term for RlmC.</p>
+</li>
+</ol>
+<p><strong>Completeness issues:</strong></p>
+<ol>
+<li>
+<p>No mention of the [4Fe-4S] cluster. This is a significant omission. UniProt annotates RlmC with 4Fe-4S keywords and binding sites (Cys3, Cys11, Cys14, Cys87) based on HAMAP rule MF_01012. The [4Fe-4S] cluster is experimentally established in the paralog RumA/RlmD (Agarwalla et al. 2004, PMID:15181002, <a href="https://doi.org/10.1074/jbc.M405702200">DOI</a>), and the conserved CX5CGGC motif is present in RlmC. This cluster is a defining structural feature of this enzyme subfamily.</p>
+</li>
+<li>
+<p>No mention of the nomenclature history (ybjF -&gt; RumB -&gt; RlmC). The gene has gone through three name changes, and the original identification paper (PMID:12907714) used the names YbjF and RumB. This context is important for literature searching.</p>
+</li>
+<li>
+<p>No mention that recombinant RlmC could not be obtained in active form in vitro. According to PubMed, Madsen et al. (2003, <a href="https://doi.org/10.1093/nar/gkg657">DOI</a>) stated: "We were unable to generate a recombinant version of YbjF that retained in vitro activity." This is a notable experimental finding relevant to protein biochemistry and contrasts with the successful in vitro reconstitution of the paralog RumA/RlmD.</p>
+</li>
+<li>
+<p>No mention of the COG2265 family context or the evolutionary relationship among TrmA, RlmC, and RlmD. According to PubMed, Desmolaize et al. (2011, PMID:21824914, <a href="https://doi.org/10.1093/nar/gkr626">DOI</a>) showed that B. subtilis uses a single enzyme (RlmCD/YefA) for both m5U747 and m5U1939, demonstrating that E. coli's three-enzyme system reflects evolutionary specialization.</p>
+</li>
+<li>
+<p>No mention of the phylogenetic conservation of m5U747 or its location in domain II of 23S rRNA near functionally important regions. According to PubMed, Gregory &amp; Dahlberg (1999, PMID:10369764, <a href="https://doi.org/10.1006/jmbi.1999.2839">DOI</a>) showed that the L22 erythromycin resistance mutation affects modification at m5U747, indicating its position in a structurally dynamic region.</p>
+</li>
+<li>
+<p>The BioReason GO term predictions sections (MF, BP, CC) are completely empty, which is unusual and unhelpful.</p>
+</li>
+</ol>
+<h2 id="comparison-with-interpro2go">Comparison with interpro2go</h2>
+<p>The interpro2go annotations map:<br />
+- IPR011825 (23S rRNA methyltransferase RlmC) to GO:0016436 (rRNA (uridine) methyltransferase activity) and GO:0016070 (RNA metabolic process)<br />
+- IPR010280 (Uracil-5-methyltransferase family) to GO:0008173 (RNA methyltransferase activity) and GO:0006396 (RNA processing)<br />
+- IPR029063 (SAM-dependent MTase superfamily) provides the structural context</p>
+<p>The BioReason summary recapitulates and extends the information derivable from interpro2go. The domain architecture analysis in the thinking trace methodically walks from the SAM-dependent methyltransferase superfamily (IPR029063) through the TrmA active site motifs (IPR030390, IPR030391) to the RlmC family assignment (IPR011825). This hierarchical reasoning correctly narrows the substrate specificity from "RNA methyltransferase" to "23S rRNA U747 C5-methyltransferase."</p>
+<p>However, the BioReason summary fails to incorporate the [4Fe-4S] cluster, which is a key feature annotated by interpro2go through the CX5CGGC motif conserved in the family. The InterPro domain list does not include a specific iron-sulfur entry, but the UniProt record clearly lists 4Fe-4S as a keyword, and the binding sites are explicitly annotated.</p>
+<h2 id="notes-on-thinking-trace">Notes on thinking trace</h2>
+<p>The thinking trace follows a methodical domain-architecture-first approach, correctly identifying all InterPro entries and building the functional annotation from structural features to catalytic mechanism to biological role.</p>
+<p>The trace is weakest in its speculative claims:</p>
+<ol>
+<li>
+<p>"Plausible partners include 50S ribosomal proteins positioned near the 70S-binding region (e.g., L3 and L4) that help present the helix, and 23S rRNA chaperones or assembly factors (e.g., the ObgE GTPase and the RbgA GTPase)" -- There is no evidence for any of these interactions with RlmC. These are generic ribosome assembly factors mentioned without RlmC-specific evidence.</p>
+</li>
+<li>
+<p>"Because catalysis consumes S-adenosyl-L-methionine, coupling to local SAM supply is also likely" -- This is a vague truism applicable to any SAM-dependent enzyme and provides no specific insight about RlmC.</p>
+</li>
+<li>
+<p>The cellular component assignment to "cytosol (GO:0005829)" is presented with confidence despite the absence of experimental localization data for RlmC. While cytoplasmic localization is the most likely scenario for a bacterial rRNA methyltransferase, this should be noted as inference rather than established fact.</p>
+</li>
+</ol>
+<p>The thinking trace correctly identifies the catalytic mechanism (nucleophilic cysteine, Michael adduct, beta-elimination), which is well-supported by biochemical studies of the COG2265 family (Urbonavicius et al. 2007, PMID:17459887, <a href="https://doi.org/10.1093/nar/gkm205">DOI</a>).</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P75817
+gene_symbol: rlmC
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:83333
+  label: Escherichia coli (strain K12)
+description: &gt;-
+  RlmC (formerly RumB/YbjF) is a 23S rRNA (uracil(747)-C(5))-methyltransferase
+  (EC 2.1.1.189) in E. coli K12 that catalyzes the formation of 5-methyluridine
+  at position 747 (m5U747) in 23S rRNA using S-adenosyl-L-methionine as methyl donor.
+  It belongs to the COG2265 cluster of RNA m5U methyltransferases, which in E. coli
+  includes three paralogs with distinct specificities: TrmA (tRNA U54), RlmC (23S rRNA
+  U747), and RlmD/RumA (23S rRNA U1939). Function was established in vivo by Madsen
+  et al. (2003, PMID:12907714) using a ybjF knockout strain, which specifically lacked
+  only the m5U747 modification. RlmC contains an N-terminal [4Fe-4S] cluster (predicted
+  by HAMAP based on the conserved CX5CGGC motif established in the paralog RumA/RlmD)
+  and a C-terminal SAM-dependent methyltransferase fold with a catalytic cysteine
+  (Cys334) that forms a covalent Michael adduct with the target uracil during catalysis.
+  In some Gram-positive bacteria such as B. subtilis, a single enzyme (RlmCD) performs
+  both the U747 and U1939 modifications, suggesting evolutionary specialization of
+  the COG2265 paralogs in E. coli.
+existing_annotations:
+- term:
+    id: GO:0070041
+    label: rRNA (uridine-C5-)-methyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for rRNA (uridine-C5-)-methyltransferase activity based on
+      phylogenetic inference (PANTHER). This is the most specific molecular function
+      term for RlmC and is strongly supported by the in vivo knockout evidence from
+      Madsen et al. 2003 (PMID:12907714), which showed loss of m5U747 modification
+      specifically in the ybjF/rlmC deletion strain.
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct and most specific molecular function annotation for RlmC.
+      The IBA inference from PANTHER is well supported by experimental IMP evidence
+      (PMID:12907714) demonstrating that RlmC specifically methylates U747 at C5 in
+      23S rRNA.
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+          strains showed that the latter differed only in the lack of the m(5)U747
+          modification
+      - reference_id: file:ECOLI/rlmC/rlmC-deep-research-bioreason-sft.md
+        supporting_text: &gt;-
+          BioReason domain architecture analysis confirms RlmC family assignment
+          (IPR011825) and the TrmA-like catalytic mechanism, consistent with
+          rRNA (uridine-C5-)-methyltransferase activity
+- term:
+    id: GO:0070475
+    label: rRNA base methylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation for rRNA base methylation based on phylogenetic inference
+      (PANTHER). Correct biological process for RlmC. The m5U747 modification is
+      a base methylation on 23S rRNA.
+    action: ACCEPT
+    reason: &gt;-
+      Accurately describes the biological process: RlmC catalyzes methylation of a
+      base (uracil C5) in rRNA. Supported by in vivo evidence from PMID:12907714.
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+          strains showed that the latter differed only in the lack of the m(5)U747
+          modification
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for iron ion binding based on UniRule (UR000100395). RlmC
+      contains a predicted [4Fe-4S] cluster coordinated by Cys3, Cys11, Cys14,
+      and Cys87 (HAMAP-Rule:MF_01012). The [4Fe-4S] cluster has been experimentally
+      demonstrated in the paralog RumA/RlmD (PMID:15181002, PMID:15016356) and the
+      cysteine motif CX5CGGC is conserved in RlmC. While iron ion binding is
+      technically correct, a more precise term would be 4 iron, 4 sulfur cluster
+      binding (GO:0051539), which is already annotated in the UniProt DR lines.
+    action: MODIFY
+    reason: &gt;-
+      Iron ion binding is too general. The iron is bound as part of a [4Fe-4S]
+      cluster, not as free iron ions. GO:0051539 (4 iron, 4 sulfur cluster binding)
+      is a more precise and informative annotation. The [4Fe-4S] cluster is
+      well-established in this enzyme family (PMID:15181002).
+    proposed_replacement_terms:
+      - id: GO:0051539
+        label: 4 iron, 4 sulfur cluster binding
+    supported_by:
+      - reference_id: PMID:15181002
+        supporting_text: &gt;-
+          Sequence data base searches revealed that RumA homologs are widespread in
+          various kingdoms of life and contain a conserved and unique iron-sulfur cluster
+          binding motif, CX(5)CGGC
+- term:
+    id: GO:0006396
+    label: RNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for RNA processing based on combined automated methods
+      (InterPro:IPR010280). RNA processing is overly broad for what RlmC does.
+      RlmC performs a specific chemical modification (methylation) of rRNA, not
+      processing in the sense of cleavage, splicing, or end-maturation. The more
+      appropriate term is rRNA methylation (GO:0031167) or rRNA base methylation
+      (GO:0070475), both of which are already annotated.
+    action: MODIFY
+    reason: &gt;-
+      RNA processing is too general and somewhat misleading for a methyltransferase.
+      Methylation is a modification, not processing. The correct biological process
+      terms (rRNA methylation, rRNA base methylation) are already present.
+    proposed_replacement_terms:
+      - id: GO:0031167
+        label: rRNA methylation
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          here we determine the functions of these candidate methyltransferases using
+          MALDI mass spectrometry
+- term:
+    id: GO:0008173
+    label: RNA methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for RNA methyltransferase activity. This is correct but less
+      specific than GO:0070041 (rRNA (uridine-C5-)-methyltransferase activity) and
+      GO:0016436 (rRNA (uridine) methyltransferase activity), both of which are
+      already annotated. This is a valid parent term but redundant when the more
+      specific child terms are present.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but redundant with the more specific terms GO:0070041 and GO:0016436
+      that are already annotated. Keeping as non-core since it adds no information
+      beyond what the more specific terms provide.
+- term:
+    id: GO:0008757
+    label: S-adenosylmethionine-dependent methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for SAM-dependent methyltransferase activity based on ARBA
+      machine learning. Correct: RlmC uses S-adenosyl-L-methionine as methyl donor.
+      The catalytic reaction is well-defined (Rhea:RHEA:42628). However, this is
+      a general parent term and less specific than GO:0070041.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct cofactor usage but a general parent of the more specific rRNA
+      methyltransferase terms already present. The SAM-dependent mechanism is
+      confirmed by the UniProt catalytic activity annotation and the family membership
+      in COG2265 SAM-dependent RNA m5U methyltransferases.
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          Two open reading frames, YbjF and YgcA, are approximately 30% identical to
+          TrmA
+- term:
+    id: GO:0009451
+    label: RNA modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for RNA modification based on ARBA. Correct but very general.
+      More specific child terms (rRNA base methylation GO:0070475, rRNA methylation
+      GO:0031167) are already annotated.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but very general parent of more specific biological process terms
+      already annotated. Redundant with GO:0070475 and GO:0031167.
+- term:
+    id: GO:0016070
+    label: RNA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for RNA metabolic process based on InterPro (IPR011825).
+      Extremely broad term. While technically true, this is uninformative given the
+      much more specific annotations already present.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Extremely broad parent term. Redundant with more specific biological process
+      annotations (rRNA base methylation, rRNA methylation). Provides no additional
+      functional insight.
+- term:
+    id: GO:0016436
+    label: rRNA (uridine) methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for rRNA (uridine) methyltransferase activity based on InterPro
+      (IPR011825). This is a correct molecular function annotation at an intermediate
+      specificity level. GO:0070041 (rRNA (uridine-C5-)-methyltransferase activity)
+      is more specific and also annotated. Since the evidence from PMID:12907714
+      specifically demonstrates C5 methylation, the more specific term is preferred.
+    action: MODIFY
+    reason: &gt;-
+      The evidence supports the more specific term GO:0070041 (rRNA (uridine-C5-)-
+      methyltransferase activity), which specifies the C5 position. Consistent with
+      the action for the IMP-evidenced annotation of the same term.
+    proposed_replacement_terms:
+      - id: GO:0070041
+        label: rRNA (uridine-C5-)-methyltransferase activity
+- term:
+    id: GO:0031167
+    label: rRNA methylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for rRNA methylation based on UniRule (UR000100395). This is an
+      appropriate biological process term for RlmC. It is a parent of GO:0070475
+      (rRNA base methylation), which is already annotated with experimental (IMP)
+      evidence. Keeping as non-core since the more specific child term is present.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but parent of the more specific GO:0070475 (rRNA base methylation)
+      which is annotated with IMP evidence.
+- term:
+    id: GO:0070041
+    label: rRNA (uridine-C5-)-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for rRNA (uridine-C5-)-methyltransferase activity based on
+      UniRule (UR000100395). Duplicate of the IBA annotation with the same GO term
+      from GO_REF:0000033. Both are correct; this IEA provides independent
+      computational support.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and most specific molecular function term. Independent computational
+      support for the IBA annotation from PANTHER.
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+          strains showed that the latter differed only in the lack of the m(5)U747
+          modification
+- term:
+    id: GO:0070475
+    label: rRNA base methylation
+  evidence_type: IMP
+  original_reference_id: PMID:12907714
+  review:
+    summary: &gt;-
+      IMP annotation for rRNA base methylation from Madsen et al. 2003. This is the
+      key experimental evidence for RlmC function, based on comparison of methylation
+      patterns between wild-type and ybjF knockout strains using MALDI mass
+      spectrometry. The knockout specifically lost m5U747 methylation.
+    action: ACCEPT
+    reason: &gt;-
+      Core experimental evidence (IMP) demonstrating that RlmC is required for rRNA
+      base methylation in vivo. The MALDI-MS analysis directly showed loss of m5U747
+      in the knockout strain. This is the most informative biological process
+      annotation with direct experimental support.
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+          strains showed that the latter differed only in the lack of the m(5)U747
+          modification
+- term:
+    id: GO:0016436
+    label: rRNA (uridine) methyltransferase activity
+  evidence_type: IMP
+  original_reference_id: PMID:12907714
+  review:
+    summary: &gt;-
+      IMP annotation for rRNA (uridine) methyltransferase activity from Madsen et al.
+      2003. Based on the same knockout experiment that demonstrated loss of m5U747
+      in the ybjF- strain. While IMP (inferred from mutant phenotype) is technically
+      the correct evidence code for this knockout study, a more specific MF term
+      GO:0070041 would be preferred.
+    action: MODIFY
+    reason: &gt;-
+      The evidence from PMID:12907714 supports the more specific term GO:0070041
+      (rRNA (uridine-C5-)-methyltransferase activity) since the study specifically
+      demonstrated C5 methylation of uridine. Upgrading to the more specific term.
+    proposed_replacement_terms:
+      - id: GO:0070041
+        label: rRNA (uridine-C5-)-methyltransferase activity
+    supported_by:
+      - reference_id: PMID:12907714
+        supporting_text: &gt;-
+          There are three sites of m(5)U modification in Escherichia coli stable RNAs
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12907714
+  title: Identifying the methyltransferases for m(5)U747 and m(5)U1939 in 23S rRNA
+    using MALDI mass spectrometry.
+  findings:
+    - statement: &gt;-
+        YbjF (now RlmC/RumB) is responsible for m5U747 methylation in 23S rRNA, as
+        demonstrated by in vivo knockout showing specific loss of this modification.
+      supporting_text: &gt;-
+        Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+        strains showed that the latter differed only in the lack of the m(5)U747
+        modification
+    - statement: &gt;-
+        Recombinant YbjF/RlmC could not be obtained in an active form in vitro,
+        so function was established by in vivo knockout analysis.
+      supporting_text: &gt;-
+        We were unable to generate a recombinant version of YbjF that retained in
+        vitro activity, so the function of this enzyme was defined in vivo by
+        engineering a ybjF knockout strain
+    - statement: &gt;-
+        The three E. coli m5U RNA methyltransferases are: TrmA (tRNA U54),
+        YbjF/RumB/RlmC (23S rRNA U747), and YgcA/RumA/RlmD (23S rRNA U1939).
+      supporting_text: &gt;-
+        With this report, the functions of all the E.coli m(5)U RNA methyltransferases
+        are identified
+- id: PMID:21824914
+  title: A single methyltransferase YefA (RlmCD) catalyses both m5U747 and m5U1939
+    modifications in Bacillus subtilis 23S rRNA.
+  findings:
+    - statement: &gt;-
+        In B. subtilis, a single COG2265 enzyme (YefA/RlmCD) catalyzes both m5U747
+        and m5U1939 modifications, whereas E. coli uses separate enzymes RlmC and
+        RlmD for these two sites.
+      supporting_text: &gt;-
+        methylation of U747 and U1939 in B. subtilis rRNA is catalysed by a single
+        enzyme, YefA that is a COG2265 member
+- id: PMID:21051506
+  title: Specificity shifts in the rRNA and tRNA nucleotide targets of archaeal and
+    bacterial m5U methyltransferases.
+  findings:
+    - statement: &gt;-
+        RNA m5U methyltransferases arose in Bacteria and spread to Archaea and
+        Eukaryota by horizontal gene transfer. The COG2265 enzymes have undergone
+        target specificity shifts during evolution.
+      supporting_text: &gt;-
+        The RNA m(5)U methyltransferases appear to have arisen in Bacteria and were
+        then dispersed by horizontal transfer of an rlmD-type gene to the Archaea
+        and Eukaryota
+- id: PMID:30388185
+  title: Unveiling the structural features that determine the dual methyltransferase
+    activities of Streptococcus pneumoniae RlmCD.
+  findings:
+    - statement: &gt;-
+        Structural analysis of S. pneumoniae RlmCD in complex with U747-containing
+        and U1939-containing RNA substrates reveals how the dual-specificity enzyme
+        discriminates between the two substrates, providing insight into the dedicated
+        specificity of E. coli RlmC for U747.
+      supporting_text: &gt;-
+        RlmC is the dedicated enzyme for m5U747 in Escherichia coli
+- id: PMID:15181002
+  title: Redox reactions of the iron-sulfur cluster in a ribosomal RNA methyltransferase,
+    RumA.
+  findings:
+    - statement: &gt;-
+        RumA/RlmD homologs (including RlmC) contain a conserved [4Fe-4S] cluster
+        with a CX5CGGC binding motif. The cluster is structural rather than catalytic
+        since the methyltransferase reaction does not involve a redox step.
+      supporting_text: &gt;-
+        Sequence data base searches revealed that RumA homologs are widespread in
+        various kingdoms of life and contain a conserved and unique iron-sulfur cluster
+        binding motif, CX(5)CGGC
+- id: PMID:17459887
+  title: Amino acid residues of the Escherichia coli tRNA(m5U54)methyltransferase
+    (TrmA) critical for stability, covalent binding of tRNA and enzymatic activity.
+  findings:
+    - statement: &gt;-
+        Conserved residues in the COG2265 catalytic domain are shared across TrmA,
+        RumA/RlmD, and RumB/RlmC, supporting modular evolution with a conserved
+        catalytic domain combined with different RNA-binding domains.
+      supporting_text: &gt;-
+        the amino acids F188, Q190, G220, D299, R302, C324 and E358, conserved in
+        the C-terminal catalytic domain of several RNA(m5U)methyltransferases of the
+        COG2265 family, are important for the formation of the TrmA-tRNA intermediate
+        and/or the enzymatic activity
+core_functions:
+- description: &gt;-
+    RlmC catalyzes the SAM-dependent methylation of uracil at position 747 in 23S
+    rRNA, producing 5-methyluridine (m5U747). This is its sole known enzymatic activity.
+    The catalytic mechanism involves a nucleophilic cysteine (Cys334) that forms a
+    covalent Michael adduct at the uracil C6 position, enabling electrophilic methyl
+    transfer from SAM to C5. The enzyme contains a [4Fe-4S] cluster that serves a
+    structural rather than catalytic role.
+  molecular_function:
+    id: GO:0070041
+    label: rRNA (uridine-C5-)-methyltransferase activity
+  directly_involved_in:
+    - id: GO:0070475
+      label: rRNA base methylation
+  supported_by:
+    - reference_id: PMID:12907714
+      supporting_text: &gt;-
+        Comparison of the methylation patterns in 23S rRNAs from YbjF(+) and YbjF(-)
+        strains showed that the latter differed only in the lack of the m(5)U747
+        modification
+suggested_questions:
+- question: &gt;-
+    What is the functional significance of the m5U747 modification for ribosome
+    assembly or translational fidelity? The original knockout study (PMID:12907714)
+    did not report growth phenotypes.
+- question: &gt;-
+    Has the [4Fe-4S] cluster in RlmC been experimentally verified, or is this
+    inference based solely on sequence conservation with RumA/RlmD?
+- question: &gt;-
+    Why could recombinant RlmC not be obtained in active form in vitro
+    (PMID:12907714)? Is this related to [4Fe-4S] cluster assembly or protein
+    folding requirements?
+suggested_experiments:
+- description: &gt;-
+    Phenotypic characterization of an rlmC deletion strain under stress conditions
+    (e.g., sublethal antibiotic concentrations, temperature stress, competitive growth).
+    The original study (PMID:12907714) focused on biochemical identification of the
+    modification rather than phenotypic consequences.
+  hypothesis: &gt;-
+    Loss of m5U747 may confer subtle growth disadvantages under stress conditions
+    or when combined with loss of other rRNA modifications.
+- description: &gt;-
+    Spectroscopic characterization (UV-vis, EPR) of purified RlmC to directly
+    demonstrate the presence of a [4Fe-4S] cluster, analogous to the studies performed
+    on RumA/RlmD (PMID:15181002).
+  hypothesis: &gt;-
+    RlmC contains a [4Fe-4S] cluster coordinated by Cys3, Cys11, Cys14, and Cys87,
+    analogous to the cluster in RumA/RlmD.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

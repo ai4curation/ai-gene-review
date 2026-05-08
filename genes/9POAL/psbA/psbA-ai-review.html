@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>psbA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>psbA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P48183" target="_blank" class="term-link">
+                        P48183
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Zea mays</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "psbA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P48183" data-a="DESCRIPTION: psbA encodes the D1 protein (Photosystem II protei..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>psbA encodes the D1 protein (Photosystem II protein D1), which is the core reaction center subunit of Photosystem II (PSII). D1 forms a heterodimer with D2 (PsbD) that binds P680, the primary electron donor of PSII, along with pheophytin, plastoquinone QB, and a non-heme iron. D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC), which catalyzes the light-driven oxidation of water to molecular oxygen. The protein functions as a water:plastoquinone oxidoreductase (EC 1.10.3.9). D1 is located in the chloroplast thylakoid membrane and is a multi-pass transmembrane protein with 5 transmembrane helices. It is the primary target of photoinhibition damage and undergoes rapid light-dependent turnover via degradation by Deg1 and FtsH proteases followed by de novo synthesis. The QB binding pocket of D1 is also the target site for herbicides such as atrazine, diuron, and ioxynil. The protein is C-terminally processed by CTPA protease, which is essential for assembly of the OEC. psbA is chloroplast-encoded and one of the most conserved genes across all oxygenic photosynthetic organisms.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009523" target="_blank" class="term-link">
+                                    GO:0009523
+                                </a>
+                            </span>
+                            <span class="term-label">photosystem II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0009523" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation placing psbA/D1 as part of the photosystem II complex, inferred by phylogenetic analysis across orthologs. D1 is one of the two core reaction center subunits of PSII (together with D2/PsbD). This is arguably the single most fundamental annotation for this protein. UniProt states: &#34;PSII is composed of 1 copy each of membrane proteins PsbA, PsbB, PsbC, PsbD, PsbE, PsbF, PsbH, PsbI, PsbJ, PsbK, PsbL, PsbM, PsbT, PsbX, PsbY, PsbZ, Psb30/Ycf12&#34; (HAMAP-Rule:MF_01379). The IBA annotation is phylogenetically well-supported and at the correct level of specificity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> psbA/D1 is a core structural and catalytic subunit of PSII. This is the defining annotation for this protein. The IBA is appropriately at the photosystem II level rather than being overly specific to a sub-complex.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">PSII is composed of 1 copy each of membrane proteins PsbA, PsbB, PsbC, PsbD, PsbE, PsbF, PsbH, PsbI, PsbJ, PsbK, PsbL, PsbM, PsbT, PsbX, PsbY, PsbZ, Psb30/Ycf12</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">The D1/D2 (PsbA/PsbD) reaction center heterodimer binds P680, the primary electron donor of PSII as well as several subsequent electron acceptors</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0005506" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for iron ion binding, transferred via UniRule UR000352928. D1 does bind a non-heme iron atom shared with D2 at the interface of the heterodimer. UniProt feature annotations show His-215 and His-272 as Fe cation binding residues with the note &#34;ligand shared with heterodimeric partner&#34; (HAMAP-Rule:MF_01379). While accurate, this is a secondary cofactor-binding property rather than a core catalytic function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The non-heme iron binding is real and structurally important — it bridges the D1/D2 heterodimer between the QA and QB quinone binding sites. However, this is a structural cofactor role subsidiary to the primary catalytic function. Iron ion binding alone does not adequately describe what psbA does.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">ligand shared with heterodimeric partner [Fe cation binding at His-215 and His-272]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">The D1/D2 heterodimer... shares a non-heme iron and each subunit binds pheophytin, quinone, additional chlorophylls, carotenoids and lipids</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010242" target="_blank" class="term-link">
+                                    GO:0010242
+                                </a>
+                            </span>
+                            <span class="term-label">oxygen evolving activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0010242" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for oxygen evolving activity (catalysis of 2 H2O = O2 + 4 H+ + 4 e-), inferred from EC 1.10.3.9. D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC). UniProt feature annotations show binding of the [CaMn4O5] cluster at residues Asp-170, His-189, Glu-332, His-333, Ala-342, and Ala-344 (HAMAP-Rule:MF_01379). The Tyr-161 residue forms the redox-active TyrZ radical intermediate that directly participates in electron extraction from water.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Oxygen evolving activity is one of the core molecular functions of psbA/D1. The D1 subunit provides 5 of the 7 amino acid ligands to the Mn4-Ca-O5 cluster and the redox-active TyrZ (Tyr-161) that is the immediate electron donor to P680+. This is a defining catalytic activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Tyr-161 forms a radical intermediate that is referred to as redox-active TyrZ, YZ or Y-Z</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                    GO:0015979
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0015979" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for involvement in photosynthesis, transferred via UniRule UR000352928. D1 is essential for photosynthesis as the core reaction center subunit of PSII. However, this is a very broad BP term. More specific terms like GO:0009772 (photosynthetic electron transport in photosystem II) are already annotated and better capture the specific role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> While accurate — D1 is absolutely essential for oxygenic photosynthesis — the term GO:0015979 is very general. The more specific GO:0009772 (photosynthetic electron transport in photosystem II) is already annotated and better represents the specific biological process this protein participates in. This broad annotation is redundant but not incorrect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016168" target="_blank" class="term-link">
+                                    GO:0016168
+                                </a>
+                            </span>
+                            <span class="term-label">chlorophyll binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0016168" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for chlorophyll binding, transferred via UniRule UR000352928. D1 binds multiple chlorophyll a molecules including ChlzD1 (axial binding at His-118) and PD1 (axial binding at His-198), one of the pair of chlorophylls constituting the P680 reaction center. UniProt notes that &#34;2 of the reaction center chlorophylls (ChlD1 and ChlD2) are entirely coordinated by water&#34; (HAMAP-Rule:MF_01379).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chlorophyll binding is a core molecular function of D1. The binding of PD1 chlorophyll is essential for formation of the P680 reaction center, and ChlzD1 participates in accessory electron transfer pathways. The structural binding sites are well-characterized.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">chlorophyll a binding [ChlzD1] axial binding residue at His-118</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">chlorophyll a binding [PD1] axial binding residue at His-198</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">2 of the reaction center chlorophylls (ChlD1 and ChlD2) are entirely coordinated by water</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016682" target="_blank" class="term-link">
+                                    GO:0016682
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on diphenols and related substances as donors, oxygen as acceptor</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0016682" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for oxidoreductase activity corresponding to EC 1.10.3.9 (water:plastoquinone oxidoreductase), transferred via UniRule UR000352928. The PSII complex catalyzes: 2 plastoquinone + 4 hnu + 2 H2O = 2 plastoquinol + O2. This describes the overall enzymatic reaction of the PSII complex in which D1 is the central catalytic subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term captures the catalytic activity of the PSII reaction center. The catalytic activity annotation at EC 1.10.3.9 is specifically assigned to the D1/D2 heterodimer and is the defining enzymatic function. D1 binds the QB plastoquinone binding site (Ser-264, Phe-265, His-215) where plastoquinone is reduced to plastoquinol.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=2 a plastoquinone + 4 hnu + 2 H2O = 2 a plastoquinol + O2; EC=1.10.3.9</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">quinone binding [B] at Ser-264/Phe-265 and His-215</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    GO:0009055
+                                </a>
+                            </span>
+                            <span class="term-label">electron transfer activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0009055" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for electron transfer activity, inferred from InterPro IPR005867 (PSII D1) and UniRule UR000352928. D1 contains a complete electron transfer chain: P680 -&gt; pheophytin (PheoD1) -&gt; QA (on D2) -&gt; QB (on D1). The protein binds pheophytin a at Glu-126 and plastoquinone QB at His-215/Ser-264/Phe-265. Tyr-161 (TyrZ) mediates electron transfer from the Mn4-Ca-O5 cluster to P680+.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Electron transfer activity is a core molecular function of D1. The D1 subunit directly participates in the photosynthetic electron transfer chain: TyrZ donates electrons to P680+, and the protein provides the QB binding site where the terminal electron acceptor plastoquinone is reduced. This is intrinsic to the catalytic mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">each subunit binds pheophytin, quinone, additional chlorophylls, carotenoids and lipids</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">pheophytin a binding [D1] at Glu-126</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                    GO:0009535
+                                </a>
+                            </span>
+                            <span class="term-label">chloroplast thylakoid membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0009535" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for localization to the chloroplast thylakoid membrane, inferred from UniProtKB-SubCell SL-0058 and UniRule UR000352928. This localization is experimentally confirmed in maize by Fristedt et al. (PMID:22833285), who showed by mass spectrometry that D1 is present in thylakoid membranes of both bundle sheath and mesophyll chloroplasts, with PSII more abundant in mesophyll cells and in grana lamellae.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Chloroplast thylakoid membrane localization is well-established for D1 by direct experimental evidence in Zea mays (PMID:22833285). D1 is a multi-pass transmembrane protein with 5 transmembrane helices embedded in the thylakoid membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22833285" target="_blank" class="term-link">
+                                        PMID:22833285
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the photosynthetic apparatus is partitioned over two cell types called mesophyll (M) and bundle sheath (BS), which have different structure and specialization of the photosynthetic thylakoid membranes</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plastid, chloroplast thylakoid membrane; Multi-pass membrane protein</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009536" target="_blank" class="term-link">
+                                    GO:0009536
+                                </a>
+                            </span>
+                            <span class="term-label">plastid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0009536" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for localization to plastid, inferred by ARBA machine learning (ARBA:ARBA00027316). While technically correct — psbA is chloroplast-encoded and the D1 protein resides in the chloroplast — this is a less specific term than the already-annotated GO:0009535 (chloroplast thylakoid membrane), which precisely captures the sub-organellar localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The plastid annotation is accurate but redundant with the more specific chloroplast thylakoid membrane annotation (GO:0009535). GO:0009536 (plastid) is a broad parent term. Since the more precise term is already annotated, this adds no additional information, but is not incorrect.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Plastid, chloroplast thylakoid membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009772" target="_blank" class="term-link">
+                                    GO:0009772
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthetic electron transport in photosystem II</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0009772" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for involvement in photosynthetic electron transport in photosystem II, inferred from InterPro domains IPR000484 (Photo_RC_L/M) and IPR036854 (Photo_II_D1/D2_sf). D1 is the central subunit in PSII electron transport, hosting the primary electron transfer chain from water oxidation through TyrZ -&gt; P680 -&gt; PheoD1 -&gt; QA -&gt; QB -&gt; plastoquinone pool. This is the most specific and accurate BP term for D1&#39;s role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most appropriate biological process term for psbA/D1. The protein is the core catalytic subunit mediating electron transfer from water to plastoquinone within PSII. This term is at the right level of specificity — more informative than the broad &#34;photosynthesis&#34; term while accurately describing the specific process.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019684" target="_blank" class="term-link">
+                                    GO:0019684
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis, light reaction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0019684" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation for involvement in photosynthesis, light reaction, inferred from InterPro domains IPR000484 and IPR036854. D1 is essential for the light-dependent reactions of photosynthesis as the reaction center where light energy drives charge separation. However, this term is intermediate in specificity between GO:0015979 (photosynthesis) and GO:0009772 (photosynthetic electron transport in photosystem II).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Accurate but partially redundant with the more specific GO:0009772 (photosynthetic electron transport in photosystem II), which is already annotated. This broader term adds little additional information beyond what the PSII-specific electron transport term captures. Not wrong, but not the most informative annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            HAMAP-Rule:MF_01379
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0030145" data-r="HAMAP-Rule:MF_01379" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D1 provides most of the amino acid ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC). UniProt feature annotations show [CaMn4O5] cluster binding at residues Asp-170, His-189, Glu-332, His-333, Ala-342, and Ala-344 (5 of the 7 protein ligands to the cluster). Manganese binding is essential for water oxidation activity and is a core molecular function not captured by existing annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing iron ion binding annotation captures the non-heme Fe, but the much more functionally important Mn4-Ca-O5 cluster binding is not annotated. D1 provides the majority of ligands to this catalytic metal center. Manganese ion binding is a core molecular function that should be annotated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">[CaMn4O5] cluster binding at Asp-170, His-189, Glu-332, His-333, Ala-342, Ala-344</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048038" target="_blank" class="term-link">
+                                    GO:0048038
+                                </a>
+                            </span>
+                            <span class="term-label">quinone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            HAMAP-Rule:MF_01379
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P48183" data-a="GO:0048038" data-r="HAMAP-Rule:MF_01379" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> D1 provides the QB plastoquinone binding site, which is critical for PSII function. UniProt feature annotations show quinone binding at His-215 and Ser-264/Phe-265 (HAMAP-Rule:MF_01379). The QB site is also the target of herbicides (atrazine, diuron, ioxynil) that compete for plastoquinone binding. This is a functionally important molecular function not captured by existing annotations.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Quinone (plastoquinone) binding at the QB site is one of the most functionally important activities of D1 — it is essential for electron transfer from PSII to the plastoquinone pool and is the binding site for major herbicide classes. This is a core molecular function that should be annotated.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">quinone binding [B] at His-215 and Ser-264/Phe-265</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P48183
+                                    
+                                </span>
+                                
+                                <div class="support-text">Herbicides such as atrazine, BNT, diuron or ioxynil bind in the Q(B) binding site and block subsequent electron transfer</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>D1 is the core reaction center subunit of Photosystem II, forming a heterodimer with D2 (PsbD) that binds P680, the primary electron donor. D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC), which catalyzes the light-driven oxidation of water to molecular oxygen. The protein mediates the electron transfer chain: water -&gt; TyrZ (Tyr-161) -&gt; P680 -&gt; pheophytin -&gt; QA -&gt; QB (plastoquinone). D1 also binds multiple chlorophyll a molecules including PD1 (part of the P680 reaction center) and accessory ChlzD1. The overall catalytic reaction is water:plastoquinone oxidoreductase (EC 1.10.3.9): 2 plastoquinone + 4 hnu + 2 H2O = 2 plastoquinol + O2. D1 is subject to light-induced damage (photoinhibition) and undergoes rapid turnover via FtsH and Deg1 proteases followed by de novo synthesis.</h3>
+                <span class="vote-buttons" data-g="P48183" data-a="FUNCTION: D1 is the core reaction center subunit of Photosys..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010242" target="_blank" class="term-link">
+                            oxygen evolving activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009772" target="_blank" class="term-link">
+                                photosynthetic electron transport in photosystem II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009535" target="_blank" class="term-link">
+                                chloroplast thylakoid membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009523" target="_blank" class="term-link">
+                            photosystem II
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P48183
+                            
+                        </span>
+                        
+                        <div class="finding-text">Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P48183
+                            
+                        </span>
+                        
+                        <div class="finding-text">D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22833285" target="_blank" class="term-link">
+                                PMID:22833285
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">the photosynthetic apparatus is partitioned over two cell types called mesophyll (M) and bundle sheath (BS), which have different structure and specialization of the photosynthetic thylakoid membranes</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22833285" target="_blank" class="term-link">
+                            PMID:22833285
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Differential phosphorylation of thylakoid proteins in mesophyll and bundle sheath chloroplasts from maize plants grown under low or high light</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Direct experimental evidence for D1 localization in chloroplast thylakoid membrane in Zea mays. D1 is phosphorylated in both bundle sheath and mesophyll cells. PSII is more abundant in mesophyll than bundle sheath cells. D1 degradation is faster in bundle sheath cells.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7666415" target="_blank" class="term-link">
+                            PMID:7666415
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete sequence of the maize chloroplast genome</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Complete nucleotide sequence of the Zea mays chloroplast genome including psbA</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        HAMAP-Rule:MF_01379
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">HAMAP rule for Photosystem II protein D1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive annotation rule for PSII D1 protein covering function, cofactors, subunit composition, subcellular location, and post-translational modifications</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(psbA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P48183" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-04-22T22:44:45.210881'<br />
+end_time: '2026-04-22T22:53:34.539772'<br />
+duration_seconds: 529.33<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: 9POAL<br />
+  gene_id: psbA<br />
+  gene_symbol: psbA<br />
+  uniprot_accession: P48183<br />
+  protein_description: 'RecName: Full=Photosystem II protein D1 {ECO:0000255|HAMAP-Rule:MF_01379};<br />
+    Short=PSII D1 protein {ECO:0000255|HAMAP-Rule:MF_01379}; EC=1.10.3.9 {ECO:0000255|HAMAP-Rule:MF_01379};<br />
+    AltName: Full=32 kDa thylakoid membrane protein {ECO:0000303|Ref.1}; AltName:<br />
+    Full=Photosystem II Q(B) protein {ECO:0000255|HAMAP-Rule:MF_01379}; Flags: Precursor;'<br />
+  gene_info: Name=psbA {ECO:0000255|HAMAP-Rule:MF_01379};<br />
+  organism_full: Zea mays (Maize).<br />
+  protein_family: Belongs to the reaction center PufL/M/PsbA/D family.<br />
+  protein_domains: D1/D2. (IPR055266); Photo_II_D1/D2_sf. (IPR036854); Photo_RC_L/M.<br />
+    (IPR000484); Photo_RC_L/M_CS. (IPR055265); PSII_D1. (IPR005867)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 25</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P48183</li>
+<li><strong>Protein Description:</strong> RecName: Full=Photosystem II protein D1 {ECO:0000255|HAMAP-Rule:MF_01379}; Short=PSII D1 protein {ECO:0000255|HAMAP-Rule:MF_01379}; EC=1.10.3.9 {ECO:0000255|HAMAP-Rule:MF_01379}; AltName: Full=32 kDa thylakoid membrane protein {ECO:0000303|Ref.1}; AltName: Full=Photosystem II Q(B) protein {ECO:0000255|HAMAP-Rule:MF_01379}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=psbA {ECO:0000255|HAMAP-Rule:MF_01379};</li>
+<li><strong>Organism (full):</strong> Zea mays (Maize).</li>
+<li><strong>Protein Family:</strong> Belongs to the reaction center PufL/M/PsbA/D family.</li>
+<li><strong>Key Domains:</strong> D1/D2. (IPR055266); Photo_II_D1/D2_sf. (IPR036854); Photo_RC_L/M. (IPR000484); Photo_RC_L/M_CS. (IPR055265); PSII_D1. (IPR005867)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "psbA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Zea mays (Maize).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'psbA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>psbA</strong> (gene ID: psbA, UniProt: P48183) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> P48183</li>
+<li><strong>Protein Description:</strong> RecName: Full=Photosystem II protein D1 {ECO:0000255|HAMAP-Rule:MF_01379}; Short=PSII D1 protein {ECO:0000255|HAMAP-Rule:MF_01379}; EC=1.10.3.9 {ECO:0000255|HAMAP-Rule:MF_01379}; AltName: Full=32 kDa thylakoid membrane protein {ECO:0000303|Ref.1}; AltName: Full=Photosystem II Q(B) protein {ECO:0000255|HAMAP-Rule:MF_01379}; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=psbA {ECO:0000255|HAMAP-Rule:MF_01379};</li>
+<li><strong>Organism (full):</strong> Zea mays (Maize).</li>
+<li><strong>Protein Family:</strong> Belongs to the reaction center PufL/M/PsbA/D family.</li>
+<li><strong>Key Domains:</strong> D1/D2. (IPR055266); Photo_II_D1/D2_sf. (IPR036854); Photo_RC_L/M. (IPR000484); Photo_RC_L/M_CS. (IPR055265); PSII_D1. (IPR005867)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "psbA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Zea mays (Maize).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'psbA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>psbA</strong> (gene ID: psbA, UniProt: P48183) in 9POAL.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-psba-photosystem-ii-protein-d1-uniprot-p48183-in-zea-mays">Research report: functional annotation of <strong>psbA / Photosystem II protein D1</strong> (UniProt <strong>P48183</strong>) in <strong>Zea mays</strong></h2>
+<h3 id="0-mandatory-verification-of-target-identity-to-avoid-symbol-ambiguity">0) Mandatory verification of target identity (to avoid symbol ambiguity)</h3>
+<p>The gene symbol <strong>psbA</strong> is widely used across oxygenic photosynthetic lineages, but the <strong>specific target here is Zea mays psbA encoding Photosystem II reaction-center protein D1</strong>, consistent with UniProt accession <strong>P48183</strong>. Primary literature explicitly identifies <strong>ZmpsbA as a cDNA encoding the D1 protein from maize (Zea mays L.)</strong>, and maize chloroplast ribosome-profiling studies likewise define <strong>psbA as encoding the D1 reaction-center protein of Photosystem II (PSII)</strong>. (huo2016overexpressionofthe pages 2-3, chotewutmontri2018multileveleffectsof pages 1-2)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-is-psbad1">1.1 What is PsbA/D1?</h4>
+<p><strong>PsbA (D1)</strong> is a <strong>chloroplast-encoded, integral thylakoid-membrane core subunit of PSII</strong>. It is described as an indispensable component of oxygenic photosynthesis and a key part of the PSII reaction center together with D2; D1 and D2 bind most redox-active cofactors required for electron transfer. (huo2016overexpressionofthe pages 1-2, huo2016overexpressionofthe pages 2-3)</p>
+<h4 id="12-psii-as-an-enzyme-system-and-the-role-of-d1">1.2 PSII as an enzyme system and the role of D1</h4>
+<p>A modern functional definition of PSII is a <strong>water–plastoquinone oxidoreductase</strong>: it uses light energy to drive charge separation, extracts electrons ultimately from water (via the oxygen-evolving complex, OEC), and reduces plastoquinone. In mechanistic terms, PSII photochemistry proceeds from <strong>P680 → pheophytin → QA (primary plastoquinone acceptor) → QB (secondary acceptor)</strong>. D1 is a core reaction-center subunit in which the quinone chemistry and binding pocket targeted by many inhibitors is classically localized (“32 kDa QB protein” terminology appears in the recent PSII repair review literature). (mehra2024assemblyandrepair pages 1-2, mehra2024assemblyandrepair pages 13-14)</p>
+<h4 id="13-localization-and-membrane-topology">1.3 Localization and membrane topology</h4>
+<p>D1 is a <strong>thylakoid membrane protein</strong> whose synthesis and assembly are coordinated with thylakoid insertion. A recent light-stress review describes D1 as being inserted <strong>co-translationally into thylakoid membranes</strong>, with a topology including <strong>five transmembrane helices</strong> and an <strong>N-terminus facing the stroma</strong>. (khan2025adaptiveresponsesof pages 9-10)</p>
+<h3 id="2-biological-processes-pathways-and-mechanistic-function">2) Biological processes, pathways, and mechanistic function</h3>
+<h4 id="21-photosynthetic-electron-transfer-at-psii-qaqb-pathway">2.1 Photosynthetic electron transfer at PSII (QA/QB pathway)</h4>
+<p>PSII electron transfer includes reduction of QA and then QB during successive turnover events; this QA/QB step is central to converting a one-electron photochemical event into plastoquinol formation. The PSII assembly/repair review explicitly situates QA and QB as sequential electron acceptors after P680 and pheophytin. (mehra2024assemblyandrepair pages 1-2)</p>
+<h4 id="22-photoinhibition-and-why-d1-is-replaced">2.2 Photoinhibition and why D1 is replaced</h4>
+<p>A core concept in PSII biology is that <strong>D1 is a primary target of light-driven oxidative damage</strong> and therefore undergoes ongoing <strong>damage–degradation–replacement</strong>. In maize chloroplasts, this requirement is reflected by unusually strong regulation of psbA translation: D1 is described as the <strong>primary target of photo-oxidative damage</strong> and subject to a <strong>repair cycle</strong> where damaged D1 is degraded and replaced with newly synthesized D1; to meet this demand, D1 is among the most rapidly synthesized proteins in photosynthesizing cells. (chotewutmontri2018multileveleffectsof pages 1-2)</p>
+<p>Mechanistically, photodamage can involve both <strong>donor-side</strong> problems (near/OEC) and <strong>acceptor-side</strong> limitations (acceptor saturation leading to charge recombination), which promote formation of reactive species such as <strong>singlet oxygen (\u00b9O2)</strong>; acceptor-side effects can include conditions where QA becomes doubly reduced and is released, increasing damaging reactions. (lempiainenUnknownyearphotoinhibitionandregulation pages 31-35)</p>
+<h4 id="23-the-psii-repair-cycle-proteases-assembly-factors-and-thylakoid-regions">2.3 The PSII repair cycle (proteases, assembly factors, and thylakoid regions)</h4>
+<p>A consistent view across recent synthesis is that PSII repair proceeds through partial PSII disassembly and migration within the thylakoid membrane network, followed by targeted D1 proteolysis and reassembly. One review summarizes a cycle in which <strong>CP43 dissociates to expose D1</strong>, <strong>D1 is degraded</strong> (Deg proteases implicated in primary cleavages; FtsH involved in processive degradation/remodeling), and then <strong>new D1 is synthesized and inserted</strong>, after which CP43 rebinds and functional PSII is restored. (mehra2024assemblyandrepair pages 6-8, mehra2024assemblyandrepair pages 13-14)</p>
+<p>A figure schematic from the 2024 PSII assembly/repair review shows the spatial organization of these events: <strong>active PSII dimers are located in appressed thylakoid regions (grana), whereas assembly and degradation/repair steps occur in non-appressed regions (stroma lamellae/margins)</strong>, with D1 degradation linked to FtsH (and possibly Deg) and followed by resynthesis/insertion. (mehra2024assemblyandrepair media f077a610)</p>
+<h3 id="3-regulation-of-psba-expression-maize-specific-evidence">3) Regulation of psbA expression (maize-specific evidence)</h3>
+<p>A distinctive feature of chloroplast gene regulation is that <strong>psbA translation is strongly light responsive relative to most other chloroplast mRNAs</strong>. In maize seedlings, <strong>ribosome occupancy on psbA mRNA increases dramatically within minutes after illumination and returns to low occupancy within about an hour in darkness</strong>, consistent with rapid D1 replacement needs during PSII maintenance. (chotewutmontri2018multileveleffectsof pages 1-2)</p>
+<h3 id="4-recent-developments-and-latest-research-prioritizing-20232024">4) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="41-2024-psii-assembly-and-repair-synthesis-state-of-the-field">4.1 2024: PSII assembly and repair synthesis (state of the field)</h4>
+<p>The 2024 review of PSII assembly and repair consolidates current understanding that (i) D1 is highly oxidation-prone and hence frequently replaced; (ii) D1 proteolysis is a central step in repair; and (iii) repair is organized in specialized thylakoid regions and depends on proteases and assembly factors that coordinate disassembly, replacement, and reassembly. (mehra2024assemblyandrepair pages 6-8, mehra2024assemblyandrepair media f077a610)</p>
+<h4 id="42-2024-psii-inhibitor-discovery-targeting-the-d1qb-pocket">4.2 2024: PSII inhibitor discovery targeting the D1/QB pocket</h4>
+<p>Applied mechanistic work in 2024 demonstrates continuing emphasis on the D1 pocket as a chemical target. A 2024 study investigating <strong>brassicanate A sulfoxide</strong> reports that it binds stably to D1 and <strong>competes with plastoquinone at the binding pocket</strong>, forming hydrogen bonds with <strong>His-214 and Phe-261</strong>, and highlights that urea/triazine inhibitors bind near <strong>Ser-264</strong>. Binding was supported computationally (molecular dynamics) and experimentally by <strong>biolayer interferometry</strong>. (wang2024potentialcandidatemolecule pages 9-10)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-engineering-stress-tolerance-by-manipulating-psbad1-abundance">5.1 Engineering stress tolerance by manipulating psbA/D1 abundance</h4>
+<p>A transgenic application relevant to crop biotechnology is the use of maize psbA to modulate PSII performance under stress: overexpression of <strong>ZmpsbA</strong> in tobacco increased D1 abundance and was associated with improved drought-tolerance phenotypes, including less reduction of photosynthetic parameters such as <strong>Fv/Fm</strong> under drought, alongside altered antioxidant enzyme activities. (huo2016overexpressionofthe pages 2-3)</p>
+<h4 id="52-herbicides-and-bioherbicide-development-targeting-d1qb">5.2 Herbicides and bioherbicide development targeting D1/QB</h4>
+<p>The D1/QB pocket is a long-established herbicide target, and new natural-product-inspired candidates continue to be explored. The 2024 brassicanate A sulfoxide study explicitly positions D1 binding as a mode of action for developing photosynthesis-inhibiting herbicides (and validates binding by recombinant D1 expression plus biophysical binding assays). (wang2024potentialcandidatemolecule pages 9-10)</p>
+<h3 id="6-expert-opinions-and-authoritative-synthesis-with-caveats">6) Expert opinions and authoritative synthesis (with caveats)</h3>
+<p>Recent review-level synthesis (2024) frames <strong>D1 turnover as a central, energetically costly but essential maintenance strategy</strong> that is more efficient than complete reaction-center replacement, and emphasizes the coordinated roles of proteases and assembly factors in maintaining PSII function under light stress. (mehra2024assemblyandrepair pages 6-8)</p>
+<p>Limitation: A major 2024 Plant Cell review on PSII biogenesis/maintenance was flagged as unobtainable in the retrieval process, so this report relies primarily on accessible 2024 synthesis in <em>Plants</em> and the accessible applied 2024 D1-inhibitor work; maize-specific mechanistic details beyond translation regulation were limited in the retrieved full-text set. (mehra2024assemblyandrepair pages 1-2, mehra2024assemblyandrepair pages 6-8, chotewutmontri2018multileveleffectsof pages 1-2, wang2024potentialcandidatemolecule pages 9-10)</p>
+<h3 id="7-relevant-statistics-and-quantitative-data-recent-studies">7) Relevant statistics and quantitative data (recent studies)</h3>
+<ul>
+<li>
+<p><strong>D1 turnover under high light:</strong> A 2024 review reports that in <em>Chlamydomonas</em>, under saturating light, <strong>D1 half-life can be ~20 minutes</strong>, illustrating the extreme turnover pressures that psbA translation and the repair protease network must meet in oxygenic photosynthesis. (mehra2024assemblyandrepair pages 6-8)</p>
+</li>
+<li>
+<p><strong>D1-ligand binding affinity (herbicide candidate):</strong> The 2024 brassicanate A sulfoxide study reports an affinity constant of <strong>2.69 × 10−3 M</strong> for binding to PSII D1 (measured by biolayer interferometry), supporting stable binding in the D1 pocket used for inhibitor development. (wang2024potentialcandidatemolecule pages 9-10)</p>
+</li>
+</ul>
+<h3 id="8-summary-functional-annotation-for-database-style-use">8) Summary functional annotation (for database-style use)</h3>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Key points</th>
+<th>Evidence/citations</th>
+<th>Key references with URL and publication date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>UniProt P48183 matches <strong>Zea mays psbA</strong>, encoding the <strong>Photosystem II reaction-center D1 protein</strong>; maize psbA/"ZmpsbA" was experimentally isolated as a cDNA encoding D1. D1 is a core PSII reaction-center subunit and historically corresponds to the 32 kDa QB/D1 protein class.</td>
+<td>Maize-specific identification of ZmpsbA as D1 (huo2016overexpressionofthe pages 2-3); psbA encodes D1 in maize chloroplasts and D1/D2 bind most redox-active cofactors (huo2016overexpressionofthe pages 1-2); broader PSII/core-subunit mapping psbA→D1 (mehra2024assemblyandrepair pages 2-4, mehra2024assemblyandrepair pages 13-14)</td>
+<td>Huo et al., <em>Frontiers in Plant Science</em> (Jan 2016), https://doi.org/10.3389/fpls.2015.01223; Mehra et al., <em>Plants</em> (Mar 2024), https://doi.org/10.3390/plants13060811</td>
+</tr>
+<tr>
+<td>Localization/topology</td>
+<td>D1 is a <strong>chloroplast-encoded thylakoid membrane protein</strong> inserted co-translationally into thylakoid membranes; active PSII dimers are enriched in appressed thylakoids, whereas repair/assembly steps occur in non-appressed regions. A recent review describes D1 as having <strong>five transmembrane helices</strong> with the <strong>N-terminus facing the stroma</strong>.</td>
+<td>Chloroplast-encoded, membrane-inserted D1 in thylakoids (mehra2024assemblyandrepair pages 2-4, huo2016overexpressionofthe pages 2-3); co-translational targeting/insertion and topology (khan2025adaptiveresponsesof pages 9-10); repair/assembly localization across thylakoid domains (mehra2024assemblyandrepair pages 6-8, mehra2024assemblyandrepair media f077a610)</td>
+<td>Khan et al., <em>Frontiers in Plant Science</em> (Mar 2025), https://doi.org/10.3389/fpls.2025.1550125; Mehra et al., <em>Plants</em> (Mar 2024), https://doi.org/10.3390/plants13060811</td>
+</tr>
+<tr>
+<td>Core biochemical function</td>
+<td>D1 is indispensable for oxygenic photosynthesis as part of the <strong>PSII reaction center</strong>. Together with D2, it binds most redox-active cofactors and supports photochemical electron transfer in PSII, which functions as a <strong>water–plastoquinone oxidoreductase</strong>.</td>
+<td>D1/D2 bind redox cofactors and participate in electron transfer (huo2016overexpressionofthe pages 1-2); PSII defined as water–plastoquinone oxidoreductase and D1 as core component in assembly/repair review (mehra2024assemblyandrepair pages 1-2)</td>
+<td>Huo et al., <em>Frontiers in Plant Science</em> (Jan 2016), https://doi.org/10.3389/fpls.2015.01223; Mehra et al., <em>Plants</em> (Mar 2024), https://doi.org/10.3390/plants13060811</td>
+</tr>
+<tr>
+<td>Electron acceptors/cofactors</td>
+<td>In PSII photochemistry, charge separation proceeds from <strong>P680</strong> to <strong>pheophytin</strong>, then to the primary plastoquinone acceptor <strong>QA</strong> and secondary acceptor <strong>QB</strong>. D1 is the canonical <strong>QB/plastoquinone-binding</strong> reaction-center subunit targeted by many PSII inhibitor herbicides; recent work identified ligand interactions involving <strong>His-214</strong> and <strong>Phe-261</strong>, while prior inhibitor classes are noted to bind near <strong>Ser-264</strong>.</td>
+<td>QA/QB electron-transfer pathway in PSII review (mehra2024assemblyandrepair pages 1-2); D1 as 32 kDa QB protein and herbicide/QB-site target (mehra2024assemblyandrepair pages 13-14, wang2024potentialcandidatemolecule pages 9-10); acceptor-side photodamage context involving QA release/recombination (lempiainenUnknownyearphotoinhibitionandregulation pages 31-35)</td>
+<td>Mehra et al., <em>Plants</em> (Mar 2024), https://doi.org/10.3390/plants13060811; Wang et al., <em>International Journal of Molecular Sciences</em> (Feb 2024), https://doi.org/10.3390/ijms25042400</td>
+</tr>
+<tr>
+<td>PSII repair/turnover</td>
+<td>D1 is the <strong>primary target of photo-oxidative damage</strong> and undergoes continuous <strong>damage–degradation–replacement</strong> during the PSII repair cycle. In plants/algae, repair involves PSII migration/disassembly, proteolysis by <strong>Deg</strong> and <strong>FtsH</strong> proteases, synthesis/insertion of new D1, and reassembly. Quantitative data from a 2024 review note that under saturating light in <em>Chlamydomonas</em>, D1 half-life can be <strong>~20 min</strong>.</td>
+<td>Maize/light-regulated high D1 turnover and repair need (chotewutmontri2018multileveleffectsof pages 1-2); D1 photodamage and FtsH/Deg-mediated turnover (huo2016overexpressionofthe pages 1-2, mehra2024assemblyandrepair pages 6-8, mehra2024assemblyandrepair pages 13-14); localization of repair in non-appressed membranes (mehra2024assemblyandrepair media f077a610)</td>
+<td>Chotewutmontri &amp; Barkan, <em>PLOS Genetics</em> (Aug 2018), https://doi.org/10.1371/journal.pgen.1007555; Mehra et al., <em>Plants</em> (Mar 2024), https://doi.org/10.3390/plants13060811</td>
+</tr>
+<tr>
+<td>Regulation of gene expression</td>
+<td><strong>psbA translation is uniquely and strongly light regulated</strong> in chloroplasts. In maize, ribosome occupancy on psbA mRNA increases within minutes in the light and declines in darkness, consistent with rapid D1 replacement needs. Reviews emphasize that transcription/translation of psbA is a major chloroplast-gene-expression response to high light and stress.</td>
+<td>Maize ribosome profiling showing rapid, psbA-specific light response (chotewutmontri2018multileveleffectsof pages 1-2); stress/light review highlighting psbA transcription/translation importance (khan2025adaptiveresponsesof pages 9-10); recent chloroplast gene-expression review framing psbA regulation as important for crop yield/stress tolerance (khan2025adaptiveresponsesof pages 9-10)</td>
+<td>Chotewutmontri &amp; Barkan, <em>PLOS Genetics</em> (Aug 2018), https://doi.org/10.1371/journal.pgen.1007555; Zhang et al., <em>Plant Communications</em> (Sep 2023), https://doi.org/10.1016/j.xplc.2023.100611; Zhang et al., <em>Int. J. Mol. Sci.</em> (Aug 2020), https://doi.org/10.3390/ijms21176082</td>
+</tr>
+<tr>
+<td>Applications/real-world</td>
+<td>Real-world relevance centers on <strong>crop stress tolerance</strong> and <strong>PSII-targeting herbicides</strong>. Overexpressing maize psbA in tobacco increased D1 abundance and improved drought tolerance, photosynthetic performance, antioxidant enzyme activities, and Fv/Fm under stress. Separately, the D1/QB pocket is exploited for herbicide design; a 2024 study reported a PSII-inhibitor candidate with biolayer interferometry affinity of <strong>2.69 × 10^-3 M</strong> for D1.</td>
+<td>Transgenic overexpression/abiotic-stress phenotype from maize psbA (huo2016overexpressionofthe pages 2-3); D1-targeted natural-product herbicide candidate and measured affinity (wang2024potentialcandidatemolecule pages 9-10)</td>
+<td>Huo et al., <em>Frontiers in Plant Science</em> (Jan 2016), https://doi.org/10.3389/fpls.2015.01223; Wang et al., <em>International Journal of Molecular Sciences</em> (Feb 2024), https://doi.org/10.3390/ijms25042400</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the functional annotation of Zea mays psbA (UniProt P48183), covering identity, localization, core PSII function, repair dynamics, regulation, and applied relevance. It is useful as a compact evidence map anchored to available context IDs and recent authoritative literature.</em></p>
+<p><strong>One-sentence functional summary:</strong> In maize chloroplasts, <strong>psbA (UniProt P48183)</strong> encodes the PSII reaction-center <strong>D1</strong> thylakoid membrane protein that is essential for PSII photochemistry (QA→QB/plastoquinone reduction) and is the principal target of photodamage, maintained through a conserved PSII repair cycle involving D1 proteolysis (Deg/FtsH) and rapid light-regulated resynthesis and membrane reinsertion. (chotewutmontri2018multileveleffectsof pages 1-2, mehra2024assemblyandrepair pages 1-2, mehra2024assemblyandrepair pages 13-14, mehra2024assemblyandrepair media f077a610)</p>
+<h3 id="key-visual-evidence">Key visual evidence</h3>
+<p>A schematic of PSII assembly/repair localizes D1 damage, degradation, and replacement steps within the thylakoid network (grana vs non-appressed regions). (mehra2024assemblyandrepair media f077a610)</p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Mehra HS et al. <strong>Assembly and Repair of Photosystem II in Chlamydomonas reinhardtii.</strong> <em>Plants</em> (publication date: <strong>Mar 2024</strong>). https://doi.org/10.3390/plants13060811 (mehra2024assemblyandrepair pages 1-2, mehra2024assemblyandrepair pages 6-8, mehra2024assemblyandrepair pages 13-14, mehra2024assemblyandrepair media f077a610)</li>
+<li>Wang Y et al. <strong>Potential Candidate Molecule of Photosystem II Inhibitor Herbicide—Brassicanate A Sulfoxide.</strong> <em>International Journal of Molecular Sciences</em> (publication date: <strong>Feb 2024</strong>). https://doi.org/10.3390/ijms25042400 (wang2024potentialcandidatemolecule pages 9-10)</li>
+<li>Zhang Y et al. <strong>Chloroplast gene expression: Recent advances and perspectives.</strong> <em>Plant Communications</em> (publication date: <strong>Sep 2023</strong>). https://doi.org/10.1016/j.xplc.2023.100611 (khan2025adaptiveresponsesof pages 9-10)</li>
+<li>Chotewutmontri P, Barkan A. <strong>Multilevel effects of light on ribosome dynamics in chloroplasts program genome-wide and psbA-specific changes in translation.</strong> <em>PLOS Genetics</em> (publication date: <strong>Aug 2018</strong>). https://doi.org/10.1371/journal.pgen.1007555 (chotewutmontri2018multileveleffectsof pages 1-2)</li>
+<li>Huo Y et al. <strong>Overexpression of the Maize psbA Gene Enhances Drought Tolerance…</strong> <em>Frontiers in Plant Science</em> (publication date: <strong>Jan 2016</strong>). https://doi.org/10.3389/fpls.2015.01223 (huo2016overexpressionofthe pages 2-3, huo2016overexpressionofthe pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(huo2016overexpressionofthe pages 2-3): Yongjin Huo, Meiping Wang, Yangyang Wei, and Zongliang Xia. Overexpression of the maize psba gene enhances drought tolerance through regulating antioxidant system, photosynthetic capability, and stress defense gene expression in tobacco. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01223, doi:10.3389/fpls.2015.01223. This article has 126 citations.</p>
+</li>
+<li>
+<p>(chotewutmontri2018multileveleffectsof pages 1-2): Prakitchai Chotewutmontri and Alice Barkan. Multilevel effects of light on ribosome dynamics in chloroplasts program genome-wide and psba-specific changes in translation. PLOS Genetics, 14:e1007555, Aug 2018. URL: https://doi.org/10.1371/journal.pgen.1007555, doi:10.1371/journal.pgen.1007555. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(huo2016overexpressionofthe pages 1-2): Yongjin Huo, Meiping Wang, Yangyang Wei, and Zongliang Xia. Overexpression of the maize psba gene enhances drought tolerance through regulating antioxidant system, photosynthetic capability, and stress defense gene expression in tobacco. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01223, doi:10.3389/fpls.2015.01223. This article has 126 citations.</p>
+</li>
+<li>
+<p>(mehra2024assemblyandrepair pages 1-2): Himanshu S. Mehra, Xiaozhuo Wang, Brandon P. Russell, Nidhi Kulkarni, Nicholas Ferrari, Brent Larson, and David J. Vinyard. Assembly and repair of photosystem ii in chlamydomonas reinhardtii. Plants, 13:811, Mar 2024. URL: https://doi.org/10.3390/plants13060811, doi:10.3390/plants13060811. This article has 7 citations.</p>
+</li>
+<li>
+<p>(mehra2024assemblyandrepair pages 13-14): Himanshu S. Mehra, Xiaozhuo Wang, Brandon P. Russell, Nidhi Kulkarni, Nicholas Ferrari, Brent Larson, and David J. Vinyard. Assembly and repair of photosystem ii in chlamydomonas reinhardtii. Plants, 13:811, Mar 2024. URL: https://doi.org/10.3390/plants13060811, doi:10.3390/plants13060811. This article has 7 citations.</p>
+</li>
+<li>
+<p>(khan2025adaptiveresponsesof pages 9-10): Imran Khan, Sohail, Shah Zaman, Guihua Li, Mei Fu, Wajid Zaman, Sima Panahirad, and Muhammad Irfan. Adaptive responses of plants to light stress: mechanisms of photoprotection and acclimation. a review. Frontiers in Plant Science, Mar 2025. URL: https://doi.org/10.3389/fpls.2025.1550125, doi:10.3389/fpls.2025.1550125. This article has 49 citations.</p>
+</li>
+<li>
+<p>(lempiainenUnknownyearphotoinhibitionandregulation pages 31-35): T Lempiäinen. Photoinhibition and regulation of photosynthesis. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(mehra2024assemblyandrepair pages 6-8): Himanshu S. Mehra, Xiaozhuo Wang, Brandon P. Russell, Nidhi Kulkarni, Nicholas Ferrari, Brent Larson, and David J. Vinyard. Assembly and repair of photosystem ii in chlamydomonas reinhardtii. Plants, 13:811, Mar 2024. URL: https://doi.org/10.3390/plants13060811, doi:10.3390/plants13060811. This article has 7 citations.</p>
+</li>
+<li>
+<p>(mehra2024assemblyandrepair media f077a610): Himanshu S. Mehra, Xiaozhuo Wang, Brandon P. Russell, Nidhi Kulkarni, Nicholas Ferrari, Brent Larson, and David J. Vinyard. Assembly and repair of photosystem ii in chlamydomonas reinhardtii. Plants, 13:811, Mar 2024. URL: https://doi.org/10.3390/plants13060811, doi:10.3390/plants13060811. This article has 7 citations.</p>
+</li>
+<li>
+<p>(wang2024potentialcandidatemolecule pages 9-10): Yu Wang, Dong Wang, Baozhu Dong, Jianxiu Hao, Xinyu Jia, and Hongyou Zhou. Potential candidate molecule of photosystem ii inhibitor herbicide—brassicanate a sulfoxide. International Journal of Molecular Sciences, 25:2400, Feb 2024. URL: https://doi.org/10.3390/ijms25042400, doi:10.3390/ijms25042400. This article has 2 citations.</p>
+</li>
+<li>
+<p>(mehra2024assemblyandrepair pages 2-4): Himanshu S. Mehra, Xiaozhuo Wang, Brandon P. Russell, Nidhi Kulkarni, Nicholas Ferrari, Brent Larson, and David J. Vinyard. Assembly and repair of photosystem ii in chlamydomonas reinhardtii. Plants, 13:811, Mar 2024. URL: https://doi.org/10.3390/plants13060811, doi:10.3390/plants13060811. This article has 7 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>khan2025adaptiveresponsesof pages 9-10</li>
+<li>mehra2024assemblyandrepair pages 1-2</li>
+<li>chotewutmontri2018multileveleffectsof pages 1-2</li>
+<li>wang2024potentialcandidatemolecule pages 9-10</li>
+<li>huo2016overexpressionofthe pages 2-3</li>
+<li>mehra2024assemblyandrepair pages 6-8</li>
+<li>huo2016overexpressionofthe pages 1-2</li>
+<li>mehra2024assemblyandrepair pages 13-14</li>
+<li>mehra2024assemblyandrepair pages 2-4</li>
+<li>https://doi.org/10.3389/fpls.2015.01223;</li>
+<li>https://doi.org/10.3390/plants13060811</li>
+<li>https://doi.org/10.3389/fpls.2025.1550125;</li>
+<li>https://doi.org/10.3390/plants13060811;</li>
+<li>https://doi.org/10.3390/ijms25042400</li>
+<li>https://doi.org/10.1371/journal.pgen.1007555;</li>
+<li>https://doi.org/10.1016/j.xplc.2023.100611;</li>
+<li>https://doi.org/10.3390/ijms21176082</li>
+<li>https://doi.org/10.1016/j.xplc.2023.100611</li>
+<li>https://doi.org/10.1371/journal.pgen.1007555</li>
+<li>https://doi.org/10.3389/fpls.2015.01223</li>
+<li>https://doi.org/10.3389/fpls.2015.01223,</li>
+<li>https://doi.org/10.1371/journal.pgen.1007555,</li>
+<li>https://doi.org/10.3390/plants13060811,</li>
+<li>https://doi.org/10.3389/fpls.2025.1550125,</li>
+<li>https://doi.org/10.3390/ijms25042400,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(psbA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P48183" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="psba-photosystem-ii-protein-d1-zea-mays-review-notes">psbA (Photosystem II protein D1) - Zea mays - Review Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<p>psbA encodes the D1 protein, one of the two core reaction center subunits of Photosystem II (PSII). It is chloroplast-encoded and one of the most highly conserved genes across all oxygenic photosynthetic organisms. The UniProt representative entry used for this review is P48183 (Zea mays, maize).</p>
+<h2 id="key-functional-features">Key Functional Features</h2>
+<h3 id="waterplastoquinone-oxidoreductase-ec-11039">Water:plastoquinone oxidoreductase (EC 1.10.3.9)</h3>
+<ul>
+<li>D1/D2 heterodimer catalyzes: 2 plastoquinone + 4 hν + 2 H₂O = 2 plastoquinol + O₂</li>
+<li>D1 provides the QB plastoquinone binding site (His-215, Ser-264, Phe-265)</li>
+</ul>
+<h3 id="oxygen-evolving-complex-oec">Oxygen-Evolving Complex (OEC)</h3>
+<ul>
+<li>D1 provides 5 of 7 protein ligands to the Mn₄-Ca-O₅ cluster: Asp-170, His-189, Glu-332, His-333, Ala-342, Ala-344</li>
+<li>Tyr-161 (TyrZ) is the redox-active radical intermediate that extracts electrons from water</li>
+</ul>
+<h3 id="cofactor-binding">Cofactor binding</h3>
+<ul>
+<li>Chlorophyll a: ChlzD1 (His-118), PD1 (His-198, part of P680 reaction center)</li>
+<li>Pheophytin a: PheoD1 (Glu-126)</li>
+<li>Non-heme Fe: His-215, His-272 (shared with D2)</li>
+<li>Plastoquinone QB: His-215, Ser-264, Phe-265</li>
+</ul>
+<h3 id="herbicide-target">Herbicide target</h3>
+<ul>
+<li>QB binding pocket is the target of triazine (atrazine), urea (diuron), and nitrile (ioxynil) herbicides</li>
+<li>Herbicide resistance mutations in psbA are well-characterized (e.g., Ser-264 → Gly confers atrazine resistance)</li>
+</ul>
+<h3 id="photoinhibition-and-turnover">Photoinhibition and turnover</h3>
+<ul>
+<li>D1 is the primary target of light-induced damage in PSII</li>
+<li>Rapid turnover: damaged D1 is degraded by FtsH and Deg1 proteases and replaced by de novo synthesis</li>
+<li>In maize: D1 degradation is faster in bundle sheath cells <a href="https://pubmed.ncbi.nlm.nih.gov/22833285">PMID:22833285</a></li>
+</ul>
+<h3 id="post-translational-modifications">Post-translational modifications</h3>
+<ul>
+<li>C-terminal processing by CTPA protease (essential for OEC assembly)</li>
+<li>N-terminal acetylation at Thr-2 <a href="https://pubmed.ncbi.nlm.nih.gov/22833285">PMID:22833285</a></li>
+<li>Phosphorylation at Thr-2, light-dependent <a href="https://pubmed.ncbi.nlm.nih.gov/22833285">PMID:22833285</a></li>
+</ul>
+<h2 id="review-decisions">Review Decisions</h2>
+<h3 id="accepted-as-core">Accepted as core</h3>
+<ul>
+<li>GO:0009523 (photosystem II) - IBA, defining CC annotation</li>
+<li>GO:0010242 (oxygen evolving activity) - IEA, core MF</li>
+<li>GO:0016168 (chlorophyll binding) - IEA, core MF</li>
+<li>GO:0016682 (oxidoreductase activity, diphenols as donors, O₂ as acceptor) - IEA, core MF (EC 1.10.3.9)</li>
+<li>GO:0009055 (electron transfer activity) - IEA, core MF</li>
+<li>GO:0009535 (chloroplast thylakoid membrane) - IEA, confirmed by PMID:22833285</li>
+<li>GO:0009772 (photosynthetic electron transport in PSII) - IEA, most specific BP</li>
+</ul>
+<h3 id="kept-as-non-core">Kept as non-core</h3>
+<ul>
+<li>GO:0005506 (iron ion binding) - real but subsidiary to Mn₄-Ca-O₅ cluster binding</li>
+<li>GO:0015979 (photosynthesis) - too broad, redundant with GO:0009772</li>
+<li>GO:0009536 (plastid) - too broad, redundant with GO:0009535</li>
+<li>GO:0019684 (photosynthesis, light reaction) - intermediate specificity, redundant</li>
+</ul>
+<h3 id="proposed-new-annotations">Proposed new annotations</h3>
+<ul>
+<li>GO:0030145 (manganese ion binding) - D1 provides most OEC cluster ligands</li>
+<li>GO:0048038 (quinone binding) - QB plastoquinone binding site, herbicide target</li>
+</ul>
+<h2 id="organism-context">Organism Context</h2>
+<p>9POAL (Poales) is a taxonomic grouping. The representative entry P48183 is from Zea mays (maize, NCBITaxon:4577). psbA is essentially identical across Poales grasses given its extreme conservation.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>PMID:22833285 - Fristedt et al. 2012, thylakoid protein phosphorylation in maize M/BS cells</li>
+<li>PMID:7666415 - Maier et al. 1995, complete maize chloroplast genome sequence</li>
+<li>HAMAP-Rule:MF_01379 - comprehensive annotation rule for PSII D1</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P48183
+gene_symbol: psbA
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:4577
+  label: Zea mays
+description: &gt;-
+  psbA encodes the D1 protein (Photosystem II protein D1), which is the core reaction center
+  subunit of Photosystem II (PSII). D1 forms a heterodimer with D2 (PsbD) that binds P680,
+  the primary electron donor of PSII, along with pheophytin, plastoquinone QB, and a non-heme
+  iron. D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex
+  (OEC), which catalyzes the light-driven oxidation of water to molecular oxygen. The protein
+  functions as a water:plastoquinone oxidoreductase (EC 1.10.3.9). D1 is located in the chloroplast
+  thylakoid membrane and is a multi-pass transmembrane protein with 5 transmembrane helices. It is
+  the primary target of photoinhibition damage and undergoes rapid light-dependent turnover via
+  degradation by Deg1 and FtsH proteases followed by de novo synthesis. The QB binding pocket of
+  D1 is also the target site for herbicides such as atrazine, diuron, and ioxynil. The protein is
+  C-terminally processed by CTPA protease, which is essential for assembly of the OEC. psbA is
+  chloroplast-encoded and one of the most conserved genes across all oxygenic photosynthetic
+  organisms.
+existing_annotations:
+- term:
+    id: GO:0009523
+    label: photosystem II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      IBA annotation placing psbA/D1 as part of the photosystem II complex, inferred by
+      phylogenetic analysis across orthologs. D1 is one of the two core reaction center
+      subunits of PSII (together with D2/PsbD). This is arguably the single most fundamental
+      annotation for this protein. UniProt states: &#34;PSII is composed of 1 copy each of
+      membrane proteins PsbA, PsbB, PsbC, PsbD, PsbE, PsbF, PsbH, PsbI, PsbJ, PsbK, PsbL,
+      PsbM, PsbT, PsbX, PsbY, PsbZ, Psb30/Ycf12&#34; (HAMAP-Rule:MF_01379). The IBA annotation
+      is phylogenetically well-supported and at the correct level of specificity.
+    action: ACCEPT
+    reason: &gt;-
+      psbA/D1 is a core structural and catalytic subunit of PSII. This is the defining
+      annotation for this protein. The IBA is appropriately at the photosystem II level
+      rather than being overly specific to a sub-complex.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;PSII is composed of 1 copy each of membrane proteins PsbA, PsbB, PsbC, PsbD, PsbE, PsbF, PsbH, PsbI, PsbJ, PsbK, PsbL, PsbM, PsbT, PsbX, PsbY, PsbZ, Psb30/Ycf12&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;The D1/D2 (PsbA/PsbD) reaction center heterodimer binds P680, the primary electron donor of PSII as well as several subsequent electron acceptors&#34;
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for iron ion binding, transferred via UniRule UR000352928. D1 does
+      bind a non-heme iron atom shared with D2 at the interface of the heterodimer. UniProt
+      feature annotations show His-215 and His-272 as Fe cation binding residues with the note
+      &#34;ligand shared with heterodimeric partner&#34; (HAMAP-Rule:MF_01379). While accurate, this
+      is a secondary cofactor-binding property rather than a core catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The non-heme iron binding is real and structurally important — it bridges the D1/D2
+      heterodimer between the QA and QB quinone binding sites. However, this is a structural
+      cofactor role subsidiary to the primary catalytic function. Iron ion binding alone does
+      not adequately describe what psbA does.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;ligand shared with heterodimeric partner [Fe cation binding at His-215 and His-272]&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;The D1/D2 heterodimer... shares a non-heme iron and each subunit binds pheophytin, quinone, additional chlorophylls, carotenoids and lipids&#34;
+- term:
+    id: GO:0010242
+    label: oxygen evolving activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for oxygen evolving activity (catalysis of 2 H2O = O2 + 4 H+ + 4 e-),
+      inferred from EC 1.10.3.9. D1 provides most of the ligands for the Mn4-Ca-O5 cluster
+      of the oxygen-evolving complex (OEC). UniProt feature annotations show binding of the
+      [CaMn4O5] cluster at residues Asp-170, His-189, Glu-332, His-333, Ala-342, and Ala-344
+      (HAMAP-Rule:MF_01379). The Tyr-161 residue forms the redox-active TyrZ radical
+      intermediate that directly participates in electron extraction from water.
+    action: ACCEPT
+    reason: &gt;-
+      Oxygen evolving activity is one of the core molecular functions of psbA/D1. The D1
+      subunit provides 5 of the 7 amino acid ligands to the Mn4-Ca-O5 cluster and the
+      redox-active TyrZ (Tyr-161) that is the immediate electron donor to P680+. This is
+      a defining catalytic activity.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Tyr-161 forms a radical intermediate that is referred to as redox-active TyrZ, YZ or Y-Z&#34;
+- term:
+    id: GO:0015979
+    label: photosynthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for involvement in photosynthesis, transferred via UniRule UR000352928.
+      D1 is essential for photosynthesis as the core reaction center subunit of PSII. However,
+      this is a very broad BP term. More specific terms like GO:0009772 (photosynthetic electron
+      transport in photosystem II) are already annotated and better capture the specific role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      While accurate — D1 is absolutely essential for oxygenic photosynthesis — the term
+      GO:0015979 is very general. The more specific GO:0009772 (photosynthetic electron
+      transport in photosystem II) is already annotated and better represents the specific
+      biological process this protein participates in. This broad annotation is redundant
+      but not incorrect.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation&#34;
+- term:
+    id: GO:0016168
+    label: chlorophyll binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for chlorophyll binding, transferred via UniRule UR000352928. D1 binds
+      multiple chlorophyll a molecules including ChlzD1 (axial binding at His-118) and PD1
+      (axial binding at His-198), one of the pair of chlorophylls constituting the P680
+      reaction center. UniProt notes that &#34;2 of the reaction center chlorophylls (ChlD1 and
+      ChlD2) are entirely coordinated by water&#34; (HAMAP-Rule:MF_01379).
+    action: ACCEPT
+    reason: &gt;-
+      Chlorophyll binding is a core molecular function of D1. The binding of PD1 chlorophyll
+      is essential for formation of the P680 reaction center, and ChlzD1 participates in
+      accessory electron transfer pathways. The structural binding sites are well-characterized.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;chlorophyll a binding [ChlzD1] axial binding residue at His-118&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;chlorophyll a binding [PD1] axial binding residue at His-198&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;2 of the reaction center chlorophylls (ChlD1 and ChlD2) are entirely coordinated by water&#34;
+- term:
+    id: GO:0016682
+    label: oxidoreductase activity, acting on diphenols and related substances as
+      donors, oxygen as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      IEA annotation for oxidoreductase activity corresponding to EC 1.10.3.9
+      (water:plastoquinone oxidoreductase), transferred via UniRule UR000352928. The PSII
+      complex catalyzes: 2 plastoquinone + 4 hnu + 2 H2O = 2 plastoquinol + O2. This
+      describes the overall enzymatic reaction of the PSII complex in which D1 is the
+      central catalytic subunit.
+    action: ACCEPT
+    reason: &gt;-
+      This term captures the catalytic activity of the PSII reaction center. The catalytic
+      activity annotation at EC 1.10.3.9 is specifically assigned to the D1/D2 heterodimer
+      and is the defining enzymatic function. D1 binds the QB plastoquinone binding site
+      (Ser-264, Phe-265, His-215) where plastoquinone is reduced to plastoquinol.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Reaction=2 a plastoquinone + 4 hnu + 2 H2O = 2 a plastoquinol + O2; EC=1.10.3.9&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;quinone binding [B] at Ser-264/Phe-265 and His-215&#34;
+- term:
+    id: GO:0009055
+    label: electron transfer activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for electron transfer activity, inferred from InterPro IPR005867
+      (PSII D1) and UniRule UR000352928. D1 contains a complete electron transfer chain:
+      P680 -&gt; pheophytin (PheoD1) -&gt; QA (on D2) -&gt; QB (on D1). The protein binds
+      pheophytin a at Glu-126 and plastoquinone QB at His-215/Ser-264/Phe-265. Tyr-161
+      (TyrZ) mediates electron transfer from the Mn4-Ca-O5 cluster to P680+.
+    action: ACCEPT
+    reason: &gt;-
+      Electron transfer activity is a core molecular function of D1. The D1 subunit
+      directly participates in the photosynthetic electron transfer chain: TyrZ donates
+      electrons to P680+, and the protein provides the QB binding site where the terminal
+      electron acceptor plastoquinone is reduced. This is intrinsic to the catalytic
+      mechanism.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;each subunit binds pheophytin, quinone, additional chlorophylls, carotenoids and lipids&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;pheophytin a binding [D1] at Glu-126&#34;
+- term:
+    id: GO:0009535
+    label: chloroplast thylakoid membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      IEA annotation for localization to the chloroplast thylakoid membrane, inferred from
+      UniProtKB-SubCell SL-0058 and UniRule UR000352928. This localization is experimentally
+      confirmed in maize by Fristedt et al. (PMID:22833285), who showed by mass spectrometry
+      that D1 is present in thylakoid membranes of both bundle sheath and mesophyll
+      chloroplasts, with PSII more abundant in mesophyll cells and in grana lamellae.
+    action: ACCEPT
+    reason: &gt;-
+      Chloroplast thylakoid membrane localization is well-established for D1 by direct
+      experimental evidence in Zea mays (PMID:22833285). D1 is a multi-pass transmembrane
+      protein with 5 transmembrane helices embedded in the thylakoid membrane.
+    supported_by:
+      - reference_id: PMID:22833285
+        supporting_text: &#34;the photosynthetic apparatus is partitioned over two cell types called mesophyll (M) and bundle sheath (BS), which have different structure and specialization of the photosynthetic thylakoid membranes&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Plastid, chloroplast thylakoid membrane; Multi-pass membrane protein&#34;
+- term:
+    id: GO:0009536
+    label: plastid
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: &gt;-
+      IEA annotation for localization to plastid, inferred by ARBA machine learning
+      (ARBA:ARBA00027316). While technically correct — psbA is chloroplast-encoded and
+      the D1 protein resides in the chloroplast — this is a less specific term than the
+      already-annotated GO:0009535 (chloroplast thylakoid membrane), which precisely
+      captures the sub-organellar localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The plastid annotation is accurate but redundant with the more specific chloroplast
+      thylakoid membrane annotation (GO:0009535). GO:0009536 (plastid) is a broad parent
+      term. Since the more precise term is already annotated, this adds no additional
+      information, but is not incorrect.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Plastid, chloroplast thylakoid membrane&#34;
+- term:
+    id: GO:0009772
+    label: photosynthetic electron transport in photosystem II
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for involvement in photosynthetic electron transport in photosystem II,
+      inferred from InterPro domains IPR000484 (Photo_RC_L/M) and IPR036854 (Photo_II_D1/D2_sf).
+      D1 is the central subunit in PSII electron transport, hosting the primary electron
+      transfer chain from water oxidation through TyrZ -&gt; P680 -&gt; PheoD1 -&gt; QA -&gt; QB -&gt;
+      plastoquinone pool. This is the most specific and accurate BP term for D1&#39;s role.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most appropriate biological process term for psbA/D1. The protein is the
+      core catalytic subunit mediating electron transfer from water to plastoquinone within
+      PSII. This term is at the right level of specificity — more informative than the broad
+      &#34;photosynthesis&#34; term while accurately describing the specific process.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation&#34;
+- term:
+    id: GO:0019684
+    label: photosynthesis, light reaction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      IEA annotation for involvement in photosynthesis, light reaction, inferred from
+      InterPro domains IPR000484 and IPR036854. D1 is essential for the light-dependent
+      reactions of photosynthesis as the reaction center where light energy drives charge
+      separation. However, this term is intermediate in specificity between GO:0015979
+      (photosynthesis) and GO:0009772 (photosynthetic electron transport in photosystem II).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate but partially redundant with the more specific GO:0009772 (photosynthetic
+      electron transport in photosystem II), which is already annotated. This broader term
+      adds little additional information beyond what the PSII-specific electron transport
+      term captures. Not wrong, but not the most informative annotation.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O&#34;
+# New annotations not covered by existing GOA
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IEA
+  original_reference_id: HAMAP-Rule:MF_01379
+  review:
+    summary: &gt;-
+      D1 provides most of the amino acid ligands for the Mn4-Ca-O5 cluster of the
+      oxygen-evolving complex (OEC). UniProt feature annotations show [CaMn4O5] cluster
+      binding at residues Asp-170, His-189, Glu-332, His-333, Ala-342, and Ala-344
+      (5 of the 7 protein ligands to the cluster). Manganese binding is essential for
+      water oxidation activity and is a core molecular function not captured by existing
+      annotations.
+    action: NEW
+    reason: &gt;-
+      The existing iron ion binding annotation captures the non-heme Fe, but the much more
+      functionally important Mn4-Ca-O5 cluster binding is not annotated. D1 provides the
+      majority of ligands to this catalytic metal center. Manganese ion binding is a core
+      molecular function that should be annotated.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;[CaMn4O5] cluster binding at Asp-170, His-189, Glu-332, His-333, Ala-342, Ala-344&#34;
+- term:
+    id: GO:0048038
+    label: quinone binding
+  evidence_type: IEA
+  original_reference_id: HAMAP-Rule:MF_01379
+  review:
+    summary: &gt;-
+      D1 provides the QB plastoquinone binding site, which is critical for PSII function.
+      UniProt feature annotations show quinone binding at His-215 and Ser-264/Phe-265
+      (HAMAP-Rule:MF_01379). The QB site is also the target of herbicides (atrazine,
+      diuron, ioxynil) that compete for plastoquinone binding. This is a functionally
+      important molecular function not captured by existing annotations.
+    action: NEW
+    reason: &gt;-
+      Quinone (plastoquinone) binding at the QB site is one of the most functionally
+      important activities of D1 — it is essential for electron transfer from PSII to the
+      plastoquinone pool and is the binding site for major herbicide classes. This is a
+      core molecular function that should be annotated.
+    supported_by:
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;quinone binding [B] at His-215 and Ser-264/Phe-265&#34;
+      - reference_id: UniProt:P48183
+        supporting_text: &#34;Herbicides such as atrazine, BNT, diuron or ioxynil bind in the Q(B) binding site and block subsequent electron transfer&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22833285
+  title: Differential phosphorylation of thylakoid proteins in mesophyll and bundle sheath
+    chloroplasts from maize plants grown under low or high light
+  findings:
+    - statement: &gt;-
+        Direct experimental evidence for D1 localization in chloroplast thylakoid membrane
+        in Zea mays. D1 is phosphorylated in both bundle sheath and mesophyll cells.
+        PSII is more abundant in mesophyll than bundle sheath cells. D1 degradation is
+        faster in bundle sheath cells.
+- id: PMID:7666415
+  title: Complete sequence of the maize chloroplast genome
+  findings:
+    - statement: Complete nucleotide sequence of the Zea mays chloroplast genome including psbA
+- id: HAMAP-Rule:MF_01379
+  title: HAMAP rule for Photosystem II protein D1
+  findings:
+    - statement: &gt;-
+        Comprehensive annotation rule for PSII D1 protein covering function, cofactors,
+        subunit composition, subcellular location, and post-translational modifications
+core_functions:
+# Core function 1: PSII reaction center -- water oxidation and electron transfer
+- description: &gt;-
+    D1 is the core reaction center subunit of Photosystem II, forming a heterodimer with
+    D2 (PsbD) that binds P680, the primary electron donor. D1 provides most of the ligands
+    for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC), which catalyzes the
+    light-driven oxidation of water to molecular oxygen. The protein mediates the electron
+    transfer chain: water -&gt; TyrZ (Tyr-161) -&gt; P680 -&gt; pheophytin -&gt; QA -&gt; QB (plastoquinone).
+    D1 also binds multiple chlorophyll a molecules including PD1 (part of the P680 reaction
+    center) and accessory ChlzD1. The overall catalytic reaction is water:plastoquinone
+    oxidoreductase (EC 1.10.3.9): 2 plastoquinone + 4 hnu + 2 H2O = 2 plastoquinol + O2.
+    D1 is subject to light-induced damage (photoinhibition) and undergoes rapid turnover
+    via FtsH and Deg1 proteases followed by de novo synthesis.
+  molecular_function:
+    id: GO:0010242
+    label: oxygen evolving activity
+  directly_involved_in:
+  - id: GO:0009772
+    label: photosynthetic electron transport in photosystem II
+  locations:
+  - id: GO:0009535
+    label: chloroplast thylakoid membrane
+  in_complex:
+    id: GO:0009523
+    label: photosystem II
+  supported_by:
+  - reference_id: UniProt:P48183
+    supporting_text: &#34;Photosystem II (PSII) is a light-driven water:plastoquinone oxidoreductase that uses light energy to abstract electrons from H(2)O, generating O(2) and a proton gradient subsequently used for ATP formation&#34;
+  - reference_id: UniProt:P48183
+    supporting_text: &#34;D1 provides most of the ligands for the Mn4-Ca-O5 cluster of the oxygen-evolving complex (OEC)&#34;
+  - reference_id: PMID:22833285
+    supporting_text: &#34;the photosynthetic apparatus is partitioned over two cell types called mesophyll (M) and bundle sheath (BS), which have different structure and specialization of the photosynthetic thylakoid membranes&#34;
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

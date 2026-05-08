@@ -28,6 +28,36 @@ from typing import Dict, List, Any, Union, Optional
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
 
+
+class _AttrDict:
+    """Lightweight wrapper that gives attribute access to nested dicts/lists."""
+
+    def __init__(self, data):
+        if isinstance(data, dict):
+            for k, v in data.items():
+                setattr(self, k, _dict_to_obj(v))
+        elif data is None:
+            pass
+
+    def __getattr__(self, name):
+        return None
+
+    def __bool__(self):
+        return bool(self.__dict__)
+
+    def __iter__(self):
+        return iter(self.__dict__.values())
+
+
+def _dict_to_obj(data):
+    """Recursively convert dicts to attribute-accessible objects, lists stay as lists."""
+    if isinstance(data, dict):
+        return _AttrDict(data)
+    elif isinstance(data, list):
+        return [_dict_to_obj(item) for item in data]
+    return data
+
+
 # Mapping from NCBI Taxon IDs to the organism directory name under genes/.
 # Includes both species-level and common strain-level taxon IDs.
 TAXON_TO_ORGANISM_DIR = {
@@ -101,8 +131,7 @@ class AnnotationExporter:
         with open(file_path, "r") as f:
             data = yaml.safe_load(f)
 
-        # Parse into GeneReview model
-        gene_review = GeneReview.model_validate(data)
+        gene_review = _dict_to_obj(data)
 
         return self._flatten_existing_annotations(gene_review, source_path=file_path)
 

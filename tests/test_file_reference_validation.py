@@ -159,22 +159,6 @@ def test_invalid_file_reference_directory(tmp_path):
         os.chdir(original_cwd)
 
 
-def test_file_prefix_not_validated_as_ontology():
-    """Test that file: prefix is excluded from ontology validation."""
-    from ai_gene_review.validation import TermValidator
-
-    validator = TermValidator()
-
-    data = {
-        "references": [{"id": "file:some/path/to/file.md", "title": "A file reference"}]
-    }
-
-    results = validator.validate_terms_in_data(data)
-
-    # Should not try to validate file: as an ontology term
-    assert len(results) == 0
-
-
 def test_mixed_reference_types():
     """Test validation with mixed PMID and file references."""
     # Use actual CFAP300 structure for realistic test

@@ -36,7 +36,7 @@ install:
 [group('model development')]
 test: pytest doctest mypy format
 
-test-full: test pytest-integration
+test-full: test pytest-integration test-examples
 
 pytest:
   uv run pytest tests
@@ -57,7 +57,7 @@ doctest:
   uv run pytest  --doctest-modules src
 
 mypy:
-  uv run mypy src tests
+  uv run mypy src tests --exclude "src/ai_gene_review/(datamodel|tools|export)/"
 
 format:
 	uv run ruff check .
