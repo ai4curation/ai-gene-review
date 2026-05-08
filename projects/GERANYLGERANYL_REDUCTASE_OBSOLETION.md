@@ -26,6 +26,11 @@ geranylgeranyl reductase term derived from in vitro substrate-screening data.
 |---|---|---|
 | geranylgeranyl reductase activity | GO:0045550 | GO:0102067 geranylgeranyl diphosphate reductase activity |
 
+Term labels were verified in OLS on 2026-05-08. Both `GO:0045550`
+(`geranylgeranyl reductase activity`) and `GO:0102067` (`geranylgeranyl
+diphosphate reductase activity`) are still live in OLS at the time of this
+check; the obsoletion is tracked by geneontology/go-ontology#31963.
+
 The replacement term is substrate-specific (geranylgeranyl-**diphosphate**),
 so any annotation that was made because the enzyme reduces a different
 geranylgeranyl-conjugated substrate (e.g. free geranylgeraniol, geranylgeranyl
@@ -38,7 +43,7 @@ removal or remapping rather than a mechanical move.
 | # | Source | Accession | Symbol | Taxon | PMID | Evidence | Notes |
 |---|---|---|---|---|---|---|---|
 | 1 | TIGR | AGI_LocusCode:AT1G74470 | CHLP | NCBITaxon:3702 (Arabidopsis thaliana) | PMID:9492312 | IDA | Plant chlorophyll synthesis GGR — strong candidate to move cleanly to GO:0102067 |
-| 2 | UniProt | UniProtKB:Q9ZS34 | CHLP | NCBITaxon:4097 | PMID:10398704 | NAS | Cyanobacterial/plant GGR ortholog — same family as #1; NAS evidence is weaker |
+| 2 | UniProt | UniProtKB:Q9ZS34 | CHLP | NCBITaxon:4097 (Nicotiana tabacum) | PMID:10398704 | NAS | Tobacco chloroplastic GGR in the plant CHLP/GGR family; NAS evidence is weaker and may need removal rather than remapping if no traceable primary support is found |
 | 3 | UniProt | UniProtKB:P42330 | AKR1C3 | NCBITaxon:9606 (Homo sapiens) | PMID:21187079 | IDA | Aldo-keto reductase; geranylgeranyl reductase claim likely in-vitro side activity — flag for review |
 | 4 | UniProt | UniProtKB:O60218 | AKR1B10 | NCBITaxon:9606 (Homo sapiens) | PMID:21187079 | IDA | Aldo-keto reductase; same paper as AKR1C3 — flag for review |
 
@@ -46,7 +51,9 @@ Group impact tally (from upstream): TIGR 1, UniProt 3.
 
 ## Mappings flagged for redirection
 
-- `unirule2go`: UniRule:UR001995838 → GO:0045550
+- `unirule2go`: UniRule:UR001995838 → GO:0045550 (UniProt UniRule REST
+  checked 2026-05-08; rule applies to Cyanobacteriota proteins with
+  TIGR02028 and currently maps to GO:0045550)
 - `interpro2go`: IPR010253 (Geranylgeranyl reductase, plant/prokaryotic) → GO:0045550
 - `interpro2go`: IPR011774 (Geranylgeranyl reductase, plant/cyanobacteria) → GO:0045550
 - `interpro2go`: IPR023590 (Digeranylgeranylglycerophospholipid reductase) → GO:0045550
@@ -68,8 +75,8 @@ queueing exercise rather than a re-review of existing files.
 
 ## Scope
 
-- Organism: human (AKR1C3, AKR1B10) plus Arabidopsis (CHLP) and a
-  plant/cyanobacterial CHLP ortholog. The human entries are the highest-value
+- Organism: human (AKR1C3, AKR1B10) plus Arabidopsis (CHLP) and tobacco
+  (CHLP/Q9ZS34). The human entries are the highest-value
   candidates for review here because the AKR family is well-studied and the
   geranylgeranyl-reductase claim sits awkwardly against the established
   prostaglandin/steroid reductase function.
@@ -94,15 +101,19 @@ Listed in priority order. Each should be set up with
    the in-vivo function. Likely outcome: REMOVE or MARK_AS_OVER_ANNOTATED on
    the GO:0045550 entry.
 2. **AKR1B10 (human, O60218)** — Aldo-keto reductase 1B10. Same paper
-   (PMID:21187079) and same critique as AKR1C3. Known primary function is
-   retinal/farnesal reductase. Likely outcome similar to AKR1C3.
+   (PMID:21187079) and same critique as AKR1C3. Characterised activities
+   include retinal reductase (all-trans-retinal to retinol) and farnesal
+   reductase; the primary in-vivo function remains debated. Likely outcome
+   similar to AKR1C3.
 3. **CHLP (Arabidopsis, AT1G74470)** — Geranylgeranyl reductase in
    chlorophyll/tocopherol biosynthesis. PMID:9492312 IDA annotation. This is
    the canonical use of the term and the cleanest candidate to move to
    GO:0102067; useful as a positive control for the replacement.
-4. **CHLP (taxon 4097, Q9ZS34)** — Plant/cyanobacterial CHLP ortholog.
-   PMID:10398704 NAS evidence (lower-strength). Verify the taxon assignment
-   and confirm orthology to the Arabidopsis CHLP before review.
+4. **CHLP (Nicotiana tabacum, taxon 4097, Q9ZS34)** — Tobacco chloroplastic
+   GGR in the plant CHLP/GGR family. UniProt REST confirms the taxon and
+   protein name. PMID:10398704 NAS evidence is lower-strength; absent
+   traceable primary support, this annotation may need removal rather than
+   automatic remapping.
 
 ## Proposed approach
 
@@ -119,6 +130,8 @@ Listed in priority order. Each should be set up with
 3. **Use the plant CHLP as a positive control.** Reviewing the Arabidopsis
    CHLP entry is straightforward and helps confirm that GO:0102067 is the
    right replacement for genuine in-vivo GGR enzymes.
+   Treat the tobacco Q9ZS34 NAS annotation separately because NAS evidence
+   may not provide enough traceable support for either ACCEPT or MODIFY.
 4. **Flag IPR023590 mapping question to upstream.** The
    digeranylgeranylglycerophospholipid reductase family does not act on free
    GGDP, so noting this on the upstream issue (or via a comment on
@@ -136,3 +149,6 @@ term).
 - 2026-05-03 — Project file created. Tracking upstream issue #6394 (opened
   2026-04-28). Obsoletion not yet applied. No reviews started; no genes from
   the upstream list are present in this repo yet.
+- 2026-05-08 — Verified Q9ZS34 organism via UniProt REST as Nicotiana tabacum
+  (taxon 4097), verified GO:0045550 and GO:0102067 labels via OLS, and
+  verified UniRule:UR001995838 via UniProt REST.
