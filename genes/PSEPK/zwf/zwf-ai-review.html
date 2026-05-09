@@ -1,0 +1,2557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zwf - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>zwf</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88C32" target="_blank" class="term-link">
+                        Q88C32
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_5351</span>
+                    
+                    <span class="badge">zwfC</span>
+                    
+                    <span class="badge">G6PDH-C</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "zwf";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88C32" data-a="DESCRIPTION: Glucose-6-phosphate 1-dehydrogenase isozyme of Pse..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Glucose-6-phosphate 1-dehydrogenase isozyme of Pseudomonas putida KT2440 (ordered locus PP_5351), corresponding to the minor zwfC/G6PDH-C paralog. Sequence and family annotations support canonical glucose-6-phosphate dehydrogenase chemistry with NADP binding, but the best KT2440 experimental synthesis indicates that zwfA and zwfB carry most of the detectable G6PDH activity under the tested conditions. Accordingly, this gene is best curated as a bona fide cytosolic G6PDH isozyme with limited or condition-specific physiological contribution compared with the other two paralogs.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004345" target="_blank" class="term-link">
+                                    GO:0004345
+                                </a>
+                            </span>
+                            <span class="term-label">glucose-6-phosphate dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0004345" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most specific and informative molecular-function annotation for Q88C32. UniProt identifies the protein as glucose-6-phosphate dehydrogenase, and the KT2440 isozyme study shows that the strain carries three distinct G6PDH enzymes with different cofactor preferences. Even if PP_5351 is not the dominant in vivo isozyme, the specific catalytic activity itself is still the correct function for this gene product.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation captures the exact catalytic activity of the protein. The evidence argues for a minor or condition-specific role, but not for removal of the G6PDH molecular function itself.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Glucose-6-phosphate 1-dehydrogenase ... EC=1.1.1.49</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The key KT2440 isozyme paper shows that the strain carries three G6PDH isozymes with different cofactor specificities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016614" target="_blank" class="term-link">
+                                    GO:0016614
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on CH-OH group of donors</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0016614" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent oxidoreductase term is technically compatible with a glucose-6-phosphate dehydrogenase, but it is much less informative than the specific catalytic term already present in the annotation set.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0004345 already captures the exact activity. Retaining this broader oxidoreductase term adds redundancy without improving biological precision.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050661" target="_blank" class="term-link">
+                                    GO:0050661
+                                </a>
+                            </span>
+                            <span class="term-label">NADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0050661" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NADP binding is consistent with both the UniProt family annotation and the 2021 isozyme study, which concludes that the KT2440 G6PDH isozymes have distinct cofactor specificities. For PP_5351, this is an informative molecular-property annotation rather than a vague binding over-annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Cofactor specificity is central to how the different KT2440 G6PDH isozymes partition redox functions. For this paralog, NADP binding is specific and useful.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   GO; GO:0050661; F:NADP binding</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the strain carries three G6PDH isozymes with different cofactor specificities</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006006" target="_blank" class="term-link">
+                                    GO:0006006
+                                </a>
+                            </span>
+                            <span class="term-label">glucose metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0006006" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad process assignment is plausible by homology, but the best KT2440 evidence does not support PP_5351 as a major contributor to glucose catabolism. The main experimentally supported glucose-processing G6PDH activity in KT2440 is carried by zwfA, with zwfB also contributing more than this paralog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Assigning the generic glucose metabolic process to this specific paralog overstates the available evidence for its physiological importance.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the isoforms encoded by zwfA and zwfB carry most of the activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0006098" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> G6PDH chemistry connects directly to the oxidative pentose-phosphate branch, but for PP_5351 the current KT2440 evidence supports only a minor or poorly expressed isozyme. The process term is therefore too strong as a gene-specific statement for this paralog.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The process assignment is inferred from enzyme class rather than a clear paralog-specific role in vivo.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the isoforms encoded by zwfA and zwfB carry most of the activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009051" target="_blank" class="term-link">
+                                    GO:0009051
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt, oxidative branch</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0009051" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an even more pathway-committed version of the same process inference. For PP_5351, the current evidence base is insufficient to treat this paralog as a core oxidative pentose-phosphate enzyme in vivo.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation likely reflects family-level pathway propagation rather than paralog-specific physiological evidence.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-notes.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the isoforms encoded by zwfA and zwfB carry most of the activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88C32" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization is consistent with the catalytic role of a soluble glucose-6-phosphate dehydrogenase acting on phosphorylated sugar intermediates, and UniProt also places the protein in the cytosol.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This localization is compatible with both enzyme family expectations and the curated UniProt record, and there is no evidence for secretion or a membrane-confined role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/zwf/zwf-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DR   GO; GO:0005829; C:cytosol</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic glucose-6-phosphate dehydrogenase isozyme with NADP-binding capacity. The available KT2440 evidence suggests that PP_5351/zwfC is a real G6PDH paralog but not the dominant carrier of glucose-6-phosphate dehydrogenase flux under standard tested conditions.</h3>
+                <span class="vote-buttons" data-g="Q88C32" data-a="FUNCTION: Cytosolic glucose-6-phosphate dehydrogenase isozym..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004345" target="_blank" class="term-link">
+                            glucose-6-phosphate dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/zwf/zwf-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RecName: Full=Glucose-6-phosphate 1-dehydrogenase ... DR   GO; GO:0005829; C:cytosol</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/zwf/zwf-notes.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">the isoforms encoded by zwfA and zwfB carry most of the activity</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO supplies family/domain-based automated annotations for glucose-6-phosphate dehydrogenase that require curator review against the P. putida zwf paralog context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter transfers GO terms from phylogenetic families; curator review checks whether the transferred term matches the PP_5351 zwf paralog.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The combined UniProt automated pipeline annotation provides IEA terms that must be checked for specificity and evidence fit.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 genome sequencing establishes the PP_5351/zwf locus in the strain background under review.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33727391" target="_blank" class="term-link">
+                            PMID:33727391
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cofactor Specificity of Glucose-6-Phosphate Dehydrogenase Isozymes in Pseudomonas putida Reveals a General Principle Underlying Glycolytic Strategies in Bacteria.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 G6PDH isozyme study defines three zwf paralogs and their cofactor preferences; PP_5351 is a minor or condition-specific isozyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/zwf/zwf-notes.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Curator notes on zwf function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Curator notes synthesize UniProt and the G6PDH isozyme paper to distinguish PP_5351 from the dominant zwfA and zwfB paralogs.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/zwf/zwf-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research on zwf function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon report summarizes the zwfC/G6PDH-C family assignment and its likely condition-specific contribution.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/zwf/zwf-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for zwf (Q88C32)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88C32 as glucose-6-phosphate 1-dehydrogenase with EC 1.1.1.49 and NADP-binding GO annotations.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which stress or nutrient conditions is PP_5351/zwfC actually expressed strongly enough to carry meaningful flux?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pablo Iván Nikel, Daniel Christoph Volke</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C32" data-a="Q: Under which stress or nutrient conditions is PP_53..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does zwfC specialize in redox balancing under conditions where zwfA and zwfB are insufficient, or is it becoming dispensable in KT2440?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pablo Iván Nikel, Daniel Christoph Volke</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C32" data-a="Q: Does zwfC specialize in redox balancing under cond..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure zwf, zwfA, and zwfB transcript levels and promoter activity across glucose, gluconate, ribose, oxidative stress, and redox-imbalancing conditions to identify contexts that induce PP_5351.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: promoter reporter and RNA-seq</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C32" data-a="EXPERIMENT: Measure zwf, zwfA, and zwfB transcript levels and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare WT, Δzwf, and combinatorial zwf paralog mutants by 13C flux analysis and intracellular NADPH/NADH measurements under oxidative and sugar-shift conditions to test whether PP_5351 has a backup redox-balancing role.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: fluxomics and redox phenotyping</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C32" data-a="EXPERIMENT: Compare WT, Δzwf, and combinatorial zwf paralog mu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Purify the PP_5351 enzyme from KT2440 or recombinant expression and determine kinetic constants with NADP and NAD for glucose-6-phosphate to quantify how much catalytic capacity remains relative to ZwfA and ZwfB.</p>
+                    
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: enzymology</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88C32" data-a="EXPERIMENT: Purify the PP_5351 enzyme from KT2440 or recombina..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(zwf-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C32" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T13:53:39.162366'<br />
+end_time: '2026-03-21T13:59:23.501810'<br />
+duration_seconds: 344.38<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: zwf<br />
+  gene_symbol: zwf<br />
+  uniprot_accession: Q88C32<br />
+  protein_description: 'RecName: Full=Glucose-6-phosphate 1-dehydrogenase {ECO:0000256|HAMAP-Rule:MF_00966};<br />
+    Short=G6PD {ECO:0000256|HAMAP-Rule:MF_00966}; EC=1.1.1.49 {ECO:0000256|HAMAP-Rule:MF_00966};'<br />
+  gene_info: Name=zwf {ECO:0000256|HAMAP-Rule:MF_00966, ECO:0000313|EMBL:AAN70916.1};<br />
+    OrderedLocusNames=PP_5351 {ECO:0000313|EMBL:AAN70916.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the glucose-6-phosphate dehydrogenase family.<br />
+  protein_domains: G6P_DH. (IPR001282); G6P_DH_AS. (IPR019796); G6P_DH_C. (IPR022675);<br />
+    G6P_DH_NAD-bd. (IPR022674); NAD(P)-bd_dom_sf. (IPR036291)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 21</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88C32</li>
+<li><strong>Protein Description:</strong> RecName: Full=Glucose-6-phosphate 1-dehydrogenase {ECO:0000256|HAMAP-Rule:MF_00966}; Short=G6PD {ECO:0000256|HAMAP-Rule:MF_00966}; EC=1.1.1.49 {ECO:0000256|HAMAP-Rule:MF_00966};</li>
+<li><strong>Gene Information:</strong> Name=zwf {ECO:0000256|HAMAP-Rule:MF_00966, ECO:0000313|EMBL:AAN70916.1}; OrderedLocusNames=PP_5351 {ECO:0000313|EMBL:AAN70916.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the glucose-6-phosphate dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> G6P_DH. (IPR001282); G6P_DH_AS. (IPR019796); G6P_DH_C. (IPR022675); G6P_DH_NAD-bd. (IPR022674); NAD(P)-bd_dom_sf. (IPR036291)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "zwf" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'zwf' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>zwf</strong> (gene ID: zwf, UniProt: Q88C32) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88C32</li>
+<li><strong>Protein Description:</strong> RecName: Full=Glucose-6-phosphate 1-dehydrogenase {ECO:0000256|HAMAP-Rule:MF_00966}; Short=G6PD {ECO:0000256|HAMAP-Rule:MF_00966}; EC=1.1.1.49 {ECO:0000256|HAMAP-Rule:MF_00966};</li>
+<li><strong>Gene Information:</strong> Name=zwf {ECO:0000256|HAMAP-Rule:MF_00966, ECO:0000313|EMBL:AAN70916.1}; OrderedLocusNames=PP_5351 {ECO:0000313|EMBL:AAN70916.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the glucose-6-phosphate dehydrogenase family.</li>
+<li><strong>Key Domains:</strong> G6P_DH. (IPR001282); G6P_DH_AS. (IPR019796); G6P_DH_C. (IPR022675); G6P_DH_NAD-bd. (IPR022674); NAD(P)-bd_dom_sf. (IPR036291)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "zwf" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'zwf' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>zwf</strong> (gene ID: zwf, UniProt: Q88C32) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-zwf-pp_5351-uniprot-q88c32-in-pseudomonas-putida-kt2440">Research report: functional annotation of <strong>zwf (PP_5351; UniProt Q88C32)</strong> in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="0-target-verification-mandatory-disambiguation">0) Target verification (mandatory disambiguation)</h3>
+<p>The UniProt accession <strong>Q88C32</strong> corresponds to the <em>P. putida</em> KT2440 locus <strong>PP_5351</strong>, which is one of three glucose-6-phosphate dehydrogenase (G6PDH) paralogs in this strain (often referred to as <strong>zwfC / zwf-3</strong> in the literature). In KT2440, the three G6PDH genes are <strong>zwfA (PP_1022)</strong>, <strong>zwfB (PP_4042)</strong>, and <strong>zwfC (PP_5351)</strong>, and the connecting point between ED and (partial) EMP metabolism is the G6PDH reaction catalyzed by these isozymes. (volke2021cofactorspecificityof pages 2-4, nikel2015pseudomonasputidakt2440 pages 21-25)</p>
+<p>Accordingly, this report is specifically about <strong>zwfC = PP_5351 = UniProt Q88C32</strong>, while also summarizing how this paralog relates to the better-studied <strong>zwfA/zwfB</strong> system that dominates glycolytic physiology in KT2440. (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 7-9)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-enzymatic-function-and-reaction-chemistry">1.1 Enzymatic function and reaction chemistry</h4>
+<p><strong>Glucose-6-phosphate dehydrogenase (G6PDH; EC 1.1.1.49)</strong> catalyzes the first committed step of the <strong>oxidative pentose phosphate (PP) pathway</strong> and also supplies carbon into the <strong>Entner–Doudoroff (ED) pathway</strong> via 6-phosphogluconate. In <em>P. putida</em> KT2440, the zwf-1 product is described as required to convert <strong>glucose-6-phosphate (G6P) to 6-phosphogluconolactone</strong> with reduction of NAD(P)+ to NAD(P)H (reported in the context of zwf-1 as the major isozyme). (kim2008dualregulationof pages 4-6)</p>
+<p>A standard biochemical description of the reaction is:<br />
+- <strong>D-glucose-6-phosphate + NAD(P)+ → 6-phospho-D-glucono-δ-lactone + NAD(P)H + H+</strong></p>
+<p>Because NAD(P)H (often predominantly <strong>NADPH</strong>) supports biosynthesis and oxidative-stress defense (e.g., via glutathione reduction), Zwf enzymes are central determinants of <strong>redox balance</strong> in KT2440. (volke2021cofactorspecificityof pages 1-2, i.2021reconfigurationofmetabolic pages 8-10)</p>
+<h4 id="12-pathway-context-in-p-putida-edemppp-edemp-cycle">1.2 Pathway context in <em>P. putida</em>: ED–EMP–PP “EDEMP cycle”</h4>
+<p>A key concept for KT2440 is that glucose catabolism is organized as an interconnected network (often called the <strong>EDEMP cycle</strong>) that merges the ED pathway with a gluconeogenic operation of (incomplete) EMP and PP pathway reactions to tune precursor supply and <strong>NADPH formation</strong>. (nikel2015pseudomonasputidakt2440 pages 1-2, volke2021cofactorspecificityof pages 2-4)</p>
+<p>This network architecture is directly relevant to zwf paralogs because G6PDH activity sits at the connection between ED and EMP/PP routing, and can be rate- and redox-controlling. (volke2021cofactorspecificityof pages 2-4)</p>
+<h4 id="13-isozyme-multiplicity-and-cofactor-specificity">1.3 Isozyme multiplicity and cofactor specificity</h4>
+<p>Unlike the “default” assumption (from <em>E. coli</em>) that bacterial G6PDH is strictly NADP+-specific, KT2440 encodes <strong>three</strong> G6PDH isozymes with <strong>distinct cofactor preferences and kinetic behaviors</strong>, interpreted as an evolutionary/physiological strategy to balance <strong>NADPH vs NADH</strong> production depending on carbon source and redox state. (volke2021cofactorspecificityof pages 1-2, volke2021cofactorspecificityof pages 7-9)</p>
+<h3 id="2-gene-product-specific-functional-annotation-zwfc-pp_5351-uniprot-q88c32">2) Gene product-specific functional annotation: <strong>ZwfC (PP_5351; UniProt Q88C32)</strong></h3>
+<h4 id="21-molecular-function">2.1 Molecular function</h4>
+<p>ZwfC is a <strong>G6PDH-family enzyme</strong> (glucose-6-phosphate dehydrogenase isozyme C) that conserves canonical G6PDH sequence motifs for cofactor and substrate binding. (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 7-9)</p>
+<p><strong>Cofactor specificity and kinetics (isozyme-level):</strong> ZwfC/G6PDH-C is described as <strong>highly NADP+-specific</strong>, with a specificity coefficient ω reported to be ~5× higher than the canonical <em>E. coli</em> enzyme’s ω (~410), but with <strong>very low turnover</strong> (reported <strong>kcat &lt; 1 s−1</strong>), consistent with low physiological contribution under tested conditions. (volke2021cofactorspecificityof pages 7-9)</p>
+<h4 id="22-biological-process-and-pathway-role">2.2 Biological process and pathway role</h4>
+<p>Although ZwfC is a bona fide G6PDH, multiple lines of evidence indicate that in KT2440 it contributes <strong>little</strong> to bulk glucose catabolism in standard laboratory conditions:<br />
+- <strong>Transcription is very low</strong>: reporter constructs for the zwfC promoter/5′UTR showed <strong>almost no detectable expression</strong> across tested carbon sources. (volke2021cofactorspecificityof pages 9-11)<br />
+- <strong>Phenotype is minimal</strong>: deletion of zwfC alone produced <strong>no significant growth phenotype</strong> in the tested substrate panel (whereas zwfA loss severely affects growth on glucose). (volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 2-4)</p>
+<p>Thus, the most defensible functional statement from current evidence is that <strong>ZwfC encodes an NADP+-specific G6PDH isozyme with low expression and low catalytic turnover, likely acting as a condition-dependent or auxiliary redox enzyme rather than the primary entry point for glycolytic carbon</strong> in KT2440. (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 7-9)</p>
+<h4 id="23-cellular-localization">2.3 Cellular localization</h4>
+<p>Direct subcellular localization measurements for ZwfC were not identified in the retrieved evidence. However, the pathway context and enzyme assays described for KT2440 focus on cytoplasmic sugar phosphorylation and intracellular flux through the ED/PP network connected by G6PDHs, consistent with Zwf isozymes functioning as <strong>intracellular (cytosolic) dehydrogenases</strong> acting on G6P. This should be treated as pathway-based inference rather than a direct localization experiment. (volke2021cofactorspecificityof pages 2-4, kim2008dualregulationof pages 4-6)</p>
+<h3 id="3-regulation-and-control-kt2440-specific">3) Regulation and control (KT2440-specific)</h3>
+<h4 id="31-hexr-as-a-major-transcriptional-regulator-of-zwf-in-kt2440">3.1 HexR as a major transcriptional regulator of zwf in KT2440</h4>
+<p>For the major zwf gene (historically “zwf-1”), the transcription factor <strong>HexR</strong> acts as a <strong>repressor</strong>: zwf promoter activity in glucose or gluconate is reported to be <strong>25–50-fold higher</strong> than in pyruvate/succinate, and HexR knockout yields constitutively high reporter signal across conditions. (kim2008dualregulationof pages 4-6)</p>
+<p>Mechanistically, <strong>KDPG (2-keto-3-deoxy-6-phosphogluconate)</strong>—a key ED intermediate—acts as an inducer by <strong>blocking HexR binding</strong> to the zwf promoter region; this is supported by EMSA and by edd/eda mutants that modulate intracellular KDPG (edd cannot make KDPG; eda accumulates KDPG). (kim2008dualregulationof pages 6-7)</p>
+<p>For <strong>zwfC (PP_5351)</strong> specifically, upstream sequence analysis reported a HexR binding motif, but <strong>functional reporter assays still detected almost no zwfC expression</strong> under the conditions tested, implying that (i) zwfC is under tighter/alternative regulation, (ii) it may require specific inducing conditions not present in the tested set, or (iii) it is effectively silent in many standard regimes. (volke2021cofactorspecificityof pages 9-11)</p>
+<h4 id="32-oxidative-stress-induction-and-physiological-relevance">3.2 Oxidative-stress induction and physiological relevance</h4>
+<p>Oxidative stress strongly increases the cellular need for NADPH. In KT2440, network-level 13C flux analysis under sublethal H2O2 showed that periplasmic glucose processing is rerouted toward <strong>cytoplasmic oxidation</strong> and a cyclic PP operation, generating NADPH fluxes that <strong>exceed biosynthetic demands by ~50%</strong>. (i.2021reconfigurationofmetabolic pages 1-2)</p>
+<p>Quantitatively, net NADPH generation under oxidative stress is reported to increase to <strong>14.4 ± 0.3 mmol gCDW−1 h−1</strong>, producing ~50% NADPH surplus relative to biosynthetic requirements. (i.2021reconfigurationofmetabolic pages 8-10)</p>
+<p>In vitro enzyme assays support this metabolic reconfiguration: under H2O2, specific activities of the two major NADPH-generating dehydrogenases in the PP-related network increased strongly, with <strong>Zwf activity increasing 4.7-fold</strong> (and GntZ 9.2-fold). (i.2021reconfigurationofmetabolic pages 8-10)</p>
+<p>These results establish Zwf-linked metabolism as a key, rapidly tunable NADPH supply route under redox stress, even if the evidence does not isolate ZwfC’s specific contribution (given its low expression/activity). (i.2021reconfigurationofmetabolic pages 8-10, volke2021cofactorspecificityof pages 7-9)</p>
+<p><strong>Visual evidence:</strong> Figure panels summarizing the NADPH balance shift and enzyme activity changes under oxidative stress are available in the extracted images. (i.2021reconfigurationofmetabolic media b8b02296, i.2021reconfigurationofmetabolic media a2c989ad)</p>
+<h3 id="4-quantitative-cofactor-specificity-and-redox-outputs-kt2440">4) Quantitative cofactor specificity and redox outputs (KT2440)</h3>
+<h4 id="41-whole-cell-extract-cofactor-preference-combined-zwf-activity">4.1 Whole-cell-extract cofactor preference (combined Zwf activity)</h4>
+<p>Because KT2440 has multiple Zwf isozymes, measured cofactor preference can depend on assay conditions and reflects the <strong>combined</strong> activity of all contributing isozymes.</p>
+<p>In KT2440 glucose-grown extracts:<br />
+- Under <strong>saturating</strong> assay conditions, total Zwf activity showed ~<strong>67.1% NADP+</strong> and ~<strong>32.9% NAD+</strong> usage.<br />
+- Under <strong>non-saturating (quasi in vivo)</strong> conditions, the same activity becomes strongly NADP+-biased: ~<strong>93.8% NADP+</strong> vs ~<strong>6.2% NAD+</strong>.</p>
+<p>This supports a model where in vivo Zwf function is tuned toward NADPH production. (nikel2015pseudomonasputidakt2440 pages 21-25)</p>
+<h4 id="42-isozyme-level-specialization-notably-zwfc">4.2 Isozyme-level specialization (notably zwfC)</h4>
+<p>Isozyme-resolved biochemical modeling/kinetic comparisons indicate:<br />
+- <strong>G6PDH-A (zwfA)</strong> produces NADH and NADPH in roughly equal amounts under physiological settings (NADH/NADPH near 1).<br />
+- <strong>G6PDH-B (zwfB)</strong> tends to produce mostly NADH and has ~<strong>5-fold lower Km for G6P</strong> than G6PDH-A, implying stronger activity at low G6P.<br />
+- <strong>G6PDH-C (zwfC = PP_5351 = Q88C32)</strong> is highly NADP+-specific but has <strong>kcat &lt; 1 s−1</strong> and is poorly expressed.</p>
+<p>Together, this supports an “isozyme portfolio” hypothesis: KT2440 maintains multiple Zwf enzymes to flexibly balance NADH/NADPH output across carbon sources and environmental stresses. (volke2021cofactorspecificityof pages 7-9)</p>
+<h3 id="5-recent-developments-prioritizing-20232024">5) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="51-2024-systems-level-engineering-derepressing-glycolysisppp-via-hexr-deletion">5.1 2024 systems-level engineering: derepressing glycolysis/PPP via <strong>hexR</strong> deletion</h4>
+<p>A 2024 <em>Nature Communications</em> study on engineering KT2440 derivatives for xylose utilization used <strong>deletion of hexR</strong> to derepress native glycolysis-associated functions, and explicitly pursued enhancing the <strong>pentose phosphate pathway</strong> by implanting additional transketolase/transaldolase activities. This positions the HexR–PPP/ED control structure (which includes zwf regulation in KT2440) as a practical engineering lever for expanding substrate scope and improving growth on non-native feedstocks. (Published 2024-03; https://doi.org/10.1038/s41467-024-46812-9) (dvorak2024syntheticallyprimedadaptationof pages 1-2)</p>
+<p>Within their multilevel comparisons of evolved/engineered states, they report differential expression for <strong>ZwfA</strong> in pathway schematics (log2 fold changes shown), emphasizing the continued centrality of Zwf-mediated redox generation in rewired central metabolism—even when the target phenotype is new substrate assimilation (xylose → X5P → EDEMP cycle). (dvorak2024syntheticallyprimedadaptationof pages 9-10)</p>
+<p>While this work does not single out <strong>zwfC</strong>, it is an authoritative recent example of real-world strain development where PPP/ED routing (and by implication Zwf gatekeeping) is explicitly engineered for lignocellulosic bioprocess goals. (dvorak2024syntheticallyprimedadaptationof pages 1-2)</p>
+<h4 id="52-2023-preprint-to-2024-paper-trajectory-xylose-adaptation">5.2 2023 preprint to 2024 paper trajectory (xylose adaptation)</h4>
+<p>A 2023 bioRxiv preprint on adapting <em>P. putida</em> to xylose (later published in 2024) emphasizes the importance of redox/PPP capacity and highlights Zwf as a key NADPH-supplying enzyme in this host’s physiology and engineering. (2023-05; https://doi.org/10.1101/2023.05.19.541448) (volke2021cofactorspecificityof pages 4-6)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-bioprocess-robustness-and-oxidative-stress-tolerance">6.1 Bioprocess robustness and oxidative-stress tolerance</h4>
+<p>Mechanistic fluxomics under oxidative stress demonstrates that KT2440 increases NADPH-forming fluxes (including via Zwf and GntZ) to generate a substantial NADPH surplus that fuels glutathione-based detoxification, linking Zwf-network function to <strong>stress robustness</strong>—a core reason KT2440 is widely used for harsh industrial biotransformations and bioremediation contexts. (i.2021reconfigurationofmetabolic pages 1-2, i.2021reconfigurationofmetabolic pages 8-10)</p>
+<h4 id="62-metabolic-engineering-logic-using-zwfppp-control-for-redox-intensive-production">6.2 Metabolic engineering logic: using Zwf/PPP control for redox-intensive production</h4>
+<p>The broader metabolic-engineering literature treats zwf as an archetypal NADPH-supply lever (PPP entry) and highlights that cofactor supply limitations (especially NADPH regeneration) are frequent bottlenecks in redox-intensive whole-cell catalysis. While not KT2440-specific, this provides a conceptual rationale for why <em>P. putida</em>’s high-NADPH EDEMP architecture (with Zwf gatekeeping) is attractive as a chassis. (volke2021cofactorspecificityof pages 1-2)</p>
+<h3 id="7-expert-synthesis-and-interpretation-authoritative-source-backed">7) Expert synthesis and interpretation (authoritative-source-backed)</h3>
+<ol>
+<li>
+<p><strong>ZwfC (PP_5351/Q88C32) is a confirmed G6PDH-family enzyme but is not the dominant glycolytic Zwf in KT2440.</strong> Evidence strongly supports very low zwfC transcription and minimal phenotype upon zwfC deletion, while showing that zwfA (and to a lesser extent zwfB) carries most G6PDH function in typical glycolytic regimes. (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 2-4)</p>
+</li>
+<li>
+<p><strong>KT2440’s multi-zwf design is best understood as a redox-balancing strategy rather than redundancy.</strong> Isozyme differences in cofactor preference and substrate affinity (e.g., zwfB low Km for G6P; zwfC extreme NADP+ specificity but low kcat) support a division of labor that can reshape NADH vs NADPH production as carbon entry points and redox conditions vary. (volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 1-2)</p>
+</li>
+<li>
+<p><strong>Zwf-linked NADPH generation is a cornerstone of oxidative-stress tolerance and thus industrial robustness, but attributing this system-level phenotype specifically to zwfC is not currently justified by available evidence.</strong> Under oxidative stress, overall metabolic flux is rerouted to increase Zwf- and GntZ-linked NADPH formation, with net NADPH generation rising to 14.4 ± 0.3 mmol gCDW−1 h−1 and producing ~50% excess over biosynthetic demands; however, these analyses and enzyme activity measurements do not resolve zwfC’s individual contribution and likely reflect predominantly zwfA/zwfB activity. (i.2021reconfigurationofmetabolic pages 8-10, volke2021cofactorspecificityof pages 7-9)</p>
+</li>
+</ol>
+<h3 id="8-high-value-quantitative-statistics-for-annotation-selected">8) High-value quantitative statistics for annotation (selected)</h3>
+<ul>
+<li><strong>zwf-1 promoter induction by carbon source:</strong> glucose/gluconate induce ~<strong>25–50×</strong> higher reporter activity than pyruvate/succinate; HexR deletion leads to constitutively high activity. (Kim et al., 2008-12; https://doi.org/10.1099/mic.0.2008/020362-0) (kim2008dualregulationof pages 4-6)</li>
+<li><strong>Oxidative stress NADPH surplus:</strong> cyclic PPP operation yields NADPH formation exceeding biosynthetic demand by <strong>~50%</strong>; net NADPH generation reported <strong>14.4 ± 0.3 mmol gCDW−1 h−1</strong> in H2O2-stressed cultures. (Nikel et al., 2021-01-11; https://doi.org/10.1038/s41396-020-00884-9) (i.2021reconfigurationofmetabolic pages 8-10)</li>
+<li><strong>Enzyme activity shifts under oxidative stress:</strong> Zwf activity <strong>+4.7×</strong>, GntZ activity <strong>+9.2×</strong> in vitro (cell-free extracts) under H2O2 vs control. (i.2021reconfigurationofmetabolic pages 8-10)</li>
+<li><strong>Total Zwf cofactor usage in extracts (glucose-grown):</strong> saturating assays ~<strong>67.1% NADP+ / 32.9% NAD+</strong>; quasi in vivo assays ~<strong>93.8% NADP+ / 6.2% NAD+</strong>. (Nikel et al., 2015-10; https://doi.org/10.1074/jbc.M115.687749) (nikel2015pseudomonasputidakt2440 pages 21-25)</li>
+<li><strong>zwfC-specific biochemistry:</strong> strongly <strong>NADP+-specific</strong>, with <strong>kcat &lt; 1 s−1</strong> and very low transcription, consistent with minor contribution in standard conditions. (Volke et al., 2021-03-16; https://doi.org/10.1128/mSystems.00014-21) (volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 9-11)</li>
+</ul>
+<h3 id="9-summary-table-isoform-map-includes-target-mapping">9) Summary table (isoform map; includes target mapping)</h3>
+<p>The following table maps UniProt Q88C32 to the correct KT2440 zwf paralog and contrasts all zwf isozymes for practical annotation.</p>
+<table>
+<thead>
+<tr>
+<th>Isoform / target mapping</th>
+<th>Locus tag / identifier</th>
+<th>Role in metabolism and growth phenotype</th>
+<th>Expression / regulation notes</th>
+<th>Cofactor specificity / kinetic highlights</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>zwfA (G6PDH-A)</strong></td>
+<td><strong>PP_1022</strong></td>
+<td>Major G6PDH for glycolytic conditions; provides the bulk of total G6PDH activity. Deletion causes a major glucose-growth defect (reported as ~84% lower specific growth rate than WT on glucose), and activity is almost lost in mutants lacking zwfA; also important for fructose/ribose entry into the EDEMP/PP network (volke2021cofactorspecificityof pages 4-6, volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 2-4)</td>
+<td>Part of the <strong>zwfA-pgl-eda</strong> operon. Strongly expressed on glucose/glycolytic substrates. Negatively regulated by <strong>HexR</strong>; deleting hexR caused a ~2.5-fold increase in a <strong>PzwfA</strong> reporter on fructose (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 2-4)</td>
+<td>Produces roughly balanced NADH and NADPH under simulated physiological conditions (NADH/NADPH output near 1). In total-cell Zwf activity assays, G6PDH activity in KT2440 is strongly NADP+-biased under quasi in vivo conditions (~93.8% NADP+ versus ~6.2% NAD+), though this reflects combined isozyme activity rather than zwfA alone (volke2021cofactorspecificityof pages 7-9, nikel2015pseudomonasputidakt2440 pages 21-25)</td>
+</tr>
+<tr>
+<td><strong>zwfB (G6PDH-B)</strong></td>
+<td><strong>PP_4042</strong></td>
+<td>Contributes substantially alongside zwfA, especially as a metabolic gatekeeper for carbon sources entering different network nodes; double/triple zwf mutants show strong defects, including no growth of ΔzwfAB on ribose and ~70% lower growth rate of ΔzwfABC on fructose (volke2021cofactorspecificityof pages 4-6, volke2021cofactorspecificityof pages 2-4)</td>
+<td>Cotranscribed with <strong>gntZ</strong>; less emphasized than zwfA in HexR-controlled glycolytic induction, but retained as an active isozyme in central carbon metabolism (volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 2-4)</td>
+<td>Reported as <strong>dual-cofactor</strong> in P. putida KT2440 comparative analysis. Simulations indicate zwfB tends to generate mostly <strong>NADH</strong>; it has an approximately <strong>5-fold lower Km for G6P</strong> than G6PDH-A, suggesting effectiveness at lower substrate concentrations (volke2021cofactorspecificityof pages 7-9, shah2022glucose6phosphatedehydrogenasezwfa pages 5-8)</td>
+</tr>
+<tr>
+<td><strong>zwfC (G6PDH-C)</strong></td>
+<td><strong>PP_5351</strong>; <strong>UniProt Q88C32 target</strong></td>
+<td>This is the user’s target protein. Present in KT2440 but appears to make little contribution to growth under tested conditions; deletion of <strong>zwfC</strong> alone had no significant effect on growth patterns, and the enzyme likely has a minor physiological role under standard conditions (volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 2-4)</td>
+<td><strong>Poorly transcribed</strong> across tested conditions; upstream region contains a duplicated/consensus <strong>HexR</strong>-binding motif and adjacent <strong>RpiR-family regulator</strong> gene (<strong>PP_5350</strong>), but reporter assays detected almost no <strong>PzwfC</strong> expression (volke2021cofactorspecificityof pages 9-11)</td>
+<td>Highly <strong>NADP+-specific</strong>. Sequence conserves the canonical cofactor-binding motif and substrate-contact residues. The specificity coefficient (<strong>ω</strong>) is reported as about <strong>5-fold higher</strong> than the canonical E. coli G6PDH value (~410), but turnover is very low (<strong>kcat &lt; 1 s⁻¹</strong>), consistent with near-zero activity in vivo (volke2021cofactorspecificityof pages 7-9, volke2021cofactorspecificityof pages 9-11)</td>
+</tr>
+<tr>
+<td><strong>Total Zwf activity in KT2440 extracts</strong></td>
+<td>Combined activity of <strong>zwfA/zwfB/zwfC</strong></td>
+<td>Supports the oxidative PP / ED-linked <strong>EDEMP</strong> cycle that underpins glucose catabolism and redox balancing in P. putida KT2440 (nikel2015pseudomonasputidakt2440 pages 1-2, volke2021cofactorspecificityof pages 2-4)</td>
+<td>Under oxidative stress, carbon flux is rerouted toward cytosolic oxidation and Zwf-linked NADPH formation; Zwf activity increased <strong>4.7-fold</strong> in vitro, contributing to increased NADPH supply (i.2021reconfigurationofmetabolic pages 8-10)</td>
+<td>Combined cofactor use in extracts grown on glucose: under saturating conditions ~<strong>67.1% NADP+ / 32.9% NAD+</strong>; under quasi in vivo conditions ~<strong>93.8% NADP+ / 6.2% NAD+</strong> (nikel2015pseudomonasputidakt2440 pages 21-25)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table maps the user’s UniProt target Q88C32 to zwfC/PP_5351 and contrasts all three Pseudomonas putida KT2440 zwf-encoded G6PDH isoforms by locus, physiological importance, regulation, and cofactor/kinetic properties. It is useful for distinguishing the specific target from the better-studied zwfA and zwfB paralogs.</em></p>
+<h3 id="10-practical-functional-annotation-statements-recommended">10) Practical functional annotation statements (recommended)</h3>
+<p><strong>Gene:</strong> zwfC (PP_5351; UniProt Q88C32)</p>
+<p><strong>Recommended molecular function:</strong> Glucose-6-phosphate dehydrogenase isozyme (G6PDH-C); oxidizes G6P to 6-phosphogluconolactone with reduction of NADP+ (high specificity) and supports NADPH generation capacity in the ED/PP-linked central carbon metabolism network. (kim2008dualregulationof pages 4-6, volke2021cofactorspecificityof pages 7-9)</p>
+<p><strong>Recommended pathway assignment:</strong> Oxidative PP / ED interface (EDEMP cycle connection point), but likely auxiliary under many laboratory conditions due to low expression and low turnover. (volke2021cofactorspecificityof pages 2-4, volke2021cofactorspecificityof pages 9-11, volke2021cofactorspecificityof pages 7-9)</p>
+<p><strong>Regulatory notes:</strong> Promoter region contains HexR motifs, yet zwfC reporter expression is near-zero under tested conditions; core HexR/KDPG regulation is clearly demonstrated for the major zwf promoter system in KT2440. (kim2008dualregulationof pages 6-7, volke2021cofactorspecificityof pages 9-11)</p>
+<p><strong>Phenotype notes:</strong> zwfC deletion alone: no significant growth effect across tested substrates; contrast with zwfA deletion showing strong growth impairment on glucose. (volke2021cofactorspecificityof pages 2-4, volke2021cofactorspecificityof pages 7-9)</p>
+<h3 id="figures-evidence">Figures (evidence)</h3>
+<ul>
+<li>NADPH balance shift under oxidative stress and enzyme activity ratios including Zwf/GntZ: (i.2021reconfigurationofmetabolic media b8b02296, i.2021reconfigurationofmetabolic media a2c989ad)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(volke2021cofactorspecificityof pages 2-4): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 21-25): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(volke2021cofactorspecificityof pages 9-11): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(volke2021cofactorspecificityof pages 7-9): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2008dualregulationof pages 4-6): Juhyun Kim, Che Ok Jeon, and Woojun Park. Dual regulation of zwf-1 by both 2-keto-3-deoxy-6-phosphogluconate and oxidative stress in pseudomonas putida. Microbiology, 154 Pt 12:3905-16, Dec 2008. URL: https://doi.org/10.1099/mic.0.2008/020362-0, doi:10.1099/mic.0.2008/020362-0. This article has 75 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(volke2021cofactorspecificityof pages 1-2): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(i.2021reconfigurationofmetabolic pages 8-10): Pablo I. Nikel, Tobias Fuhrer, Max Chavarria, Alberto Sanchez-Pascuala, Uwe Sauer, and Victor de Lorenzo. Reconfiguration of metabolic fluxes in pseudomonas putida as a response to sub-lethal oxidative stress. The ISME Journal, 15:1751-1766, Jan 2021. URL: https://doi.org/10.1038/s41396-020-00884-9, doi:10.1038/s41396-020-00884-9. This article has 152 citations.</p>
+</li>
+<li>
+<p>(nikel2015pseudomonasputidakt2440 pages 1-2): Pablo I. Nikel, Max Chavarría, Tobias Fuhrer, Uwe Sauer, and Víctor de Lorenzo. Pseudomonas putida kt2440 strain metabolizes glucose through a cycle formed by enzymes of the entner-doudoroff, embden-meyerhof-parnas, and pentose phosphate pathways. Journal of Biological Chemistry, 290:25920-25932, Oct 2015. URL: https://doi.org/10.1074/jbc.m115.687749, doi:10.1074/jbc.m115.687749. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2008dualregulationof pages 6-7): Juhyun Kim, Che Ok Jeon, and Woojun Park. Dual regulation of zwf-1 by both 2-keto-3-deoxy-6-phosphogluconate and oxidative stress in pseudomonas putida. Microbiology, 154 Pt 12:3905-16, Dec 2008. URL: https://doi.org/10.1099/mic.0.2008/020362-0, doi:10.1099/mic.0.2008/020362-0. This article has 75 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(i.2021reconfigurationofmetabolic pages 1-2): Pablo I. Nikel, Tobias Fuhrer, Max Chavarria, Alberto Sanchez-Pascuala, Uwe Sauer, and Victor de Lorenzo. Reconfiguration of metabolic fluxes in pseudomonas putida as a response to sub-lethal oxidative stress. The ISME Journal, 15:1751-1766, Jan 2021. URL: https://doi.org/10.1038/s41396-020-00884-9, doi:10.1038/s41396-020-00884-9. This article has 152 citations.</p>
+</li>
+<li>
+<p>(i.2021reconfigurationofmetabolic media b8b02296): Pablo I. Nikel, Tobias Fuhrer, Max Chavarria, Alberto Sanchez-Pascuala, Uwe Sauer, and Victor de Lorenzo. Reconfiguration of metabolic fluxes in pseudomonas putida as a response to sub-lethal oxidative stress. The ISME Journal, 15:1751-1766, Jan 2021. URL: https://doi.org/10.1038/s41396-020-00884-9, doi:10.1038/s41396-020-00884-9. This article has 152 citations.</p>
+</li>
+<li>
+<p>(i.2021reconfigurationofmetabolic media a2c989ad): Pablo I. Nikel, Tobias Fuhrer, Max Chavarria, Alberto Sanchez-Pascuala, Uwe Sauer, and Victor de Lorenzo. Reconfiguration of metabolic fluxes in pseudomonas putida as a response to sub-lethal oxidative stress. The ISME Journal, 15:1751-1766, Jan 2021. URL: https://doi.org/10.1038/s41396-020-00884-9, doi:10.1038/s41396-020-00884-9. This article has 152 citations.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 1-2): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dvorak2024syntheticallyprimedadaptationof pages 9-10): Pavel Dvořák, Barbora Burýšková, Barbora Popelářová, Birgitta Elisabeth Ebert, Tibor Botka, Dalimil Bujdoš, Alberto Sánchez-Pascuala, Hannah Schöttler, Heiko Hayen, Víctor de Lorenzo, Lars M. Blank, and Martin Benešík. Synthetically-primed adaptation of pseudomonas putida to a non-native substrate d-xylose. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-46812-9, doi:10.1038/s41467-024-46812-9. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(volke2021cofactorspecificityof pages 4-6): Daniel Christoph Volke, Karel Olavarría, and Pablo Iván Nikel. Cofactor specificity of glucose-6-phosphate dehydrogenase isozymes in pseudomonas putida reveals a general principle underlying glycolytic strategies in bacteria. Apr 2021. URL: https://doi.org/10.1128/msystems.00014-21, doi:10.1128/msystems.00014-21. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shah2022glucose6phosphatedehydrogenasezwfa pages 5-8): Bhavik A. Shah, Sravanti T. Kasarlawar, and Prashant S. Phale. Glucose-6-phosphate dehydrogenase, zwfa, a dual cofactor-specific isozyme is predominantly involved in the glucose metabolism of pseudomonas bharatica csv86 <sup>t</sup>. Dec 2022. URL: https://doi.org/10.1128/spectrum.03818-22, doi:10.1128/spectrum.03818-22. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kim2008dualregulationof pages 4-6</li>
+<li>volke2021cofactorspecificityof pages 2-4</li>
+<li>volke2021cofactorspecificityof pages 7-9</li>
+<li>volke2021cofactorspecificityof pages 9-11</li>
+<li>kim2008dualregulationof pages 6-7</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 1-2</li>
+<li>dvorak2024syntheticallyprimedadaptationof pages 9-10</li>
+<li>volke2021cofactorspecificityof pages 4-6</li>
+<li>volke2021cofactorspecificityof pages 1-2</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9</li>
+<li>https://doi.org/10.1101/2023.05.19.541448</li>
+<li>https://doi.org/10.1099/mic.0.2008/020362-0</li>
+<li>https://doi.org/10.1038/s41396-020-00884-9</li>
+<li>https://doi.org/10.1074/jbc.M115.687749</li>
+<li>https://doi.org/10.1128/mSystems.00014-21</li>
+<li>https://doi.org/10.1128/msystems.00014-21,</li>
+<li>https://doi.org/10.1074/jbc.m115.687749,</li>
+<li>https://doi.org/10.1099/mic.0.2008/020362-0,</li>
+<li>https://doi.org/10.1038/s41396-020-00884-9,</li>
+<li>https://doi.org/10.1038/s41467-024-46812-9,</li>
+<li>https://doi.org/10.1128/spectrum.03818-22,</li>
+</ol>
+            </div>
+        </details>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(zwf-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88C32" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="zwf-notes">zwf notes</h1>
+<ul>
+<li>UniProt Q88C32 is the <code>zwf</code> gene product in Pseudomonas putida KT2440, with ordered locus <code>PP_5351</code>, annotated as glucose-6-phosphate 1-dehydrogenase / G6PD (EC 1.1.1.49). [file:PSEPK/zwf/zwf-uniprot.txt, "RecName: Full=Glucose-6-phosphate 1-dehydrogenase"; "GN   Name=zwf"; "OrderedLocusNames=PP_5351"; "EC=1.1.1.49"]</li>
+<li>UniProt classifies the protein in the glucose-6-phosphate dehydrogenase family and maps GO terms for glucose-6-phosphate dehydrogenase activity, NADP binding, glucose metabolic process, pentose-phosphate shunt, oxidative pentose-phosphate branch, and cytosol. [file:PSEPK/zwf/zwf-uniprot.txt, "Belongs to the glucose-6-phosphate dehydrogenase family"; "DR   GO; GO:0004345; F:glucose-6-phosphate dehydrogenase activity"; "DR   GO; GO:0050661; F:NADP binding"; "DR   GO; GO:0006006; P:glucose metabolic process"; "DR   GO; GO:0006098; P:pentose-phosphate shunt"; "DR   GO; GO:0009051; P:pentose-phosphate shunt, oxidative branch"; "DR   GO; GO:0005829; C:cytosol"]</li>
+<li>The key KT2440 isozyme paper shows that the strain carries three G6PDH isozymes with different cofactor specificities, and that <code>zwfA</code> plus <code>zwfB</code> carry most of the measurable activity. This supports treating the <code>PP_5351</code> isozyme as a bona fide G6PDH but not the dominant in vivo source of flux under the tested conditions. [PMID:33727391 Cofactor Specificity of Glucose-6-Phosphate Dehydrogenase Isozymes in Pseudomonas putida Reveals a General Principle Underlying Glycolytic Strategies in Bacteria, "We show that the three G6PDHs of strain KT2440 have different cofactor specificities and that the isoforms encoded by zwfA and zwfB carry most of the activity"]</li>
+<li>Working curation interpretation: retain the specific molecular function terms for G6PDH activity and NADP binding, but downgrade the broad biological-process annotations because the available KT2440 evidence argues that this isozyme is not a major contributor to glucose or oxidative pentose-phosphate flux in standard growth conditions. [PMID:33727391 Cofactor Specificity of Glucose-6-Phosphate Dehydrogenase Isozymes in Pseudomonas putida Reveals a General Principle Underlying Glycolytic Strategies in Bacteria, "the isoforms encoded by zwfA and zwfB carry most of the activity"]</li>
+<li>The 2002 genome paper is useful only as genome-context support for KT2440, not as functional evidence for this specific isozyme. [PMID:12534463 Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440, "Sequence analysis of the 6.18 Mb genome of strain KT2440 reveals diverse transport and metabolic systems"]</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88C32
+gene_symbol: zwf
+product_type: PROTEIN
+aliases:
+- PP_5351
+- zwfC
+- G6PDH-C
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: Glucose-6-phosphate 1-dehydrogenase isozyme of Pseudomonas putida KT2440
+  (ordered locus PP_5351), corresponding to the minor zwfC/G6PDH-C paralog. Sequence
+  and family annotations support canonical glucose-6-phosphate dehydrogenase chemistry
+  with NADP binding, but the best KT2440 experimental synthesis indicates that zwfA
+  and zwfB carry most of the detectable G6PDH activity under the tested conditions.
+  Accordingly, this gene is best curated as a bona fide cytosolic G6PDH isozyme with
+  limited or condition-specific physiological contribution compared with the other
+  two paralogs.
+existing_annotations:
+- term:
+    id: GO:0004345
+    label: glucose-6-phosphate dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This is the most specific and informative molecular-function annotation
+      for Q88C32. UniProt identifies the protein as glucose-6-phosphate dehydrogenase,
+      and the KT2440 isozyme study shows that the strain carries three distinct G6PDH
+      enzymes with different cofactor preferences. Even if PP_5351 is not the dominant
+      in vivo isozyme, the specific catalytic activity itself is still the correct
+      function for this gene product.
+    action: ACCEPT
+    reason: The annotation captures the exact catalytic activity of the protein. The
+      evidence argues for a minor or condition-specific role, but not for removal
+      of the G6PDH molecular function itself.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-uniprot.txt
+      supporting_text: &#39;RecName: Full=Glucose-6-phosphate 1-dehydrogenase ... EC=1.1.1.49&#39;
+    - reference_id: file:PSEPK/zwf/zwf-notes.md
+      supporting_text: The key KT2440 isozyme paper shows that the strain carries
+        three G6PDH isozymes with different cofactor specificities
+- term:
+    id: GO:0016614
+    label: oxidoreductase activity, acting on CH-OH group of donors
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This parent oxidoreductase term is technically compatible with a glucose-6-phosphate
+      dehydrogenase, but it is much less informative than the specific catalytic term
+      already present in the annotation set.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0004345 already captures the exact activity. Retaining this broader
+      oxidoreductase term adds redundancy without improving biological precision.
+- term:
+    id: GO:0050661
+    label: NADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: NADP binding is consistent with both the UniProt family annotation and
+      the 2021 isozyme study, which concludes that the KT2440 G6PDH isozymes have
+      distinct cofactor specificities. For PP_5351, this is an informative molecular-property
+      annotation rather than a vague binding over-annotation.
+    action: ACCEPT
+    reason: Cofactor specificity is central to how the different KT2440 G6PDH isozymes
+      partition redox functions. For this paralog, NADP binding is specific and useful.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-uniprot.txt
+      supporting_text: DR   GO; GO:0050661; F:NADP binding
+    - reference_id: file:PSEPK/zwf/zwf-notes.md
+      supporting_text: the strain carries three G6PDH isozymes with different cofactor
+        specificities
+- term:
+    id: GO:0006006
+    label: glucose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This broad process assignment is plausible by homology, but the best
+      KT2440 evidence does not support PP_5351 as a major contributor to glucose catabolism.
+      The main experimentally supported glucose-processing G6PDH activity in KT2440
+      is carried by zwfA, with zwfB also contributing more than this paralog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Assigning the generic glucose metabolic process to this specific paralog
+      overstates the available evidence for its physiological importance.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-notes.md
+      supporting_text: the isoforms encoded by zwfA and zwfB carry most of the activity
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: G6PDH chemistry connects directly to the oxidative pentose-phosphate
+      branch, but for PP_5351 the current KT2440 evidence supports only a minor or
+      poorly expressed isozyme. The process term is therefore too strong as a gene-specific
+      statement for this paralog.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The process assignment is inferred from enzyme class rather than a clear
+      paralog-specific role in vivo.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-notes.md
+      supporting_text: the isoforms encoded by zwfA and zwfB carry most of the activity
+- term:
+    id: GO:0009051
+    label: pentose-phosphate shunt, oxidative branch
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: This is an even more pathway-committed version of the same process inference.
+      For PP_5351, the current evidence base is insufficient to treat this paralog
+      as a core oxidative pentose-phosphate enzyme in vivo.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The annotation likely reflects family-level pathway propagation rather
+      than paralog-specific physiological evidence.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-notes.md
+      supporting_text: the isoforms encoded by zwfA and zwfB carry most of the activity
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  review:
+    summary: Cytosolic localization is consistent with the catalytic role of a soluble
+      glucose-6-phosphate dehydrogenase acting on phosphorylated sugar intermediates,
+      and UniProt also places the protein in the cytosol.
+    action: ACCEPT
+    reason: This localization is compatible with both enzyme family expectations and
+      the curated UniProt record, and there is no evidence for secretion or a membrane-confined
+      role.
+    supported_by:
+    - reference_id: file:PSEPK/zwf/zwf-uniprot.txt
+      supporting_text: DR   GO; GO:0005829; C:cytosol
+core_functions:
+- description: Cytosolic glucose-6-phosphate dehydrogenase isozyme with NADP-binding
+    capacity. The available KT2440 evidence suggests that PP_5351/zwfC is a real G6PDH
+    paralog but not the dominant carrier of glucose-6-phosphate dehydrogenase flux
+    under standard tested conditions.
+  molecular_function:
+    id: GO:0004345
+    label: glucose-6-phosphate dehydrogenase activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:PSEPK/zwf/zwf-uniprot.txt
+    supporting_text: &#39;RecName: Full=Glucose-6-phosphate 1-dehydrogenase ... DR   GO;
+      GO:0005829; C:cytosol&#39;
+  - reference_id: file:PSEPK/zwf/zwf-notes.md
+    supporting_text: the isoforms encoded by zwfA and zwfB carry most of the activity
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro2GO supplies family/domain-based automated annotations for
+      glucose-6-phosphate dehydrogenase that require curator review against the P.
+      putida zwf paralog context.
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings:
+  - statement: TreeGrafter transfers GO terms from phylogenetic families; curator
+      review checks whether the transferred term matches the PP_5351 zwf paralog.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: The combined UniProt automated pipeline annotation provides IEA terms
+      that must be checked for specificity and evidence fit.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: KT2440 genome sequencing establishes the PP_5351/zwf locus in the strain
+      background under review.
+- id: PMID:33727391
+  title: Cofactor Specificity of Glucose-6-Phosphate Dehydrogenase Isozymes in Pseudomonas
+    putida Reveals a General Principle Underlying Glycolytic Strategies in Bacteria.
+  findings:
+  - statement: The KT2440 G6PDH isozyme study defines three zwf paralogs and their
+      cofactor preferences; PP_5351 is a minor or condition-specific isozyme.
+- id: file:PSEPK/zwf/zwf-notes.md
+  title: Curator notes on zwf function
+  findings:
+  - statement: Curator notes synthesize UniProt and the G6PDH isozyme paper to distinguish
+      PP_5351 from the dominant zwfA and zwfB paralogs.
+- id: file:PSEPK/zwf/zwf-deep-research-falcon.md
+  title: Falcon deep research on zwf function
+  findings:
+  - statement: Falcon report summarizes the zwfC/G6PDH-C family assignment and its
+      likely condition-specific contribution.
+- id: file:PSEPK/zwf/zwf-uniprot.txt
+  title: UniProt record for zwf (Q88C32)
+  findings:
+  - statement: UniProt identifies Q88C32 as glucose-6-phosphate 1-dehydrogenase with
+      EC 1.1.1.49 and NADP-binding GO annotations.
+suggested_questions:
+- question: Under which stress or nutrient conditions is PP_5351/zwfC actually expressed
+    strongly enough to carry meaningful flux?
+  experts:
+  - Pablo Iván Nikel
+  - Daniel Christoph Volke
+- question: Does zwfC specialize in redox balancing under conditions where zwfA and
+    zwfB are insufficient, or is it becoming dispensable in KT2440?
+  experts:
+  - Pablo Iván Nikel
+  - Daniel Christoph Volke
+suggested_experiments:
+- description: Measure zwf, zwfA, and zwfB transcript levels and promoter activity
+    across glucose, gluconate, ribose, oxidative stress, and redox-imbalancing conditions
+    to identify contexts that induce PP_5351.
+  experiment_type: promoter reporter and RNA-seq
+- description: Compare WT, Δzwf, and combinatorial zwf paralog mutants by 13C flux
+    analysis and intracellular NADPH/NADH measurements under oxidative and sugar-shift
+    conditions to test whether PP_5351 has a backup redox-balancing role.
+  experiment_type: fluxomics and redox phenotyping
+- description: Purify the PP_5351 enzyme from KT2440 or recombinant expression and
+    determine kinetic constants with NADP and NAD for glucose-6-phosphate to quantify
+    how much catalytic capacity remains relative to ZwfA and ZwfB.
+  experiment_type: enzymology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
