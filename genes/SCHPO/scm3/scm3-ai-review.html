@@ -1,0 +1,3367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>scm3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>scm3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9HDY7" target="_blank" class="term-link">
+                        Q9HDY7
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "scm3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9HDY7" data-a="DESCRIPTION: Scm3 is the dedicated CENP-A/Cnp1 histone chaperon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Scm3 is the dedicated CENP-A/Cnp1 histone chaperone in S. pombe, orthologous to human HJURP. It mediates the stable deposition of the centromere-specific histone H3 variant Cnp1/CENP-A into centromeric chromatin, which is essential for kinetochore assembly and chromosome segregation. Scm3 contains an N-terminal CENP-A binding domain, a Mis16-binding domain, and a C-terminal cysteine-rich zinc-binding domain required for centromere targeting. It acts downstream of the Mis16-Mis18 complex and dynamically dissociates from centromeres during mitosis.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but non-specific. Scm3 localizes to the nucleus, confirmed by HDA evidence (PMID:16823372) and fluorescence microscopy showing nuclear foci (PMID:19217403). However, the more informative localization is to centromeric chromatin (GO:0034506).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Scm3 was detected in the cytoplasm/cytosol in the large-scale localization study (PMID:16823372). However, the primary functional localization is nuclear/centromeric. Cytoplasmic localization may reflect the pool of Scm3 before nuclear import or during mitotic dissociation from centromeres.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042393" target="_blank" class="term-link">
+                                    GO:0042393
+                                </a>
+                            </span>
+                            <span class="term-label">histone binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0042393" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Scm3 specifically binds the CENP-A histone variant Cnp1 via its N-terminal domain (PMID:19217403). It does not bind canonical histone H3 or H4 (no interaction detected in Y2H). The term histone binding is technically correct but too general; the histone chaperone activity annotation (GO:0140713) better captures the functional specificity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046982" target="_blank" class="term-link">
+                                    GO:0046982
+                                </a>
+                            </span>
+                            <span class="term-label">protein heterodimerization activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0046982" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Likely derived from the InterPro histone-fold domain annotation. While Scm3 does interact with Cnp1/CENP-A and self-associates (PMID:19217403), its mechanism of action is as a histone chaperone, not as a classical histone-fold heterodimerization partner. The S. pombe Scm3 is not an integral nucleosome component. This annotation is misleading.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000785" target="_blank" class="term-link">
+                                    GO:0000785
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217404
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3: A CENP-A receptor required for integrity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0000785" data-r="PMID:19217404" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Scm3 associates with centromeric chromatin as shown by ChIP and biochemical fractionation (PMID:19217404). While not incorrect, this is less informative than the more specific annotation to centromeric core domain (GO:0034506), which is also annotated with IDA evidence from the same paper. Keeping as non-core since the specific term is preferred.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38084929" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38084929
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cysteine-rich domain in CENP-A chaperone Scm3HJURP ensur...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0008270" data-r="PMID:38084929" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The C-terminal cysteine-rich domain (CYS) of Scm3 binds zinc in vitro, demonstrated by direct biochemical assays (PMID:38084929). Point mutations in the zinc-binding motif abolish centromere localization and compromise kinetochore integrity, indicating functional significance. Well-supported.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38084929" target="_blank" class="term-link">
+                                        PMID:38084929
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we find that CYS binds zinc in vitro and is essential for the localization and function of fission yeast Scm3</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                                    GO:0140713
+                                </a>
+                            </span>
+                            <span class="term-label">histone chaperone activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000051
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0140713" data-r="GO_REF:0000051" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Histone chaperone activity is the core molecular function of Scm3. This NAS annotation from PomBase keyword mapping is correct and consistent with the EXP annotation from PMID:19217404. Both support the core function.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034080" target="_blank" class="term-link">
+                                    GO:0034080
+                                </a>
+                            </span>
+                            <span class="term-label">CENP-A containing chromatin assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0034080" data-r="PMID:19217403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process annotation. scm3 temperature-sensitive mutants lose Cnp1/CENP-A from centromeres without affecting Cnp1 protein levels, and canonical histones H3/H2A/H2B invade centromeric chromatin (PMID:19217403). This directly demonstrates Scm3 is required for CENP-A chromatin assembly.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link">
+                                        PMID:19217403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cnp1 foci formation was reduced in the scm3-6 and scm3-19 mutants at 20°C and abolished at 36°C...The abundance of Cnp1-GFP was unaffected in the scm3-ts mutants</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034080" target="_blank" class="term-link">
+                                    GO:0034080
+                                </a>
+                            </span>
+                            <span class="term-label">CENP-A containing chromatin assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217404
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3: A CENP-A receptor required for integrity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0034080" data-r="PMID:19217404" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Independent confirmation of the core process annotation. Pidoux et al. show Scm3 co-purifies with CENP-A and is required for integrity of subkinetochore chromatin (PMID:19217404). Complementary to the Williams et al. evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link">
+                                        PMID:19217404
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with CENP-A(Cnp1) in vitro</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217404
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3: A CENP-A receptor required for integrity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005515" data-r="PMID:19217404" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too vague per curation guidelines. PMID:19217404 shows Scm3 interacts with Cnp1/CENP-A (co-affinity purification) and Mis16 (co-IP). These are specific functional interactions better captured by histone chaperone activity (GO:0140713) which is already annotated with EXP evidence from the same paper. Protein binding adds no informational value.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                                    histone chaperone activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034506" target="_blank" class="term-link">
+                                    GO:0034506
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome, centromeric core domain</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217404
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3: A CENP-A receptor required for integrity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0034506" data-r="PMID:19217404" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization annotation. Pidoux et al. show Scm3 localizes to the centromeric central domain by ChIP, colocalizing with CENP-A/Cnp1 (PMID:19217404). Scm3 is differentially released from chromatin compared to CENP-A, consistent with its role as a chaperone rather than a stable nucleosome component.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link">
+                                        PMID:19217404
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Importantly, Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with CENP-A(Cnp1) in vitro, yet localizes independently of intact CENP-A(Cnp1) chromatin and is differentially released from chromatin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                                    GO:0140713
+                                </a>
+                            </span>
+                            <span class="term-label">histone chaperone activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217404
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3: A CENP-A receptor required for integrity...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0140713" data-r="PMID:19217404" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function annotation with strong experimental evidence. Scm3 directly binds CENP-A/Cnp1 and mediates its deposition into centromeric chromatin (PMID:19217404, PMID:19217403). This is the defining molecular function of Scm3, well-supported by multiple independent studies.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link">
+                                        PMID:19217404
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">we favor a model in which Scm3(Sp) acts as a CENP-A(Cnp1) receptor/assembly factor, cooperating with Mis16 and Mis18 to receive CENP-A(Cnp1) from the Sim3 escort and mediate assembly of CENP-A(Cnp1) into subkinetochore chromatin</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000775" target="_blank" class="term-link">
+                                    GO:0000775
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome, centromeric region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26275423" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26275423
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inner Kinetochore Protein Interactions with Regional Centrom...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0000775" data-r="PMID:26275423" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by ChIP-seq showing Scm3 is enriched throughout the centromeric central domain (PMID:26275423). This is a parent term of centromeric core domain (GO:0034506). The more specific term is already annotated with IDA evidence, making this somewhat redundant but not incorrect.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034506" target="_blank" class="term-link">
+                                    GO:0034506
+                                </a>
+                            </span>
+                            <span class="term-label">chromosome, centromeric core domain</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0034506" data-r="PMID:19217403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core localization annotation. Williams et al. show by ChIP that Scm3 is enriched at cnt1/imr1 (central core) but not at dg repeats or euchromatic lys1 (PMID:19217403). Scm3-CFP foci colocalize with Cnp1-GFP and Mis12. Independent confirmation of PMID:19217404 data.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link">
+                                        PMID:19217403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Scm3-FLAG and Mis18-FLAG immunoprecipitates were enriched at cnt1/imr1 but not at the dg motifs or the euchromatic lys1 probe</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005634" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by proteome-wide YFP-tagging localization study in S. pombe (PMID:16823372). Nuclear localization is consistent with Scm3&#39;s centromeric function. Redundant with more specific centromeric localization annotations.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005829" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detected in the cytosol in the proteome-wide localization study (PMID:16823372). Likely represents the soluble pool of Scm3 before nuclear import or after mitotic release from centromeres. Not the primary functional localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005515" data-r="PMID:19217403" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too vague per curation guidelines. This IPI row is supported by PMID:19217403 for Scm3 interaction with Cnp1/CENP-A by Y2H and co-immunoprecipitation. The functional consequence is CENP-A-specific histone chaperone activity, so the annotation is better captured by GO:0140713.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                                    histone chaperone activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005515" data-r="PMID:19217403" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Too vague per curation guidelines. PMID:19217403 supports Scm3 self-association by yeast two-hybrid analysis, but the generic protein binding term does not describe the curated function of Scm3. The experimentally supported core molecular function is histone chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                                    histone chaperone activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19217403
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A i...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9HDY7" data-a="GO:0005515" data-r="PMID:19217403" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This Mis18 IPI annotation is not supported by PMID:19217403. The paper supports a Mis18-dependent localization/recruitment relationship in the CENP-A loading pathway, but explicitly reports no positive Scm3-Mis18 Y2H interaction. This GOA row should therefore be removed rather than modified to histone chaperone activity.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link">
+                                        PMID:19217403
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">We did not observe a positive Y2H interaction between Scm3 and Mis18 (Figure 5B), although we did find that Mis18 self-associates</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>CENP-A/Cnp1-specific histone chaperone that mediates the deposition of the centromere-specific histone H3 variant Cnp1 into centromeric chromatin. Scm3 binds Cnp1 via its N-terminal domain, is recruited to centromeres by the Mis16-Mis18 complex, and uses its zinc-binding CYS domain for centromere targeting. Essential for kinetochore integrity and chromosome segregation.</h3>
+                <span class="vote-buttons" data-g="Q9HDY7" data-a="FUNCTION: CENP-A/Cnp1-specific histone chaperone that mediat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140713" target="_blank" class="term-link">
+                            histone chaperone activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034080" target="_blank" class="term-link">
+                                CENP-A containing chromatin assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034506" target="_blank" class="term-link">
+                                chromosome, centromeric core domain
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000051.md" target="_blank" class="term-link">
+                            GO_REF:0000051
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">S. pombe keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 (SPAPB1A10.02) protein localizes to both the nucleus and cytosol in a proteome-wide localization study of S. pombe.</div>
+                        
+                        <div class="finding-text">"we determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19217403" target="_blank" class="term-link">
+                            PMID:19217403
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A into centromeric chromatin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 directly interacts with the CENP-A histone variant Cnp1 via its conserved N-terminal domain (first 194 amino acids), demonstrated by yeast two-hybrid and co-immunoprecipitation.</div>
+                        
+                        <div class="finding-text">"We first investigated whether S. pombe Scm3 interacts with Cnp1 using a yeast two-hybrid (Y2H) assay...Interactions in both bait and prey orientations were observed, while no interaction was detected between Scm3 and histone H4...Truncation analysis revealed that the first 194 amino acids of Scm3 (including the homology domain) are required for the interaction with Cnp1...Immunoblotting showed that only GST-Scm3 complexes contained Cnp1-GFP"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 self-associates in vivo, forming homodimers.</div>
+                        
+                        <div class="finding-text">"The Y2H analysis also detected a robust Scm3-Scm3 interaction (Figure 1B), indicating that Scm3 self-associates in vivo."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 localizes specifically to the central core domain (cnt/imr) of centromeres, colocalizing with Cnp1 and Mis12, as shown by microscopy and ChIP.</div>
+                        
+                        <div class="finding-text">"A single nuclear Scm3-CFP focus was observed in the majority of live cells...The Scm3-CFP and Cnp1-GFP foci colocalized...The Scm3-FLAG and Mis18-FLAG immunoprecipitates were enriched at cnt1/imr1 but not at the dg motifs or the euchromatic lys1 probe"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is essential for viability; scm3-null spores arrest after 1-2 divisions.</div>
+                        
+                        <div class="finding-text">"scm3Δ spores germinated and underwent 1 or 2 divisions before arresting growth"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is required for centromeric localization of Cnp1/CENP-A; loss of Scm3 function abolishes Cnp1 centromeric foci without affecting Cnp1 protein levels.</div>
+                        
+                        <div class="finding-text">"Cnp1 foci formation was reduced in the scm3-6 and scm3-19 mutants at 20°C and abolished at 36°C...The abundance of Cnp1-GFP was unaffected in the scm3-ts mutants"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 localizes to centromeres independently of Cnp1, indicating it is not an integral nucleosome component but rather acts upstream of Cnp1 deposition.</div>
+                        
+                        <div class="finding-text">"Scm3-GFP foci were readily detected in cnp1-1 cells incubated at 36°C, although the frequency was somewhat reduced compared to wild type...These data indicate that Scm3 localization at centromeres is largely independent of Cnp1"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 centromere localization requires Mis6, Mis16, and Mis18, but not Mis12, placing it downstream of the Mis16-Mis18 complex in the CENP-A loading pathway.</div>
+                        
+                        <div class="finding-text">"formation of Scm3-GFP foci was nearly abolished in the mis6, mis16 and mis18-ts mutants at 36°C...In contrast, Scm3-GFP foci were unaffected by the mis12-ts mutation"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 interacts with Mis16 via its C-terminal 141 amino acids, shown by yeast two-hybrid analysis.</div>
+                        
+                        <div class="finding-text">"Scm3 and Mis16 showed a robust Y2H interaction using either orientation of plasmids on high-stringency selective medium...The C-terminal 141 amino acids of Scm3 are required for interaction with Mis16"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 does not show a positive yeast two-hybrid interaction with Mis18 in this study; Mis18 supports Scm3 localization rather than a direct physical interaction in this assay.</div>
+                        
+                        <div class="finding-text">"We did not observe a positive Y2H interaction between Scm3 and Mis18 (Figure 5B), although we did find that Mis18 self-associates"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 dynamically dissociates from centromeres during mitosis (metaphase to early/mid-anaphase), similar to Mis16 and Mis18, while Cnp1 remains constitutively associated.</div>
+                        
+                        <div class="finding-text">"Scm3 formed nuclear foci that colocalized with Mis12 in interphase cells. However, like Mis16 and Mis18, Scm3 foci were not detectable in cells during metaphase or early to mid-anaphase...the Scm3 signal is nearly abolished in the nda3-KM311 mutant at the restrictive temperature, whereas Cnp1 enrichment is largely unchanged"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of Scm3 or Mis18 function leads to replacement of Cnp1 by canonical histones H3 and H2A/H2B at the central centromere region, and increased histone H4 acetylation.</div>
+                        
+                        <div class="finding-text">"The loss of Cnp1 at cnt1/imr1 in the scm3-ts and mis18-ts mutants was accompanied by a large increase in the H3 signal in these regions"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is required for proper chromosome segregation; scm3 temperature-sensitive mutants show chromosome missegregation and minichromosome loss.</div>
+                        
+                        <div class="finding-text">"chromosome segregation defects were observed in the scm3-ts mutants...The scm3-ts cells often failed to segregate their chromosomes equally following mitosis...there was an enhanced loss rate of minichromosome 16 in the scm3-ts mutants"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19217404" target="_blank" class="term-link">
+                            PMID:19217404
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Fission yeast Scm3: A CENP-A receptor required for integrity of subkinetochore chromatin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 co-affinity purifies with CENP-A/Cnp1 and associates with Cnp1 in vitro, confirming direct physical interaction.</div>
+                        
+                        <div class="finding-text">"Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with CENP-A(Cnp1) in vitro"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 localizes to centromeres independently of intact CENP-A chromatin, supporting its role as a receptor rather than nucleosome component.</div>
+                        
+                        <div class="finding-text">"Importantly, Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with CENP-A(Cnp1) in vitro, yet localizes independently of intact CENP-A(Cnp1) chromatin and is differentially released from chromatin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 depends on Mis16/Mis18 for centromere localization and is recruited to centromeres in late anaphase.</div>
+                        
+                        <div class="finding-text">"Scm3(Sp) depends on Mis16/18 for its centromere localization and like them is recruited to centromeres in late anaphase"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is proposed to act as a CENP-A receptor/assembly factor cooperating with Mis16 and Mis18 to receive CENP-A from the Sim3 escort and mediate chromatin assembly.</div>
+                        
+                        <div class="finding-text">"we favor a model in which Scm3(Sp) acts as a CENP-A(Cnp1) receptor/assembly factor, cooperating with Mis16 and Mis18 to receive CENP-A(Cnp1) from the Sim3 escort and mediate assembly of CENP-A(Cnp1) into subkinetochore chromatin"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 interacts with Mis16 (IPI with PomBase:SPCC970.12) and Cnp1 (IPI with PomBase:SPBC1105.17) shown by co-immunoprecipitation.</div>
+                        
+                        <div class="finding-text">"Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with CENP-A(Cnp1) in vitro...Scm3(Sp) depends on Mis16/18 for its centromere localization"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26275423" target="_blank" class="term-link">
+                            PMID:26275423
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Inner Kinetochore Protein Interactions with Regional Centromeres of Fission Yeast.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is highly enriched throughout the centromeric central domain by ChIP-seq, similar to CENP-A, CENP-C, CENP-T, and CENP-I, except at tRNA genes.</div>
+                        
+                        <div class="finding-text">"Inner kinetochore proteins CENP-A, CENP-C, CENP-T, CENP-I, and Scm3 are highly enriched throughout the central domain except at tRNA genes, with no evidence for preferred kinetochore assembly sites"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Scm3 is weakly enriched and less stably incorporated in H3-rich heterochromatin outer repeats compared to the central domain.</div>
+                        
+                        <div class="finding-text">"These proteins are weakly enriched and less stably incorporated in H3-rich heterochromatin"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38084929" target="_blank" class="term-link">
+                            PMID:38084929
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The cysteine-rich domain in CENP-A chaperone Scm3HJURP ensures centromere targeting and kinetochore integrity.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The C-terminal cysteine-rich domain (CYS) of Scm3 binds zinc in vitro and is essential for centromere localization and function.</div>
+                        
+                        <div class="finding-text">"we find that CYS binds zinc in vitro and is essential for the localization and function of fission yeast Scm3"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Disrupting CYS by deletion or point mutations in the zinc-binding motif prevents Scm3 centromere localization and compromises kinetochore integrity.</div>
+                        
+                        <div class="finding-text">"Disrupting CYS by deletion or introduction of point mutations within its zinc-binding motif prevents Scm3 centromere localization and compromises kinetochore integrity"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CYS alone can localize to the centromere weakly, and its targeting is greatly enhanced when combined with the Mis16-binding domain (Mis16-BD).</div>
+                        
+                        <div class="finding-text">"CYS alone can localize to the centromere, albeit weakly, but its targeting is greatly enhanced when combined with Mis16-BD"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CYS binds centromeric DNA, providing additional anchoring of Scm3 to centromeres independent of Mis16-BD.</div>
+                        
+                        <div class="finding-text">"we provide evidence that CYS binds centromeric DNA and can itself localize to the centromere"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression of truncated Scm3 containing Mis16-BD and CYS but lacking the CENP-A binding domain causes toxicity, chromosome missegregation, and kinetochore loss.</div>
+                        
+                        <div class="finding-text">"Expressing a truncated protein containing both Mis16-BD and CYS, but lacking the CENP-A binding domain, causes toxicity and is accompanied by considerable chromosome missegregation and kinetochore loss"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(scm3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9HDY7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="scm3-spapb1a1002-gene-review-notes">scm3 (SPAPB1A10.02) - Gene Review Notes</h1>
+<h2 id="gene-overview">Gene Overview</h2>
+<ul>
+<li><strong>Full name</strong>: CENP-A histone chaperone scm3</li>
+<li><strong>UniProt ID</strong>: Q9HDY7</li>
+<li><strong>Organism</strong>: Schizosaccharomyces pombe (fission yeast)</li>
+<li><strong>Domains</strong>: Scm3/HJURP (IPR018465), Histone-fold (IPR009072), Scm3 Pfam (PF10384)</li>
+<li><strong>Human ortholog</strong>: HJURP (Holliday junction recognition protein)</li>
+</ul>
+<h2 id="core-function-summary">Core Function Summary</h2>
+<p>Scm3 is the dedicated CENP-A/Cnp1 histone chaperone in S. pombe. Its primary function is to<br />
+mediate the stable deposition of the histone H3 variant CENP-A (Cnp1) into centromeric chromatin,<br />
+which is essential for kinetochore assembly and proper chromosome segregation.</p>
+<h3 id="key-structural-domains">Key structural domains:</h3>
+<ol>
+<li><strong>N-terminal CENP-A binding domain</strong> - Interacts specifically with Cnp1/CENP-A [PMID:19217403, PMID:19217404]</li>
+<li><strong>Mis16-binding domain (Mis16-BD)</strong> (~aa 270-305) - Interacts with Mis16 for centromere targeting <a href="https://pubmed.ncbi.nlm.nih.gov/38084929">PMID:38084929</a></li>
+<li><strong>C-terminal cysteine-rich domain (CYS)</strong> - Binds zinc, essential for centromere localization <a href="https://pubmed.ncbi.nlm.nih.gov/38084929">PMID:38084929</a></li>
+</ol>
+<h2 id="key-literature-findings">Key Literature Findings</h2>
+<h3 id="pmid19217403-williams-et-al-2009">PMID:19217403 (Williams et al. 2009)</h3>
+<ul>
+<li>Scm3 is required for centromeric localization of Cnp1</li>
+<li>Scm3 localizes at centromeres independently of Cnp1</li>
+<li>Mis16-Mis18 complex required for Scm3 centromere localization</li>
+<li>Scm3 dissociates from centromeres during mitosis (like Mis16/Mis18)</li>
+<li>Inactivation of Scm3 leads to H3 and H2A/H2B invading centromeres</li>
+<li>In S. pombe, Scm3 acts as a Cnp1 assembly/maintenance factor (not a nucleosome component as proposed in budding yeast)</li>
+</ul>
+<h3 id="pmid19217404-pidoux-et-al-2009">PMID:19217404 (Pidoux et al. 2009)</h3>
+<ul>
+<li>Scm3 co-affinity purifies with Cnp1/CENP-A</li>
+<li>Scm3 associates with CENP-A in vitro</li>
+<li>Scm3 localizes independently of intact CENP-A chromatin</li>
+<li>Differentially released from chromatin compared to CENP-A</li>
+<li>Required for integrity of subkinetochore chromatin</li>
+<li>Model: Scm3 acts as a CENP-A receptor, cooperating with Mis16 and Mis18</li>
+</ul>
+<h3 id="pmid26275423-thakur-et-al-2015">PMID:26275423 (Thakur et al. 2015)</h3>
+<ul>
+<li>ChIP-seq mapping of inner kinetochore proteins</li>
+<li>Scm3 is highly enriched throughout the centromeric central domain</li>
+<li>Enriched except at tRNA genes</li>
+<li>Weakly enriched in H3-rich heterochromatin (outer repeats)</li>
+<li>No evidence for preferred kinetochore assembly sites</li>
+</ul>
+<h3 id="pmid38084929-folco-et-al-2024">PMID:38084929 (Folco et al. 2024)</h3>
+<ul>
+<li>CYS domain binds zinc in vitro</li>
+<li>CYS is essential for Scm3 centromere localization and function</li>
+<li>Disrupting CYS prevents centromere localization and compromises kinetochore integrity</li>
+<li>CYS alone can localize to centromere (weakly), enhanced with Mis16-BD</li>
+<li>CYS likely binds centromeric DNA (independent of Mis16 interaction)</li>
+<li>Overexpression of truncated Scm3 (with CYS but lacking CENP-A binding) causes toxicity and kinetochore loss</li>
+</ul>
+<h3 id="pmid16823372-matsuyama-et-al-2006">PMID:16823372 (Matsuyama et al. 2006)</h3>
+<ul>
+<li>Large-scale protein localization study</li>
+<li>Scm3 detected in both nucleus and cytoplasm/cytosol (HDA evidence)</li>
+</ul>
+<h2 id="protein-protein-interactions">Protein-Protein Interactions</h2>
+<ul>
+<li><strong>Cnp1/CENP-A (SPBC1105.17)</strong>: Direct binding via N-terminal domain [PMID:19217403, PMID:19217404]</li>
+<li><strong>Mis16 (SPCC970.12)</strong>: Interaction via Mis16-BD for centromere targeting <a href="https://pubmed.ncbi.nlm.nih.gov/19217404">PMID:19217404</a></li>
+<li><strong>Mis18 (SPCC1672.10)</strong>: Part of the Mis18 holocomplex pathway <a href="https://pubmed.ncbi.nlm.nih.gov/19217403">PMID:19217403</a></li>
+<li><strong>Self-interaction (SPAPB1A10.02)</strong>: Reported IPI with itself <a href="https://pubmed.ncbi.nlm.nih.gov/19217403">PMID:19217403</a></li>
+</ul>
+<h2 id="annotation-review-considerations">Annotation Review Considerations</h2>
+<ul>
+<li>"protein binding" (GO:0005515) annotations should be replaced with more specific terms</li>
+<li>Histone chaperone activity is well-supported experimentally</li>
+<li>Zinc ion binding is supported by the CYS domain characterization</li>
+<li>The protein heterodimerization IEA may relate to histone fold but needs evaluation</li>
+<li>Scm3 is NOT a stable nucleosome component in S. pombe (unlike what was proposed for budding yeast)</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9HDY7
+gene_symbol: scm3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  Scm3 is the dedicated CENP-A/Cnp1 histone chaperone in S. pombe, orthologous
+  to human HJURP. It mediates the stable deposition of the centromere-specific
+  histone H3 variant Cnp1/CENP-A into centromeric chromatin, which is essential
+  for kinetochore assembly and chromosome segregation. Scm3 contains an
+  N-terminal CENP-A binding domain, a Mis16-binding domain, and a C-terminal
+  cysteine-rich zinc-binding domain required for centromere targeting. It acts
+  downstream of the Mis16-Mis18 complex and dynamically dissociates from
+  centromeres during mitosis.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Correct but non-specific. Scm3 localizes to the nucleus, confirmed by
+      HDA evidence (PMID:16823372) and fluorescence microscopy showing nuclear
+      foci (PMID:19217403). However, the more informative localization is to
+      centromeric chromatin (GO:0034506).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Scm3 was detected in the cytoplasm/cytosol in the large-scale
+      localization study (PMID:16823372). However, the primary functional
+      localization is nuclear/centromeric. Cytoplasmic localization may
+      reflect the pool of Scm3 before nuclear import or during mitotic
+      dissociation from centromeres.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0042393
+    label: histone binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Scm3 specifically binds the CENP-A histone variant Cnp1 via its
+      N-terminal domain (PMID:19217403). It does not bind canonical histone
+      H3 or H4 (no interaction detected in Y2H). The term histone binding
+      is technically correct but too general; the histone chaperone activity
+      annotation (GO:0140713) better captures the functional specificity.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0046982
+    label: protein heterodimerization activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Likely derived from the InterPro histone-fold domain annotation. While
+      Scm3 does interact with Cnp1/CENP-A and self-associates (PMID:19217403),
+      its mechanism of action is as a histone chaperone, not as a classical
+      histone-fold heterodimerization partner. The S. pombe Scm3 is not an
+      integral nucleosome component. This annotation is misleading.
+    action: MARK_AS_OVER_ANNOTATED
+- term:
+    id: GO:0000785
+    label: chromatin
+  evidence_type: IDA
+  original_reference_id: PMID:19217404
+  review:
+    summary: &gt;-
+      Scm3 associates with centromeric chromatin as shown by ChIP and
+      biochemical fractionation (PMID:19217404). While not incorrect, this
+      is less informative than the more specific annotation to centromeric
+      core domain (GO:0034506), which is also annotated with IDA evidence
+      from the same paper. Keeping as non-core since the specific term
+      is preferred.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:38084929
+  review:
+    summary: &gt;-
+      The C-terminal cysteine-rich domain (CYS) of Scm3 binds zinc in vitro,
+      demonstrated by direct biochemical assays (PMID:38084929). Point mutations
+      in the zinc-binding motif abolish centromere localization and compromise
+      kinetochore integrity, indicating functional significance. Well-supported.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:38084929
+        supporting_text: &gt;-
+          we find that CYS binds zinc in vitro and is essential for the
+          localization and function of fission yeast Scm3
+- term:
+    id: GO:0140713
+    label: histone chaperone activity
+  evidence_type: NAS
+  original_reference_id: GO_REF:0000051
+  review:
+    summary: &gt;-
+      Histone chaperone activity is the core molecular function of Scm3. This
+      NAS annotation from PomBase keyword mapping is correct and consistent
+      with the EXP annotation from PMID:19217404. Both support the core
+      function.
+    action: ACCEPT
+- term:
+    id: GO:0034080
+    label: CENP-A containing chromatin assembly
+  evidence_type: IMP
+  original_reference_id: PMID:19217403
+  review:
+    summary: &gt;-
+      Core biological process annotation. scm3 temperature-sensitive mutants
+      lose Cnp1/CENP-A from centromeres without affecting Cnp1 protein levels,
+      and canonical histones H3/H2A/H2B invade centromeric chromatin
+      (PMID:19217403). This directly demonstrates Scm3 is required for
+      CENP-A chromatin assembly.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19217403
+        supporting_text: &gt;-
+          Cnp1 foci formation was reduced in the scm3-6 and scm3-19 mutants at
+          20°C and abolished at 36°C...The abundance of Cnp1-GFP was unaffected
+          in the scm3-ts mutants
+- term:
+    id: GO:0034080
+    label: CENP-A containing chromatin assembly
+  evidence_type: IMP
+  original_reference_id: PMID:19217404
+  review:
+    summary: &gt;-
+      Independent confirmation of the core process annotation. Pidoux et al.
+      show Scm3 co-purifies with CENP-A and is required for integrity of
+      subkinetochore chromatin (PMID:19217404). Complementary to the Williams
+      et al. evidence.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19217404
+        supporting_text: &gt;-
+          Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with
+          CENP-A(Cnp1) in vitro
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19217404
+  review:
+    summary: &gt;-
+      Too vague per curation guidelines. PMID:19217404 shows Scm3 interacts
+      with Cnp1/CENP-A (co-affinity purification) and Mis16 (co-IP). These
+      are specific functional interactions better captured by histone chaperone
+      activity (GO:0140713) which is already annotated with EXP evidence from
+      the same paper. Protein binding adds no informational value.
+    action: MODIFY
+    proposed_replacement_terms:
+      - id: GO:0140713
+        label: histone chaperone activity
+- term:
+    id: GO:0034506
+    label: chromosome, centromeric core domain
+  evidence_type: IDA
+  original_reference_id: PMID:19217404
+  review:
+    summary: &gt;-
+      Core localization annotation. Pidoux et al. show Scm3 localizes to the
+      centromeric central domain by ChIP, colocalizing with CENP-A/Cnp1
+      (PMID:19217404). Scm3 is differentially released from chromatin
+      compared to CENP-A, consistent with its role as a chaperone rather
+      than a stable nucleosome component.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19217404
+        supporting_text: &gt;-
+          Importantly, Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and
+          associates with CENP-A(Cnp1) in vitro, yet localizes independently
+          of intact CENP-A(Cnp1) chromatin and is differentially released
+          from chromatin
+- term:
+    id: GO:0140713
+    label: histone chaperone activity
+  evidence_type: EXP
+  original_reference_id: PMID:19217404
+  review:
+    summary: &gt;-
+      Core molecular function annotation with strong experimental evidence.
+      Scm3 directly binds CENP-A/Cnp1 and mediates its deposition into
+      centromeric chromatin (PMID:19217404, PMID:19217403). This is the
+      defining molecular function of Scm3, well-supported by multiple
+      independent studies.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19217404
+        supporting_text: &gt;-
+          we favor a model in which Scm3(Sp) acts as a CENP-A(Cnp1)
+          receptor/assembly factor, cooperating with Mis16 and Mis18 to
+          receive CENP-A(Cnp1) from the Sim3 escort and mediate assembly
+          of CENP-A(Cnp1) into subkinetochore chromatin
+- term:
+    id: GO:0000775
+    label: chromosome, centromeric region
+  evidence_type: IDA
+  original_reference_id: PMID:26275423
+  review:
+    summary: &gt;-
+      Supported by ChIP-seq showing Scm3 is enriched throughout the centromeric
+      central domain (PMID:26275423). This is a parent term of centromeric core
+      domain (GO:0034506). The more specific term is already annotated with
+      IDA evidence, making this somewhat redundant but not incorrect.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0034506
+    label: chromosome, centromeric core domain
+  evidence_type: IDA
+  original_reference_id: PMID:19217403
+  review:
+    summary: &gt;-
+      Core localization annotation. Williams et al. show by ChIP that Scm3
+      is enriched at cnt1/imr1 (central core) but not at dg repeats or
+      euchromatic lys1 (PMID:19217403). Scm3-CFP foci colocalize with
+      Cnp1-GFP and Mis12. Independent confirmation of PMID:19217404 data.
+    action: ACCEPT
+    supported_by:
+      - reference_id: PMID:19217403
+        supporting_text: &gt;-
+          The Scm3-FLAG and Mis18-FLAG immunoprecipitates were enriched at
+          cnt1/imr1 but not at the dg motifs or the euchromatic lys1 probe
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  review:
+    summary: &gt;-
+      Supported by proteome-wide YFP-tagging localization study in S. pombe
+      (PMID:16823372). Nuclear localization is consistent with Scm3&#39;s
+      centromeric function. Redundant with more specific centromeric
+      localization annotations.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  review:
+    summary: &gt;-
+      Detected in the cytosol in the proteome-wide localization study
+      (PMID:16823372). Likely represents the soluble pool of Scm3 before
+      nuclear import or after mitotic release from centromeres. Not the
+      primary functional localization.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19217403
+  supporting_entities:
+    - PomBase:SPBC1105.17
+  review:
+    summary: &gt;-
+      Too vague per curation guidelines. This IPI row is supported by
+      PMID:19217403 for Scm3 interaction with Cnp1/CENP-A by Y2H and
+      co-immunoprecipitation. The functional consequence is CENP-A-specific
+      histone chaperone activity, so the annotation is better captured by
+      GO:0140713.
+    action: MODIFY
+    proposed_replacement_terms:
+      - id: GO:0140713
+        label: histone chaperone activity
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19217403
+  supporting_entities:
+    - PomBase:SPAPB1A10.02
+  review:
+    summary: &gt;-
+      Too vague per curation guidelines. PMID:19217403 supports Scm3
+      self-association by yeast two-hybrid analysis, but the generic protein
+      binding term does not describe the curated function of Scm3. The
+      experimentally supported core molecular function is histone chaperone
+      activity.
+    action: MODIFY
+    proposed_replacement_terms:
+      - id: GO:0140713
+        label: histone chaperone activity
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19217403
+  supporting_entities:
+    - PomBase:SPCC1672.10
+  review:
+    summary: &gt;-
+      This Mis18 IPI annotation is not supported by PMID:19217403. The paper
+      supports a Mis18-dependent localization/recruitment relationship in the
+      CENP-A loading pathway, but explicitly reports no positive Scm3-Mis18
+      Y2H interaction. This GOA row should therefore be removed rather than
+      modified to histone chaperone activity.
+    action: REMOVE
+    supported_by:
+      - reference_id: PMID:19217403
+        supporting_text: &gt;-
+          We did not observe a positive Y2H interaction between Scm3 and Mis18
+          (Figure 5B), although we did find that Mis18 self-associates
+        reference_section_type: RESULTS
+core_functions:
+- description: &gt;-
+    CENP-A/Cnp1-specific histone chaperone that mediates the deposition of
+    the centromere-specific histone H3 variant Cnp1 into centromeric chromatin.
+    Scm3 binds Cnp1 via its N-terminal domain, is recruited to centromeres
+    by the Mis16-Mis18 complex, and uses its zinc-binding CYS domain for
+    centromere targeting. Essential for kinetochore integrity and chromosome
+    segregation.
+  molecular_function:
+    id: GO:0140713
+    label: histone chaperone activity
+  directly_involved_in:
+    - id: GO:0034080
+      label: CENP-A containing chromatin assembly
+  locations:
+    - id: GO:0034506
+      label: chromosome, centromeric core domain
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000051
+  title: S. pombe keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission
+    yeast Schizosaccharomyces pombe.
+  findings:
+    - statement: Scm3 (SPAPB1A10.02) protein localizes to both the nucleus and cytosol
+        in a proteome-wide localization study of S. pombe.
+      supporting_text: we determined the localization of 4,431 proteins, corresponding
+        to approximately 90% of the fission yeast proteome, by tagging each ORF with
+        the yellow fluorescent protein
+      reference_section_type: ABSTRACT
+      full_text_unavailable: true
+- id: PMID:19217403
+  title: Fission yeast Scm3 mediates stable assembly of Cnp1/CENP-A into centromeric
+    chromatin.
+  findings:
+    - statement: Scm3 directly interacts with the CENP-A histone variant Cnp1 via
+        its conserved N-terminal domain (first 194 amino acids), demonstrated by yeast
+        two-hybrid and co-immunoprecipitation.
+      supporting_text: We first investigated whether S. pombe Scm3 interacts with Cnp1
+        using a yeast two-hybrid (Y2H) assay...Interactions in both bait and prey
+        orientations were observed, while no interaction was detected between Scm3 and
+        histone H4...Truncation analysis revealed that the first 194 amino acids of
+        Scm3 (including the homology domain) are required for the interaction with
+        Cnp1...Immunoblotting showed that only GST-Scm3 complexes contained Cnp1-GFP
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 self-associates in vivo, forming homodimers.
+      supporting_text: The Y2H analysis also detected a robust Scm3-Scm3 interaction
+        (Figure 1B), indicating that Scm3 self-associates in vivo.
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 localizes specifically to the central core domain (cnt/imr) of
+        centromeres, colocalizing with Cnp1 and Mis12, as shown by microscopy and ChIP.
+      supporting_text: A single nuclear Scm3-CFP focus was observed in the majority
+        of live cells...The Scm3-CFP and Cnp1-GFP foci colocalized...The Scm3-FLAG and
+        Mis18-FLAG immunoprecipitates were enriched at cnt1/imr1 but not at the dg
+        motifs or the euchromatic lys1 probe
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 is essential for viability; scm3-null spores arrest after 1-2
+        divisions.
+      supporting_text: scm3Δ spores germinated and underwent 1 or 2 divisions before
+        arresting growth
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 is required for centromeric localization of Cnp1/CENP-A; loss
+        of Scm3 function abolishes Cnp1 centromeric foci without affecting Cnp1 protein
+        levels.
+      supporting_text: Cnp1 foci formation was reduced in the scm3-6 and scm3-19
+        mutants at 20°C and abolished at 36°C...The abundance of Cnp1-GFP was unaffected
+        in the scm3-ts mutants
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 localizes to centromeres independently of Cnp1, indicating it
+        is not an integral nucleosome component but rather acts upstream of Cnp1
+        deposition.
+      supporting_text: Scm3-GFP foci were readily detected in cnp1-1 cells incubated
+        at 36°C, although the frequency was somewhat reduced compared to wild type...These
+        data indicate that Scm3 localization at centromeres is largely independent of
+        Cnp1
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 centromere localization requires Mis6, Mis16, and Mis18, but
+        not Mis12, placing it downstream of the Mis16-Mis18 complex in the CENP-A
+        loading pathway.
+      supporting_text: formation of Scm3-GFP foci was nearly abolished in the mis6,
+        mis16 and mis18-ts mutants at 36°C...In contrast, Scm3-GFP foci were unaffected
+        by the mis12-ts mutation
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 interacts with Mis16 via its C-terminal 141 amino acids, shown
+        by yeast two-hybrid analysis.
+      supporting_text: Scm3 and Mis16 showed a robust Y2H interaction using either
+        orientation of plasmids on high-stringency selective medium...The C-terminal 141
+        amino acids of Scm3 are required for interaction with Mis16
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 does not show a positive yeast two-hybrid interaction with
+        Mis18 in this study; Mis18 supports Scm3 localization rather than a direct
+        physical interaction in this assay.
+      supporting_text: We did not observe a positive Y2H interaction between Scm3
+        and Mis18 (Figure 5B), although we did find that Mis18 self-associates
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 dynamically dissociates from centromeres during mitosis (metaphase
+        to early/mid-anaphase), similar to Mis16 and Mis18, while Cnp1 remains
+        constitutively associated.
+      supporting_text: Scm3 formed nuclear foci that colocalized with Mis12 in
+        interphase cells. However, like Mis16 and Mis18, Scm3 foci were not detectable
+        in cells during metaphase or early to mid-anaphase...the Scm3 signal is nearly
+        abolished in the nda3-KM311 mutant at the restrictive temperature, whereas Cnp1
+        enrichment is largely unchanged
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Loss of Scm3 or Mis18 function leads to replacement of Cnp1 by
+        canonical histones H3 and H2A/H2B at the central centromere region, and
+        increased histone H4 acetylation.
+      supporting_text: The loss of Cnp1 at cnt1/imr1 in the scm3-ts and mis18-ts
+        mutants was accompanied by a large increase in the H3 signal in these regions
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+    - statement: Scm3 is required for proper chromosome segregation; scm3 temperature-sensitive
+        mutants show chromosome missegregation and minichromosome loss.
+      supporting_text: chromosome segregation defects were observed in the scm3-ts
+        mutants...The scm3-ts cells often failed to segregate their chromosomes equally
+        following mitosis...there was an enhanced loss rate of minichromosome 16 in the
+        scm3-ts mutants
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+- id: PMID:19217404
+  title: &#39;Fission yeast Scm3: A CENP-A receptor required for integrity of subkinetochore
+    chromatin.&#39;
+  findings:
+    - statement: Scm3 co-affinity purifies with CENP-A/Cnp1 and associates with Cnp1
+        in vitro, confirming direct physical interaction.
+      supporting_text: Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates
+        with CENP-A(Cnp1) in vitro
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Scm3 localizes to centromeres independently of intact CENP-A chromatin,
+        supporting its role as a receptor rather than nucleosome component.
+      supporting_text: Importantly, Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and
+        associates with CENP-A(Cnp1) in vitro, yet localizes independently of intact
+        CENP-A(Cnp1) chromatin and is differentially released from chromatin
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Scm3 depends on Mis16/Mis18 for centromere localization and is recruited
+        to centromeres in late anaphase.
+      supporting_text: Scm3(Sp) depends on Mis16/18 for its centromere localization
+        and like them is recruited to centromeres in late anaphase
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Scm3 is proposed to act as a CENP-A receptor/assembly factor cooperating
+        with Mis16 and Mis18 to receive CENP-A from the Sim3 escort and mediate chromatin
+        assembly.
+      supporting_text: we favor a model in which Scm3(Sp) acts as a CENP-A(Cnp1) receptor/assembly
+        factor, cooperating with Mis16 and Mis18 to receive CENP-A(Cnp1) from the Sim3
+        escort and mediate assembly of CENP-A(Cnp1) into subkinetochore chromatin
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Scm3 interacts with Mis16 (IPI with PomBase:SPCC970.12) and Cnp1
+        (IPI with PomBase:SPBC1105.17) shown by co-immunoprecipitation.
+      supporting_text: &gt;-
+        Scm3(Sp) coaffinity purifies with CENP-A(Cnp1) and associates with
+        CENP-A(Cnp1) in vitro...Scm3(Sp) depends on Mis16/18 for its
+        centromere localization
+      reference_section_type: RESULTS
+      full_text_unavailable: false
+- id: PMID:26275423
+  title: Inner Kinetochore Protein Interactions with Regional Centromeres of Fission
+    Yeast.
+  findings:
+    - statement: Scm3 is highly enriched throughout the centromeric central domain by
+        ChIP-seq, similar to CENP-A, CENP-C, CENP-T, and CENP-I, except at tRNA genes.
+      supporting_text: Inner kinetochore proteins CENP-A, CENP-C, CENP-T, CENP-I, and
+        Scm3 are highly enriched throughout the central domain except at tRNA genes, with
+        no evidence for preferred kinetochore assembly sites
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Scm3 is weakly enriched and less stably incorporated in H3-rich
+        heterochromatin outer repeats compared to the central domain.
+      supporting_text: These proteins are weakly enriched and less stably incorporated
+        in H3-rich heterochromatin
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+- id: PMID:38084929
+  title: The cysteine-rich domain in CENP-A chaperone Scm3HJURP ensures centromere
+    targeting and kinetochore integrity.
+  findings:
+    - statement: The C-terminal cysteine-rich domain (CYS) of Scm3 binds zinc in vitro
+        and is essential for centromere localization and function.
+      supporting_text: we find that CYS binds zinc in vitro and is essential for the
+        localization and function of fission yeast Scm3
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: Disrupting CYS by deletion or point mutations in the zinc-binding motif
+        prevents Scm3 centromere localization and compromises kinetochore integrity.
+      supporting_text: Disrupting CYS by deletion or introduction of point mutations
+        within its zinc-binding motif prevents Scm3 centromere localization and compromises
+        kinetochore integrity
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: CYS alone can localize to the centromere weakly, and its targeting is
+        greatly enhanced when combined with the Mis16-binding domain (Mis16-BD).
+      supporting_text: CYS alone can localize to the centromere, albeit weakly, but its
+        targeting is greatly enhanced when combined with Mis16-BD
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+    - statement: CYS binds centromeric DNA, providing additional anchoring of Scm3 to
+        centromeres independent of Mis16-BD.
+      supporting_text: we provide evidence that CYS binds centromeric DNA and can itself
+        localize to the centromere
+      reference_section_type: DISCUSSION
+      full_text_unavailable: false
+    - statement: Overexpression of truncated Scm3 containing Mis16-BD and CYS but lacking
+        the CENP-A binding domain causes toxicity, chromosome missegregation, and
+        kinetochore loss.
+      supporting_text: Expressing a truncated protein containing both Mis16-BD and CYS,
+        but lacking the CENP-A binding domain, causes toxicity and is accompanied by
+        considerable chromosome missegregation and kinetochore loss
+      reference_section_type: ABSTRACT
+      full_text_unavailable: false
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
