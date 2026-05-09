@@ -58,7 +58,7 @@ This document maps UniProt species codes to organism names for gene reviews in t
 | Code | Organism | Common Name | Genes |
 |------|----------|-------------|-------|
 | ARATH | Arabidopsis thaliana | Thale cress | 27 |
-| POPTR | Populus trichocarpa | Western balsam poplar | 1 |
+| POPTR | Populus trichocarpa | Western balsam poplar | 4 |
 | CHLRE | Chlamydomonas reinhardtii | Green alga | 1 |
 
 ## Animals - Vertebrates

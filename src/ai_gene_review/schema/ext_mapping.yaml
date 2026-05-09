@@ -42,7 +42,6 @@ slots:
   target_term:
     range: GOTerm
     inlined: true
-    required: true
     description: GO target term, represented as an id/label tuple.
     bindings:
       - binds_value_of: id
@@ -50,11 +49,23 @@ slots:
         obligation_level: REQUIRED
   mapping_scope:
     range: MappingScopeEnum
-    required: true
     description: >-
       Scope of the mapping. `exact` is a direct semantic match.
       `ok_for_propagation_to_go` is acceptable for GO propagation even if not
-      strictly exact.
+      strictly exact. `too_broad_to_propagate` records a real PN-to-GO
+      relationship that is useful contextually but unsafe to project as a
+      candidate GO annotation.
+  curation_status:
+    range: CurationStatusEnum
+    required: true
+    description: >-
+      Curator-facing state for this source node. `pending_review` means the
+      node is accounted for in YAML but has not yet been analyzed in depth.
+      `mapped` means a GO mapping is complete. `context_only` means a GO
+      relationship is recorded for context but is unsafe to propagate.
+      `no_mapping` means the node was reviewed and no GO mapping should be
+      made. `deferred` means review started but is blocked by evidence,
+      taxonomy ambiguity, or a missing/better GO term.
   conditions:
     range: MappingCondition
     multivalued: true
@@ -62,6 +73,14 @@ slots:
     description: >-
       Optional source-side context requirements. A mapping can be constrained to
       cases where an ancestor or surrounding code is also present.
+  excluded_subjects:
+    range: MappingCondition
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Optional source-side subjects that should not inherit this mapping even
+      though they match the mapped subject and conditions. Use this to block a
+      broad ancestor mapping from specific descendants after manual review.
   rationale:
     range: string
     required: true
@@ -80,19 +99,14 @@ slots:
       Representative source genes that illustrate what the external bucket
       means in practice. These are explanatory examples, not an exhaustive
       membership list.
-  mappings:
-    range: ExternalMapping
-    multivalued: true
-    inlined_as_list: true
-    description: Curated mappings contained in this mapping set file.
-  unmapped_subjects:
-    range: UnmappedSubject
+  subject_curations:
+    range: SubjectCuration
     multivalued: true
     inlined_as_list: true
     description: >-
-      Source-side entries that have been reviewed but are not yet mapped to GO.
-      Keep these separate from completed mappings so GO validation remains
-      strict for actual mapping records.
+      One curation record per source-side subject. The PN coverage report
+      should report zero `missing_from_yaml` records when every taxonomy node
+      has an explicit subject curation.
   condition_level:
     range: SourceHierarchyLevelEnum
     required: true
@@ -133,33 +147,21 @@ classes:
       - label
       - references
       - notes
-      - mappings
-      - unmapped_subjects
+      - subject_curations
 
-  ExternalMapping:
+  SubjectCuration:
     description: >-
-      Curated mapping from an external source string to a GO term, with optional
-      source-side context requirements.
+      Curator-facing record for one external source string. Mapping fields are
+      filled only when `curation_status` is `mapped` or `context_only`.
     slots:
       - subject_code
       - subject_level
+      - curation_status
       - target_term
       - mapping_scope
       - representative_genes
       - conditions
-      - rationale
-      - references
-      - notes
-
-  UnmappedSubject:
-    description: >-
-      A reviewed source-side subject that is intentionally not yet mapped to GO.
-      Use this to track explicit non-maps or deferred mappings without relaxing
-      the requirements for completed mapping records.
-    slots:
-      - subject_code
-      - subject_level
-      - conditions
+      - excluded_subjects
       - rationale
       - references
       - notes
@@ -179,6 +181,21 @@ enums:
     permissible_values:
       exact: {}
       ok_for_propagation_to_go: {}
+      too_broad_to_propagate: {}
+
+  CurationStatusEnum:
+    description: Curator-facing status for source nodes.
+    permissible_values:
+      pending_review:
+        description: Accounted for in YAML, but not yet manually analyzed in depth.
+      mapped:
+        description: Reviewed and mapped to a GO term.
+      context_only:
+        description: Reviewed and related to a GO term, but unsafe for gene-level propagation.
+      no_mapping:
+        description: Reviewed and concluded that no GO mapping is appropriate.
+      deferred:
+        description: Reviewed, but blocked by evidence, taxonomy ambiguity, or a missing/better GO term.
 
   GOTermEnum:
     description: A term in the GO ontology.

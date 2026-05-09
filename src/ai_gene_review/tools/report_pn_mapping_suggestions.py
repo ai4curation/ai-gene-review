@@ -1,4 +1,4 @@
-"""Generate candidate GO mappings for uncovered Proteostasis Network codes."""
+"""Generate candidate GO mappings for PN codes missing from curation YAML."""
 
 from __future__ import annotations
 
@@ -293,7 +293,7 @@ def rank_candidates_for_record(
     label_index: dict[str, set[int]],
     top_n: int = 5,
 ) -> list[CandidateMatch]:
-    """Rank candidate GO terms for one uncovered PN code."""
+    """Rank candidate GO terms for one PN code missing from YAML."""
     indices = _candidate_indices_for_record(record, token_index, label_index)
     if not indices:
         return []
@@ -368,7 +368,7 @@ def rank_candidates_for_record(
 
 
 def write_suggestion_reports(
-    uncovered_records: list[PNCodeRecord],
+    missing_records: list[PNCodeRecord],
     suggestions: dict[str, list[CandidateMatch]],
     output_dir: Path,
 ) -> None:
@@ -390,9 +390,10 @@ def write_suggestion_reports(
                 "top_candidates",
             ],
             delimiter="\t",
+            lineterminator="\n",
         )
         writer.writeheader()
-        for record in uncovered_records:
+        for record in missing_records:
             ranked = suggestions.get(record.code, [])
             top = ranked[0] if ranked else None
             writer.writerow(
@@ -427,9 +428,10 @@ def write_suggestion_reports(
                 "overlap_tokens",
             ],
             delimiter="\t",
+            lineterminator="\n",
         )
         writer.writeheader()
-        for record in uncovered_records:
+        for record in missing_records:
             for rank, candidate in enumerate(suggestions.get(record.code, []), start=1):
                 writer.writerow(
                     {
@@ -449,9 +451,14 @@ def write_suggestion_reports(
 def build_argument_parser() -> argparse.ArgumentParser:
     """Build the CLI argument parser."""
     parser = argparse.ArgumentParser(
-        description="Generate ranked GO candidates for uncovered PN codes."
+        description="Generate ranked GO candidates for PN codes missing from curation YAML."
     )
     parser.add_argument("--workbook", required=True, type=Path, help="Path to the PN workbook")
+    parser.add_argument(
+        "--sheet-name",
+        default="dense",
+        help="Workbook sheet name to use (default: dense)",
+    )
     parser.add_argument(
         "--mapping-dir",
         type=Path,
@@ -474,26 +481,25 @@ def build_argument_parser() -> argparse.ArgumentParser:
         "--top-n",
         type=int,
         default=5,
-        help="Number of ranked candidates to emit per uncovered code (default: 5)",
+        help="Number of ranked candidates to emit per missing code (default: 5)",
     )
     return parser
 
 
 def main() -> None:
-    """Generate suggestion reports for uncovered PN codes."""
+    """Generate suggestion reports for PN codes missing from curation YAML."""
     parser = build_argument_parser()
     args = parser.parse_args()
 
-    code_records = load_workbook_codes(args.workbook)
-    mapping_specs = load_subject_specs(args.mapping_dir, slot_name="mappings")
-    unmapped_specs = load_subject_specs(args.mapping_dir, slot_name="unmapped_subjects")
-    coverage_rows = summarize_coverage(code_records, mapping_specs, unmapped_specs)
+    code_records = load_workbook_codes(args.workbook, sheet_name=args.sheet_name)
+    curation_specs = load_subject_specs(args.mapping_dir)
+    coverage_rows = summarize_coverage(code_records, curation_specs)
 
     code_by_key = {(record.level, record.code): record for record in code_records}
-    uncovered_records = [
+    missing_records = [
         code_by_key[(row["level"], row["code"])]
         for row in coverage_rows
-        if row["status"] == "uncovered"
+        if row["status"] == "missing_from_yaml"
     ]
 
     terms = load_go_terms(args.go_cache)
@@ -506,17 +512,17 @@ def main() -> None:
             label_index,
             top_n=args.top_n,
         )
-        for record in uncovered_records
+        for record in missing_records
     }
-    write_suggestion_reports(uncovered_records, suggestions, args.output_dir)
+    write_suggestion_reports(missing_records, suggestions, args.output_dir)
 
-    with_candidates = sum(bool(suggestions[record.code]) for record in uncovered_records)
+    with_candidates = sum(bool(suggestions[record.code]) for record in missing_records)
     print(f"Wrote suggestion reports to {args.output_dir}")
     print(
         "Suggestion summary: "
-        f"uncovered_codes={len(uncovered_records)} "
+        f"missing_from_yaml_codes={len(missing_records)} "
         f"with_candidates={with_candidates} "
-        f"without_candidates={len(uncovered_records) - with_candidates}"
+        f"without_candidates={len(missing_records) - with_candidates}"
     )
 
 
