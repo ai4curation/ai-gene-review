@@ -50,16 +50,20 @@ The obsoletion intersects existing reviews in the following way:
 |---|---|---|
 | VMP1 | human | annotated with GO:1990456 in `genes/human/VMP1/VMP1-ai-review.yaml` |
 | CALM1 | human | GO:1990456 row currently `ACCEPT` |
-| CALM2 | human | GO:1990456 row present |
-| CALM3 | human | GO:1990456 row present |
 | Calm1 | mouse | GO:1990456 row present |
 | Calm2 | mouse | GO:1990456 row present |
 | Calm3 | mouse | GO:1990456 row present |
 
 These reviews will need a refresh once the obsoletion lands — for VMP1 and the
 calmodulin family the GO:1990456 annotation should be reassessed against
-GO:0140474 (or, for calmodulins, likely **REMOVED** as a downstream Reactome
-pathway over-annotation that was not based on a tether-activity assay).
+GO:0140474 (or, for calmodulins, likely **REMOVED** because the evidence does
+not show that calmodulin itself is a mitochondrion–ER tether). Human VMP1 and
+CALM1 carry UniProt IDA annotations from PMID:28890335. Mouse Calm1/2/3 carry
+computational or similarity-propagated annotations (IEA/ISO/ISS), not Reactome
+TAS annotations.
+
+Human CALM2 is not currently present in this repository, and human CALM3 does
+not currently have a GO:1990456 row in either GOA or the review YAML.
 
 No canonical mito–ER tether genes (ERMES components, PDZD8, MFN2,
 VAPB/PTPIP51) are currently reviewed in this repository.
@@ -86,15 +90,17 @@ add files without confirming the UniProt accession from the UniProt API.
    InterPro2GO mapping (IPR039275). Vertebrate functional analog of yeast
    Mmm1; established mito–ER tether (Hirabayashi et al. 2017, Science).
 2. **MFN2** (human) — Mitofusin-2. Long-debated mito–ER tether at MAMs
-   (de Brito & Scorrano 2008, Nature).
+   (de Brito & Scorrano 2008, Nature), with substantial counter-evidence that
+   MFN2 can instead act as a negative regulator of ER–mitochondria proximity
+   (Filadi et al. 2015, PNAS).
 3. **VAPB** (human) — VAMP-associated protein B/C. Forms a tether with
    PTPIP51 at MAMs (Stoica et al. 2014, Nat Commun).
 4. **PTPIP51** / **RMDN3** (human) — partner of VAPB at MAMs.
 
 ### Yeast ERMES complex (S. cerevisiae)
 
-5. **MMM1** — ER-anchored ERMES SMP-domain subunit (HAMAP MF_03102 family
-   member is *MDM10*; MMM1 is a sister subunit).
+5. **MMM1** — ER-anchored ERMES SMP-domain subunit. MMM1 is a sister ERMES
+   subunit and should not be treated as the direct HAMAP MF_03102 target.
 6. **MDM10** — outer mitochondrial membrane β-barrel; ERMES + TOM-assembly
    bridge. Direct target of HAMAP MF_03102.
 7. **MDM12** — cytosolic SMP-domain subunit bridging Mmm1 and Mdm34.
@@ -111,10 +117,11 @@ than to fix outstanding GOA rows.
 
 ## Proposed approach and priority
 
-1. **Refresh existing affected reviews** (VMP1, CALM1/2/3 in human + mouse)
-   to revisit GO:1990456 rows once the obsoletion lands. Most of these are
-   likely Reactome-pathway over-annotations that should be **REMOVED** rather
-   than rerouted.
+1. **Refresh existing affected reviews** (human VMP1 and CALM1; mouse
+   Calm1/2/3) to revisit GO:1990456 rows once the obsoletion lands. The
+   calmodulin rows likely should be **REMOVED** rather than rerouted, but the
+   rationale should distinguish the human UniProt IDA annotation from the mouse
+   computational/similarity-propagated annotations.
 2. **Anchor new reviews** on **PDZD8** + **MFN2** as the highest-impact
    mammalian tethers, and on **MMM1** + **MDM12** for the yeast ERMES anchor
    pair.
@@ -130,8 +137,8 @@ than to fix outstanding GOA rows.
 - Mappings (InterPro2GO IPR039275, HAMAP MF_03102, UniRule UR000106107) all
   need to be re-pointed to GO:0140474.
 - No reviews in this repo are blocked by the obsoletion; the impact is a
-  refresh queue (VMP1 + CALM1/2/3) and a forward-looking review queue (PDZD8,
-  MFN2, VAPB, PTPIP51, ERMES components).
+  refresh queue (human VMP1/CALM1 plus mouse Calm1/2/3) and a forward-looking
+  review queue (PDZD8, MFN2, VAPB, PTPIP51, ERMES components).
 - Recommend starting with **PDZD8** as the anchor review, since it is both
   the InterPro2GO mapping target and the most recently mechanistically
   characterized mammalian mito–ER tether.
