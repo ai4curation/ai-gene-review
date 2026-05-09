@@ -22,11 +22,11 @@ GOA source note: QuickGO annotation search returned server 500 errors during bat
 | 02 | CO | Q39057 | 35 | 28 | Photoperiod flowering zinc-finger TF | Reviewed; local validate/render/test pass |
 | 02 | GI | Q9SQI2 | 39 | 34 | Circadian/photoperiod flowering regulator | Reviewed; local validate/render/test pass |
 | 02 | SEP3 | O22456 | 61 | 45 | Floral organ identity MADS-box TF | Reviewed; local validate/render/test pass |
-| 03 | STM | Q38874 | 58 | 38 | Shoot meristem homeobox TF | Planned |
-| 03 | CLV1 | Q9SYQ8 | 57 | 47 | Meristem receptor kinase | Planned |
-| 03 | PHYA | P14712 | 70 | 52 | Phytochrome photoreceptor | Planned |
-| 03 | CRY1 | Q43125 | 121 | 89 | Cryptochrome photoreceptor | Planned |
-| 03 | CRY2 | Q96524 | 113 | 82 | Cryptochrome photoreceptor | Planned |
+| 03 | STM | Q38874 | 58 | 38 | Shoot meristem homeobox TF | Reviewed; local validate/render/test pass |
+| 03 | CLV1 | Q9SYQ8 | 57 | 47 | Meristem receptor kinase | Reviewed; local validate/render/test pass |
+| 03 | PHYA | P14712 | 70 | 52 | Phytochrome photoreceptor | Reviewed; local validate/render/test pass |
+| 03 | CRY1 | Q43125 | 121 | 89 | Cryptochrome photoreceptor | Reviewed; local validate/render/test pass |
+| 03 | CRY2 | Q96524 | 113 | 82 | Cryptochrome photoreceptor | Reviewed; local validate/render/test pass |
 | 04 | EIN2 | Q9S814 | 65 | 52 | Ethylene signaling | Planned |
 | 04 | BAK1 | Q94F62 | 94 | 85 | LRR receptor kinase co-receptor | Planned |
 | 04 | FLS2 | Q9FL28 | 69 | 52 | Pattern-recognition receptor kinase | Planned |
