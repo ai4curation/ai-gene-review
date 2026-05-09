@@ -1,0 +1,3633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPM1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RPM1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q39214" target="_blank" class="term-link">
+                        Q39214
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RPM1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q39214" data-a="DESCRIPTION: RPM1 is an Arabidopsis coiled-coil NB-LRR/CNL immu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RPM1 is an Arabidopsis coiled-coil NB-LRR/CNL immune receptor that confers resistance to Pseudomonas syringae strains delivering AvrB or AvrRpm1. RPM1 acts at the cytoplasmic face of the plasma membrane, where it guards the RIN4 immune hub and is activated by effector-induced RIN4 modification, especially Thr166 phosphorylation. Its core role is nucleotide-dependent immune receptor signaling that triggers effector-triggered antibacterial defense and hypersensitive response; generic protein binding and broad defense-response rows should be interpreted through this RPM1-RIN4 plasma-membrane guard mechanism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7638602
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the Arabidopsis RPM1 gene enabling dual specifi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0006952" data-r="PMID:7638602" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 mediates effector-triggered defense against Pseudomonas strains expressing AvrB or AvrRpm1, but the existing defense response term is broad.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defense response to bacterium better captures the experimentally supported RPM1 output than generic defense response.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    defense response to bacterium
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009626" target="_blank" class="term-link">
+                                    GO:0009626
+                                </a>
+                            </span>
+                            <span class="term-label">plant-type hypersensitive response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8768370
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression of the Pseudomonas syringae avirulence protein Av...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0009626" data-r="PMID:8768370" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 activation by AvrB/AvrRpm1-triggered RIN4 modification elicits hypersensitive-response cell death.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hypersensitive response is a canonical output of RPM1-mediated effector-triggered immunity and is supported by AvrB/RPM1 experiments.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7638602
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the Arabidopsis RPM1 gene enabling dual specifi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0000166" data-r="PMID:7638602" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 has an NB-ARC nucleotide-binding module, but generic nucleotide binding is less precise than the ADP/ATP switch used by NLRs.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Use ADP binding or ATP binding for the NB-ARC molecular switch rather than a broad nucleotide-binding term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043531" target="_blank" class="term-link">
+                                    ADP binding
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    ATP binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11955429" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11955429
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RIN4 interacts with Pseudomonas syringae type III effector m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005515" data-r="PMID:11955429" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15722472" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15722472
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RIN13 is a positive regulator of the plant disease resistanc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005515" data-r="PMID:15722472" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16212605" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16212605
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A duplicated pair of Arabidopsis RING-finger E3 ligases cont...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005515" data-r="PMID:16212605" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20332379" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20332379
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Endosome-associated CRT1 functions early in resistance gene-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005515" data-r="PMID:20332379" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38358510" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38358510
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The RIN4-like/NOI proteins NOI10 and NOI11 modulate the resp...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005515" data-r="PMID:38358510" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043531" target="_blank" class="term-link">
+                                    GO:0043531
+                                </a>
+                            </span>
+                            <span class="term-label">ADP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0043531" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 contains an NB-ARC module expected to bind ADP/ATP as part of NLR molecular switching.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ADP binding is mechanistically relevant, but RPM1&#39;s core gene-level role is immune receptor signaling rather than nucleotide binding alone.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0006952" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 mediates effector-triggered defense against Pseudomonas strains expressing AvrB or AvrRpm1, but the existing defense response term is broad.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Defense response to bacterium better captures the experimentally supported RPM1 output than generic defense response.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    defense response to bacterium
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009626" target="_blank" class="term-link">
+                                    GO:0009626
+                                </a>
+                            </span>
+                            <span class="term-label">plant-type hypersensitive response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0009626" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 activation by AvrB/AvrRpm1-triggered RIN4 modification elicits hypersensitive-response cell death.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Hypersensitive response is a canonical output of RPM1-mediated effector-triggered immunity and is supported by AvrB/RPM1 experiments.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 is a peripheral protein enriched at the plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005886" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 is a peripheral protein enriched at the plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9861059" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9861059
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Arabidopsis thaliana RPM1 disease resistance gene produc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0005886" data-r="PMID:9861059" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 is a peripheral protein enriched at the plasma membrane.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012505" target="_blank" class="term-link">
+                                    GO:0012505
+                                </a>
+                            </span>
+                            <span class="term-label">endomembrane system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0012505" data-r="GO_REF:0000044" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited localization evidence points to plasma-membrane/microsomal association and is better captured by a plasma-membrane cytoplasmic-face term than by broad endomembrane system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RPM1 is specifically a peripheral/extrinsic protein at the cytoplasmic side of the plasma membrane; endomembrane system is less precise.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031234" target="_blank" class="term-link">
+                                    extrinsic component of cytoplasmic side of plasma membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012505" target="_blank" class="term-link">
+                                    GO:0012505
+                                </a>
+                            </span>
+                            <span class="term-label">endomembrane system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9861059" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9861059
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Arabidopsis thaliana RPM1 disease resistance gene produc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0012505" data-r="PMID:9861059" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cited localization evidence points to plasma-membrane/microsomal association and is better captured by a plasma-membrane cytoplasmic-face term than by broad endomembrane system.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> RPM1 is specifically a peripheral/extrinsic protein at the cytoplasmic side of the plasma membrane; endomembrane system is less precise.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031234" target="_blank" class="term-link">
+                                    extrinsic component of cytoplasmic side of plasma membrane
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031234" target="_blank" class="term-link">
+                                    GO:0031234
+                                </a>
+                            </span>
+                            <span class="term-label">extrinsic component of cytoplasmic side of plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9861059" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9861059
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Arabidopsis thaliana RPM1 disease resistance gene produc...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0031234" data-r="PMID:9861059" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 resides on the cytoplasmic face of the plasma membrane as a peripheral membrane-associated immune receptor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most precise existing localization annotation for the site of RPM1-RIN4 guard signaling.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140375" target="_blank" class="term-link">
+                                    GO:0140375
+                                </a>
+                            </span>
+                            <span class="term-label">immune receptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0140375" data-r="file:ARATH/RPM1/RPM1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 functions as a CNL immune receptor that monitors effector-induced RIN4 modification.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA captures defense outputs and nucleotide binding but omits the core molecular role of RPM1 as an immune receptor.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RPM1 is a canonical example of **indirect effector recognition**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link">
+                                        PMID:7638602
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link">
+                                        PMID:8768370
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002218" target="_blank" class="term-link">
+                                    GO:0002218
+                                </a>
+                            </span>
+                            <span class="term-label">activation of innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0002218" data-r="file:ARATH/RPM1/RPM1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 activates intracellular effector-triggered immune signaling after effector-induced RIN4 modification.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This broader innate-immune activation term avoids incorrectly treating RPM1 guarded effector recognition as PAMP pattern-recognition receptor signaling.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">mediating effector-triggered immunity (ETI) to *Pseudomonas syringae* effectors **AvrRpm1** and **AvrB**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link">
+                                        PMID:7638602
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link">
+                                        PMID:8768370
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q39214" data-a="GO:0042742" data-r="file:ARATH/RPM1/RPM1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPM1 confers resistance to Pseudomonas syringae strains expressing AvrB or AvrRpm1.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the precise antibacterial defense output missing from current RPM1 GOA rows.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">RPM1 mediates race-specific resistance to *P. syringae* strains delivering **AvrB** or **AvrRpm1**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link">
+                                        PMID:7638602
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link">
+                                        PMID:8768370
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Plasma-membrane CNL immune receptor guarding RIN4. RPM1 monitors effector-induced RIN4 modification, especially AvrB/AvrRpm1-associated RIN4 Thr166 phosphorylation, at the cytoplasmic face of the plasma membrane and activates effector-triggered antibacterial defense and hypersensitive response.</h3>
+                <span class="vote-buttons" data-g="Q39214" data-a="FUNCTION: Plasma-membrane CNL immune receptor guarding RIN4...." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140375" target="_blank" class="term-link">
+                            immune receptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002218" target="_blank" class="term-link">
+                                activation of innate immune response
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                defense response to bacterium
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031234" target="_blank" class="term-link">
+                                extrinsic component of cytoplasmic side of plasma membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">RPM1 is a canonical example of **indirect effector recognition**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">RPM1 is a peripheral protein on the cytoplasmic face of the plasma membrane</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link">
+                                PMID:7638602
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link">
+                                PMID:8768370
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11955429" target="_blank" class="term-link">
+                            PMID:11955429
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RIN4 interacts with Pseudomonas syringae type III effector molecules and is required for RPM1-mediated resistance in Arabidopsis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIN4 interacts with AvrB, AvrRpm1, and RPM1 and is required for RPM1-mediated resistance.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15722472" target="_blank" class="term-link">
+                            PMID:15722472
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">RIN13 is a positive regulator of the plant disease resistance protein RPM1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIN13 is a positive regulator of RPM1-mediated immunity but does not define RPM1 core molecular activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16212605" target="_blank" class="term-link">
+                            PMID:16212605
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A duplicated pair of Arabidopsis RING-finger E3 ligases contribute to the RPM1- and RPS2-mediated hypersensitive response.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RING-finger E3 ligases contribute to RPM1- and RPS2-mediated hypersensitive response outputs.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20332379" target="_blank" class="term-link">
+                            PMID:20332379
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Endosome-associated CRT1 functions early in resistance gene-mediated defense signaling in Arabidopsis and tobacco.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CRT1 functions early in resistance-gene-mediated defense signaling and is an RPM1-associated immune regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38358510" target="_blank" class="term-link">
+                            PMID:38358510
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The RIN4-like/NOI proteins NOI10 and NOI11 modulate the response to biotic stresses mediated by RIN4 in Arabidopsis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RIN4-like/NOI proteins modulate RIN4-mediated biotic stress responses relevant to RPM1 signaling context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7638602" target="_blank" class="term-link">
+                            PMID:7638602
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the Arabidopsis RPM1 gene enabling dual specificity disease resistance.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPM1 encodes an NB-LRR disease-resistance protein enabling dual specificity to Pseudomonas syringae avrRpm1 and avrB.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8768370" target="_blank" class="term-link">
+                            PMID:8768370
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of the Pseudomonas syringae avirulence protein AvrB in plant cells alleviates its dependence on the hypersensitive response and pathogenicity (Hrp) secretion system in eliciting genotype-specific hypersensitive cell death.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Intracellular AvrB expression triggers RPM1-dependent hypersensitive cell death.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9861059" target="_blank" class="term-link">
+                            PMID:9861059
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Arabidopsis thaliana RPM1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPM1 is a peripheral plasma membrane protein likely residing on the cytoplasmic face of the plasma membrane and degraded coincident with HR.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/RPM1/RPM1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research for Arabidopsis RPM1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPM1 is a plasma-membrane-associated CNL immune receptor that guards RIN4 and is activated by effector-induced RIN4 modification.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">RPM1 localization and immune recognition are organized at the cytoplasmic face of the plasma membrane.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ARATH/RPM1/RPM1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for Arabidopsis RPM1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies RPM1/Q39214 as a disease resistance NB-LRR protein with plasma membrane, ADP/ATP binding, and hypersensitive response annotations.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR23155/PTHR23155-entries.csv
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">PANTHER PTHR23155 disease resistance protein RP family entries</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PTHR23155 places Arabidopsis Q39214/RPM1 in disease resistance protein RPM1 subfamily SF1205.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should RPM1 and related CNLs receive immune receptor activity annotations rather than only generic nucleotide/protein binding annotations?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q39214" data-a="Q: Should RPM1 and related CNLs receive immune recept..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should broad endomembrane-system annotations for RPM1 be replaced upstream with the cytoplasmic-face plasma membrane term?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q39214" data-a="Q: Should broad endomembrane-system annotations for R..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute RPM1 with RIN4 phosphorylation or ADP-ribosylation states in plasma-membrane fractions to quantify receptor activation and nucleotide exchange.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q39214" data-a="EXPERIMENT: Reconstitute RPM1 with RIN4 phosphorylation or ADP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure RPM1 ADP/ATP binding and hydrolysis states before and after RIN4 phosphomimic activation to connect NB-ARC switching with guardee modification sensing.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q39214" data-a="EXPERIMENT: Measure RPM1 ADP/ATP binding and hydrolysis states..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RPM1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q39214" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-07T02:32:18.579546'<br />
+end_time: '2026-05-07T02:43:10.286725'<br />
+duration_seconds: 651.71<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: ARATH<br />
+  gene_id: RPM1<br />
+  gene_symbol: RPM1<br />
+  uniprot_accession: Q39214<br />
+  protein_description: 'RecName: Full=Disease resistance protein RPM1 {ECO:0000303|PubMed:7638602};<br />
+    AltName: Full=Resistance to Pseudomonas syringae protein 3 {ECO:0000303|PubMed:9861059};<br />
+    AltName: Full=Resistance to Pseudomonas syringae pv. Maculicola protein 1 {ECO:0000303|PubMed:7638602};'<br />
+  gene_info: Name=RPM1 {ECO:0000303|PubMed:7638602}; Synonyms=RPS3 {ECO:0000303|PubMed:9861059};<br />
+    OrderedLocusNames=At3g07040 {ECO:0000312|Araport:AT3G07040}; ORFNames=F17A9.20<br />
+    {ECO:0000312|EMBL:AAF27008.1};<br />
+  organism_full: Arabidopsis thaliana (Mouse-ear cress).<br />
+  protein_family: Belongs to the disease resistance NB-LRR family.<br />
+  protein_domains: Apaf_helical. (IPR042197); Disease_R_plants. (IPR044974); LRR_dom_sf.<br />
+    (IPR032675); LRR_R13L4/SHOC2-like. (IPR055414); NB-ARC. (IPR002182)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 30</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q39214</li>
+<li><strong>Protein Description:</strong> RecName: Full=Disease resistance protein RPM1 {ECO:0000303|PubMed:7638602}; AltName: Full=Resistance to Pseudomonas syringae protein 3 {ECO:0000303|PubMed:9861059}; AltName: Full=Resistance to Pseudomonas syringae pv. Maculicola protein 1 {ECO:0000303|PubMed:7638602};</li>
+<li><strong>Gene Information:</strong> Name=RPM1 {ECO:0000303|PubMed:7638602}; Synonyms=RPS3 {ECO:0000303|PubMed:9861059}; OrderedLocusNames=At3g07040 {ECO:0000312|Araport:AT3G07040}; ORFNames=F17A9.20 {ECO:0000312|EMBL:AAF27008.1};</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the disease resistance NB-LRR family.</li>
+<li><strong>Key Domains:</strong> Apaf_helical. (IPR042197); Disease_R_plants. (IPR044974); LRR_dom_sf. (IPR032675); LRR_R13L4/SHOC2-like. (IPR055414); NB-ARC. (IPR002182)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RPM1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RPM1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RPM1</strong> (gene ID: RPM1, UniProt: Q39214) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q39214</li>
+<li><strong>Protein Description:</strong> RecName: Full=Disease resistance protein RPM1 {ECO:0000303|PubMed:7638602}; AltName: Full=Resistance to Pseudomonas syringae protein 3 {ECO:0000303|PubMed:9861059}; AltName: Full=Resistance to Pseudomonas syringae pv. Maculicola protein 1 {ECO:0000303|PubMed:7638602};</li>
+<li><strong>Gene Information:</strong> Name=RPM1 {ECO:0000303|PubMed:7638602}; Synonyms=RPS3 {ECO:0000303|PubMed:9861059}; OrderedLocusNames=At3g07040 {ECO:0000312|Araport:AT3G07040}; ORFNames=F17A9.20 {ECO:0000312|EMBL:AAF27008.1};</li>
+<li><strong>Organism (full):</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Protein Family:</strong> Belongs to the disease resistance NB-LRR family.</li>
+<li><strong>Key Domains:</strong> Apaf_helical. (IPR042197); Disease_R_plants. (IPR044974); LRR_dom_sf. (IPR032675); LRR_R13L4/SHOC2-like. (IPR055414); NB-ARC. (IPR002182)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "RPM1" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Arabidopsis thaliana (Mouse-ear cress).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'RPM1' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>RPM1</strong> (gene ID: RPM1, UniProt: Q39214) in ARATH.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-arabidopsis-rpm1-at3g07040-uniprot-q39214">Research report: Functional annotation of Arabidopsis <strong>RPM1</strong> (AT3G07040; UniProt Q39214)</h2>
+<h3 id="1-target-identity-verification-critical">1) Target identity verification (critical)</h3>
+<p>The literature assembled here matches <strong>Arabidopsis thaliana RPM1</strong> (locus <strong>AT3G07040</strong>; UniProt <strong>Q39214</strong>), a <strong>coiled-coil nucleotide-binding leucine-rich repeat (CC-NB-LRR; CNL/NLR)</strong> disease resistance protein mediating effector-triggered immunity (ETI) to <em>Pseudomonas syringae</em> effectors <strong>AvrRpm1</strong> and <strong>AvrB</strong> (Boyes et al., 1998-12, https://doi.org/10.1073/pnas.95.26.15849; Chiang &amp; Coaker, 2015-10, https://doi.org/10.1199/tab.0183) (boyes1998thearabidopsisthaliana pages 1-2, chiang2015effectortriggeredimmunity pages 3-5).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="plant-eti-and-the-guard-model">Plant ETI and the “guard” model</h4>
+<p>RPM1 is a canonical example of <strong>indirect effector recognition</strong>: rather than binding effectors directly, RPM1 monitors (“guards”) the host protein <strong>RIN4</strong> (RPM1-INTERACTING PROTEIN 4) and becomes activated when bacterial effectors alter RIN4 (chiang2015effectortriggeredimmunity pages 3-5, cunha2009structuralinsightsinto pages 103-107). This fits the broader concept that NLRs sense <strong>effector-induced perturbations of host targets</strong> and then trigger a robust defense program (chiang2015effectortriggeredimmunity pages 3-5).</p>
+<h4 id="nlrs-as-nucleotide-dependent-molecular-switches">NLRs as nucleotide-dependent molecular switches</h4>
+<p>NLRs such as RPM1 contain an NB-ARC module and are commonly modeled as <strong>nucleotide-dependent molecular switches</strong>, with pathogen perception leading to conformational change and ADP-to-ATP exchange to initiate downstream signaling (chiang2015effectortriggeredimmunity pages 3-5).</p>
+<h3 id="3-primary-molecular-function-of-rpm1">3) Primary molecular function of RPM1</h3>
+<h4 id="31-what-rpm1-recognizes">3.1 What RPM1 recognizes</h4>
+<p>RPM1 mediates race-specific resistance to <em>P. syringae</em> strains delivering <strong>AvrB</strong> or <strong>AvrRpm1</strong> into plant cells (Boyes et al., 1998-12; Chiang &amp; Coaker, 2015-10) (boyes1998thearabidopsisthaliana pages 1-2, chiang2015effectortriggeredimmunity pages 3-5). Mechanistically, RPM1 is activated by <strong>effector-triggered modification of RIN4</strong>, particularly at a key phosphorylation site (below) (chiang2015effectortriggeredimmunity pages 3-5, redditt2019avrrpm1functionsas pages 1-2).</p>
+<h4 id="32-the-guarded-host-protein-rin4-and-the-activating-signal">3.2 The guarded host protein (RIN4) and the activating “signal”</h4>
+<p>Multiple sources converge on <strong>RIN4 as the guarded host protein</strong> required for RPM1 activation and proper RPM1 function/accumulation (cunha2009structuralinsightsinto pages 103-107, cunha2009structuralinsightsinto pages 98-103, day2006ndr1interactionwith pages 1-2).</p>
+<p>A central mechanistic trigger is <strong>RIN4 phosphorylation at Thr166 (T166)</strong>:<br />
+- A review in <em>The Arabidopsis Book</em> summarizes that RPM1 activation can be triggered by <strong>phosphorylation of RIN4 at T166</strong> (and also by deletion of nearby <strong>Pro149</strong>) (Chiang &amp; Coaker, 2015-10) (chiang2015effectortriggeredimmunity pages 3-5).<br />
+- A mechanistic Plant Cell study reports that AvrRpm1’s enzymatic activity is required for <strong>subsequent phosphorylation of RIN4 on Thr166</strong>, and that <strong>Thr166 phosphorylation is necessary and sufficient</strong> to activate RPM1 (Redditt et al., 2019-11, https://doi.org/10.1105/tpc.19.00020r2) (redditt2019avrrpm1functionsas pages 1-2).</p>
+<h4 id="33-upstream-effector-biochemistry-and-host-enzymes-how-rin4-is-modified">3.3 Upstream effector biochemistry and host enzymes (how RIN4 is modified)</h4>
+<p><strong>AvrRpm1 is an ADP-ribosyl transferase.</strong> Redditt et al. demonstrate that AvrRpm1 induces <strong>mono-ADP-ribosylation of RIN4</strong> (within <strong>two conserved NOI domains</strong>) and also modifies <strong>≥10 additional Arabidopsis NOI-domain proteins</strong>, establishing a broader biochemical footprint beyond RIN4 alone (redditt2019avrrpm1functionsas pages 1-2). In the same work, AvrRpm1’s ADP-ribosylation activity is reported to be required for the downstream RIN4 <strong>T166 phosphorylation</strong> event that triggers RPM1 (redditt2019avrrpm1functionsas pages 1-2).</p>
+<p>For AvrB, a review synthesis indicates that AvrB promotes host-kinase–dependent phosphorylation of RIN4 (e.g., via <strong>RIPK</strong>, RPM1-INDUCED PROTEIN KINASE), culminating in RPM1 activation (chiang2015effectortriggeredimmunity pages 3-5).</p>
+<h3 id="4-subcellular-localization-and-where-rpm1-acts">4) Subcellular localization and where RPM1 acts</h3>
+<h4 id="41-rpm1-is-a-peripheral-plasma-membrane-protein">4.1 RPM1 is a peripheral plasma membrane protein</h4>
+<p>Direct biochemical fractionation experiments using functional epitope-tagged RPM1 (RPM1::MYC) show RPM1 is <strong>wholly membrane-associated</strong> in microsomal pellets, enriched in plasma-membrane fractions, and can be released by treatments that remove <strong>peripheral</strong> (not integral) membrane proteins, supporting localization to the <strong>cytoplasmic face of the plasma membrane</strong> (Boyes et al., 1998-12) (boyes1998thearabidopsisthaliana pages 4-5, boyes1998thearabidopsisthaliana pages 2-3). These conclusions are also supported by the corresponding figure evidence from Boyes et al. (Fig. 2 panels) (boyes1998thearabidopsisthaliana media 4e7b4a1b).</p>
+<p>A later review likewise characterizes RPM1 (AT3G07040) as a <strong>plasma membrane–associated NLR</strong> guarding RIN4 (chiang2015effectortriggeredimmunity pages 3-5).</p>
+<h4 id="42-activation-linked-rpm1-protein-loss-negative-feedback">4.2 Activation-linked RPM1 protein loss (negative feedback)</h4>
+<p>RPM1 protein abundance declines rapidly <strong>coincident with hypersensitive response (HR) onset</strong> after activation. Boyes et al. report that RPM1::MYC levels “declined sharply” at HR onset, without evidence for global protein destruction or appearance of a stable C-terminal cleavage fragment (boyes1998thearabidopsisthaliana pages 4-5). This activation-associated loss is also visible in their immunoblot time course figures (Boyes et al. Fig. 3/4) (boyes1998thearabidopsisthaliana media 4e7b4a1b).</p>
+<h3 id="5-signaling-pathways-downstream-and-genetic-requirements">5) Signaling pathways downstream and genetic requirements</h3>
+<h4 id="51-ndr1-dependence-cnl-branch">5.1 NDR1 dependence (CNL branch)</h4>
+<p>RPM1 is in the CNL class, and CNL ETI is generally associated with a requirement for <strong>NDR1</strong> (NON-RACE-SPECIFIC DISEASE RESISTANCE 1) rather than the EDS1/PAD4 module that is more characteristic of many TIR-NLR pathways (seto2021recognitionofthe pages 30-33).</p>
+<p>Primary genetic evidence indicates that <strong>NDR1 is required for RPM1-mediated resistance outputs</strong> (bacterial growth restriction). In a structure–function analysis of RPM1, Tornero et al. report that <strong>ndr1 mutant plants do not restrict bacterial growth</strong> in RPM1-mediated resistance assays, concluding that <strong>NDR1 is required for RPM1 function</strong> (Tornero et al., 2002-02, https://doi.org/10.1105/tpc.010393) (tornero2002largescalestructure–function pages 1-2). At the mechanistic interface, NDR1 associates with RIN4 in planta, and the RIN4–NDR1 interaction is described as an important node integrating multiple RIN4-guarding resistance pathways (Day et al., 2006-09, https://doi.org/10.1105/tpc.106.044693) (day2006ndr1interactionwith pages 1-2).</p>
+<h4 id="52-shared-ptieti-outputs">5.2 Shared PTI/ETI outputs</h4>
+<p>RPM1-triggered ETI engages defense outputs that overlap with PTI, including <strong>ROS, Ca2+ signaling, and MAPK cascades</strong>, with ETI more frequently associated with hypersensitive cell death (HR) (seto2021recognitionofthe pages 30-33). This situates RPM1 as part of the general intracellular NLR layer that amplifies and sustains immune responses.</p>
+<h3 id="6-recent-developments-prioritizing-20232024-relevant-to-rpm1-functional-annotation">6) Recent developments (prioritizing 2023–2024) relevant to RPM1 functional annotation</h3>
+<h4 id="61-spatial-regulation-of-the-rin4-t166-phospho-switch-2024">6.1 Spatial regulation of the RIN4 T166 phospho-switch (2024)</h4>
+<p>A 2024 study/refinement focusing on RIN4 provides a mechanistic update highly relevant to RPM1 activation logic: Zhao &amp; Day (2024-12, <em>Frontiers in Plant Science</em>, https://doi.org/10.3389/fpls.2024.1473944) report that <strong>phosphorylation of RIN4 at Thr166</strong> affects <strong>RIN4 plasma membrane tethering</strong> and can <strong>repress defense activation</strong>, linking the RPM1-associated phospho-switch to <strong>subcellular localization control</strong>. They further connect RIN4 PM tethering to <strong>Exo70B1-mediated exocytosis</strong> and the actin cytoskeleton, and propose that phosphorylation reduces RIN4’s binding affinity for Exo70B1, shifting RIN4 localization and immune output (zhao2024subcellularspatialregulation pages 1-2).</p>
+<p>This 2024 work is best interpreted as an update on the <em>context</em> in which RPM1 senses the RIN4 T166 state—i.e., the T166 modification is not only a biochemical “on/off” signal but also intersects with <strong>membrane trafficking and spatial organization</strong> of immunity (zhao2024subcellularspatialregulation pages 1-2).</p>
+<h3 id="7-applications-and-real-world-implementations">7) Applications and real-world implementations</h3>
+<p>RPM1 itself is primarily a <strong>model Arabidopsis ETI receptor</strong> used to dissect principles of NLR activation, guardee modification sensing, and membrane organization of intracellular immunity (chiang2015effectortriggeredimmunity pages 3-5, boyes1998thearabidopsisthaliana pages 4-5). While this evidence set does not include 2023–2024 field-deployment papers specifically transferring RPM1 to crops, the RPM1/RIN4/AvrRpm1 system is experimentally leveraged as a tractable ETI module (e.g., inducible effector expression systems in RPM1 backgrounds) to probe immune signaling and regulation (tornero2002largescalestructure–function pages 1-2, boyes1998thearabidopsisthaliana pages 4-5).</p>
+<h3 id="8-expert-synthesis-and-authoritative-interpretations">8) Expert synthesis and authoritative interpretations</h3>
+<p>A key authoritative synthesis is <em>The Arabidopsis Book</em> ETI review (Chiang &amp; Coaker, 2015-10), which explicitly frames RPM1 as a <strong>plasma membrane-associated NLR</strong> activated by <strong>RIN4 T166 phosphorylation</strong> (and related perturbations such as Pro149 deletion), fitting the guard model and the nucleotide-switch paradigm of NLR activation (chiang2015effectortriggeredimmunity pages 3-5). The 2024 Zhao &amp; Day study adds a contemporary mechanistic layer by connecting the same T166 phospho-switch to <strong>RIN4’s spatial distribution</strong> and trafficking dependencies, illustrating how ETI-relevant guardee modifications can be integrated with membrane logistics (zhao2024subcellularspatialregulation pages 1-2).</p>
+<h3 id="9-quantitative-statistics-and-recent-data-from-studies">9) Quantitative statistics and recent data from studies</h3>
+<h4 id="91-population-genetics-of-rpm1-presenceabsence-polymorphism">9.1 Population genetics of RPM1 presence/absence polymorphism</h4>
+<p>RPM1 is a classic case of a <strong>presence/absence polymorphism</strong> maintained over long evolutionary time.</p>
+<p>Stahl et al. (1999-08, <em>Nature</em>, https://doi.org/10.1038/23260) report:<br />
+- <strong>Worldwide resistance-allele frequency</strong> of <strong>0.52</strong> in a random sample of <strong>26 accessions</strong> (treated as <strong>27 alleles</strong>), with <strong>s.e. ≈ 0.098</strong> (stahl1999dynamicsofdisease pages 1-2).<br />
+- Strong departure from neutrality at the deletion junction region, including <strong>Tajima’s D = 3.06 (P &lt; 0.001)</strong> (stahl1999dynamicsofdisease pages 2-2).<br />
+- Divergence between resistant and susceptible haplotypes at the junction reaching <strong>11.8%</strong>, comparable to <strong>10.5%</strong> average divergence between <em>A. thaliana</em> and <em>A. lyrata</em> (stahl1999dynamicsofdisease pages 2-2).<br />
+- An estimated polymorphism age of <strong>~9.8 million years</strong>, supporting long-term maintenance (balancing selection) (stahl1999dynamicsofdisease pages 2-2).<br />
+- Elevated intraclass diversity among resistance haplotypes (e.g., “30 versus 3” polymorphisms overall; conservative counts of 12 resistance vs 3 susceptibility polymorphisms) and geographic structure (generally high resistance allele frequency across the northern hemisphere but low in the US midwest) (stahl1999dynamicsofdisease pages 3-4).</p>
+<p>Together, these statistics support an expert conclusion that RPM1 polymorphism is consistent with a <strong>long-lived balanced polymorphism (“trench warfare”)</strong> rather than rapid sequential sweeps (arms race), and that local demography can still modulate allele retention (stahl1999dynamicsofdisease pages 2-3, stahl1999dynamicsofdisease pages 3-4).</p>
+<hr />
+<h3 id="summary-artifact">Summary artifact</h3>
+<p>The following table consolidates the key evidence-backed annotation points (recognition, guardee, activation modifications, localization, signaling requirements, and key statistics):</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings</th>
+<th>Key citations with pqac IDs</th>
+<th>URLs / publication dates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / domains</td>
+<td>RPM1 in the cited literature is the Arabidopsis thaliana disease-resistance gene AT3G07040, described as a CC-NB-LRR/CNL NLR. Reviews place it in the NB-ARC-containing, plasma membrane–associated NLR class.</td>
+<td>(chiang2015effectortriggeredimmunity pages 3-5, boyes1998thearabidopsisthaliana pages 1-2)</td>
+<td>Chiang &amp; Coaker 2015-10, https://doi.org/10.1199/tab.0183; Boyes et al. 1998-12, https://doi.org/10.1073/pnas.95.26.15849</td>
+</tr>
+<tr>
+<td>Recognition</td>
+<td>RPM1 recognizes the Pseudomonas syringae type III effectors AvrB and AvrRpm1 indirectly rather than by stable direct effector binding. Recognition occurs through sensing effector-induced perturbation of the host protein RIN4.</td>
+<td>(chiang2015effectortriggeredimmunity pages 3-5, redditt2019avrrpm1functionsas pages 1-2, day2006ndr1interactionwith pages 1-2)</td>
+<td>Chiang &amp; Coaker 2015-10, https://doi.org/10.1199/tab.0183; Redditt et al. 2019-11, https://doi.org/10.1105/tpc.19.00020r2; Day et al. 2006-09, https://doi.org/10.1105/tpc.106.044693</td>
+</tr>
+<tr>
+<td>Guardee</td>
+<td>RIN4 is the guarded host protein central to RPM1 activation. It is a multifunctional, membrane-associated regulator of immunity that also negatively regulates PTI and is required for proper RPM1 function and accumulation.</td>
+<td>(cunha2009structuralinsightsinto pages 103-107, cunha2009structuralinsightsinto pages 98-103, day2006ndr1interactionwith pages 1-2)</td>
+<td>Day et al. 2006-09, https://doi.org/10.1105/tpc.106.044693</td>
+</tr>
+<tr>
+<td>Activating modifications</td>
+<td>Phosphorylation of RIN4 at Thr166 is reported as necessary and sufficient for RPM1 activation; deletion of nearby Pro149 can also activate RPM1. AvrB/AvrRpm1-induced phosphorylation is therefore the key molecular trigger in the guard model.</td>
+<td>(chiang2015effectortriggeredimmunity pages 3-5, redditt2019avrrpm1functionsas pages 1-2, zhao2024subcellularspatialregulation pages 1-2)</td>
+<td>Chiang &amp; Coaker 2015-10, https://doi.org/10.1199/tab.0183; Redditt et al. 2019-11, https://doi.org/10.1105/tpc.19.00020r2; Zhao &amp; Day 2024-12, https://doi.org/10.3389/fpls.2024.1473944</td>
+</tr>
+<tr>
+<td>Upstream effectors / enzymes</td>
+<td>AvrRpm1 and AvrB are the upstream bacterial effectors. AvrRpm1 functions as an ADP-ribosyl transferase that mono-ADP-ribosylates RIN4/NOI proteins, and this activity is required for subsequent RIN4 Thr166 phosphorylation; AvrB promotes RIPK-mediated phosphorylation of RIN4.</td>
+<td>(redditt2019avrrpm1functionsas pages 1-2, chiang2015effectortriggeredimmunity pages 3-5)</td>
+<td>Redditt et al. 2019-11, https://doi.org/10.1105/tpc.19.00020r2; Chiang &amp; Coaker 2015-10, https://doi.org/10.1199/tab.0183</td>
+</tr>
+<tr>
+<td>Downstream signaling requirements</td>
+<td>RPM1 belongs to the CNL branch that generally requires NDR1 rather than EDS1 for signaling. NDR1 is shared by RPM1- and RPS2-mediated pathways, associates with RIN4, and is required for RPM1-mediated bacterial growth restriction; ETI outputs overlap with PTI, including ROS, Ca2+ signaling, MAPKs, and often HR.</td>
+<td>(seto2021recognitionofthe pages 30-33, tornero2002largescalestructure–function pages 1-2, day2006ndr1interactionwith pages 1-2)</td>
+<td>Tornero et al. 2002-02, https://doi.org/10.1105/tpc.010393; Day et al. 2006-09, https://doi.org/10.1105/tpc.106.044693</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>RPM1 is a peripheral protein on the cytoplasmic face of the plasma membrane, enriched in plasma membrane fractions rather than being an integral membrane protein. The associated recognition system is thus organized at the plasma membrane where RIN4 and relevant effectors operate.</td>
+<td>(boyes1998thearabidopsisthaliana pages 4-5, boyes1998thearabidopsisthaliana pages 2-3)</td>
+<td>Boyes et al. 1998-12, https://doi.org/10.1073/pnas.95.26.15849</td>
+</tr>
+<tr>
+<td>Activation-linked degradation</td>
+<td>RPM1 protein abundance declines sharply coincident with hypersensitive response onset after activation, and degradation is also observed during RPS4-mediated HR. This was interpreted as possible negative feedback limiting cell death/resistance output.</td>
+<td>(boyes1998thearabidopsisthaliana pages 4-5, boyes1998thearabidopsisthaliana pages 1-2, boyes1998thearabidopsisthaliana media 4e7b4a1b)</td>
+<td>Boyes et al. 1998-12, https://doi.org/10.1073/pnas.95.26.15849</td>
+</tr>
+<tr>
+<td>Population genetics / statistics</td>
+<td>Rpm1 shows a classic presence/absence polymorphism: a worldwide resistance-allele frequency of 0.52 in a random sample of 26 accessions (27 alleles), Tajima’s D = 3.06 (P &lt; 0.001), divergence between R and S haplotypes up to 11.8%, and an estimated age of ~9.8 million years. These data support long-term balancing selection (“trench warfare”) rather than rapid turnover by recurrent sweeps.</td>
+<td>(stahl1999dynamicsofdisease pages 2-3, stahl1999dynamicsofdisease pages 1-2, stahl1999dynamicsofdisease pages 2-2, stahl1999dynamicsofdisease pages 3-4)</td>
+<td>Stahl et al. 1999-08, https://doi.org/10.1038/23260</td>
+</tr>
+<tr>
+<td>Recent 2024 updates</td>
+<td>A 2024 study links RIN4 Thr166 phosphorylation to altered subcellular localization: phospho-mimic RIN4 disrupts plasma membrane tethering via reduced Exo70B1 interaction and represses defense activation, refining how the RPM1-associated phospho-switch is spatially controlled. A 2024 review also places RPM1/RIN4 within PTI–ETI synergistic signaling.</td>
+<td>(zhao2024subcellularspatialregulation pages 1-2)</td>
+<td>Zhao &amp; Day 2024-12, https://doi.org/10.3389/fpls.2024.1473944</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes evidence-backed functional annotation for Arabidopsis RPM1, including recognition mechanism, signaling requirements, localization, and quantitative population-genetic findings. It is useful as a compact reference for the main experimentally supported claims and their source contexts.</em></p>
+<h3 id="key-figure-evidence-images">Key figure evidence (images)</h3>
+<p>Boyes et al. provide figure-based experimental support for (i) <strong>plasma membrane enrichment/peripheral association</strong> of RPM1::MYC and (ii) <strong>RPM1 degradation coincident with HR</strong>, including immunoblot time courses and fractionation panels (boyes1998thearabidopsisthaliana media 4e7b4a1b).</p>
+<h3 id="evidence-gaps-scope-limitation">Evidence gaps (scope limitation)</h3>
+<p>Within the retrieved full-text evidence, specific 2023–2024 sources directly reporting <strong>RPM1 structural (cryo-EM) resistosome formation</strong> or <strong>deployment/engineering of RPM1 in crops</strong> were not available; accordingly, this report does not assert RPM1-specific resistosome architecture or field-validated RPM1 transgenic applications beyond what is supported by the cited sources.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(boyes1998thearabidopsisthaliana pages 1-2): Douglas C. Boyes, Jaesung Nam, and Jeffery L. Dangl. The arabidopsis thaliana rpm1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response. Proceedings of the National Academy of Sciences of the United States of America, 95 26:15849-54, Dec 1998. URL: https://doi.org/10.1073/pnas.95.26.15849, doi:10.1073/pnas.95.26.15849. This article has 531 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chiang2015effectortriggeredimmunity pages 3-5): Yi-Hsuan Chiang and Gitta Coaker. Effector triggered immunity: nlr immune perception and downstream defense responses. The Arabidopsis Book, 2015:e0183, Oct 2015. URL: https://doi.org/10.1199/tab.0183, doi:10.1199/tab.0183. This article has 96 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cunha2009structuralinsightsinto pages 103-107): LCV Da Cunha. Structural insights into the function of the arabidopsis protein rin4, a multi-regulator of plant resistance against bacterial pathogens. Unknown journal, 2009.</p>
+</li>
+<li>
+<p>(redditt2019avrrpm1functionsas pages 1-2): Thomas J. Redditt, Eui-Hwan Chung, H. Z. Karimi, N. Rodibaugh, Yixiang Zhang, Jonathan C Trinidad, Jin Hee Kim, Qian Zhou, Mingzhe Shen, Jeffery L Dangl, David Mackey, and R. Innes. Avrrpm1 functions as an adp-ribosyl transferase to modify noi domain-containing proteins, including arabidopsis and soybean rpm1-interacting protein4. The Plant cell, 31 11:2664-2681, Nov 2019. URL: https://doi.org/10.1105/tpc.19.00020r2, doi:10.1105/tpc.19.00020r2. This article has 100 citations.</p>
+</li>
+<li>
+<p>(cunha2009structuralinsightsinto pages 98-103): LCV Da Cunha. Structural insights into the function of the arabidopsis protein rin4, a multi-regulator of plant resistance against bacterial pathogens. Unknown journal, 2009.</p>
+</li>
+<li>
+<p>(day2006ndr1interactionwith pages 1-2): Brad Day, Douglas Dahlbeck, and Brian J. Staskawicz. Ndr1 interaction with rin4 mediates the differential activation of multiple disease resistance pathways in arabidopsis. The Plant Cell Online, 18:2782-2791, Sep 2006. URL: https://doi.org/10.1105/tpc.106.044693, doi:10.1105/tpc.106.044693. This article has 203 citations.</p>
+</li>
+<li>
+<p>(boyes1998thearabidopsisthaliana pages 4-5): Douglas C. Boyes, Jaesung Nam, and Jeffery L. Dangl. The arabidopsis thaliana rpm1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response. Proceedings of the National Academy of Sciences of the United States of America, 95 26:15849-54, Dec 1998. URL: https://doi.org/10.1073/pnas.95.26.15849, doi:10.1073/pnas.95.26.15849. This article has 531 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(boyes1998thearabidopsisthaliana pages 2-3): Douglas C. Boyes, Jaesung Nam, and Jeffery L. Dangl. The arabidopsis thaliana rpm1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response. Proceedings of the National Academy of Sciences of the United States of America, 95 26:15849-54, Dec 1998. URL: https://doi.org/10.1073/pnas.95.26.15849, doi:10.1073/pnas.95.26.15849. This article has 531 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(boyes1998thearabidopsisthaliana media 4e7b4a1b): Douglas C. Boyes, Jaesung Nam, and Jeffery L. Dangl. The arabidopsis thaliana rpm1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response. Proceedings of the National Academy of Sciences of the United States of America, 95 26:15849-54, Dec 1998. URL: https://doi.org/10.1073/pnas.95.26.15849, doi:10.1073/pnas.95.26.15849. This article has 531 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seto2021recognitionofthe pages 30-33): DJ Seto. Recognition of the pseudomonas syringae type iii effector hopf1r by the arabidopsis nlr zar1. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(tornero2002largescalestructure–function pages 1-2): Pablo Tornero, Ryon A. Chao, William N. Luthin, Stephen A. Goff, and Jeffery L. Dangl. Large-scale structure –function analysis of the arabidopsis rpm1 disease resistance protein. The Plant Cell, 14:435-450, Feb 2002. URL: https://doi.org/10.1105/tpc.010393, doi:10.1105/tpc.010393. This article has 216 citations.</p>
+</li>
+<li>
+<p>(zhao2024subcellularspatialregulation pages 1-2): Yi Zhao and Brad Day. Subcellular spatial regulation of immunity-induced phosphorylation of rin4 links pamp-triggered immunity to exo70b1. Frontiers in Plant Science, Dec 2024. URL: https://doi.org/10.3389/fpls.2024.1473944, doi:10.3389/fpls.2024.1473944. This article has 1 citations.</p>
+</li>
+<li>
+<p>(stahl1999dynamicsofdisease pages 1-2): Eli A. Stahl, Greg Dwyer, Rodney Mauricio, Martin Kreitman, and Joy Bergelson. Dynamics of disease resistance polymorphism at the rpm1 locus of arabidopsis. Nature, 400:667-671, Aug 1999. URL: https://doi.org/10.1038/23260, doi:10.1038/23260. This article has 699 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stahl1999dynamicsofdisease pages 2-2): Eli A. Stahl, Greg Dwyer, Rodney Mauricio, Martin Kreitman, and Joy Bergelson. Dynamics of disease resistance polymorphism at the rpm1 locus of arabidopsis. Nature, 400:667-671, Aug 1999. URL: https://doi.org/10.1038/23260, doi:10.1038/23260. This article has 699 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stahl1999dynamicsofdisease pages 3-4): Eli A. Stahl, Greg Dwyer, Rodney Mauricio, Martin Kreitman, and Joy Bergelson. Dynamics of disease resistance polymorphism at the rpm1 locus of arabidopsis. Nature, 400:667-671, Aug 1999. URL: https://doi.org/10.1038/23260, doi:10.1038/23260. This article has 699 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stahl1999dynamicsofdisease pages 2-3): Eli A. Stahl, Greg Dwyer, Rodney Mauricio, Martin Kreitman, and Joy Bergelson. Dynamics of disease resistance polymorphism at the rpm1 locus of arabidopsis. Nature, 400:667-671, Aug 1999. URL: https://doi.org/10.1038/23260, doi:10.1038/23260. This article has 699 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>chiang2015effectortriggeredimmunity pages 3-5</li>
+<li>boyes1998thearabidopsisthaliana pages 4-5</li>
+<li>seto2021recognitionofthe pages 30-33</li>
+<li>zhao2024subcellularspatialregulation pages 1-2</li>
+<li>stahl1999dynamicsofdisease pages 1-2</li>
+<li>stahl1999dynamicsofdisease pages 2-2</li>
+<li>stahl1999dynamicsofdisease pages 3-4</li>
+<li>boyes1998thearabidopsisthaliana pages 1-2</li>
+<li>cunha2009structuralinsightsinto pages 103-107</li>
+<li>cunha2009structuralinsightsinto pages 98-103</li>
+<li>boyes1998thearabidopsisthaliana pages 2-3</li>
+<li>stahl1999dynamicsofdisease pages 2-3</li>
+<li>https://doi.org/10.1073/pnas.95.26.15849;</li>
+<li>https://doi.org/10.1199/tab.0183</li>
+<li>https://doi.org/10.1105/tpc.19.00020r2</li>
+<li>https://doi.org/10.1105/tpc.010393</li>
+<li>https://doi.org/10.1105/tpc.106.044693</li>
+<li>https://doi.org/10.3389/fpls.2024.1473944</li>
+<li>https://doi.org/10.1038/23260</li>
+<li>https://doi.org/10.1199/tab.0183;</li>
+<li>https://doi.org/10.1073/pnas.95.26.15849</li>
+<li>https://doi.org/10.1105/tpc.19.00020r2;</li>
+<li>https://doi.org/10.1105/tpc.010393;</li>
+<li>https://doi.org/10.1073/pnas.95.26.15849,</li>
+<li>https://doi.org/10.1199/tab.0183,</li>
+<li>https://doi.org/10.1105/tpc.19.00020r2,</li>
+<li>https://doi.org/10.1105/tpc.106.044693,</li>
+<li>https://doi.org/10.1105/tpc.010393,</li>
+<li>https://doi.org/10.3389/fpls.2024.1473944,</li>
+<li>https://doi.org/10.1038/23260,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q39214
+gene_symbol: RPM1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: &#39;RPM1 is an Arabidopsis coiled-coil NB-LRR/CNL immune receptor that confers resistance to Pseudomonas syringae strains delivering AvrB or AvrRpm1. RPM1 acts at the cytoplasmic face of the plasma membrane, where it guards the RIN4 immune hub and is activated by effector-induced RIN4 modification, especially Thr166 phosphorylation. Its core role is nucleotide-dependent immune receptor signaling that triggers effector-triggered antibacterial defense and hypersensitive response; generic protein binding and broad defense-response rows should be interpreted through this RPM1-RIN4 plasma-membrane guard mechanism.&#39;
+existing_annotations:
+- term:
+    id: GO:0006952
+    label: defense response
+  evidence_type: TAS
+  original_reference_id: PMID:7638602
+  review:
+    summary: RPM1 mediates effector-triggered defense against Pseudomonas strains expressing AvrB or AvrRpm1, but the existing defense response term is broad.
+    action: MODIFY
+    reason: Defense response to bacterium better captures the experimentally supported RPM1 output than generic defense response.
+    proposed_replacement_terms:
+    - id: GO:0042742
+      label: defense response to bacterium
+- term:
+    id: GO:0009626
+    label: plant-type hypersensitive response
+  evidence_type: IDA
+  original_reference_id: PMID:8768370
+  review:
+    summary: RPM1 activation by AvrB/AvrRpm1-triggered RIN4 modification elicits hypersensitive-response cell death.
+    action: ACCEPT
+    reason: Hypersensitive response is a canonical output of RPM1-mediated effector-triggered immunity and is supported by AvrB/RPM1 experiments.
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: ISS
+  original_reference_id: PMID:7638602
+  review:
+    summary: RPM1 has an NB-ARC nucleotide-binding module, but generic nucleotide binding is less precise than the ADP/ATP switch used by NLRs.
+    action: MODIFY
+    reason: Use ADP binding or ATP binding for the NB-ARC molecular switch rather than a broad nucleotide-binding term.
+    proposed_replacement_terms:
+    - id: GO:0043531
+      label: ADP binding
+    - id: GO:0005524
+      label: ATP binding
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:11955429
+  review:
+    summary: RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15722472
+  review:
+    summary: RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16212605
+  review:
+    summary: RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20332379
+  review:
+    summary: RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:38358510
+  review:
+    summary: RPM1-associated interactions with RIN4, RIN-family proteins, CRT1, and other immune regulators are biologically meaningful, but generic protein binding obscures the receptor mechanism.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The informative curation is RPM1 immune receptor activity at a RIN4-centered plasma-membrane complex; protein binding alone is too generic for the core function.
+- term:
+    id: GO:0043531
+    label: ADP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: RPM1 contains an NB-ARC module expected to bind ADP/ATP as part of NLR molecular switching.
+    action: KEEP_AS_NON_CORE
+    reason: ADP binding is mechanistically relevant, but RPM1&#39;s core gene-level role is immune receptor signaling rather than nucleotide binding alone.
+- term:
+    id: GO:0006952
+    label: defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: RPM1 mediates effector-triggered defense against Pseudomonas strains expressing AvrB or AvrRpm1, but the existing defense response term is broad.
+    action: MODIFY
+    reason: Defense response to bacterium better captures the experimentally supported RPM1 output than generic defense response.
+    proposed_replacement_terms:
+    - id: GO:0042742
+      label: defense response to bacterium
+- term:
+    id: GO:0009626
+    label: plant-type hypersensitive response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: RPM1 activation by AvrB/AvrRpm1-triggered RIN4 modification elicits hypersensitive-response cell death.
+    action: ACCEPT
+    reason: Hypersensitive response is a canonical output of RPM1-mediated effector-triggered immunity and is supported by AvrB/RPM1 experiments.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: RPM1 is a peripheral protein enriched at the plasma membrane.
+    action: ACCEPT
+    reason: Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  review:
+    summary: RPM1 is a peripheral protein enriched at the plasma membrane.
+    action: ACCEPT
+    reason: Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:9861059
+  review:
+    summary: RPM1 is a peripheral protein enriched at the plasma membrane.
+    action: ACCEPT
+    reason: Plasma membrane localization is central to RPM1 function because RPM1 guards RIN4 at the cytoplasmic face of the plasma membrane.
+- term:
+    id: GO:0012505
+    label: endomembrane system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: The cited localization evidence points to plasma-membrane/microsomal association and is better captured by a plasma-membrane cytoplasmic-face term than by broad endomembrane system.
+    action: MODIFY
+    reason: RPM1 is specifically a peripheral/extrinsic protein at the cytoplasmic side of the plasma membrane; endomembrane system is less precise.
+    proposed_replacement_terms:
+    - id: GO:0031234
+      label: extrinsic component of cytoplasmic side of plasma membrane
+- term:
+    id: GO:0012505
+    label: endomembrane system
+  evidence_type: EXP
+  original_reference_id: PMID:9861059
+  review:
+    summary: The cited localization evidence points to plasma-membrane/microsomal association and is better captured by a plasma-membrane cytoplasmic-face term than by broad endomembrane system.
+    action: MODIFY
+    reason: RPM1 is specifically a peripheral/extrinsic protein at the cytoplasmic side of the plasma membrane; endomembrane system is less precise.
+    proposed_replacement_terms:
+    - id: GO:0031234
+      label: extrinsic component of cytoplasmic side of plasma membrane
+- term:
+    id: GO:0031234
+    label: extrinsic component of cytoplasmic side of plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:9861059
+  review:
+    summary: RPM1 resides on the cytoplasmic face of the plasma membrane as a peripheral membrane-associated immune receptor.
+    action: ACCEPT
+    reason: This is the most precise existing localization annotation for the site of RPM1-RIN4 guard signaling.
+- term:
+    id: GO:0140375
+    label: immune receptor activity
+  evidence_type: IC
+  original_reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+  review:
+    summary: RPM1 functions as a CNL immune receptor that monitors effector-induced RIN4 modification.
+    action: NEW
+    reason: GOA captures defense outputs and nucleotide binding but omits the core molecular role of RPM1 as an immune receptor.
+    additional_reference_ids:
+    - PMID:7638602
+    - PMID:8768370
+    supported_by:
+    - reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+      supporting_text: RPM1 is a canonical example of **indirect effector recognition**
+    - reference_id: PMID:7638602
+      supporting_text: The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.
+    - reference_id: PMID:8768370
+      supporting_text: both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis
+- term:
+    id: GO:0002218
+    label: activation of innate immune response
+  evidence_type: IC
+  original_reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+  review:
+    summary: RPM1 activates intracellular effector-triggered immune signaling after effector-induced RIN4 modification.
+    action: NEW
+    reason: This broader innate-immune activation term avoids incorrectly treating RPM1 guarded effector recognition as PAMP pattern-recognition receptor signaling.
+    additional_reference_ids:
+    - PMID:7638602
+    - PMID:8768370
+    supported_by:
+    - reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+      supporting_text: mediating effector-triggered immunity (ETI) to *Pseudomonas syringae* effectors **AvrRpm1** and **AvrB**
+    - reference_id: PMID:7638602
+      supporting_text: The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing either of two unrelated Pseudomonas syringae avr genes.
+    - reference_id: PMID:8768370
+      supporting_text: both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent necrosis
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IC
+  original_reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+  review:
+    summary: RPM1 confers resistance to Pseudomonas syringae strains expressing AvrB or AvrRpm1.
+    action: NEW
+    reason: This is the precise antibacterial defense output missing from current RPM1 GOA rows.
+    additional_reference_ids:
+    - PMID:7638602
+    - PMID:8768370
+    supported_by:
+    - reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+      supporting_text: RPM1 mediates race-specific resistance to *P. syringae* strains delivering **AvrB** or **AvrRpm1**
+    - reference_id: PMID:7638602
+      supporting_text: The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing
+        either of two unrelated Pseudomonas syringae avr genes.
+    - reference_id: PMID:8768370
+      supporting_text: Both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent
+        necrosis.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:11955429
+  title: RIN4 interacts with Pseudomonas syringae type III effector molecules and is required for RPM1-mediated resistance in Arabidopsis.
+  findings:
+  - statement: RIN4 interacts with AvrB, AvrRpm1, and RPM1 and is required for RPM1-mediated resistance.
+- id: PMID:15722472
+  title: RIN13 is a positive regulator of the plant disease resistance protein RPM1.
+  findings:
+  - statement: RIN13 is a positive regulator of RPM1-mediated immunity but does not define RPM1 core molecular activity.
+- id: PMID:16212605
+  title: A duplicated pair of Arabidopsis RING-finger E3 ligases contribute to the RPM1- and RPS2-mediated hypersensitive response.
+  findings:
+  - statement: RING-finger E3 ligases contribute to RPM1- and RPS2-mediated hypersensitive response outputs.
+- id: PMID:20332379
+  title: Endosome-associated CRT1 functions early in resistance gene-mediated defense signaling in Arabidopsis and tobacco.
+  findings:
+  - statement: CRT1 functions early in resistance-gene-mediated defense signaling and is an RPM1-associated immune regulator.
+- id: PMID:38358510
+  title: The RIN4-like/NOI proteins NOI10 and NOI11 modulate the response to biotic stresses mediated by RIN4 in Arabidopsis.
+  findings:
+  - statement: RIN4-like/NOI proteins modulate RIN4-mediated biotic stress responses relevant to RPM1 signaling context.
+- id: PMID:7638602
+  title: Structure of the Arabidopsis RPM1 gene enabling dual specificity disease resistance.
+  findings:
+  - statement: RPM1 encodes an NB-LRR disease-resistance protein enabling dual specificity to Pseudomonas syringae avrRpm1 and avrB.
+- id: PMID:8768370
+  title: Expression of the Pseudomonas syringae avirulence protein AvrB in plant cells alleviates its dependence on the hypersensitive response and pathogenicity (Hrp) secretion system in eliciting genotype-specific hypersensitive cell death.
+  findings:
+  - statement: Intracellular AvrB expression triggers RPM1-dependent hypersensitive cell death.
+- id: PMID:9861059
+  title: The Arabidopsis thaliana RPM1 disease resistance gene product is a peripheral plasma membrane protein that is degraded coincident with the hypersensitive response.
+  findings:
+  - statement: RPM1 is a peripheral plasma membrane protein likely residing on the cytoplasmic face of the plasma membrane and degraded coincident with HR.
+- id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+  title: Falcon deep research for Arabidopsis RPM1
+  findings:
+  - statement: RPM1 is a plasma-membrane-associated CNL immune receptor that guards RIN4 and is activated by effector-induced RIN4 modification.
+  - statement: RPM1 localization and immune recognition are organized at the cytoplasmic face of the plasma membrane.
+- id: file:ARATH/RPM1/RPM1-uniprot.txt
+  title: UniProt record for Arabidopsis RPM1
+  findings:
+  - statement: UniProt identifies RPM1/Q39214 as a disease resistance NB-LRR protein with plasma membrane, ADP/ATP binding, and hypersensitive response annotations.
+- id: file:interpro/panther/PTHR23155/PTHR23155-entries.csv
+  title: PANTHER PTHR23155 disease resistance protein RP family entries
+  findings:
+  - statement: PTHR23155 places Arabidopsis Q39214/RPM1 in disease resistance protein RPM1 subfamily SF1205.
+core_functions:
+- description: Plasma-membrane CNL immune receptor guarding RIN4. RPM1 monitors effector-induced RIN4 modification, especially AvrB/AvrRpm1-associated RIN4 Thr166 phosphorylation, at the cytoplasmic face of the plasma membrane and activates effector-triggered antibacterial defense and hypersensitive response.
+  molecular_function:
+    id: GO:0140375
+    label: immune receptor activity
+  directly_involved_in:
+  - id: GO:0002218
+    label: activation of innate immune response
+  - id: GO:0042742
+    label: defense response to bacterium
+  locations:
+  - id: GO:0031234
+    label: extrinsic component of cytoplasmic side of plasma membrane
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+    supporting_text: RPM1 is a canonical example of **indirect effector recognition**
+  - reference_id: file:ARATH/RPM1/RPM1-deep-research-falcon.md
+    supporting_text: RPM1 is a peripheral protein on the cytoplasmic face of the plasma membrane
+  - reference_id: PMID:7638602
+    supporting_text: The Arabidopsis thaliana RPM1 gene enables dual specificity to pathogens expressing
+      either of two unrelated Pseudomonas syringae avr genes.
+  - reference_id: PMID:8768370
+    supporting_text: Both stable and transient expression of avrB in Arabidopsis resulted in RPM1-dependent
+      necrosis.
+proposed_new_terms: []
+suggested_questions:
+- question: Should RPM1 and related CNLs receive immune receptor activity annotations rather than only generic nucleotide/protein binding annotations?
+- question: Should broad endomembrane-system annotations for RPM1 be replaced upstream with the cytoplasmic-face plasma membrane term?
+suggested_experiments:
+- description: Reconstitute RPM1 with RIN4 phosphorylation or ADP-ribosylation states in plasma-membrane fractions to quantify receptor activation and nucleotide exchange.
+- description: Measure RPM1 ADP/ATP binding and hydrolysis states before and after RIN4 phosphomimic activation to connect NB-ARC switching with guardee modification sensing.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
