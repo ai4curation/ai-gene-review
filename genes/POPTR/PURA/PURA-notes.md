@@ -2,3 +2,5 @@
 
 - Fetched with `just fetch-gene POPTR PURA`.
 - Curated as chloroplast adenylosuccinate synthetase. The cytoplasm annotations are inconsistent with the reviewed chloroplast localization and are modified to chloroplast; nucleotide, GTP, and magnesium binding are retained as non-core substrate/cofactor features.
+
+- Addressed PR #469 review on 2026-05-10: added a suggested question/experiment to acknowledge UniProt transit-peptide uncertainty despite the reviewed chloroplast localization.
