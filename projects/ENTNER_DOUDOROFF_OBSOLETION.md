@@ -58,7 +58,7 @@ already use GO:0009255 in their `existing_annotations` and `core_functions`:
 | Gene | File | Current usage |
 |---|---|---|
 | PSEPK edd | `genes/PSEPK/edd/edd-ai-review.yaml` | IEA from `GO_REF:0000120`, accepted; also referenced under `core_functions[].directly_involved_in` |
-| PSEPK eda | `genes/PSEPK/eda/eda-ai-review.yaml` | IEA propagated via the UniProt pathway statement; also referenced under `core_functions[].directly_involved_in` |
+| PSEPK eda | `genes/PSEPK/eda/eda-ai-review.yaml` | `action: NEW` annotation proposal (not in GOA) keyed off the UniProt pathway statement; also referenced under `core_functions[].directly_involved_in` |
 
 Both reviews will need a refresh once the obsoletion lands so that the
 `directly_involved_in` references and the `existing_annotations` review
@@ -112,8 +112,14 @@ add files without confirming the UniProt accession from the UniProt API.
    change.
 2. **Once the obsoletion is in a release**, update the two PSEPK reviews in
    one PR — the change is mechanical (term ID swap + label update) and the
-   `review.summary` text already justifies pathway-level annotation, so the
-   action stays `ACCEPT` on the lifted parent term.
+   `review.summary` text already justifies pathway-level annotation. The
+   action differs by gene: for **edd** the existing IEA is `ACCEPT`ed and
+   stays `ACCEPT` on the lifted parent term; for **eda** the annotation is
+   a curator-proposed `NEW` (no GOA row) and stays `NEW` on the lifted
+   parent term. The `review.summary` text in eda also references the old
+   label "Entner-Doudoroff pathway through 6-phosphogluconate" and should
+   be updated to "Entner-Doudoroff pathway (GO:0061678)" alongside the
+   term-ID swap.
 3. **Re-run `just validate PSEPK edd` and `just validate PSEPK eda`** after
    the edits to confirm the schema accepts the new term IDs.
 4. **Defer new ortholog reviews** (E. coli edd/eda, zwf, gnd) to a follow-up
