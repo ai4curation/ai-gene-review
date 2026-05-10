@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ttgA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ttgA</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N30" target="_blank" class="term-link">
+                        Q88N30
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1386</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ttgA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N30" data-a="DESCRIPTION: TtgA is the N-terminally lipidated periplasmic ada..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TtgA is the N-terminally lipidated periplasmic adaptor or membrane fusion protein subunit of the tripartite TtgABC RND efflux system in Pseudomonas putida KT2440. It is anchored to the inner membrane and helps couple the inner-membrane transporter TtgB to the outer-membrane exit duct TtgC, thereby supporting export of toxic hydrophobic compounds. Evidence from KT2440 and closely related Pseudomonas systems links TtgABC to tolerance against antibiotics, organic solvents, and monoterpenoid toxicants, although the exact substrate range of the KT2440 pump remains incompletely resolved.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>RND efflux pump adaptor activity</h3>
+                <span class="vote-buttons" data-g="Q88N30" data-a="RND efflux pump adaptor activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> Binding-based adaptor activity by a periplasmic membrane-fusion protein subunit that bridges an inner-membrane RND transporter and an outer-membrane exit duct, stabilizing a tripartite efflux complex that exports toxic compounds across the cell envelope.</p>
+            
+
+            
+            <p><strong>Justification:</strong> Current GO annotations tend to over-annotate membrane-fusion/adaptor subunits like TtgA as transmembrane transporter activity even though these proteins do not themselves form the transport pore. A dedicated adaptor term would better represent the molecular role of RND pump MFP subunits.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044325" target="_blank" class="term-link">
+                    transmembrane transporter binding
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                    
+                    
+                    : Probable periplasmic linker protein component of the TtgABC
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization is appropriate for TtgA. UniProt identifies TtgA as a lipid-anchored inner-membrane protein, and the membrane-fusion/adaptor subunit of the TtgABC pump is expected to remain associated with the plasma membrane while projecting into the periplasm.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TtgA is not a soluble periplasmic protein; it is a lipoprotein tethered to the inner membrane. GO:0005886 is therefore an informative and biologically correct cellular component term for this gene product.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is too broad. TtgA is membrane-associated, but GO:0005886 already captures the specific and relevant location.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Retaining the generic membrane term adds little value once the more specific plasma membrane annotation is accepted. The broad InterPro-derived term obscures the fact that TtgA is specifically anchored to the bacterial inner membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an over-annotation for TtgA itself. TtgA is the periplasmic adaptor subunit of the TtgABC complex, not the inner-membrane transport pore or the energy-coupling RND transporter. Its role is to stabilize coupling between the transporter and the outer-membrane channel.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The tripartite pump as a whole enables transmembrane transport, but that activity should not be assigned directly to the non-transmembrane adaptor subunit. A better molecular-function proxy is GO:0044325 transmembrane transporter binding, with complex membership captured separately by GO:1902495.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044325" target="_blank" class="term-link">
+                                    transmembrane transporter binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable periplasmic linker protein component of the TtgABC</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the membrane fusion protein (MFP) (TC 8.A.1) family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                    GO:0046677
+                                </a>
+                            </span>
+                            <span class="term-label">response to antibiotic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000118
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0046677" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The annotation is plausible because TtgABC-family pumps contribute to antibiotic tolerance, but it is narrower than the best-supported biological picture. TtgABC systems also handle organic solvents and monoterpenoid toxicants, so antibiotic response is only one facet of a broader xenobiotic-defense role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Experimental work in Pseudomonas links TtgABC to antibiotic efflux, but the broader core function is export of multiple toxic hydrophobic compounds. Keeping this term as non-core preserves a supported substrate class without mistaking it for the full functional scope.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0046677; P:response to antibiotic; IEA:TreeGrafter.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0055085" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The general process term is directionally correct but too broad. The best-supported process is transport of toxic xenobiotic compounds rather than abstract transmembrane transport.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TtgA functions in a multidrug or solvent-efflux context, so GO:0042908 xenobiotic transport better captures the biological process than the parent term GO:0055085.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042908" target="_blank" class="term-link">
+                                    xenobiotic transport
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">encodes the **membrane fusion protein (MFP) / periplasmic adaptor** subunit</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902495" target="_blank" class="term-link">
+                                    GO:1902495
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Investigation of monoterpenoid resistance mechanisms in Pseu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:1902495" data-r="PMID:32296906" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TtgA is described as the lipoprotein/adaptor component of the tripartite TtgABC transporter assembly. The evidence here is a traceable literature statement and UniProt family assignment, not a direct complex-assembly assay.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Complex membership is a more accurate representation of TtgA than assigning the subunit the full transporter activity. TAS is used instead of IMP because the GS1 monoterpenoid paper states the Ttg pump architecture and TtgA/D/G adaptor role, while the mutant phenotypes do not directly demonstrate complex assembly.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link">
+                                        PMID:32296906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">All three efflux pumps consist of three components: an inner membrane protein (TtgB/E/H), which binds the substrates and acts as the extrusion element, an outer membrane protein that reaches into the periplasmic space to form a channel (TtgC/F/I), and a lipoprotein that plays a role in stabilizing the interaction between the other two elements (TtgA/D/G)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable periplasmic linker protein component of the TtgABC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042908" target="_blank" class="term-link">
+                                    GO:0042908
+                                </a>
+                            </span>
+                            <span class="term-label">xenobiotic transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Investigation of monoterpenoid resistance mechanisms in Pseu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0042908" data-r="PMID:32296906" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the most useful process-level summary of TtgA function. TtgABC-family pumps protect Pseudomonas cells against chemically diverse toxic hydrophobic compounds including antibiotics, solvents, and monoterpenoids.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The phenotype of ttgA loss and the broader TtgABC literature both support a role in transport-based detoxification of xenobiotic compounds. This is more precise than the parent term transmembrane transport and more general than the substrate-specific antibiotic-response annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044325" target="_blank" class="term-link">
+                                    GO:0044325
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296906
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Investigation of monoterpenoid resistance mechanisms in Pseu...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N30" data-a="GO:0044325" data-r="PMID:32296906" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO currently lacks a term tailored to RND efflux-pump adaptor subunits. As a conservative proxy, transmembrane transporter binding captures the traceable literature statement that the TtgA/D/G lipoprotein class stabilizes the interaction between inner-membrane transporter and outer-membrane channel elements.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TtgA does not itself span the membrane or catalyze transport. TAS is used instead of ISS because the support is a traceable author statement about TtgA/D/G adaptor interactions, not transfer from a characterized ortholog. Until a more specific adaptor term exists, GO:0044325 is the closest informative molecular-function representation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link">
+                                        PMID:32296906
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a lipoprotein that plays a role in stabilizing the interaction between the other two elements (TtgA/D/G)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable periplasmic linker protein component of the TtgABC</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgA/ttgA-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Belongs to the membrane fusion protein (MFP) (TC 8.A.1) family.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TtgA is the inner-membrane-anchored adaptor subunit of the TtgABC tripartite RND efflux pump. By binding and stabilizing the transporter/channel components, it contributes to complex-level transmembrane efflux of toxic hydrophobic compounds across the cell envelope.</h3>
+                <span class="vote-buttons" data-g="Q88N30" data-a="FUNCTION: TtgA is the inner-membrane-anchored adaptor subuni..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044325" target="_blank" class="term-link">
+                            transmembrane transporter binding
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042908" target="_blank" class="term-link">
+                                xenobiotic transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902495" target="_blank" class="term-link">
+                            transmembrane transporter complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ttgA/ttgA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Probable periplasmic linker protein component of the TtgABC</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ttgA/ttgA-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO supplies family/domain-based automated annotations that require curator review against the specific TtgA adaptor protein context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TreeGrafter transfers GO terms from phylogenetic families; curator review checks whether the transferred term matches the P. putida TtgA ortholog.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The combined UniProt automated pipeline annotation provides IEA terms that must be checked for specificity and evidence fit.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12743835" target="_blank" class="term-link">
+                            PMID:12743835
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Comparative genomic analysis of solvent extrusion pumps in Pseudomonas strains exhibiting different degrees of solvent tolerance</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Solvent tolerance differences across Pseudomonas strains correlate with the number and type of RND solvent extrusion pumps.</div>
+                        
+                        <div class="finding-text">"We also studied the number and type of efflux pumps in different strains in comparison with the P. putida DOT-T1E strain."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14506010" target="_blank" class="term-link">
+                            PMID:14506010
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Antibiotic-dependent induction of Pseudomonas putida DOT-T1E TtgABC efflux pump is mediated by the drug binding repressor TtgR</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TtgABC is a broad-substrate RND efflux pump whose expression is induced by hydrophobic antibiotics.</div>
+                        
+                        <div class="finding-text">"The TtgABC efflux pump, which has a broad substrate specificity, extrudes antibiotics such as ampicillin, carbenicillin, tetracycline, nalidixic acid, and chloramphenicol."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296906" target="_blank" class="term-link">
+                            PMID:32296906
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Investigation of monoterpenoid resistance mechanisms in Pseudomonas putida and their consequences for biotransformations</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 carries only the TtgABC member of the Ttg solvent-efflux systems.</div>
+                        
+                        <div class="finding-text">"the frequently used KT2440 strain contains only the TtgABC system"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">TtgA is the lipoprotein adaptor subunit of the TtgABC pump.</div>
+                        
+                        <div class="finding-text">"a lipoprotein that plays a role in stabilizing the interaction between the other two elements (TtgA/D/G)"</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of ttgA lowers efflux activity and compromises tolerance to several monoterpenoid toxicants.</div>
+                        
+                        <div class="finding-text">"the deletion in the ttgA gene results in a loss of the TtgABC efflux system accompanied by a reduced resazurin efflux activity"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ttgA/ttgA-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88N30</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies TtgA as a probable periplasmic linker protein component of the TtgABC efflux pump.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt places TtgA in the membrane fusion protein family and annotates it as a lipid-anchored inner-membrane protein.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ttgA/ttgA-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for ttgA in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">ttgA encodes the membrane fusion or periplasmic adaptor subunit of the TtgABC tripartite RND efflux pump in KT2440.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 genetic evidence supports a role for TtgABC in efflux-mediated resistance to antibiotics and other xenobiotic toxicants.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the native substrate spectrum of the KT2440 TtgABC pump under physiological conditions: antibiotics, aromatic solvents, monoterpenoids, or a broader xenobiotic set?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ana Segura, Juan L Ramos, Markus Buchhaupt</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N30" data-a="Q: What is the native substrate spectrum of the KT244..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does TtgA merely stabilize the TtgB-TtgC assembly, or does it also influence substrate selectivity and efflux efficiency?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ana Segura, Juan L Ramos, Markus Buchhaupt</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N30" data-a="Q: Does TtgA merely stabilize the TtgB-TtgC assembly,..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct clean ttgA and ttgABC deletion mutants in KT2440, complement them in trans, and measure tolerance or MIC phenotypes for chloramphenicol, tetracycline, toluene, 1,8-cineole, verbenone, and geraniol together with a resazurin efflux assay.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TtgA is required for efficient efflux of multiple toxic hydrophobic compounds in KT2440.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: targeted gene deletion and phenotype profiling</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N30" data-a="EXPERIMENT: Construct clean ttgA and ttgABC deletion mutants i..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Mutate the lipobox cysteine and predicted interfacial residues of TtgA, then test complex formation with TtgB and TtgC by co-immunoprecipitation or crosslinking and compare efflux activity against the wild-type protein.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The lipidated periplasmic adaptor domain of TtgA is required to couple TtgB and TtgC into a functional tripartite complex.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: structure-function analysis of efflux-pump assembly</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N30" data-a="EXPERIMENT: Mutate the lipobox cysteine and predicted interfac..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttgA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N30" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: true<br />
+start_time: '2026-03-21T14:11:03.051105'<br />
+end_time: '2026-03-21T14:11:03.448404'<br />
+duration_seconds: 0.4<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: ttgA<br />
+  gene_symbol: ttgA<br />
+  uniprot_accession: Q88N30<br />
+  protein_description: 'RecName: Full=Probable efflux pump periplasmic linker TtgA;<br />
+    Flags: Precursor;'<br />
+  gene_info: Name=ttgA; OrderedLocusNames=PP_1386;<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Belongs to the membrane fusion protein (MFP) (TC 8.A.1)<br />
+  protein_domains: MdtA-like_b-barrel. (IPR058626); MdtA-like_BSH. (IPR058625); MdtA-like_C.<br />
+    (IPR058627); MdtA-like_HH. (IPR058624); RND_pump_MFP. (IPR006143)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88N30</li>
+<li><strong>Protein Description:</strong> RecName: Full=Probable efflux pump periplasmic linker TtgA; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=ttgA; OrderedLocusNames=PP_1386;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the membrane fusion protein (MFP) (TC 8.A.1)</li>
+<li><strong>Key Domains:</strong> MdtA-like_b-barrel. (IPR058626); MdtA-like_BSH. (IPR058625); MdtA-like_C. (IPR058627); MdtA-like_HH. (IPR058624); RND_pump_MFP. (IPR006143)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ttgA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ttgA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ttgA</strong> (gene ID: ttgA, UniProt: Q88N30) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88N30</li>
+<li><strong>Protein Description:</strong> RecName: Full=Probable efflux pump periplasmic linker TtgA; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=ttgA; OrderedLocusNames=PP_1386;</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Belongs to the membrane fusion protein (MFP) (TC 8.A.1)</li>
+<li><strong>Key Domains:</strong> MdtA-like_b-barrel. (IPR058626); MdtA-like_BSH. (IPR058625); MdtA-like_C. (IPR058627); MdtA-like_HH. (IPR058624); RND_pump_MFP. (IPR006143)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "ttgA" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'ttgA' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>ttgA</strong> (gene ID: ttgA, UniProt: Q88N30) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-ttga-pp_1386-uniprot-q88n30-in-pseudomonas-putida-kt2440">Research Report: <strong>ttgA (PP_1386; UniProt Q88N30)</strong> in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The gene <strong>ttgA</strong> (ordered locus <strong>PP_1386</strong>, UniProt <strong>Q88N30</strong>) in <em>Pseudomonas putida</em> KT2440 encodes the <strong>membrane fusion protein (MFP) / periplasmic adaptor</strong> subunit of the tripartite <strong>RND (resistance–nodulation–division) efflux pump TtgABC</strong>. TtgA physically couples the inner-membrane RND transporter (TtgB) to the outer-membrane channel (TtgC), enabling export of diverse toxic compounds from the inner membrane/periplasm to the external milieu. In KT2440, genetic and transcriptomic evidence links <strong>ttgA/ttgABC</strong> to clinically relevant <strong>β-lactam resistance</strong>, resistance to several other antibiotics, and detoxification of non-antibiotic toxicants (e.g., bipyridyl chelators), with strong quantitative MIC phenotypes upon deletion or overexpression. (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</p>
+<h2 id="1-target-verification-critical-identity-checks">1) Target verification (critical identity checks)</h2>
+<p><strong>Gene symbol/protein match.</strong> In KT2440, <strong>ttgA is PP_1386</strong> and is explicitly annotated as an <strong>“RND family efflux transporter MFP subunit”</strong> (i.e., a membrane fusion protein/periplasmic adaptor) in transcriptome-linked gene tables. This matches the UniProt description “Probable efflux pump periplasmic linker TtgA; precursor” and the expected MFP role in a tripartite RND efflux pump. (tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<p><strong>Organism match.</strong> The quantitative MIC and RNA-seq evidence explicitly refers to **<br />
+<em>Pseudomonas putida</em> KT2440**, the same strain context as the UniProt entry provided. (tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</p>
+<p><strong>Family/domain match (conceptual).</strong> Multiple KT2440 sources describe TtgA as the <strong>periplasmic adaptor/MFP</strong> of a tripartite RND efflux system, consistent with membership in the MFP family (TC 8.A.1) and its multi-domain architecture typical of RND pump periplasmic linkers. (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h2>
+<h3 id="21-tripartite-rnd-efflux-pumps-in-gram-negative-bacteria">2.1 Tripartite RND efflux pumps in Gram-negative bacteria</h3>
+<p>Tripartite RND systems form a continuous conduit across the Gram-negative envelope. In KT2440, <strong>TtgABC</strong> consists of:<br />
+- <strong>TtgB</strong>: inner-membrane RND transporter (the energy-coupled exporter)<br />
+- <strong>TtgA</strong>: <strong>periplasmic membrane fusion protein (MFP) / adaptor</strong><br />
+- <strong>TtgC</strong>: outer-membrane channel (outer membrane factor)</p>
+<p>This architecture allows substrates to be exported from the periplasm and/or inner membrane to the extracellular milieu. (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h3 id="22-what-membrane-fusion-protein-mfp-means-for-ttga-function">2.2 What “membrane fusion protein (MFP)” means for TtgA function</h3>
+<p>In the TtgABC complex, <strong>TtgA is not the energizing transporter</strong>; rather, it is the <strong>periplasmic linker/adaptor</strong> that mediates assembly and functional coupling between the inner-membrane transporter and the outer-membrane channel. This adaptor role is central to creating the trans-envelope efflux route characteristic of RND systems. (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h2 id="3-functional-annotation-of-ttga-in-kt2440">3) Functional annotation of <strong>TtgA</strong> in KT2440</h2>
+<h3 id="31-molecular-function-and-mechanism">3.1 Molecular function and mechanism</h3>
+<p><strong>Primary function:</strong> TtgA functions as the <strong>MFP/adaptor subunit</strong> of the <strong>TtgABC RND efflux system</strong>, enabling efflux of diverse toxic compounds (antibiotics and non-antibiotics). (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<p><strong>Mechanistic role:</strong> TtgABC exports substrates <strong>from the periplasm or inner membrane to the extracellular environment</strong>, and TtgA is a required structural/functional component for transporter–channel coupling in this tripartite assembly. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<h3 id="32-cellular-localization">3.2 Cellular localization</h3>
+<p>For KT2440, ttgA (PP_1386) is annotated as the <strong>MFP subunit</strong> of an RND efflux transporter, placing TtgA primarily in the <strong>periplasm</strong>, associated with the inner-membrane transporter and contacting the outer-membrane channel as part of the assembled complex. (tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h3 id="33-substrate-profile-what-ttgabc-exports-what-this-implies-for-ttga">3.3 Substrate profile (what TtgABC exports; what this implies for TtgA)</h3>
+<p>Because TtgA is an essential subunit of TtgABC, the most defensible statement about “TtgA substrates” is: <strong>TtgA supports export of the TtgABC substrate set</strong>.</p>
+<p><strong>Antibiotics and xenobiotics (KT2440 evidence):</strong> TtgABC contributes to resistance against multiple antibiotic classes, with particularly strong effects for several antipseudomonal <strong>β-lactams</strong> and measurable effects for <strong>fluoroquinolones</strong>; aminoglycoside effects are limited or absent in certain genetic backgrounds. (puja2020coordinateoverexpressionof pages 2-4, puja2020coordinateoverexpressionof pages 4-5)</p>
+<p><strong>Non-antibiotic toxicants (KT2440 evidence):</strong> TtgABC is required for detoxification/resistance to <strong>2,2′-bipyridyl</strong> and related <strong>bipyridyl derivatives</strong> (including the natural product <strong>caerulomycin A</strong>). This suggests a plausible native ecological role in resisting chelators produced by other organisms and maintaining metal homeostasis. (henriquez2020resistancetobipyridyls pages 1-2)</p>
+<p><strong>Solvents/aromatic hydrocarbons (context from <em>P. putida</em> efflux literature; strain note):</strong> Authoritative reviews and primary studies in the closely related solvent-tolerant strain <strong>DOT-T1E</strong> link TtgABC to extrusion of aromatic solvents such as <strong>toluene, isopropylbenzene, p-xylene</strong> and to antibiotic efflux; however, these DOT-T1E findings should be treated as contextual support rather than direct KT2440 proof. (duque2001globalandcognate pages 2-3, segura2014toluenetolerancesystems pages 9-12)</p>
+<h2 id="4-regulation-and-pathway-context">4) Regulation and pathway context</h2>
+<h3 id="41-local-repression-by-ttgr">4.1 Local repression by TtgR</h3>
+<p>Across <em>P. putida</em> TtgABC literature, <strong>TtgR</strong> is a TetR-family repressor encoded divergently from <strong>ttgA</strong> and controlling the <strong>ttgABC operon</strong>. In DOT-T1E, inactivation of ttgR yields strong derepression of the ttgA promoter (~10–20-fold), establishing TtgR as the key local negative regulator. (duque2001globalandcognate pages 2-3, rojas2003invivoand pages 1-2)</p>
+<h3 id="42-systems-level-regulation-in-kt2440-ecf-sigma-factor-effects">4.2 Systems-level regulation in KT2440: ECF sigma factor effects</h3>
+<p>In KT2440, knockout of the extracytoplasmic-function sigma factor <strong>ECF-10</strong> caused strong upregulation of <strong>ttgA (PP_1386)</strong> (~5.9-fold) along with ttgB and ttgC, linking envelope stress regulation to increased efflux capacity. (tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h3 id="43-coordination-with-other-rnd-pumps-and-regulatory-networks">4.3 Coordination with other RND pumps and regulatory networks</h3>
+<p>A key insight from KT2440 multidrug-resistance studies is that <strong>efflux phenotypes can reflect coordinated expression of multiple RND systems</strong>, not just TtgABC alone. For example, MDR mutants can show TtgABC overproduction due to regulatory mutations, and combined contributions of distinct pumps shape the full resistance profile. (puja2020coordinateoverexpressionof pages 2-4, puja2020coordinateoverexpressionof pages 4-5)</p>
+<h2 id="5-quantitative-phenotypes-and-statistics-recent-studies-emphasized">5) Quantitative phenotypes and statistics (recent studies emphasized)</h2>
+<h3 id="51-direct-kt2440-mic-effects-of-ttga-deletion-and-ttgabc-upregulation-tettmann-et-al-2014">5.1 Direct KT2440 MIC effects of <strong>ttgA</strong> deletion and <strong>ttgABC</strong> upregulation (Tettmann et al., 2014)</h3>
+<p>Tettmann et al. (Applied and Environmental Microbiology; publication date: <strong>Aug 2014</strong>; URL: https://doi.org/10.1128/AEM.01291-14) provides KT2440 MIC tables that directly connect <strong>ttgA</strong> to antibiotic susceptibility and show transcriptional upregulation of <strong>ttgA/ttgB/ttgC</strong>.</p>
+<p>Key observations:<br />
+- In ΔECF-10, <strong>ttgA (PP_1386)</strong> is upregulated <strong>~5.90-fold</strong> (RNA-seq), with ttgB ~4.17-fold and ttgC ~2.94-fold. (tettmann2014knockoutofextracytoplasmic pages 4-5)<br />
+- The <strong>ttgA mutant</strong> shows reduced MICs relative to wild type for multiple antibiotics (examples): ciprofloxacin 0.03→0.015 µg/mL; meropenem 0.03→0.015; chloramphenicol 16→8; nalidixic acid 4→1; sulfamethoxazole 64→16 µg/mL. (tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<p>These MIC values and the PP_1386 functional annotation are visible in the extracted tables. (tettmann2014knockoutofextracytoplasmic media f0f78e33, tettmann2014knockoutofextracytoplasmic media 8a52eb29)</p>
+<h3 id="52-kt2440-mic-effects-of-ttgab-deletion-and-ttgabc-overexpression-puja-et-al-2020">5.2 KT2440 MIC effects of <strong>ttgAB deletion</strong> and <strong>TtgABC overexpression</strong> (Puja et al., 2020)</h3>
+<p>Puja et al. (Environmental Microbiology; publication date: <strong>Sep 2020</strong>; URL: https://doi.org/10.1111/1462-2920.15200) provides large-magnitude MIC shifts in KT2440 upon genetic perturbation of the TtgABC system.</p>
+<p>Examples from their KT2440 dataset:<br />
+- <strong>ΔttgAB</strong> drastically sensitizes KT2440 to key β-lactams: ticarcillin <strong>128→4 µg/mL</strong> (32-fold), piperacillin <strong>8→0.25</strong> (32-fold), aztreonam <strong>16→0.25</strong> (64-fold), with smaller effects on ciprofloxacin (<strong>0.06→0.03</strong>, 2-fold). (puja2020coordinateoverexpressionof pages 2-4)<br />
+- <strong>TtgABC overexpression</strong> yields strong resistance increases, e.g. ticarcillin <strong>128→1024 µg/mL</strong> and ceftazidime <strong>2→8 µg/mL</strong>. (puja2020coordinateoverexpressionof pages 2-4)<br />
+- In MDR mutants, <strong>ttgA</strong> can be overexpressed on the order of <strong>~3.8–5.4-fold</strong> relative to KT2440, consistent with efflux-driven multidrug resistance mechanisms. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<h3 id="53-kt2440-physiological-role-beyond-antibiotics-bipyridyl-detoxification-henriquez-et-al-2020">5.3 KT2440 physiological role beyond antibiotics: bipyridyl detoxification (Henríquez et al., 2020)</h3>
+<p>Henríquez et al. (Frontiers in Microbiology; publication date: <strong>Aug 2020</strong>; URL: https://doi.org/10.3389/fmicb.2020.01974) provides physiological evidence that TtgABC is required for detoxification of <strong>2,2′-bipyridyl</strong> and natural bipyridyl derivatives, and that loss of the transporter subunit impacts energy status and siderophore/iron acquisition programs.</p>
+<p>Key observations:<br />
+- A <strong>ttgB deletion</strong> renders KT2440 susceptible to 2,2′-bipyridyl and caerulomycin A.<br />
+- The mutant shows reduced ATP levels and reduced expression of iron acquisition/pyoverdine-related genes; copper addition restores growth and pyoverdine production. (henriquez2020resistancetobipyridyls pages 1-2)</p>
+<p>These results support an ecological/physiological role for TtgABC (and by extension its adaptor TtgA) in resisting environmental chelators and maintaining metal homeostasis. (henriquez2020resistancetobipyridyls pages 1-2)</p>
+<h2 id="6-recent-developments-and-latest-research-20232024-prioritized">6) Recent developments and latest research (2023–2024 prioritized)</h2>
+<h3 id="61-2023-emphasis-efflux-pump-networks-and-overlapping-functions-in-kt2440">6.1 2023 emphasis: efflux-pump networks and overlapping functions in KT2440</h3>
+<p>While not focused on TtgA directly, recent KT2440 work highlights that <strong>tripartite efflux systems form interacting networks with overlapping substrate spaces</strong>; this influences how single-pump knockouts manifest phenotypes and how cells partition roles among pumps for physiology and resistance. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<p>A 2023 KT2440 study on another RND pump (ParXY) explicitly frames tripartite systems as transporting not only antibiotics but also toxic metabolites and secreted products, reinforcing the broader physiological framing relevant to interpreting TtgABC/TtgA functions. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<h3 id="62-2023-industrial-biology-context-aromatic-product-toxicity-and-efflux-usage">6.2 2023 industrial-biology context: aromatic product toxicity and efflux usage</h3>
+<p>In the context of engineering <em>P. putida</em> for production of industrial aromatics, recent work emphasizes induction and use of efflux pumps to manage toxicity of produced compounds and intermediates, with evidence that distinct RND pumps can dominate depending on the compound and strain context. This supports real-world relevance of efflux components like TtgA in strain robustness strategies (noting that some 2023 work emphasizes other pumps such as TtgGHI in solvent-tolerant backgrounds). (franco2025engineeringpseudomonasputida pages 57-60)</p>
+<p><strong>Coverage limitation (2024):</strong> In the retrieved/accessible corpus here, I did not identify a 2024 primary research article specifically dedicated to KT2440 <strong>ttgA (PP_1386)</strong>; therefore, the newest direct quantitative KT2440 ttgA evidence available in this report is primarily 2014–2020, with 2023 sources contributing contextual advances in efflux network and application framing. (franco2025engineeringpseudomonasputida pages 57-60, tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h2>
+<h3 id="71-antibiotic-resistance-and-risk-assessment-in-p-putida">7.1 Antibiotic resistance and risk assessment in <em>P. putida</em></h3>
+<p>KT2440 and clinical/environmental <em>P. putida</em> isolates can display significant β-lactam and fluoroquinolone resistance phenotypes driven by efflux. The magnitude of MIC shifts upon TtgABC perturbation (tens-fold for some β-lactams) indicates that TtgABC is a major determinant shaping susceptibility profiles, relevant to clinical surveillance and to assessing biosafety of engineered <em>P. putida</em> strains. (puja2020coordinateoverexpressionof pages 2-4)</p>
+<h3 id="72-strain-engineering-for-tolerance-to-toxic-chemicals">7.2 Strain engineering for tolerance to toxic chemicals</h3>
+<p>Efflux pumps are frequently exploited (or avoided) in industrial biotechnology for tolerance engineering. Evidence that TtgABC exports diverse toxic compounds and that its expression is regulated by envelope stress responses in KT2440 supports its relevance as a tunable module for robustness—balanced against potential tradeoffs (e.g., energetic costs or altered physiology) implied by stress-regulatory coupling. (tettmann2014knockoutofextracytoplasmic pages 4-5)</p>
+<h2 id="8-expert-opinion-and-authoritative-synthesis">8) Expert opinion and authoritative synthesis</h2>
+<p>A synthesis from reviews and foundational primary studies in <em>P. putida</em> efflux biology frames <strong>TtgABC</strong> as an RND efflux pump involved in solvent and antibiotic resistance, with <strong>TtgR</strong> as a key repressor that responds to certain antibiotics/plant metabolites and can strongly derepress the operon when inactivated. Reviews also emphasize that high solvent tolerance generally involves <strong>multiple mechanisms/pumps</strong>, and that increasing TtgABC expression does not necessarily translate into higher solvent tolerance in all contexts—highlighting the importance of system-level interpretation and strain-specific contributions. (segura2014toluenetolerancesystems pages 9-12)</p>
+<h2 id="evidence-synthesis-table">Evidence synthesis table</h2>
+<p>The following table compiles the most directly supported, KT2440-centered functional annotation and quantitative phenotypes for <strong>ttgA/PP_1386</strong> and its cognate pump components.</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Gene / locus</th>
+<th>Protein role</th>
+<th>Localization</th>
+<th>Known / implicated substrates</th>
+<th>Regulation</th>
+<th>Key quantitative phenotypes</th>
+<th>Key references</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TtgA</td>
+<td><strong>ttgA / PP_1386 / UniProt Q88N30</strong></td>
+<td>Periplasmic membrane fusion protein (MFP) / adaptor subunit of the tripartite RND pump TtgABC; links inner-membrane transporter to outer-membrane channel (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Periplasmic adaptor associated with the inner membrane–outer membrane efflux assembly; precursor protein per UniProt and MFP annotation in KT2440 (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>As part of TtgABC, implicated in export of β-lactams, fluoroquinolones, chloramphenicol, tetracycline, erythromycin, nalidixic acid; aromatic solvents/hydrophobics such as toluene, isopropylbenzene, p-xylene, trichlorobenzene; also flavonoids, bipyridyls/caerulomycin A, bile salts/deoxycholate, and reported nonnative substrates such as styrene/1-naphthol/butanol in broader TtgABC literature (KT2440 unless noted; some solvent data from DOT-T1E) (puja2020coordinateoverexpressionof pages 1-2, duque2001globalandcognate pages 2-3, rojas2003invivoand pages 1-2, puja2020coordinateoverexpressionof pages 2-4, henriquez2020resistancetobipyridyls pages 1-2)</td>
+<td><strong>Local:</strong> TtgR (TetR-family repressor) divergently transcribed from ttgA; loss of TtgR derepresses ttgABC. <strong>Global/other:</strong> ECF-10 negatively affects ttgABC expression in KT2440; Lrp-like global regulator affects ttgABC via ttgR in DOT-T1E; PpeRS positively controls TtgABC in KT2440 MDR backgrounds (duque2001globalandcognate pages 2-3, duque2001globalandcognate pages 1-2, rojas2003invivoand pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</td>
+<td><strong>KT2440:</strong> ttgA (PP1386) upregulated <strong>~5.90-fold</strong> in ΔECF-10; ttgA mutant MICs drop vs WT for CIP <strong>0.03→0.015</strong>, MER <strong>0.03→0.015</strong>, CM <strong>16→8</strong>, NA <strong>4→1</strong>, SX <strong>64→16</strong> µg/mL; TOB <strong>0.125→0.06</strong>, IMP unchanged <strong>0.125</strong>. <strong>Overexpression context:</strong> ttgA overexpressed <strong>~3.8–5.4-fold</strong> in TtgABC-overproducing mutants relative to KT2440. <strong>DOT-T1E note:</strong> ttgA promoter rises <strong>~10–20-fold</strong> in ttgR mutants; ttgA mRNA about <strong>1.5-fold lower</strong> with toluene while ttgR mRNA rises <strong>4–8-fold</strong> (duque2001globalandcognate pages 2-3, duque2001globalandcognate pages 1-2, rojas2003invivoand pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</td>
+<td>Tettmann 2014, https://doi.org/10.1128/AEM.01291-14; Puja 2020, https://doi.org/10.1111/1462-2920.15200; Duque 2001 (DOT-T1E), https://doi.org/10.1046/j.1365-2958.2001.02310.x; Rojas 2003 (DOT-T1E), https://doi.org/10.1128/JB.185.16.4755-4763.2003; Henríquez 2020, https://doi.org/10.3389/fmicb.2020.01974</td>
+</tr>
+<tr>
+<td>TtgB</td>
+<td><strong>ttgB / PP_1385</strong></td>
+<td>Inner-membrane RND transporter / HAE1 family exporter; energy-coupled pump component that interacts with TtgA and TtgC to move substrates from periplasm or inner membrane to outside (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Inner membrane (canonical RND transporter position) (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Same TtgABC substrate spectrum as above; direct KT2440 evidence includes resistance to many β-lactams and fluoroquinolones, bipyridyl chelators and related natural products, bile salts/deoxycholate; broader literature also implicates aromatic solvents and hydrophobic toxicants (some solvent data from DOT-T1E) (puja2020coordinateoverexpressionof pages 1-2, duque2001globalandcognate pages 2-3, puja2020coordinateoverexpressionof pages 2-4, henriquez2020resistancetobipyridyls pages 1-2)</td>
+<td>Controlled with ttgA/ttgC in the ttgABC operon; repressed by TtgR; upregulated in ΔECF-10 and MDR regulatory backgrounds such as altered PpeRS signaling (duque2001globalandcognate pages 2-3, tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4)</td>
+<td><strong>KT2440 ΔttgAB:</strong> MICs fall strongly: ticarcillin <strong>128→4</strong> (32-fold), piperacillin <strong>8→0.25</strong> (32-fold), aztreonam <strong>16→0.25</strong> (64-fold), ceftazidime <strong>2→0.5</strong> (4-fold), cefepime <strong>1→0.5</strong> (2-fold), meropenem <strong>0.25→0.06</strong> (~4-fold), ciprofloxacin <strong>0.06→0.03</strong> (2-fold), gentamicin unchanged <strong>0.25→0.25</strong>. <strong>KT2440 ttgB mutant:</strong> susceptible to 2,2'-bipyridyl and caerulomycin A; reduced ATP and impaired pyoverdine/iron-acquisition responses, rescued by copper. <strong>ΔECF-10:</strong> ttgB up <strong>~4.17-fold</strong> (tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4, henriquez2020resistancetobipyridyls pages 1-2)</td>
+<td>Puja 2020, https://doi.org/10.1111/1462-2920.15200; Henríquez 2020, https://doi.org/10.3389/fmicb.2020.01974; Tettmann 2014, https://doi.org/10.1128/AEM.01291-14</td>
+</tr>
+<tr>
+<td>TtgC</td>
+<td><strong>ttgC / PP_1384</strong></td>
+<td>Outer-membrane factor / NodT-like channel completing the tripartite conduit (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Outer membrane (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Same TtgABC-associated substrates; required for full antibiotic/dye resistance profile of the TtgABC system in KT2440; broader solvent role mainly inferred from TtgABC studies including DOT-T1E (puja2020coordinateoverexpressionof pages 1-2, puja2020coordinateoverexpressionof pages 4-5)</td>
+<td>Co-regulated in ttgABC operon with TtgA/B; subject to TtgR repression and ECF-10/PpeRS-linked control in KT2440-related studies (tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4, puja2020coordinateoverexpressionof pages 4-5)</td>
+<td><strong>KT2440:</strong> ttgC up <strong>~2.94-fold</strong> in ΔECF-10. In-frame <strong>ΔttgC</strong> phenocopies strong susceptibility effects seen with loss of TtgABC/associated channel function, supporting dependence on this outer-membrane channel for resistance to multiple β-lactams, fluoroquinolones, chloramphenicol, tetracycline, novobiocin, and dyes (quantified in ΔttgAB datasets and comparative mutant analyses) (tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 4-5)</td>
+<td>Tettmann 2014, https://doi.org/10.1128/AEM.01291-14; Puja 2020, https://doi.org/10.1111/1462-2920.15200</td>
+</tr>
+<tr>
+<td>TtgABC system note</td>
+<td><strong>Operon: PP_1386-PP_1384</strong></td>
+<td>Chromosomally encoded tripartite RND efflux system in <strong>Pseudomonas putida KT2440</strong>; mechanistically analogous to MexAB-OprM-like assemblies, exporting substrates from inner membrane/periplasm directly to extracellular milieu (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 4-5)</td>
+<td>Spans inner membrane, periplasm, and outer membrane (puja2020coordinateoverexpressionof pages 1-2, tettmann2014knockoutofextracytoplasmic pages 1-2)</td>
+<td>Native roles include multidrug resistance and detoxification of hydrophobic chemicals; likely contributes to ecological defense against plant metabolites/flavonoids and microbial chelators, and to solvent stress adaptation. In KT2440, evidence is strongest for antibiotics and bipyridyl-family toxicants; in DOT-T1E, solvent/aromatic hydrocarbon export is especially well established (puja2020coordinateoverexpressionof pages 1-2, duque2001globalandcognate pages 2-3, segura2014toluenetolerancesystems pages 9-12, henriquez2020resistancetobipyridyls pages 1-2)</td>
+<td>TtgR is the principal local repressor; TtgR recognizes several antibiotics and plant secondary metabolites. Overexpression of TtgABC increases antibiotic resistance, but in DOT-T1E does <strong>not</strong> by itself measurably increase toluene tolerance, implying other systems such as TtgGHI are more important for extreme solvent tolerance (segura2014toluenetolerancesystems pages 9-12, puja2020coordinateoverexpressionof pages 2-4)</td>
+<td><strong>KT2440 overexpression:</strong> engineered/selected TtgABC overproducers show major MIC increases, e.g. ticarcillin <strong>128→1024</strong>, piperacillin <strong>8→32</strong>, aztreonam <strong>16→64</strong>, ceftazidime <strong>2→8</strong> µg/mL. <strong>KT2440 deletion:</strong> large sensitization especially to β-lactams and some quinolones, but not aminoglycosides. <strong>DOT-T1E note:</strong> TtgABC contributes to intrinsic solvent tolerance but appears accessory relative to TtgGHI for high toluene tolerance (segura2014toluenetolerancesystems pages 9-12, puja2020coordinateoverexpressionof pages 2-4, puja2020coordinateoverexpressionof pages 7-8)</td>
+<td>Puja 2020, https://doi.org/10.1111/1462-2920.15200; Segura 2014 (review; DOT-T1E emphasis), https://doi.org/10.1007/978-4-431-54520-0_11; Duque 2001 (DOT-T1E), https://doi.org/10.1046/j.1365-2958.2001.02310.x</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported functional annotation of Pseudomonas putida KT2440 ttgA (PP_1386; UniProt Q88N30) and its partner subunits TtgB/TtgC within the TtgABC RND efflux pump. It highlights subunit roles, localization, substrates, regulation, and quantitative phenotypes while clearly flagging evidence derived from DOT-T1E rather than KT2440.</em></p>
+<h2 id="conclusions-functional-annotation-statement">Conclusions (functional annotation statement)</h2>
+<p>In <em>Pseudomonas putida</em> KT2440, <strong>ttgA (PP_1386; UniProt Q88N30)</strong> encodes a <strong>periplasmic membrane fusion protein/adaptor</strong> required for the activity of the <strong>TtgABC tripartite RND efflux pump</strong>. The primary biological role of TtgA is structural/functional coupling of TtgB (inner-membrane transporter) to TtgC (outer-membrane channel), enabling efflux of diverse toxic compounds. In KT2440, disruption of ttgA or other TtgABC components yields clear susceptibility phenotypes—especially large MIC reductions for multiple β-lactams—while conditions or mutations that upregulate ttgA/ttgABC increase resistance. The pump additionally contributes to detoxification of non-antibiotic toxicants (e.g., bipyridyl chelators) with downstream effects on cellular energy and iron-acquisition physiology, underscoring a plausible native ecological defense function beyond antibiotics. (tettmann2014knockoutofextracytoplasmic pages 4-5, puja2020coordinateoverexpressionof pages 2-4, henriquez2020resistancetobipyridyls pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(puja2020coordinateoverexpressionof pages 1-2): Hélène Puja, Gwendoline Comment, Sophie Chassagne, Patrick Plésiat, and Katy Jeannot. Coordinate overexpression of two <scp>rnd</scp> efflux systems, <scp>parxy</scp> and <scp>ttgabc</scp>, is responsible for multidrug resistance in <i>pseudomonas putida</i>. Sep 2020. URL: https://doi.org/10.1111/1462-2920.15200, doi:10.1111/1462-2920.15200. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tettmann2014knockoutofextracytoplasmic pages 4-5): Beatrix Tettmann, Andreas Dötsch, Olivier Armant, Christopher D. Fjell, and Joerg Overhage. Knockout of extracytoplasmic function sigma factor ecf-10 affects stress resistance and biofilm formation in pseudomonas putida kt2440. Aug 2014. URL: https://doi.org/10.1128/aem.01291-14, doi:10.1128/aem.01291-14. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(puja2020coordinateoverexpressionof pages 2-4): Hélène Puja, Gwendoline Comment, Sophie Chassagne, Patrick Plésiat, and Katy Jeannot. Coordinate overexpression of two <scp>rnd</scp> efflux systems, <scp>parxy</scp> and <scp>ttgabc</scp>, is responsible for multidrug resistance in <i>pseudomonas putida</i>. Sep 2020. URL: https://doi.org/10.1111/1462-2920.15200, doi:10.1111/1462-2920.15200. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tettmann2014knockoutofextracytoplasmic pages 1-2): Beatrix Tettmann, Andreas Dötsch, Olivier Armant, Christopher D. Fjell, and Joerg Overhage. Knockout of extracytoplasmic function sigma factor ecf-10 affects stress resistance and biofilm formation in pseudomonas putida kt2440. Aug 2014. URL: https://doi.org/10.1128/aem.01291-14, doi:10.1128/aem.01291-14. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(puja2020coordinateoverexpressionof pages 4-5): Hélène Puja, Gwendoline Comment, Sophie Chassagne, Patrick Plésiat, and Katy Jeannot. Coordinate overexpression of two <scp>rnd</scp> efflux systems, <scp>parxy</scp> and <scp>ttgabc</scp>, is responsible for multidrug resistance in <i>pseudomonas putida</i>. Sep 2020. URL: https://doi.org/10.1111/1462-2920.15200, doi:10.1111/1462-2920.15200. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(henriquez2020resistancetobipyridyls pages 1-2): Tania Henríquez, Nicola Victoria Stein, and Heinrich Jung. Resistance to bipyridyls mediated by the ttgabc efflux system in pseudomonas putida kt2440. Frontiers in Microbiology, Aug 2020. URL: https://doi.org/10.3389/fmicb.2020.01974, doi:10.3389/fmicb.2020.01974. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(duque2001globalandcognate pages 2-3): Estrella Duque, Ana Segura, Gilberto Mosqueda, and Juan L. Ramos. Global and cognate regulators control the expression of the organic solvent efflux pumps ttgabc and ttgdef of pseudomonas putida. Molecular Microbiology, 39:1100-1106, Feb 2001. URL: https://doi.org/10.1046/j.1365-2958.2001.02310.x, doi:10.1046/j.1365-2958.2001.02310.x. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(segura2014toluenetolerancesystems pages 9-12): Ana Segura and Juan Luis Ramos. Toluene tolerance systems in pseudomonas. ArXiv, pages 227-248, Sep 2014. URL: https://doi.org/10.1007/978-4-431-54520-0_11, doi:10.1007/978-4-431-54520-0_11. This article has 8 citations.</p>
+</li>
+<li>
+<p>(rojas2003invivoand pages 1-2): Antonia Rojas, Ana Segura, María Eugenia Guazzaroni, Wilson Terán, Ana Hurtado, María Trinidad Gallegos, and Juan L. Ramos. In vivo and in vitro evidence that ttgv is the specific regulator of the ttgghi multidrug and solvent efflux pump of pseudomonas putida. Journal of Bacteriology, 185:4755-4763, Aug 2003. URL: https://doi.org/10.1128/jb.185.16.4755-4763.2003, doi:10.1128/jb.185.16.4755-4763.2003. This article has 103 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tettmann2014knockoutofextracytoplasmic media f0f78e33): Beatrix Tettmann, Andreas Dötsch, Olivier Armant, Christopher D. Fjell, and Joerg Overhage. Knockout of extracytoplasmic function sigma factor ecf-10 affects stress resistance and biofilm formation in pseudomonas putida kt2440. Aug 2014. URL: https://doi.org/10.1128/aem.01291-14, doi:10.1128/aem.01291-14. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tettmann2014knockoutofextracytoplasmic media 8a52eb29): Beatrix Tettmann, Andreas Dötsch, Olivier Armant, Christopher D. Fjell, and Joerg Overhage. Knockout of extracytoplasmic function sigma factor ecf-10 affects stress resistance and biofilm formation in pseudomonas putida kt2440. Aug 2014. URL: https://doi.org/10.1128/aem.01291-14, doi:10.1128/aem.01291-14. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(franco2025engineeringpseudomonasputida pages 57-60): AÁ García Franco. Engineering pseudomonas putida for sustainable production of styrene. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(duque2001globalandcognate pages 1-2): Estrella Duque, Ana Segura, Gilberto Mosqueda, and Juan L. Ramos. Global and cognate regulators control the expression of the organic solvent efflux pumps ttgabc and ttgdef of pseudomonas putida. Molecular Microbiology, 39:1100-1106, Feb 2001. URL: https://doi.org/10.1046/j.1365-2958.2001.02310.x, doi:10.1046/j.1365-2958.2001.02310.x. This article has 136 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(puja2020coordinateoverexpressionof pages 7-8): Hélène Puja, Gwendoline Comment, Sophie Chassagne, Patrick Plésiat, and Katy Jeannot. Coordinate overexpression of two <scp>rnd</scp> efflux systems, <scp>parxy</scp> and <scp>ttgabc</scp>, is responsible for multidrug resistance in <i>pseudomonas putida</i>. Sep 2020. URL: https://doi.org/10.1111/1462-2920.15200, doi:10.1111/1462-2920.15200. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tettmann2014knockoutofextracytoplasmic pages 4-5</li>
+<li>puja2020coordinateoverexpressionof pages 1-2</li>
+<li>henriquez2020resistancetobipyridyls pages 1-2</li>
+<li>puja2020coordinateoverexpressionof pages 2-4</li>
+<li>franco2025engineeringpseudomonasputida pages 57-60</li>
+<li>segura2014toluenetolerancesystems pages 9-12</li>
+<li>tettmann2014knockoutofextracytoplasmic pages 1-2</li>
+<li>puja2020coordinateoverexpressionof pages 4-5</li>
+<li>duque2001globalandcognate pages 2-3</li>
+<li>rojas2003invivoand pages 1-2</li>
+<li>duque2001globalandcognate pages 1-2</li>
+<li>puja2020coordinateoverexpressionof pages 7-8</li>
+<li>https://doi.org/10.1128/AEM.01291-14</li>
+<li>https://doi.org/10.1111/1462-2920.15200</li>
+<li>https://doi.org/10.3389/fmicb.2020.01974</li>
+<li>https://doi.org/10.1128/AEM.01291-14;</li>
+<li>https://doi.org/10.1111/1462-2920.15200;</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02310.x;</li>
+<li>https://doi.org/10.1128/JB.185.16.4755-4763.2003;</li>
+<li>https://doi.org/10.3389/fmicb.2020.01974;</li>
+<li>https://doi.org/10.1007/978-4-431-54520-0_11;</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02310.x</li>
+<li>https://doi.org/10.1111/1462-2920.15200,</li>
+<li>https://doi.org/10.1128/aem.01291-14,</li>
+<li>https://doi.org/10.3389/fmicb.2020.01974,</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02310.x,</li>
+<li>https://doi.org/10.1007/978-4-431-54520-0_11,</li>
+<li>https://doi.org/10.1128/jb.185.16.4755-4763.2003,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N30
+gene_symbol: ttgA
+product_type: PROTEIN
+aliases:
+  - PP_1386
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  TtgA is the N-terminally lipidated periplasmic adaptor or membrane fusion protein
+  subunit of the tripartite TtgABC RND efflux system in Pseudomonas putida KT2440.
+  It is anchored to the inner membrane and helps couple the inner-membrane transporter
+  TtgB to the outer-membrane exit duct TtgC, thereby supporting export of toxic
+  hydrophobic compounds. Evidence from KT2440 and closely related Pseudomonas systems
+  links TtgABC to tolerance against antibiotics, organic solvents, and monoterpenoid
+  toxicants, although the exact substrate range of the KT2440 pump remains incompletely
+  resolved.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO
+      terms
+    findings:
+      - statement: InterPro2GO supplies family/domain-based automated annotations
+          that require curator review against the specific TtgA adaptor protein context.
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings:
+      - statement: TreeGrafter transfers GO terms from phylogenetic families; curator
+          review checks whether the transferred term matches the P. putida TtgA ortholog.
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings:
+      - statement: The combined UniProt automated pipeline annotation provides IEA
+          terms that must be checked for specificity and evidence fit.
+  - id: PMID:12743835
+    title: Comparative genomic analysis of solvent extrusion pumps in Pseudomonas
+      strains exhibiting different degrees of solvent tolerance
+    findings:
+      - statement: Solvent tolerance differences across Pseudomonas strains correlate
+          with the number and type of RND solvent extrusion pumps.
+        supporting_text: We also studied the number and type of efflux pumps in different
+          strains in comparison with the P. putida DOT-T1E strain.
+  - id: PMID:14506010
+    title: Antibiotic-dependent induction of Pseudomonas putida DOT-T1E TtgABC efflux
+      pump is mediated by the drug binding repressor TtgR
+    findings:
+      - statement: TtgABC is a broad-substrate RND efflux pump whose expression is
+          induced by hydrophobic antibiotics.
+        supporting_text: The TtgABC efflux pump, which has a broad substrate specificity,
+          extrudes antibiotics such as ampicillin, carbenicillin, tetracycline, nalidixic
+          acid, and chloramphenicol.
+  - id: PMID:32296906
+    title: Investigation of monoterpenoid resistance mechanisms in Pseudomonas putida
+      and their consequences for biotransformations
+    findings:
+      - statement: KT2440 carries only the TtgABC member of the Ttg solvent-efflux
+          systems.
+        supporting_text: the frequently used KT2440 strain contains only the TtgABC
+          system
+      - statement: TtgA is the lipoprotein adaptor subunit of the TtgABC pump.
+        supporting_text: a lipoprotein that plays a role in stabilizing the interaction
+          between the other two elements (TtgA/D/G)
+      - statement: Loss of ttgA lowers efflux activity and compromises tolerance to
+          several monoterpenoid toxicants.
+        supporting_text: the deletion in the ttgA gene results in a loss of the TtgABC
+          efflux system accompanied by a reduced resazurin efflux activity
+  - id: file:PSEPK/ttgA/ttgA-uniprot.txt
+    title: UniProt entry Q88N30
+    findings:
+      - statement: UniProt identifies TtgA as a probable periplasmic linker protein
+          component of the TtgABC efflux pump.
+      - statement: UniProt places TtgA in the membrane fusion protein family and
+          annotates it as a lipid-anchored inner-membrane protein.
+  - id: file:PSEPK/ttgA/ttgA-deep-research-falcon.md
+    title: Falcon deep research report for ttgA in Pseudomonas putida KT2440
+    findings:
+      - statement: ttgA encodes the membrane fusion or periplasmic adaptor subunit
+          of the TtgABC tripartite RND efflux pump in KT2440.
+      - statement: KT2440 genetic evidence supports a role for TtgABC in efflux-mediated
+          resistance to antibiotics and other xenobiotic toxicants.
+existing_annotations:
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        This localization is appropriate for TtgA. UniProt identifies TtgA as a
+        lipid-anchored inner-membrane protein, and the membrane-fusion/adaptor subunit
+        of the TtgABC pump is expected to remain associated with the plasma membrane
+        while projecting into the periplasm.
+      action: ACCEPT
+      reason: &gt;-
+        TtgA is not a soluble periplasmic protein; it is a lipoprotein tethered to
+        the inner membrane. GO:0005886 is therefore an informative and biologically
+        correct cellular component term for this gene product.
+      supported_by:
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}&#34;
+
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This annotation is too broad. TtgA is membrane-associated, but GO:0005886
+        already captures the specific and relevant location.
+      action: REMOVE
+      reason: &gt;-
+        Retaining the generic membrane term adds little value once the more specific
+        plasma membrane annotation is accepted. The broad InterPro-derived term obscures
+        the fact that TtgA is specifically anchored to the bacterial inner membrane.
+
+  - term:
+      id: GO:0022857
+      label: transmembrane transporter activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This is an over-annotation for TtgA itself. TtgA is the periplasmic adaptor
+        subunit of the TtgABC complex, not the inner-membrane transport pore or the
+        energy-coupling RND transporter. Its role is to stabilize coupling between
+        the transporter and the outer-membrane channel.
+      action: MODIFY
+      reason: &gt;-
+        The tripartite pump as a whole enables transmembrane transport, but that activity
+        should not be assigned directly to the non-transmembrane adaptor subunit.
+        A better molecular-function proxy is GO:0044325 transmembrane transporter
+        binding, with complex membership captured separately by GO:1902495.
+      proposed_replacement_terms:
+        - id: GO:0044325
+          label: transmembrane transporter binding
+      supported_by:
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: Probable periplasmic linker protein component of the TtgABC
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: Belongs to the membrane fusion protein (MFP) (TC 8.A.1)
+            family.
+
+  - term:
+      id: GO:0046677
+      label: response to antibiotic
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    review:
+      summary: &gt;-
+        The annotation is plausible because TtgABC-family pumps contribute to antibiotic
+        tolerance, but it is narrower than the best-supported biological picture. TtgABC
+        systems also handle organic solvents and monoterpenoid toxicants, so antibiotic
+        response is only one facet of a broader xenobiotic-defense role.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Experimental work in Pseudomonas links TtgABC to antibiotic efflux, but the
+        broader core function is export of multiple toxic hydrophobic compounds. Keeping
+        this term as non-core preserves a supported substrate class without mistaking
+        it for the full functional scope.
+      supported_by:
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: &#34;GO; GO:0046677; P:response to antibiotic; IEA:TreeGrafter.&#34;
+
+  - term:
+      id: GO:0055085
+      label: transmembrane transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        The general process term is directionally correct but too broad. The best-supported
+        process is transport of toxic xenobiotic compounds rather than abstract transmembrane
+        transport.
+      action: MODIFY
+      reason: &gt;-
+        TtgA functions in a multidrug or solvent-efflux context, so GO:0042908 xenobiotic
+        transport better captures the biological process than the parent term GO:0055085.
+      proposed_replacement_terms:
+        - id: GO:0042908
+          label: xenobiotic transport
+      supported_by:
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: &#34;GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.&#34;
+        - reference_id: file:PSEPK/ttgA/ttgA-deep-research-falcon.md
+          supporting_text: encodes the **membrane fusion protein (MFP) / periplasmic adaptor** subunit
+
+  - term:
+      id: GO:1902495
+      label: transmembrane transporter complex
+    evidence_type: TAS
+    original_reference_id: PMID:32296906
+    review:
+      summary: &gt;-
+        TtgA is described as the lipoprotein/adaptor component of the tripartite
+        TtgABC transporter assembly. The evidence here is a traceable literature
+        statement and UniProt family assignment, not a direct complex-assembly assay.
+      action: NEW
+      reason: &gt;-
+        Complex membership is a more accurate representation of TtgA than assigning
+        the subunit the full transporter activity. TAS is used instead of IMP because
+        the GS1 monoterpenoid paper states the Ttg pump architecture and TtgA/D/G
+        adaptor role, while the mutant phenotypes do not directly demonstrate complex
+        assembly.
+      supported_by:
+        - reference_id: PMID:32296906
+          supporting_text: &#34;All three efflux pumps consist of three components: an inner membrane protein (TtgB/E/H), which binds the substrates and acts as the extrusion element, an outer membrane protein that reaches into the periplasmic space to form a channel (TtgC/F/I), and a lipoprotein that plays a role in stabilizing the interaction between the other two elements (TtgA/D/G)&#34;
+          reference_section_type: INTRODUCTION
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: Probable periplasmic linker protein component of the TtgABC
+
+  - term:
+      id: GO:0042908
+      label: xenobiotic transport
+    evidence_type: IMP
+    original_reference_id: PMID:32296906
+    review:
+      summary: &gt;-
+        This is the most useful process-level summary of TtgA function. TtgABC-family
+        pumps protect Pseudomonas cells against chemically diverse toxic hydrophobic
+        compounds including antibiotics, solvents, and monoterpenoids.
+      action: NEW
+      reason: &gt;-
+        The phenotype of ttgA loss and the broader TtgABC literature both support
+        a role in transport-based detoxification of xenobiotic compounds. This is
+        more precise than the parent term transmembrane transport and more general
+        than the substrate-specific antibiotic-response annotation.
+      supported_by:
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: &#34;GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.&#34;
+
+  - term:
+      id: GO:0044325
+      label: transmembrane transporter binding
+    evidence_type: TAS
+    original_reference_id: PMID:32296906
+    review:
+      summary: &gt;-
+        GO currently lacks a term tailored to RND efflux-pump adaptor subunits. As
+        a conservative proxy, transmembrane transporter binding captures the traceable
+        literature statement that the TtgA/D/G lipoprotein class stabilizes the
+        interaction between inner-membrane transporter and outer-membrane channel
+        elements.
+      action: NEW
+      reason: &gt;-
+        TtgA does not itself span the membrane or catalyze transport. TAS is used
+        instead of ISS because the support is a traceable author statement about
+        TtgA/D/G adaptor interactions, not transfer from a characterized ortholog.
+        Until a more specific adaptor term exists, GO:0044325 is the closest
+        informative molecular-function representation.
+      supported_by:
+        - reference_id: PMID:32296906
+          supporting_text: &#34;a lipoprotein that plays a role in stabilizing the interaction between the other two elements (TtgA/D/G)&#34;
+          reference_section_type: INTRODUCTION
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: Probable periplasmic linker protein component of the TtgABC
+        - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+          supporting_text: Belongs to the membrane fusion protein (MFP) (TC 8.A.1)
+            family.
+core_functions:
+  - molecular_function:
+      id: GO:0044325
+      label: transmembrane transporter binding
+    contributes_to_molecular_function:
+      id: GO:0022857
+      label: transmembrane transporter activity
+    directly_involved_in:
+      - id: GO:0042908
+        label: xenobiotic transport
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    in_complex:
+      id: GO:1902495
+      label: transmembrane transporter complex
+    description: &gt;-
+      TtgA is the inner-membrane-anchored adaptor subunit of the TtgABC tripartite
+      RND efflux pump. By binding and stabilizing the transporter/channel components,
+      it contributes to complex-level transmembrane efflux of toxic hydrophobic compounds
+      across the cell envelope.
+    supported_by:
+      - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+        supporting_text: Probable periplasmic linker protein component of the TtgABC
+      - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+        supporting_text: &#34;GO; GO:0042908; P:xenobiotic transport; IEA:UniProtKB-ARBA.&#34;
+proposed_new_terms:
+  - proposed_name: RND efflux pump adaptor activity
+    proposed_definition: &gt;-
+      Binding-based adaptor activity by a periplasmic membrane-fusion protein subunit
+      that bridges an inner-membrane RND transporter and an outer-membrane exit duct,
+      stabilizing a tripartite efflux complex that exports toxic compounds across
+      the cell envelope.
+    justification: &gt;-
+      Current GO annotations tend to over-annotate membrane-fusion/adaptor subunits
+      like TtgA as transmembrane transporter activity even though these proteins do
+      not themselves form the transport pore. A dedicated adaptor term would better
+      represent the molecular role of RND pump MFP subunits.
+    proposed_parent:
+      id: GO:0044325
+      label: transmembrane transporter binding
+    supported_by:
+      - reference_id: file:PSEPK/ttgA/ttgA-uniprot.txt
+        supporting_text: Probable periplasmic linker protein component of the TtgABC
+suggested_questions:
+  - question: &gt;-
+      What is the native substrate spectrum of the KT2440 TtgABC pump under physiological
+      conditions: antibiotics, aromatic solvents, monoterpenoids, or a broader xenobiotic
+      set?
+    experts:
+      - Ana Segura
+      - Juan L Ramos
+      - Markus Buchhaupt
+  - question: &gt;-
+      Does TtgA merely stabilize the TtgB-TtgC assembly, or does it also influence
+      substrate selectivity and efflux efficiency?
+    experts:
+      - Ana Segura
+      - Juan L Ramos
+      - Markus Buchhaupt
+suggested_experiments:
+  - hypothesis: TtgA is required for efficient efflux of multiple toxic hydrophobic
+      compounds in KT2440.
+    description: &gt;-
+      Construct clean ttgA and ttgABC deletion mutants in KT2440, complement them
+      in trans, and measure tolerance or MIC phenotypes for chloramphenicol, tetracycline,
+      toluene, 1,8-cineole, verbenone, and geraniol together with a resazurin efflux
+      assay.
+    experiment_type: targeted gene deletion and phenotype profiling
+  - hypothesis: The lipidated periplasmic adaptor domain of TtgA is required to couple
+      TtgB and TtgC into a functional tripartite complex.
+    description: &gt;-
+      Mutate the lipobox cysteine and predicted interfacial residues of TtgA, then
+      test complex formation with TtgB and TtgC by co-immunoprecipitation or crosslinking
+      and compare efflux activity against the wild-type protein.
+    experiment_type: structure-function analysis of efflux-pump assembly
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
