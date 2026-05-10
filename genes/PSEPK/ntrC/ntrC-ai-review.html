@@ -1,0 +1,3706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ntrC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ntrC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CY1" target="_blank" class="term-link">
+                        Q88CY1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">glnG</span>
+
+                    <span class="badge">PP_5048</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ntrC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CY1" data-a="DESCRIPTION: NtrC (UniProt Q88CY1; primary locus name glnG) is ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NtrC (UniProt Q88CY1; primary locus name glnG) is the cognate response regulator of the NtrB/NtrC two-component system and the master transcriptional regulator of nitrogen assimilation in Pseudomonas putida KT2440. It combines an N-terminal receiver domain, a central AAA+ ATPase/sigma54-interaction module, and a C-terminal DNA-binding domain to control sigma54-dependent promoters used during nitrogen limitation. Experimental work in KT2440 shows that NtrC directly activates glnK and additional nitrogen-scavenging genes such as codB and ureD, while it can also directly repress selected targets such as gdhA under nitrogen-limiting conditions. Transcriptome studies place NtrC at the top of a broader nitrogen-responsive network that coordinates nitrogen source utilization with wider metabolic adjustments.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                                    GO:0000156
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay response regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0000156" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core molecular function. NtrC is the response regulator partner of the NtrB/NtrC two-component system and uses its receiver domain to couple nitrogen status sensing to transcriptional control.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The response regulator role is central to NtrC biology and directly explains how the protein connects upstream nitrogen sensing with downstream gene regulation.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ntrC/ntrC-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NtrC (GlnG) is the response regulator of the NtrBC two-component system in *Pseudomonas putida*.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                    GO:0000160
+                                </a>
+                            </span>
+                            <span class="term-label">phosphorelay signal transduction system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0000160" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This process annotation is appropriate. NtrC operates within the NtrB/NtrC phosphorelay to convert nitrogen limitation signals into altered transcriptional output.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NtrC is not an isolated DNA-binding protein; it functions as the downstream regulator in a classical bacterial phosphorelay.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NtrC certainly binds DNA, but this parent term adds little once the more informative annotations for transcription cis-regulatory region binding, sequence-specific DNA binding, and activator/repressor activity are retained.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but too generic for a well-characterized bacterial transcription regulator with more specific child terms already present.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is appropriate for NtrC. The central AAA+ sigma54-interaction module binds ATP and uses nucleotide-dependent conformational changes to promote open-complex formation at sigma54-dependent promoters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is a core mechanistic requirement for enhancer-binding proteins such as NtrC, even though the GOA entry stops short of naming ATPase activity.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This localization is appropriate for a soluble bacterial response regulator that interacts with chromosomal promoter regions from the cytoplasmic side.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NtrC lacks membrane-targeting features and performs its signaling and DNA-binding functions in the bacterial cytoplasm/nucleoid.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The overall concept is right, but the term is overly broad for NtrC. In P. putida KT2440, NtrC directly activates some promoters and directly represses others, so the specific positive and negative regulation terms are more informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A generic transcription-regulation term obscures the experimentally demonstrated dual activator/repressor behavior of NtrC.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    positive regulation of DNA-templated transcription
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    negative regulation of DNA-templated transcription
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006808" target="_blank" class="term-link">
+                                    GO:0006808
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of nitrogen utilization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0006808" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is one of the best high-level process annotations for NtrC. The KT2440 literature defines NtrC as the master regulator of nitrogen assimilation and nitrogen-responsive gene expression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Coordinating nitrogen source uptake and assimilation is the primary biological role of NtrC in this organism.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is appropriate and more informative than generic DNA binding. NtrC binds defined upstream regulatory sequences in promoters such as glnK and gdhA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence-specific promoter recognition is fundamental to the direct-regulator role of NtrC.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    GO:0045893
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0045893" data-r="GO_REF:0000108" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This positive-regulation annotation is well supported by direct activation of sigma54-dependent nitrogen-responsive promoters, including glnK and other nitrogen-scavenging genes characterized in KT2440.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Positive transcriptional control is a core NtrC function and should be retained explicitly.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19648236
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NtrC-dependent regulatory network for nitrogen assimilation ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0000976" data-r="PMID:19648236" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This experimental annotation is appropriate. Footprinting and promoter analyses in the 2009 KT2440 study directly support NtrC binding upstream regulatory regions of nitrogen-responsive genes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct promoter binding is a core, experimentally demonstrated property of NtrC in this organism.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0000976" data-r="PMID:20735780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is also appropriate. The gdhA repression study showed direct NtrC interaction with multiple sites in the target promoter region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The 2010 work provides independent promoter-binding evidence in a repressor context.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000976" target="_blank" class="term-link">
+                                    GO:0000976
+                                </a>
+                            </span>
+                            <span class="term-label">transcription cis-regulatory region binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0000976" data-r="PMID:20735780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term remains appropriate with mutant/functional evidence from the gdhA repression study supporting promoter-region engagement by NtrC.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The biological effect depends on direct interaction with cis-regulatory DNA.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001216" target="_blank" class="term-link">
+                                    GO:0001216
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription activator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19648236
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NtrC-dependent regulatory network for nitrogen assimilation ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0001216" data-r="PMID:19648236" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a core molecular function. In vitro transcription and promoter studies show that NtrC directly activates sigma54-dependent genes involved in nitrogen assimilation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct transcriptional activation of nitrogen-regulated promoters is one of the defining activities of NtrC.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    GO:0001217
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription repressor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0001217" data-r="PMID:20735780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is supported by direct repression of gdhA under nitrogen-limiting conditions. The KT2440 data show that NtrC can operate as a repressor as well as an activator.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retaining the repressor term captures an experimentally demonstrated aspect of NtrC function that would otherwise be lost.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                                    GO:0001217
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription repressor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0001217" data-r="PMID:20735780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The phenotype-level and mechanistic evidence from the gdhA study supports NtrC-mediated transcriptional repression in vivo and in vitro.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NtrC is not solely an activator in KT2440; repressor activity is directly supported and biologically meaningful.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19648236
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    NtrC-dependent regulatory network for nitrogen assimilation ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0032993" data-r="PMID:19648236" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is accurate for the bound state of NtrC at target promoters, but it is a generic consequence of site-specific DNA binding rather than a particularly informative core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong, but it adds less biological specificity than the direct DNA-binding and transcription-regulation annotations.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0032993" data-r="PMID:20735780" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is likewise an accurate bound-state annotation for promoter-associated NtrC complexes formed during repression of gdhA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Useful as contextual cellular-component information, but not a principal core function term.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032993" target="_blank" class="term-link">
+                                    GO:0032993
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0032993" data-r="PMID:20735780" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The annotation is acceptable but generic, reflecting promoter-bound complexes rather than a uniquely defining component annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Better retained as non-core context than treated as a primary function.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20735780
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glutamate dehydrogenase expression in Pseudomo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CY1" data-a="GO:0045892" data-r="PMID:20735780" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term is directly supported by the gdhA study and should be retained. NtrC represses gdhA under nitrogen limitation through direct promoter binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Negative transcriptional regulation is an experimentally established component of the KT2440 NtrC regulon.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NtrC acts as the response regulator output of the NtrB/NtrC phosphorelay, coupling nitrogen limitation sensing to downstream transcriptional control in P. putida KT2440.</h3>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="FUNCTION: NtrC acts as the response regulator output of the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000156" target="_blank" class="term-link">
+                            phosphorelay response regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000160" target="_blank" class="term-link">
+                                phosphorelay signal transduction system
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17965157" target="_blank" class="term-link">
+                                PMID:17965157
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We define NtrC as the master nitrogen regulator</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ntrC/ntrC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DNA-binding transcriptional regulator NtrC</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NtrC directly activates sigma54-dependent promoters used during nitrogen limitation, including glnK and other nitrogen-scavenging genes, by binding upstream regulatory DNA and using its ATP-dependent enhancer-binding protein module to stimulate transcription initiation.</h3>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="FUNCTION: NtrC directly activates sigma54-dependent promoter..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001216" target="_blank" class="term-link">
+                            DNA-binding transcription activator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006808" target="_blank" class="term-link">
+                                regulation of nitrogen utilization
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                positive regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link">
+                                PMID:19648236
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In vitro experiments with purified proteins demonstrated that glnK transcription was directly activated by NtrC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link">
+                                PMID:19648236
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the codB and ureD genes have sigma(N)-dependent promoters and their nitrogen regulation was exerted directly by NtrC</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In addition to activation, NtrC directly represses selected targets such as gdhA under nitrogen-limiting conditions, showing that the KT2440 regulator has dual activator/repressor behavior within the nitrogen-response network.</h3>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="FUNCTION: In addition to activation, NtrC directly represses..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001217" target="_blank" class="term-link">
+                            DNA-binding transcription repressor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                negative regulation of DNA-templated transcription
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link">
+                                PMID:20735780
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In P. putida, the binding of NtrC to the gdhA promoter region and in vitro transcription suggest that, unlike its enterobacterial homologue that is repressed by Nac, gdhA is directly repressed by NtrC.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link">
+                                PMID:20735780
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both the phosphorylated and the non-phosphorylated forms of NtrC efficiently repressed gdhA transcription in vitro and in vivo.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro/domain-based automated annotations recover broad DNA-binding, ATP-binding, and transcription-regulator features for this NtrC-family response regulator.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular-location mapping supports cytoplasmic localization for the soluble bacterial transcriptional regulator.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Logical inference contributes a positive transcription-regulation annotation consistent with NtrC&#39;s sigma54-dependent activator role.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined automated annotation captures response-regulator and nitrogen-utilization roles that require curation against direct KT2440 experimental studies.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 genome sequence establishes the strain background and locus context for PP_5048/glnG.</div>
+
+                        <div class="finding-text">"Sequence analysis of the 6.18 Mb genome of strain KT2440 reveals diverse transport and metabolic systems."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17965157" target="_blank" class="term-link">
+                            PMID:17965157
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptome analysis of Pseudomonas putida in response to nitrogen availability.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Nitrogen-availability transcriptomics defines NtrC as the master nitrogen regulator in P. putida.</div>
+
+                        <div class="finding-text">"We define NtrC as the master nitrogen regulator and suggest that it not only activates pathways for the assimilation of alternative nitrogen sources but also represses carbon catabolism under nitrogen-limited conditions"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19648236" target="_blank" class="term-link">
+                            PMID:19648236
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NtrC-dependent regulatory network for nitrogen assimilation in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida glnK, codB, and ureD nitrogen regulation is directly exerted by NtrC through sigma54-dependent promoters.</div>
+
+                        <div class="finding-text">"In vitro experiments with purified proteins demonstrated that glnK transcription was directly activated by NtrC"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Footprinting identified NtrC binding sites upstream of the glnK promoter.</div>
+
+                        <div class="finding-text">"Two contiguous NtrC binding sites located upstream of the sigma(N)-dependent glnK promoter have been identified by footprinting analysis."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20437145" target="_blank" class="term-link">
+                            PMID:20437145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NtrC-sensed nitrogen availability is important for oxidative stress defense in Pseudomonas putida KT2440.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NtrC also affects oxidative-stress defense under nitrogen limitation, showing broader consequences of the nitrogen regulatory state.</div>
+
+                        <div class="finding-text">"NtrC-sensed nitrogen availability is one of the most important prerequisite for full cellular defense against oxidative stress in P. putida."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20735780" target="_blank" class="term-link">
+                            PMID:20735780
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of glutamate dehydrogenase expression in Pseudomonas putida results from its direct repression by NtrC under nitrogen-limiting conditions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NtrC directly represses gdhA under nitrogen-limiting conditions.</div>
+
+                        <div class="finding-text">"In P. putida, the binding of NtrC to the gdhA promoter region and in vitro transcription suggest that, unlike its enterobacterial homologue that is repressed by Nac, gdhA is directly repressed by NtrC."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NtrC binds multiple sites in the gdhA promoter and can repress transcription in vitro and in vivo.</div>
+
+                        <div class="finding-text">"Both the phosphorylated and the non-phosphorylated forms of NtrC efficiently repressed gdhA transcription in vitro and in vivo."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ntrC/ntrC-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Research report on ntrC/glnG in Pseudomonas putida KT2440 generated with Falcon.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The deep research synthesis identifies NtrC/GlnG as the NtrB/NtrC response regulator that controls nitrogen-responsive transcription and direct gdhA repression in KT2440.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which genes in the broader KT2440 nitrogen-limitation transcriptome are direct in vivo NtrC targets versus indirect downstream effects?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ana B. Hervas, Ignacio Canosa, Estrella Santero</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="Q: Which genes in the broader KT2440 nitrogen-limitat..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does NtrC coordinate with CbrB and other global regulators to couple nitrogen limitation to carbon catabolism, oxidative stress defense, and biofilm-associated phenotypes?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ignacio Canosa, Estrella Santero, Wonsuck Park</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="Q: How does NtrC coordinate with CbrB and other globa..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines whether NtrC acts as a sigma54-dependent activator or as a direct repressor at a given promoter in P. putida KT2440?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ana B. Hervas, Estrella Santero</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="Q: What determines whether NtrC acts as a sigma54-dep..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map the direct NtrC regulon under nitrogen-replete and nitrogen-limited conditions using ChIP-seq or DAP-seq combined with RNA-seq.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Many broader nitrogen-limitation transcript changes in KT2440 are indirect, while a smaller subset represent direct NtrC-bound promoters.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq/RNA-seq</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="EXPERIMENT: Map the direct NtrC regulon under nitrogen-replete..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Mutate the identified NtrC binding sites in the glnK, codB, ureD, and gdhA promoters and quantify promoter activity with transcriptional reporters.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Direct promoter occupancy by NtrC is required for both activation of nitrogen-scavenging genes and repression of gdhA.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Promoter mutagenesis and reporter assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="EXPERIMENT: Mutate the identified NtrC binding sites in the gl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type NtrC with receiver-domain phospho-defective and ATPase-dead AAA+ mutants to separate phosphorylation-dependent signaling from ATP-dependent transcription activation.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ATP hydrolysis is essential for sigma54-dependent activation, whereas promoter repression may have distinct requirements for phosphorylation and oligomerization.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Targeted mutagenesis and transcription assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CY1" data-a="EXPERIMENT: Compare wild-type NtrC with receiver-domain phosph..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ntrC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CY1" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-03-21T14:04:58.498899'<br />
+end_time: '2026-03-21T14:14:15.799111'<br />
+duration_seconds: 557.3<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: PSEPK<br />
+  gene_id: ntrC<br />
+  gene_symbol: glnG<br />
+  uniprot_accession: Q88CY1<br />
+  protein_description: 'RecName: Full=DNA-binding transcriptional regulator NtrC {ECO:0000256|ARBA:ARBA00019059,<br />
+    ECO:0000256|RuleBase:RU365013}; AltName: Full=Nitrogen regulation protein NR(I)<br />
+    {ECO:0000256|RuleBase:RU365013};'<br />
+  gene_info: Name=glnG {ECO:0000313|EMBL:AAN70613.1}; Synonyms=ntrC {ECO:0000256|RuleBase:RU365013};<br />
+    OrderedLocusNames=PP_5048 {ECO:0000313|EMBL:AAN70613.1};<br />
+  organism_full: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB<br />
+    11950 / KT2440).<br />
+  protein_family: Not specified in UniProt<br />
+  protein_domains: AAA+_ATPase. (IPR003593); AAA_lid_NorR. (IPR058031); CheY-like_superfamily.<br />
+    (IPR011006); Homeodomain-like_sf. (IPR009057); HTH_Fis. (IPR002197)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 27</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88CY1</li>
+<li><strong>Protein Description:</strong> RecName: Full=DNA-binding transcriptional regulator NtrC {ECO:0000256|ARBA:ARBA00019059, ECO:0000256|RuleBase:RU365013}; AltName: Full=Nitrogen regulation protein NR(I) {ECO:0000256|RuleBase:RU365013};</li>
+<li><strong>Gene Information:</strong> Name=glnG {ECO:0000313|EMBL:AAN70613.1}; Synonyms=ntrC {ECO:0000256|RuleBase:RU365013}; OrderedLocusNames=PP_5048 {ECO:0000313|EMBL:AAN70613.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); AAA_lid_NorR. (IPR058031); CheY-like_superfamily. (IPR011006); Homeodomain-like_sf. (IPR009057); HTH_Fis. (IPR002197)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "glnG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'glnG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>glnG</strong> (gene ID: ntrC, UniProt: Q88CY1) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q88CY1</li>
+<li><strong>Protein Description:</strong> RecName: Full=DNA-binding transcriptional regulator NtrC {ECO:0000256|ARBA:ARBA00019059, ECO:0000256|RuleBase:RU365013}; AltName: Full=Nitrogen regulation protein NR(I) {ECO:0000256|RuleBase:RU365013};</li>
+<li><strong>Gene Information:</strong> Name=glnG {ECO:0000313|EMBL:AAN70613.1}; Synonyms=ntrC {ECO:0000256|RuleBase:RU365013}; OrderedLocusNames=PP_5048 {ECO:0000313|EMBL:AAN70613.1};</li>
+<li><strong>Organism (full):</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Protein Family:</strong> Not specified in UniProt</li>
+<li><strong>Key Domains:</strong> AAA+_ATPase. (IPR003593); AAA_lid_NorR. (IPR058031); CheY-like_superfamily. (IPR011006); Homeodomain-like_sf. (IPR009057); HTH_Fis. (IPR002197)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "glnG" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'glnG' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>glnG</strong> (gene ID: ntrC, UniProt: Q88CY1) in PSEPK.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-pseudomonas-putida-kt2440-glng-ntrc-functional-annotation-uniprot-q88cy1">Research report: <em>Pseudomonas putida</em> KT2440 glnG (ntrC) — functional annotation (UniProt Q88CY1)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The <em>Pseudomonas putida</em> KT2440 protein GlnG (syn. NtrC; UniProt Q88CY1, locus PP_5048) is a nitrogen-responsive transcriptional regulator that functions as the response regulator of the NtrBC two-component system and interfaces with the alternative sigma factor σ54 (RpoN) to reprogram transcription during nitrogen limitation. In <em>P. putida</em>, NtrC also has a well-supported, unusual role as a <strong>direct repressor</strong> of <em>gdhA</em> (glutamate dehydrogenase), mediated by cooperative multi-site DNA binding and likely DNA looping; this repression can occur even when NtrC is not phosphorylated, implying a concentration/occupancy-driven mechanism for this target. Recent work (2024) continues to place NtrBC/NtrC as the canonical controller of nitrate assimilation gene expression (nas cluster) via phospho-NtrC + RpoN, and transcriptome profiling under nitrogen limitation identifies NtrBC among key regulators linked to metabolic reallocation in the KT2440 biotechnological chassis. (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 2-3, dabrowska2020transcriptomechangesin pages 1-2, nie2024cyclicdigmpinhibits pages 2-3)</p>
+<h2 id="1-identity-verification-mandatory">1. Identity verification (mandatory)</h2>
+<h3 id="11-geneprotein-match-and-organism">1.1 Gene/protein match and organism</h3>
+<p>The literature examined here explicitly studies <strong>NtrC (glnG)</strong> in <em>Pseudomonas putida</em> and describes it as the response regulator of the <strong>NtrB/NtrC (NtrBC)</strong> system controlling nitrogen-responsive transcription. (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 2-3, nie2024cyclicdigmpinhibits pages 2-3)</p>
+<h3 id="12-functional-class-and-domains-conceptual-mapping">1.2 Functional class and domains (conceptual mapping)</h3>
+<p>NtrC is a member of the σ54-associated bacterial enhancer-binding proteins (bEBPs): σ54 promoters form stable closed complexes requiring an activator that uses ATP hydrolysis to drive open-complex formation. bEBPs are typically multi-domain regulators with a regulatory N-terminus, a central AAA+ ATPase activation domain (often containing the σ54-interacting GAFTGA motif), and a C-terminal HTH DNA-binding domain. (hartman2016modulatingsalmonellatyphimuriums pages 2-4, hartman2016modulatingsalmonellatyphimuriums pages 1-2)</p>
+<p><em>Note:</em> The retrieved evidence provides strong mechanistic and functional confirmation that <em>P. putida</em> GlnG/NtrC operates as a σ54-linked bEBP response regulator, but it does not directly provide a domain schematic specific to Q88CY1; domain assertions beyond this mechanistic class should be sourced directly from UniProt/InterPro if required.</p>
+<h2 id="2-key-concepts-and-current-understanding">2. Key concepts and current understanding</h2>
+<h3 id="21-54rpon-dependent-transcription-and-bebps-definitions">2.1 σ54/RpoN-dependent transcription and bEBPs (definitions)</h3>
+<p>σ54 (RpoN) recognizes conserved promoter elements at −24/−12 and forms a <strong>stable closed RNAP–promoter complex</strong> that does not spontaneously isomerize to an open complex. Open-complex formation requires <strong>ATP hydrolysis by a bEBP</strong>, which contacts RNAP–σ54 (often via DNA looping from enhancer sites ~80–150 bp upstream) and remodels the closed complex into a transcriptionally competent open complex. (hartman2016modulatingsalmonellatyphimuriums pages 2-4, hartman2016modulatingsalmonellatyphimuriums pages 1-2)</p>
+<h3 id="22-ntrbc-logic-nitrogen-availability-sensing">2.2 NtrBC logic (nitrogen availability sensing)</h3>
+<p>In the canonical NtrBC scheme used by <em>P. putida</em>, low nitrogen enables NtrB autophosphorylation and transfer of phosphate to NtrC; phosphorylated NtrC then activates σ54-dependent transcription of nitrogen assimilation genes. Conversely, ammonium availability suppresses NtrB autophosphorylation and represses NtrC-dependent expression of certain nitrogen assimilation operons (e.g., nas). (nie2024cyclicdigmpinhibits pages 2-3, hervas2010regulationofglutamate pages 1-2)</p>
+<h2 id="3-molecular-function-of-p-putida-ntrc-glng">3. Molecular function of <em>P. putida</em> NtrC (GlnG)</h2>
+<h3 id="31-primary-biochemical-activity-atp-dependent-transcriptional-activation-with-54">3.1 Primary biochemical activity: ATP-dependent transcriptional activation with σ54</h3>
+<p>NtrC’s primary role is transcriptional regulation rather than enzymatic catalysis of small-molecule transformations. In the σ54 system, the relevant “reaction” is <strong>ATP hydrolysis coupled to transcription initiation</strong>: bEBPs oligomerize and hydrolyze ATP to catalyze closed→open complex conversion at σ54 promoters. (hartman2016modulatingsalmonellatyphimuriums pages 2-4)</p>
+<p>In <em>P. putida</em>, NtrC is specifically described as the nitrogen-mediated regulator that (when phosphorylated by NtrB under nitrogen limitation) activates σ54-dependent promoters via ATP-dependent enhancer activity. (hervas2010regulationofglutamate pages 1-2)</p>
+<h3 id="32-direct-repression-gdha-as-a-high-confidence-ntrc-repression-target">3.2 Direct repression: <em>gdhA</em> as a high-confidence NtrC repression target</h3>
+<p>A defining <em>P. putida</em>-specific insight is that NtrC can directly repress <em>gdhA</em> (glutamate dehydrogenase), a gene that is induced under nitrogen excess. (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 2-3)</p>
+<p><strong>Quantitative expression evidence:</strong> In wild-type <em>P. putida</em> (KT2442 background in the study), a <em>gdhA–lacZ</em> reporter is low under nitrogen limitation and increases ~10-fold with ammonium; in an <em>ntrC</em> mutant, expression remains high under nitrogen limitation at ~80% of the excess-nitrogen level, indicating NtrC-dependent repression under N limitation. (hervas2010regulationofglutamate pages 2-3)</p>
+<p><strong>Binding-site architecture and mechanism:</strong> DNase I footprinting shows NtrC binding to <strong>four distinct sites (boxes I–IV)</strong> around the <em>gdhA</em> promoter region, including one overlapping the core promoter region and others upstream/downstream, supporting cooperative binding and higher-order complex formation. The periodic hypersensitivity pattern is consistent with DNA looping stabilized by NtrC dimer–dimer interactions, and the authors propose repression occurs prior to open complex formation. (hervas2010regulationofglutamate pages 3-5, hervas2010regulationofglutamate media 238c0c86)</p>
+<p><strong>Phosphorylation independence (target-specific):</strong> Both phosphorylated and non-phosphorylated NtrC can efficiently repress <em>gdhA</em> in vitro and in vivo; repression under nitrogen limitation is argued to rely on increased NtrC concentration rather than its phosphorylation state. (hervas2010regulationofglutamate pages 1-2)</p>
+<h2 id="4-biological-processes-and-pathways">4. Biological processes and pathways</h2>
+<h3 id="41-nitrogen-scavengingassimilation-programs-54-dependent">4.1 Nitrogen scavenging/assimilation programs (σ54-dependent)</h3>
+<p>NtrC is positioned as a master regulator controlling multiple operons involved in uptake/assimilation of alternative nitrogen sources, including (in broader description) its own nitrogen-regulatory operon(s). (hervas2010regulationofglutamate pages 1-2)</p>
+<p>A recent mechanistic example in <em>P. putida</em> is regulation of the <strong>nitrate assimilation (nas) cluster</strong>: under low nitrogen, NtrB→NtrC phosphorylation enables phospho-NtrC + RpoN to activate nas transcription, while ammonium inhibits NtrB autophosphorylation and represses nas expression. (nie2024cyclicdigmpinhibits pages 2-3)</p>
+<h3 id="42-integration-with-other-global-regulatory-hierarchies-in-pseudomonas">4.2 Integration with other global regulatory hierarchies in <em>Pseudomonas</em></h3>
+<p>A 2022 review on the CbrAB system (a major Pseudomonadaceae signal-integrating two-component system) highlights regulatory cross-talk between CbrAB and NtrBC in nutrient assimilation hierarchies (carbon/nitrogen source use). In histidine catabolism regulation, it summarizes evidence that NtrC activates hut transcription when histidine is a nitrogen source and that regulatory-site overlap can gate access of CbrB vs NtrC-family regulators at promoters, illustrating multi-layered signal integration in <em>Pseudomonas</em> regulatory networks. (monteagudocascales2022theregulatoryhierarchy pages 11-13, monteagudocascales2022theregulatoryhierarchy pages 2-4)</p>
+<h2 id="5-subcellular-localization">5. Subcellular localization</h2>
+<p>As a DNA-binding transcriptional regulator, NtrC function is expected to occur in the cytoplasm with promoter binding on the chromosome (nucleoid). The retrieved evidence supports DNA binding at specific promoters (e.g., <em>gdhA</em>) and σ54-dependent transcriptional control, but does not provide microscopy or fractionation-based localization measurements in <em>P. putida</em>. (hervas2010regulationofglutamate pages 3-5, hartman2016modulatingsalmonellatyphimuriums pages 2-4)</p>
+<h2 id="6-recent-developments-prioritizing-20232024">6. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="61-2024-ntrbc-remains-central-to-nitrate-assimilation-regulation-now-contextualized-with-second-messenger-control">6.1 2024: NtrBC remains central to nitrate assimilation regulation, now contextualized with second-messenger control</h3>
+<p>A 2024 <em>Nucleic Acids Research</em> study on nitrate assimilation regulation via NasT (an antiterminator) reiterates the canonical role of NtrBC: ammonium repression of the nas cluster is mediated by NtrBC, with NtrB autophosphorylating under low nitrogen and transferring phosphate to NtrC; phospho-NtrC together with RpoN activates nas transcription; ammonium inhibits NtrB autophosphorylation. The study’s nitrogen-source conditions include 5 mM NH4Cl or 5 mM KNO3 as sole nitrogen sources. (nie2024cyclicdigmpinhibits pages 2-3)</p>
+<p>Although the paper’s primary novelty concerns c-di-GMP binding to NasT and inhibition of antitermination (not NtrC itself), it is a current, authoritative confirmation that NtrBC/NtrC remains the front-end controller of nitrate assimilation transcription in <em>P. putida</em>, while downstream layers (RNA antitermination and c-di-GMP signaling) can modulate expression outputs. (nie2024cyclicdigmpinhibits pages 2-3)</p>
+<h3 id="62-transcriptome-scale-evidence-relevant-to-nitrogen-limitation-in-the-kt2440-chassis">6.2 Transcriptome-scale evidence relevant to nitrogen limitation in the KT2440 chassis</h3>
+<p>A KT2440 transcriptome study under nitrogen limitation during mcl-PHA synthesis reports shared differentially expressed genes across strains (24 commonly downregulated and 21 commonly upregulated), and identifies NtrB/NtrC among candidate regulators implicated in transcriptome rearrangement under N limitation, linking nitrogen regulation to industrially relevant carbon storage biopolymer production. (dabrowska2020transcriptomechangesin pages 1-2)</p>
+<p><em>Note:</em> This transcriptomics paper is 2020 rather than 2023–2024; it is included because it is directly KT2440- and nitrogen-limitation-focused within the retrieved corpus.</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-biotechnology-nitrogen-limitation-as-a-process-lever-in-p-putida-production-strains">7.1 Biotechnology: nitrogen limitation as a process lever in <em>P. putida</em> production strains</h3>
+<p>Nitrogen limitation is commonly used to induce carbon storage polymers such as medium-chain-length polyhydroxyalkanoates (mcl-PHAs) in <em>P. putida</em> KT2440, and transcriptome analysis under these conditions implicates nitrogen regulators (including NtrB/NtrC and σ54-linked factors) in remodeling expression programs during production. This positions NtrC as an indirect but strategically important node for metabolic engineering and process optimization (e.g., decoupling nitrogen stress signaling from product formation). (dabrowska2020transcriptomechangesin pages 1-2)</p>
+<h3 id="72-environmental-nutrient-cycling-nitrate-assimilation-control">7.2 Environmental nutrient cycling: nitrate assimilation control</h3>
+<p>The nas cluster is part of nitrate assimilation, a pathway central to environmental nitrogen cycling. The 2024 mechanistic framework indicates that NtrBC provides nitrogen-status gating of nitrate assimilation in <em>P. putida</em>, integrating ammonium repression with nitrate/nitrite induction logic. (nie2024cyclicdigmpinhibits pages 2-3)</p>
+<h2 id="8-expert-opinions-and-analysis-authoritative-synthesis">8. Expert opinions and analysis (authoritative synthesis)</h2>
+<h3 id="81-why-p-putida-ntrc-is-notable-among-ntrc-family-regulators">8.1 Why <em>P. putida</em> NtrC is notable among NtrC-family regulators</h3>
+<p>Canonical NtrC-family regulators are often emphasized as σ54-dependent activators. The <em>P. putida</em> work by Hervás et al. provides a clear counterexample where NtrC directly represses <em>gdhA</em> via multi-site binding and looping, and where repression is not strictly phosphorylation-dependent. This implies that “NtrC = activator when phosphorylated” is an incomplete functional model: promoter architecture, binding-site topology, and regulator concentration can produce repression outputs even for an archetypal σ54 activator. (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 3-5)</p>
+<h3 id="82-systems-level-implication-multiple-regulatory-layers-downstream-of-ntrbc">8.2 Systems-level implication: multiple regulatory layers downstream of NtrBC</h3>
+<p>The 2024 NasT/c-di-GMP study indicates that, even when NtrBC defines the primary nitrogen-status input (via phospho-NtrC + RpoN), <em>Pseudomonas</em> nitrate assimilation can be further tuned by RNA-level antitermination control and second-messenger signaling. This layered control is consistent with the broader view that <em>Pseudomonas</em> integrates multiple environmental cues through hierarchically connected regulators (e.g., CbrAB cross-talk), improving robustness and flexibility in nutrient-variable habitats. (nie2024cyclicdigmpinhibits pages 2-3, monteagudocascales2022theregulatoryhierarchy pages 2-4)</p>
+<h2 id="9-key-statistics-and-data-points-from-cited-studies">9. Key statistics and data points (from cited studies)</h2>
+<ul>
+<li><em>gdhA–lacZ</em> reporter in <em>P. putida</em>: ~10-fold induction with ammonium; <em>ntrC</em> mutant retains high expression under nitrogen limitation at ~80% of excess-nitrogen level. (Hervás et al., 2010; published Oct 2010; https://doi.org/10.1111/j.1365-2958.2010.07329.x) (hervas2010regulationofglutamate pages 2-3)</li>
+<li><em>gdhA</em> promoter NtrC occupancy: four binding sites (boxes I–IV) detected by footprinting, consistent with cooperative binding and proposed repression looping. (Hervás et al., 2010; https://doi.org/10.1111/j.1365-2958.2010.07329.x) (hervas2010regulationofglutamate pages 3-5, hervas2010regulationofglutamate media 238c0c86)</li>
+<li>KT2440 nitrogen-limitation transcriptome (mcl-PHA conditions): 24 commonly downregulated and 21 commonly upregulated genes across three strains (WT, stringent-response mutant, rpoN mutant), with NtrB/NtrC implicated among regulators. (Dabrowska et al., 2020; published Dec 2020; https://doi.org/10.3390/ijms22010152) (dabrowska2020transcriptomechangesin pages 1-2)</li>
+<li>Nitrate assimilation experiments: media included 5 mM NH4Cl or 5 mM KNO3 as sole N sources; NtrBC described as gating nas transcription via phospho-NtrC + RpoN under low nitrogen. (Nie et al., 2024; published Nov 2024; https://doi.org/10.1093/nar/gkad1117) (nie2024cyclicdigmpinhibits pages 2-3)</li>
+</ul>
+<h2 id="10-evidence-synopsis-table">10. Evidence synopsis table</h2>
+<p>The following table consolidates the core functional annotation facts and quantitative support.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary</th>
+<th>Quantitative datapoints</th>
+<th>Key source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Molecular function / mechanism</td>
+<td>NtrC (GlnG) is the response regulator of the NtrBC two-component system in <em>Pseudomonas putida</em>. Under nitrogen limitation, NtrB phosphorylates NtrC; phospho-NtrC acts with σ54/RpoN as an enhancer-binding ATP-dependent activator of σ54 promoters. NtrC can also directly repress some targets such as <em>gdhA</em>; for <em>gdhA</em>, both phosphorylated and non-phosphorylated NtrC can repress transcription, with repression depending largely on NtrC abundance rather than phosphorylation state (hervas2010regulationofglutamate pages 1-2).</td>
+<td>In vitro phosphorylation used acetyl phosphate at 30 mM for EMSA and 40 mM for in vitro transcription assays; transcription assays used 100 nM <em>E. coli</em> core RNAP + 200 nM <em>P. putida</em> σ54 for activation assays (hervas2010regulationofglutamate pages 13-13).</td>
+<td>Hervás et al., 2010, <em>Molecular Microbiology</em>, https://doi.org/10.1111/j.1365-2958.2010.07329.x</td>
+</tr>
+<tr>
+<td>Target / process: <em>gdhA</em> repression</td>
+<td>NtrC directly represses <em>gdhA</em> (glutamate dehydrogenase), a gene induced by nitrogen excess. Footprinting and promoter analyses showed multi-site NtrC binding around the <em>gdhA</em> promoter and a proposed DNA-looping repression mechanism that blocks open-complex formation (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 2-3, hervas2010regulationofglutamate pages 3-5, hervas2010regulationofglutamate media 238c0c86).</td>
+<td><em>gdhA-lacZ</em> expression increased ~10-fold with ammonium in wild type; in an <em>ntrC</em> mutant, expression under nitrogen limitation remained high at ~80% of the excess-nitrogen level. Four NtrC binding sites were identified around the promoter; mapped protected regions included +2 to +25, −11 to −31, −89 to −104, and an upstream site extending to ~−130 (hervas2010regulationofglutamate pages 2-3, hervas2010regulationofglutamate pages 3-5).</td>
+<td>Hervás et al., 2010, <em>Molecular Microbiology</em>, https://doi.org/10.1111/j.1365-2958.2010.07329.x</td>
+</tr>
+<tr>
+<td>Target / process: <em>glnK</em> activation</td>
+<td>NtrC can activate a σ54-dependent <em>glnK</em> promoter in vitro, consistent with its canonical role as a nitrogen-responsive σ54 enhancer-binding activator in <em>P. putida</em> (hervas2010regulationofglutamate pages 13-13, hervas2010regulationofglutamate pages 1-2).</td>
+<td>After nitrogen upshift, transcript kinetics for <em>glnK</em> and <em>gdhA</em> were monitored by RT-qPCR following addition of 1 g L⁻¹ ammonium chloride to N-limited cultures; the excerpt confirms assay design but does not provide fold-change values for <em>glnK</em> in the retrieved evidence (hervas2010regulationofglutamate pages 13-13).</td>
+<td>Hervás et al., 2010, <em>Molecular Microbiology</em>, https://doi.org/10.1111/j.1365-2958.2010.07329.x</td>
+</tr>
+<tr>
+<td>Target / process: <em>nas</em> cluster regulation</td>
+<td>In <em>P. putida</em>, ammonium-mediated repression of the nitrate assimilation (<em>nas</em>) cluster is controlled by NtrBC. Under low nitrogen, NtrB autophosphorylates and transfers phosphate to NtrC; phospho-NtrC, together with RpoN, activates <em>nas</em> transcription. Ammonium inhibits NtrB autophosphorylation, repressing <em>nas</em> expression (nie2024cyclicdigmpinhibits pages 2-3, nie2024cyclicdigmpinhibits pages 1-2).</td>
+<td>Experiments described nitrogen-source conditions of 5 mM NH4Cl or 5 mM KNO3 as sole nitrogen sources; no additional NtrBC-specific kinetic values were reported in the retrieved excerpt (nie2024cyclicdigmpinhibits pages 2-3).</td>
+<td>Nie et al., 2024, <em>Nucleic Acids Research</em>, https://doi.org/10.1093/nar/gkad1117</td>
+</tr>
+<tr>
+<td>Broader nitrogen-limitation response / regulon context</td>
+<td>Transcriptomics under nitrogen limitation in KT2440 implicated NtrB/NtrC among the regulators driving transcriptome rearrangement during adaptation and mcl-PHA synthesis; a review also notes cross-talk between CbrAB and NtrBC in nitrogen/carbon assimilation hierarchies in <em>Pseudomonas</em> (dabrowska2020transcriptomechangesin pages 1-2, monteagudocascales2022theregulatoryhierarchy pages 11-13, monteagudocascales2022theregulatoryhierarchy pages 2-4).</td>
+<td>Under N limitation, 24 genes were commonly downregulated and 21 commonly upregulated across three strains analyzed in one KT2440 transcriptome study (dabrowska2020transcriptomechangesin pages 1-2). A HutC mutant study cited in review showed upregulation of 46 nitrogen-regulation-related genes, illustrating broader network connectivity, though not a direct KT2440 NtrC regulon size (monteagudocascales2022theregulatoryhierarchy pages 11-13).</td>
+<td>Dabrowska et al., 2020, <em>Int. J. Mol. Sci.</em>, https://doi.org/10.3390/ijms22010152; Monteagudo-Cascales et al., 2022, <em>Genes</em>, https://doi.org/10.3390/genes13020375</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the core functional annotation evidence for </em>P. putida<em> NtrC/GlnG, including mechanism, key regulated targets, quantitative observations, and the most relevant supporting sources.</em></p>
+<h2 id="11-visual-evidence-promoter-binding-and-repression-model">11. Visual evidence (promoter binding and repression model)</h2>
+<p>DNase I footprinting and the proposed DNA-loop repression model for NtrC at the <em>gdhA</em> promoter are captured in cropped figure regions from Hervás et al. (2010). (hervas2010regulationofglutamate media 238c0c86, hervas2010regulationofglutamate media 7244e00a)</p>
+<h2 id="12-limitations-of-the-current-evidence-set">12. Limitations of the current evidence set</h2>
+<ul>
+<li>The retrieved corpus did not include KT2440-specific ChIP-seq/ChIP-exo maps for NtrC, so a comprehensive, genome-wide, experimentally validated NtrC regulon size for KT2440 could not be stated here.</li>
+<li>Direct experimental subcellular localization (imaging/fractionation) for NtrC in <em>P. putida</em> was not present in the retrieved evidence; localization is inferred from function as a DNA-binding transcriptional regulator.</li>
+<li>2023–2024 sources directly centered on <em>P. putida</em> NtrC were limited in the retrieved set; the key recent contribution used here (Nie et al., 2024) provides mechanistic reinforcement of NtrBC control but focuses on NasT/c-di-GMP.</li>
+</ul>
+<h2 id="references-urls-and-publication-dates">References (URLs and publication dates)</h2>
+<ul>
+<li>Hervás AB, Canosa I, Santero E. “Regulation of glutamate dehydrogenase expression in <em>Pseudomonas putida</em> results from its direct repression by NtrC under nitrogen-limiting conditions.” <em>Molecular Microbiology</em>. Oct 2010. https://doi.org/10.1111/j.1365-2958.2010.07329.x (hervas2010regulationofglutamate pages 1-2, hervas2010regulationofglutamate pages 2-3, hervas2010regulationofglutamate pages 3-5)</li>
+<li>Nie L, Xiao Y, Zhou T, et al. “Cyclic di-GMP inhibits nitrate assimilation by impairing the antitermination function of NasT in <em>Pseudomonas putida</em>.” <em>Nucleic Acids Research</em>. Nov 2024. https://doi.org/10.1093/nar/gkad1117 (nie2024cyclicdigmpinhibits pages 2-3)</li>
+<li>Dabrowska D, Mozejko-Ciesielska J, Pokój T, Ciesielski S. “Transcriptome Changes in <em>Pseudomonas putida</em> KT2440 during Medium-Chain-Length Polyhydroxyalkanoate Synthesis Induced by Nitrogen Limitation.” <em>International Journal of Molecular Sciences</em>. Dec 2020. https://doi.org/10.3390/ijms22010152 (dabrowska2020transcriptomechangesin pages 1-2)</li>
+<li>Monteagudo-Cascales E, Santero E, Canosa I. “The Regulatory Hierarchy Following Signal Integration by the CbrAB Two-Component System: Diversity of Responses and Functions.” <em>Genes</em>. Feb 2022. https://doi.org/10.3390/genes13020375 (monteagudocascales2022theregulatoryhierarchy pages 11-13, monteagudocascales2022theregulatoryhierarchy pages 2-4)</li>
+<li>Hartman CE, Samuels DJ, Karls AC. “Modulating <em>Salmonella</em> Typhimurium's Response to a Changing Environment through Bacterial Enhancer-Binding Proteins and the RpoN Regulon.” <em>Frontiers in Molecular Biosciences</em>. Aug 2016. https://doi.org/10.3389/fmolb.2016.00041 (hartman2016modulatingsalmonellatyphimuriums pages 2-4, hartman2016modulatingsalmonellatyphimuriums pages 1-2)</li>
+<li>Shimada T, Furuhata S, Ishihama A. “Whole set of constitutive promoters for RpoN sigma factor and the regulatory role of its enhancer protein NtrC in <em>Escherichia coli</em> K-12.” <em>Microbial Genomics</em>. Nov 2021. https://doi.org/10.1099/mgen.0.000653 (shimada2021wholesetof pages 1-2, shimada2021wholesetof pages 25-26, shimada2021wholesetof pages 8-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(hervas2010regulationofglutamate pages 1-2): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hervas2010regulationofglutamate pages 2-3): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dabrowska2020transcriptomechangesin pages 1-2): Dorota Dabrowska, Justyna Mozejko-Ciesielska, Tomasz Pokój, and Slawomir Ciesielski. Transcriptome changes in pseudomonas putida kt2440 during medium-chain-length polyhydroxyalkanoate synthesis induced by nitrogen limitation. International Journal of Molecular Sciences, 22:152, Dec 2020. URL: https://doi.org/10.3390/ijms22010152, doi:10.3390/ijms22010152. This article has 13 citations.</p>
+</li>
+<li>
+<p>(nie2024cyclicdigmpinhibits pages 2-3): Liang Nie, Yujie Xiao, Tiantian Zhou, Haoqi Feng, Meina He, Qingyuan Liang, Kexin Mu, Hailing Nie, Qiaoyun Huang, and Wenli Chen. Cyclic di-gmp inhibits nitrate assimilation by impairing the antitermination function of nast in pseudomonas putida. Nucleic Acids Research, 52:186-203, Nov 2024. URL: https://doi.org/10.1093/nar/gkad1117, doi:10.1093/nar/gkad1117. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hartman2016modulatingsalmonellatyphimuriums pages 2-4): Christine E. Hartman, David J. Samuels, and Anna C. Karls. Modulating salmonella typhimurium's response to a changing environment through bacterial enhancer-binding proteins and the rpon regulon. Frontiers in Molecular Biosciences, Aug 2016. URL: https://doi.org/10.3389/fmolb.2016.00041, doi:10.3389/fmolb.2016.00041. This article has 23 citations.</p>
+</li>
+<li>
+<p>(hartman2016modulatingsalmonellatyphimuriums pages 1-2): Christine E. Hartman, David J. Samuels, and Anna C. Karls. Modulating salmonella typhimurium's response to a changing environment through bacterial enhancer-binding proteins and the rpon regulon. Frontiers in Molecular Biosciences, Aug 2016. URL: https://doi.org/10.3389/fmolb.2016.00041, doi:10.3389/fmolb.2016.00041. This article has 23 citations.</p>
+</li>
+<li>
+<p>(hervas2010regulationofglutamate pages 3-5): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hervas2010regulationofglutamate media 238c0c86): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(monteagudocascales2022theregulatoryhierarchy pages 11-13): Elizabet Monteagudo-Cascales, Eduardo Santero, and Inés Canosa. The regulatory hierarchy following signal integration by the cbrab two-component system: diversity of responses and functions. Genes, 13:375, Feb 2022. URL: https://doi.org/10.3390/genes13020375, doi:10.3390/genes13020375. This article has 24 citations.</p>
+</li>
+<li>
+<p>(monteagudocascales2022theregulatoryhierarchy pages 2-4): Elizabet Monteagudo-Cascales, Eduardo Santero, and Inés Canosa. The regulatory hierarchy following signal integration by the cbrab two-component system: diversity of responses and functions. Genes, 13:375, Feb 2022. URL: https://doi.org/10.3390/genes13020375, doi:10.3390/genes13020375. This article has 24 citations.</p>
+</li>
+<li>
+<p>(hervas2010regulationofglutamate pages 13-13): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nie2024cyclicdigmpinhibits pages 1-2): Liang Nie, Yujie Xiao, Tiantian Zhou, Haoqi Feng, Meina He, Qingyuan Liang, Kexin Mu, Hailing Nie, Qiaoyun Huang, and Wenli Chen. Cyclic di-gmp inhibits nitrate assimilation by impairing the antitermination function of nast in pseudomonas putida. Nucleic Acids Research, 52:186-203, Nov 2024. URL: https://doi.org/10.1093/nar/gkad1117, doi:10.1093/nar/gkad1117. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hervas2010regulationofglutamate media 7244e00a): Ana B. Hervás, Inés Canosa, and Eduardo Santero. Regulation of glutamate dehydrogenase expression in pseudomonas putida results from its direct repression by ntrc under nitrogen‐limiting conditions. Molecular Microbiology, Oct 2010. URL: https://doi.org/10.1111/j.1365-2958.2010.07329.x, doi:10.1111/j.1365-2958.2010.07329.x. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shimada2021wholesetof pages 1-2): Tomohiro Shimada, Shun Furuhata, and Akira Ishihama. Whole set of constitutive promoters for rpon sigma factor and the regulatory role of its enhancer protein ntrc in escherichia coli k-12. Nov 2021. URL: https://doi.org/10.1099/mgen.0.000653, doi:10.1099/mgen.0.000653. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shimada2021wholesetof pages 25-26): Tomohiro Shimada, Shun Furuhata, and Akira Ishihama. Whole set of constitutive promoters for rpon sigma factor and the regulatory role of its enhancer protein ntrc in escherichia coli k-12. Nov 2021. URL: https://doi.org/10.1099/mgen.0.000653, doi:10.1099/mgen.0.000653. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shimada2021wholesetof pages 8-9): Tomohiro Shimada, Shun Furuhata, and Akira Ishihama. Whole set of constitutive promoters for rpon sigma factor and the regulatory role of its enhancer protein ntrc in escherichia coli k-12. Nov 2021. URL: https://doi.org/10.1099/mgen.0.000653, doi:10.1099/mgen.0.000653. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hartman2016modulatingsalmonellatyphimuriums pages 2-4</li>
+<li>hervas2010regulationofglutamate pages 1-2</li>
+<li>hervas2010regulationofglutamate pages 2-3</li>
+<li>nie2024cyclicdigmpinhibits pages 2-3</li>
+<li>dabrowska2020transcriptomechangesin pages 1-2</li>
+<li>hervas2010regulationofglutamate pages 13-13</li>
+<li>monteagudocascales2022theregulatoryhierarchy pages 11-13</li>
+<li>hartman2016modulatingsalmonellatyphimuriums pages 1-2</li>
+<li>hervas2010regulationofglutamate pages 3-5</li>
+<li>monteagudocascales2022theregulatoryhierarchy pages 2-4</li>
+<li>nie2024cyclicdigmpinhibits pages 1-2</li>
+<li>shimada2021wholesetof pages 1-2</li>
+<li>shimada2021wholesetof pages 25-26</li>
+<li>shimada2021wholesetof pages 8-9</li>
+<li>https://doi.org/10.1111/j.1365-2958.2010.07329.x</li>
+<li>https://doi.org/10.3390/ijms22010152</li>
+<li>https://doi.org/10.1093/nar/gkad1117</li>
+<li>https://doi.org/10.3390/ijms22010152;</li>
+<li>https://doi.org/10.3390/genes13020375</li>
+<li>https://doi.org/10.3389/fmolb.2016.00041</li>
+<li>https://doi.org/10.1099/mgen.0.000653</li>
+<li>https://doi.org/10.1111/j.1365-2958.2010.07329.x,</li>
+<li>https://doi.org/10.3390/ijms22010152,</li>
+<li>https://doi.org/10.1093/nar/gkad1117,</li>
+<li>https://doi.org/10.3389/fmolb.2016.00041,</li>
+<li>https://doi.org/10.3390/genes13020375,</li>
+<li>https://doi.org/10.1099/mgen.0.000653,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CY1
+gene_symbol: ntrC
+aliases:
+  - glnG
+  - PP_5048
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  NtrC (UniProt Q88CY1; primary locus name glnG) is the cognate response regulator
+  of the NtrB/NtrC two-component system and the master transcriptional regulator
+  of nitrogen assimilation in Pseudomonas putida KT2440. It combines an N-terminal
+  receiver domain, a central AAA+ ATPase/sigma54-interaction module, and a C-terminal
+  DNA-binding domain to control sigma54-dependent promoters used during nitrogen
+  limitation. Experimental work in KT2440 shows that NtrC directly activates glnK
+  and additional nitrogen-scavenging genes such as codB and ureD, while it can also
+  directly repress selected targets such as gdhA under nitrogen-limiting conditions.
+  Transcriptome studies place NtrC at the top of a broader nitrogen-responsive network
+  that coordinates nitrogen source utilization with wider metabolic adjustments.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms.
+    findings:
+      - statement: InterPro/domain-based automated annotations recover broad DNA-binding,
+          ATP-binding, and transcription-regulator features for this NtrC-family
+          response regulator.
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+      accompanied by conservative changes to GO terms applied by UniProt.
+    findings:
+      - statement: UniProt subcellular-location mapping supports cytoplasmic localization
+          for the soluble bacterial transcriptional regulator.
+  - id: GO_REF:0000108
+    title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links.
+    findings:
+      - statement: Logical inference contributes a positive transcription-regulation
+          annotation consistent with NtrC&#39;s sigma54-dependent activator role.
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods.
+    findings:
+      - statement: Combined automated annotation captures response-regulator and
+          nitrogen-utilization roles that require curation against direct KT2440
+          experimental studies.
+  - id: PMID:12534463
+    title: Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.
+    findings:
+      - statement: The KT2440 genome sequence establishes the strain background and
+          locus context for PP_5048/glnG.
+        supporting_text: Sequence analysis of the 6.18 Mb genome of strain KT2440
+          reveals diverse transport and metabolic systems.
+        reference_section_type: ABSTRACT
+  - id: PMID:17965157
+    title: Transcriptome analysis of Pseudomonas putida in response to nitrogen availability.
+    findings:
+      - statement: Nitrogen-availability transcriptomics defines NtrC as the master
+          nitrogen regulator in P. putida.
+        supporting_text: We define NtrC as the master nitrogen regulator and suggest
+          that it not only activates pathways for the assimilation of alternative
+          nitrogen sources but also represses carbon catabolism under nitrogen-limited
+          conditions
+        reference_section_type: ABSTRACT
+  - id: PMID:19648236
+    title: NtrC-dependent regulatory network for nitrogen assimilation in Pseudomonas putida.
+    findings:
+      - statement: P. putida glnK, codB, and ureD nitrogen regulation is directly
+          exerted by NtrC through sigma54-dependent promoters.
+        supporting_text: In vitro experiments with purified proteins demonstrated
+          that glnK transcription was directly activated by NtrC
+        reference_section_type: ABSTRACT
+      - statement: Footprinting identified NtrC binding sites upstream of the glnK
+          promoter.
+        supporting_text: Two contiguous NtrC binding sites located upstream of the
+          sigma(N)-dependent glnK promoter have been identified by footprinting analysis.
+        reference_section_type: ABSTRACT
+  - id: PMID:20437145
+    title: NtrC-sensed nitrogen availability is important for oxidative stress defense in Pseudomonas putida KT2440.
+    findings:
+      - statement: NtrC also affects oxidative-stress defense under nitrogen limitation,
+          showing broader consequences of the nitrogen regulatory state.
+        supporting_text: NtrC-sensed nitrogen availability is one of the most important
+          prerequisite for full cellular defense against oxidative stress in P. putida.
+        reference_section_type: ABSTRACT
+  - id: PMID:20735780
+    title: Regulation of glutamate dehydrogenase expression in Pseudomonas putida results from its direct repression by NtrC under nitrogen-limiting conditions.
+    findings:
+      - statement: NtrC directly represses gdhA under nitrogen-limiting conditions.
+        supporting_text: In P. putida, the binding of NtrC to the gdhA promoter region
+          and in vitro transcription suggest that, unlike its enterobacterial homologue
+          that is repressed by Nac, gdhA is directly repressed by NtrC.
+        reference_section_type: ABSTRACT
+      - statement: NtrC binds multiple sites in the gdhA promoter and can repress
+          transcription in vitro and in vivo.
+        supporting_text: Both the phosphorylated and the non-phosphorylated forms
+          of NtrC efficiently repressed gdhA transcription in vitro and in vivo.
+        reference_section_type: ABSTRACT
+  - id: file:PSEPK/ntrC/ntrC-deep-research-falcon.md
+    title: Research report on ntrC/glnG in Pseudomonas putida KT2440 generated with Falcon.
+    findings:
+      - statement: The deep research synthesis identifies NtrC/GlnG as the NtrB/NtrC
+          response regulator that controls nitrogen-responsive transcription and
+          direct gdhA repression in KT2440.
+existing_annotations:
+  - term:
+      id: GO:0000156
+      label: phosphorelay response regulator activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        This is a core molecular function. NtrC is the response regulator partner
+        of the NtrB/NtrC two-component system and uses its receiver domain to couple
+        nitrogen status sensing to transcriptional control.
+      action: ACCEPT
+      reason: &gt;-
+        The response regulator role is central to NtrC biology and directly explains
+        how the protein connects upstream nitrogen sensing with downstream gene regulation.
+      supported_by:
+        - reference_id: file:PSEPK/ntrC/ntrC-deep-research-falcon.md
+          supporting_text: NtrC (GlnG) is the response regulator of the NtrBC two-component
+            system in *Pseudomonas putida*.
+          reference_section_type: LITERATURE_REVIEW
+  - term:
+      id: GO:0000160
+      label: phosphorelay signal transduction system
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        This process annotation is appropriate. NtrC operates within the NtrB/NtrC
+        phosphorelay to convert nitrogen limitation signals into altered transcriptional
+        output.
+      action: ACCEPT
+      reason: &gt;-
+        NtrC is not an isolated DNA-binding protein; it functions as the downstream
+        regulator in a classical bacterial phosphorelay.
+  - term:
+      id: GO:0003677
+      label: DNA binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        NtrC certainly binds DNA, but this parent term adds little once the more
+        informative annotations for transcription cis-regulatory region binding,
+        sequence-specific DNA binding, and activator/repressor activity are retained.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        The annotation is correct but too generic for a well-characterized bacterial
+        transcription regulator with more specific child terms already present.
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This is appropriate for NtrC. The central AAA+ sigma54-interaction module
+        binds ATP and uses nucleotide-dependent conformational changes to promote
+        open-complex formation at sigma54-dependent promoters.
+      action: ACCEPT
+      reason: &gt;-
+        ATP binding is a core mechanistic requirement for enhancer-binding proteins
+        such as NtrC, even though the GOA entry stops short of naming ATPase activity.
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: &gt;-
+        This localization is appropriate for a soluble bacterial response regulator
+        that interacts with chromosomal promoter regions from the cytoplasmic side.
+      action: ACCEPT
+      reason: &gt;-
+        NtrC lacks membrane-targeting features and performs its signaling and DNA-binding
+        functions in the bacterial cytoplasm/nucleoid.
+  - term:
+      id: GO:0006355
+      label: regulation of DNA-templated transcription
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        The overall concept is right, but the term is overly broad for NtrC. In
+        P. putida KT2440, NtrC directly activates some promoters and directly represses
+        others, so the specific positive and negative regulation terms are more informative.
+      action: MODIFY
+      reason: &gt;-
+        A generic transcription-regulation term obscures the experimentally demonstrated
+        dual activator/repressor behavior of NtrC.
+      proposed_replacement_terms:
+        - id: GO:0045893
+          label: positive regulation of DNA-templated transcription
+        - id: GO:0045892
+          label: negative regulation of DNA-templated transcription
+  - term:
+      id: GO:0006808
+      label: regulation of nitrogen utilization
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        This is one of the best high-level process annotations for NtrC. The KT2440
+        literature defines NtrC as the master regulator of nitrogen assimilation and
+        nitrogen-responsive gene expression.
+      action: ACCEPT
+      reason: &gt;-
+        Coordinating nitrogen source uptake and assimilation is the primary biological
+        role of NtrC in this organism.
+  - term:
+      id: GO:0043565
+      label: sequence-specific DNA binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This is appropriate and more informative than generic DNA binding. NtrC binds
+        defined upstream regulatory sequences in promoters such as glnK and gdhA.
+      action: ACCEPT
+      reason: &gt;-
+        Sequence-specific promoter recognition is fundamental to the direct-regulator
+        role of NtrC.
+  - term:
+      id: GO:0045893
+      label: positive regulation of DNA-templated transcription
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000108
+    review:
+      summary: &gt;-
+        This positive-regulation annotation is well supported by direct activation
+        of sigma54-dependent nitrogen-responsive promoters, including glnK and other
+        nitrogen-scavenging genes characterized in KT2440.
+      action: ACCEPT
+      reason: &gt;-
+        Positive transcriptional control is a core NtrC function and should be retained
+        explicitly.
+  - term:
+      id: GO:0000976
+      label: transcription cis-regulatory region binding
+    evidence_type: IPI
+    original_reference_id: PMID:19648236
+    review:
+      summary: &gt;-
+        This experimental annotation is appropriate. Footprinting and promoter analyses
+        in the 2009 KT2440 study directly support NtrC binding upstream regulatory
+        regions of nitrogen-responsive genes.
+      action: ACCEPT
+      reason: &gt;-
+        Direct promoter binding is a core, experimentally demonstrated property of
+        NtrC in this organism.
+  - term:
+      id: GO:0000976
+      label: transcription cis-regulatory region binding
+    evidence_type: IPI
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        This annotation is also appropriate. The gdhA repression study showed direct
+        NtrC interaction with multiple sites in the target promoter region.
+      action: ACCEPT
+      reason: &gt;-
+        The 2010 work provides independent promoter-binding evidence in a repressor
+        context.
+  - term:
+      id: GO:0000976
+      label: transcription cis-regulatory region binding
+    evidence_type: IMP
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        This term remains appropriate with mutant/functional evidence from the gdhA
+        repression study supporting promoter-region engagement by NtrC.
+      action: ACCEPT
+      reason: &gt;-
+        The biological effect depends on direct interaction with cis-regulatory DNA.
+  - term:
+      id: GO:0001216
+      label: DNA-binding transcription activator activity
+    evidence_type: IPI
+    original_reference_id: PMID:19648236
+    review:
+      summary: &gt;-
+        This is a core molecular function. In vitro transcription and promoter studies
+        show that NtrC directly activates sigma54-dependent genes involved in nitrogen
+        assimilation.
+      action: ACCEPT
+      reason: &gt;-
+        Direct transcriptional activation of nitrogen-regulated promoters is one of
+        the defining activities of NtrC.
+  - term:
+      id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    evidence_type: IPI
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        This annotation is supported by direct repression of gdhA under nitrogen-limiting
+        conditions. The KT2440 data show that NtrC can operate as a repressor as well
+        as an activator.
+      action: ACCEPT
+      reason: &gt;-
+        Retaining the repressor term captures an experimentally demonstrated aspect
+        of NtrC function that would otherwise be lost.
+  - term:
+      id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    evidence_type: IMP
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        The phenotype-level and mechanistic evidence from the gdhA study supports
+        NtrC-mediated transcriptional repression in vivo and in vitro.
+      action: ACCEPT
+      reason: &gt;-
+        NtrC is not solely an activator in KT2440; repressor activity is directly
+        supported and biologically meaningful.
+  - term:
+      id: GO:0032993
+      label: protein-DNA complex
+    evidence_type: IPI
+    original_reference_id: PMID:19648236
+    review:
+      summary: &gt;-
+        This annotation is accurate for the bound state of NtrC at target promoters,
+        but it is a generic consequence of site-specific DNA binding rather than a
+        particularly informative core localization.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The term is not wrong, but it adds less biological specificity than the direct
+        DNA-binding and transcription-regulation annotations.
+  - term:
+      id: GO:0032993
+      label: protein-DNA complex
+    evidence_type: IPI
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        This is likewise an accurate bound-state annotation for promoter-associated
+        NtrC complexes formed during repression of gdhA.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Useful as contextual cellular-component information, but not a principal
+        core function term.
+  - term:
+      id: GO:0032993
+      label: protein-DNA complex
+    evidence_type: IMP
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        The annotation is acceptable but generic, reflecting promoter-bound complexes
+        rather than a uniquely defining component annotation.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Better retained as non-core context than treated as a primary function.
+  - term:
+      id: GO:0045892
+      label: negative regulation of DNA-templated transcription
+    evidence_type: IDA
+    original_reference_id: PMID:20735780
+    review:
+      summary: &gt;-
+        This term is directly supported by the gdhA study and should be retained.
+        NtrC represses gdhA under nitrogen limitation through direct promoter binding.
+      action: ACCEPT
+      reason: &gt;-
+        Negative transcriptional regulation is an experimentally established component
+        of the KT2440 NtrC regulon.
+core_functions:
+  - molecular_function:
+      id: GO:0000156
+      label: phosphorelay response regulator activity
+    directly_involved_in:
+      - id: GO:0000160
+        label: phosphorelay signal transduction system
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    description: &gt;-
+      NtrC acts as the response regulator output of the NtrB/NtrC phosphorelay, coupling
+      nitrogen limitation sensing to downstream transcriptional control in P. putida
+      KT2440.
+    supported_by:
+      - reference_id: PMID:17965157
+        supporting_text: We define NtrC as the master nitrogen regulator
+        reference_section_type: ABSTRACT
+      - reference_id: file:PSEPK/ntrC/ntrC-uniprot.txt
+        supporting_text: DNA-binding transcriptional regulator NtrC
+  - molecular_function:
+      id: GO:0001216
+      label: DNA-binding transcription activator activity
+    directly_involved_in:
+      - id: GO:0006808
+        label: regulation of nitrogen utilization
+      - id: GO:0045893
+        label: positive regulation of DNA-templated transcription
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    description: &gt;-
+      NtrC directly activates sigma54-dependent promoters used during nitrogen limitation,
+      including glnK and other nitrogen-scavenging genes, by binding upstream regulatory
+      DNA and using its ATP-dependent enhancer-binding protein module to stimulate
+      transcription initiation.
+    supported_by:
+      - reference_id: PMID:19648236
+        supporting_text: In vitro experiments with purified proteins demonstrated
+          that glnK transcription was directly activated by NtrC
+        reference_section_type: ABSTRACT
+      - reference_id: PMID:19648236
+        supporting_text: the codB and ureD genes have sigma(N)-dependent promoters
+          and their nitrogen regulation was exerted directly by NtrC
+        reference_section_type: ABSTRACT
+  - molecular_function:
+      id: GO:0001217
+      label: DNA-binding transcription repressor activity
+    directly_involved_in:
+      - id: GO:0045892
+        label: negative regulation of DNA-templated transcription
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    description: &gt;-
+      In addition to activation, NtrC directly represses selected targets such as
+      gdhA under nitrogen-limiting conditions, showing that the KT2440 regulator has
+      dual activator/repressor behavior within the nitrogen-response network.
+    supported_by:
+      - reference_id: PMID:20735780
+        supporting_text: In P. putida, the binding of NtrC to the gdhA promoter region
+          and in vitro transcription suggest that, unlike its enterobacterial homologue
+          that is repressed by Nac, gdhA is directly repressed by NtrC.
+        reference_section_type: ABSTRACT
+      - reference_id: PMID:20735780
+        supporting_text: Both the phosphorylated and the non-phosphorylated forms
+          of NtrC efficiently repressed gdhA transcription in vitro and in vivo.
+        reference_section_type: ABSTRACT
+suggested_questions:
+  - question: Which genes in the broader KT2440 nitrogen-limitation transcriptome are direct in vivo NtrC targets versus indirect downstream effects?
+    experts:
+      - Ana B. Hervas
+      - Ignacio Canosa
+      - Estrella Santero
+  - question: How does NtrC coordinate with CbrB and other global regulators to couple nitrogen limitation to carbon catabolism, oxidative stress defense, and biofilm-associated phenotypes?
+    experts:
+      - Ignacio Canosa
+      - Estrella Santero
+      - Wonsuck Park
+  - question: What determines whether NtrC acts as a sigma54-dependent activator or as a direct repressor at a given promoter in P. putida KT2440?
+    experts:
+      - Ana B. Hervas
+      - Estrella Santero
+suggested_experiments:
+  - description: Map the direct NtrC regulon under nitrogen-replete and nitrogen-limited conditions using ChIP-seq or DAP-seq combined with RNA-seq.
+    hypothesis: Many broader nitrogen-limitation transcript changes in KT2440 are indirect, while a smaller subset represent direct NtrC-bound promoters.
+    experiment_type: ChIP-seq/RNA-seq
+  - description: Mutate the identified NtrC binding sites in the glnK, codB, ureD, and gdhA promoters and quantify promoter activity with transcriptional reporters.
+    hypothesis: Direct promoter occupancy by NtrC is required for both activation of nitrogen-scavenging genes and repression of gdhA.
+    experiment_type: Promoter mutagenesis and reporter assays
+  - description: Compare wild-type NtrC with receiver-domain phospho-defective and ATPase-dead AAA+ mutants to separate phosphorylation-dependent signaling from ATP-dependent transcription activation.
+    hypothesis: ATP hydrolysis is essential for sigma54-dependent activation, whereas promoter repression may have distinct requirements for phosphorylation and oligomerization.
+    experiment_type: Targeted mutagenesis and transcription assays
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
