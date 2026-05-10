@@ -1,0 +1,6 @@
+# NRAMP6.2 notes
+
+- UniProt identifies NRAMP6.2 as Metal transporter Nramp6.2 / Natural resistance-associated macrophage protein 6.2 [file:POPTR/NRAMP6.2/NRAMP6.2-uniprot.txt "RecName: Full=Metal transporter Nramp6.2"; file:POPTR/NRAMP6.2/NRAMP6.2-uniprot.txt "AltName: Full=Natural resistance-associated macrophage protein 6.2"].
+- UniProt supports a probable divalent metal transporter role and multi-pass membrane localization [file:POPTR/NRAMP6.2/NRAMP6.2-uniprot.txt "Probable divalent metal transporter."; file:POPTR/NRAMP6.2/NRAMP6.2-uniprot.txt "SUBCELLULAR LOCATION: Membrane"].
+- PMID:20623158 identified Populus NRAMP genes as part of the poplar metal transporter repertoire; PMID:35700212 focused on NRAMP3 duplication rather than direct NRAMP6.2 assays [PMID:20623158 "Seventy-two full-length metal transporter genes were identified in the Populus genome alone"; PMID:35700212 "Here, we report that the poplar genome contains two paralogues encoding NRAMP3 metal transporters localized in tandem."].
+- Accepted broad metal ion transport/transmembrane transporter activity and membrane localization; retained iron/manganese homeostasis terms cautiously as non-core homology-based inferences.
