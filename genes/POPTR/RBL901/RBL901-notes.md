@@ -6,3 +6,4 @@
 - The IBA GO:0000977 sequence-specific DNA-binding annotation likely overstates direct DNA binding; modified it to GO:0003712 transcription coregulator activity and added GO:0005667 transcription regulator complex from UniProt DR support.
 
 - Addressed PR #470 review on 2026-05-10: removed the duplicate NEW GO:0003712 annotation, leaving transcription coregulator activity as the replacement term for GO:0000977 and as the core molecular function.
+- Addressed PR #470 third-cycle consistency suggestion on 2026-05-10: changed NEW GO:0005667 original_reference_id to the UniProt file because the term is absent from the GOA rows.

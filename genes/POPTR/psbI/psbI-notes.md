@@ -5,3 +5,4 @@
 - The correct location is chloroplast thylakoid membrane, so cytoplasm and generic membrane should be modified to GO:0009535 [file:POPTR/psbI/psbI-uniprot.txt "SUBCELLULAR LOCATION: Plastid, chloroplast thylakoid membrane"].
 - Added NEW GO:0042549 photosystem II stabilization because UniProt directly states a stability/assembly role.
 - Addressed PR #470 re-review on 2026-05-10: added an explicit curator question about possible GO:0010207 photosystem II assembly alongside GO:0042549.
+- Addressed PR #470 third-cycle consistency suggestion on 2026-05-10: changed NEW GO:0042549 original_reference_id to the UniProt file because the term is absent from the GOA rows.
