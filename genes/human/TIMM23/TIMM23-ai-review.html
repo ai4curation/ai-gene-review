@@ -1,0 +1,4324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMM23 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TIMM23</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14925" target="_blank" class="term-link">
+                        O14925
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TIMM23";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14925" data-a="DESCRIPTION: TIMM23 encodes an essential inner mitochondrial me..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TIMM23 encodes an essential inner mitochondrial membrane core subunit of the TIM23 presequence translocase. Together with TIMM17A/B and TIMM50, it supports import of nuclear-encoded, presequence-containing mitochondrial proteins into the matrix and lateral insertion of selected inner-membrane proteins; it also has a supported non-core role in PINK1-linked stress-induced mitophagy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0030150" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0008320" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005744" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0008320" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad; the more specific supported function is protein transmembrane transporter activity in the TIM23 presequence translocase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use GO:0008320 protein transmembrane transporter activity and TIM23 complex annotations rather than generic transmembrane transporter activity.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0030150" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:23260140" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23263864" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23263864
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Methylation-controlled J-protein MCJ acts in the import of p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:23263864" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0008320" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005744" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0006886" data-r="PMID:10339406" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. TIMM23 is specifically involved in mitochondrial protein import via the TIM23 presequence translocase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific mitochondrial matrix import and TIM23 translocase terms capture the supported biology better than generic intracellular protein transport.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0030150" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. TIMM23 is specifically localized to the mitochondrial inner membrane and TIM23 complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer mitochondrial inner membrane/TIM23 complex annotations over generic mitochondrion.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. TIMM23 is specifically localized to the mitochondrial inner membrane and TIM23 complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer mitochondrial inner membrane/TIM23 complex annotations over generic mitochondrion.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37160114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37160114
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TIM23 facilitates PINK1 activation by safeguarding against O...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:37160114" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061734" target="_blank" class="term-link">
+                                    GO:0061734
+                                </a>
+                            </span>
+                            <span class="term-label">type 2 mitophagy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37160114" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:37160114
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TIM23 facilitates PINK1 activation by safeguarding against O...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0061734" data-r="PMID:37160114" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as a non-core stress-response role. TIMM23 can help PINK1 accumulate during depolarization-linked mitophagy, but its primary function is TIM23 presequence translocase protein import.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Has a role in the activation of stress-induced mitophagy by protecting PINK1 from OMA1-mediated degradation and facilitating its accumulation at the outer mitochondrial membrane in response to depolarization</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30598479" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30598479
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROMO1 is a constituent of the human presequence translocase ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005744" data-r="PMID:30598479" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25997101" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25997101
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    QIL1 is a novel mitochondrial protein required for MICOS com...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="PMID:25997101" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20053669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20053669
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Role of Magmas in protein transport and human mitochondria b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="PMID:20053669" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005744" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14726512" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14726512
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Organization and function of the small Tim complexes acting ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005743" data-r="PMID:14726512" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15044455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15044455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tim50, a component of the mitochondrial translocator, regula...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005515" data-r="PMID:15044455" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15044455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15044455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tim50, a component of the mitochondrial translocator, regula...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14925" data-a="GO:0005758" data-r="PMID:15044455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported. TIMM23 has an intermembrane-space-facing region within the inner-membrane TIM23 machinery.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TIMM23 is a core inner-membrane subunit of the TIM23 presequence translocase, supporting protein translocation into the mitochondrial matrix and sorting/insertion of selected presequence-containing inner-membrane proteins.</h3>
+                <span class="vote-buttons" data-g="O14925" data-a="FUNCTION: TIMM23 is a core inner-membrane subunit of the TIM..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                            protein transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                protein import into mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                mitochondrial intermembrane space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                            TIM23 mitochondrial import inner membrane translocase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link">
+                            PMID:10339406
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic and structural characterization of the human mitochondrial inner membrane translocase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14726512" target="_blank" class="term-link">
+                            PMID:14726512
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Organization and function of the small Tim complexes acting along the import pathway of metabolite carriers into mammalian mitochondria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15044455" target="_blank" class="term-link">
+                            PMID:15044455
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Tim50, a component of the mitochondrial translocator, regulates mitochondrial integrity and cell death.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20053669" target="_blank" class="term-link">
+                            PMID:20053669
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Role of Magmas in protein transport and human mitochondria biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link">
+                            PMID:23260140
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MITRAC links mitochondrial protein translocation to respiratory-chain assembly and translational regulation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23263864" target="_blank" class="term-link">
+                            PMID:23263864
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Methylation-controlled J-protein MCJ acts in the import of proteins into human mitochondria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25997101" target="_blank" class="term-link">
+                            PMID:25997101
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QIL1 is a novel mitochondrial protein required for MICOS complex stability and cristae morphology.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30598479" target="_blank" class="term-link">
+                            PMID:30598479
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ROMO1 is a constituent of the human presequence translocase required for YME1L protease import.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37160114" target="_blank" class="term-link">
+                            PMID:37160114
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TIM23 facilitates PINK1 activation by safeguarding against OMA1-mediated degradation in damaged mitochondria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/TIMM23/TIMM23-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research report for human TIMM23</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which human TIMM23-containing TIM23 cores differ functionally between TIMM17A and TIMM17B paralog contexts?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14925" data-a="Q: Which human TIMM23-containing TIM23 cores differ f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How separable is TIMM23 structural support of the presequence translocase from its PINK1-linked mitophagy role under depolarizing stress?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14925" data-a="Q: How separable is TIMM23 structural support of the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use TIMM23 interface mutants in rescue cells and compare TIM23 complex assembly, matrix import substrates, TIM23SORT substrates, and Tim17/TIMM50 interactions by BN-PAGE and in vitro import assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TIMM23 contributes primarily as an essential structural/regulatory core subunit while TIMM17-family proteins form the dominant presequence translocation cavity.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O14925" data-a="EXPERIMENT: Use TIMM23 interface mutants in rescue cells and c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test TIMM23 mutants that preserve TIM23 complex assembly but disrupt PINK1 association, then measure PINK1 stabilization, PRKN recruitment, and matrix/import substrate flux.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TIMM23-PINK1 interaction during mitochondrial depolarization is a stress-specific function separable from basal TIM23 import.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O14925" data-a="EXPERIMENT: Test TIMM23 mutants that preserve TIM23 complex as..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TIMM23-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14925" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-11T15:53:38.528452'<br />
+end_time: '2026-05-11T16:04:58.239195'<br />
+duration_seconds: 679.71<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: TIMM23<br />
+  gene_symbol: TIMM23<br />
+  uniprot_accession: O14925<br />
+  protein_description: 'RecName: Full=Mitochondrial import inner membrane translocase<br />
+    subunit Tim23;'<br />
+  gene_info: Name=TIMM23; Synonyms=TIM23;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the Tim17/Tim22/Tim23 family. .<br />
+  protein_domains: Tim23. (IPR005681); Tim23-like. (IPR045238); Tim17 (PF02466)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 28</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O14925</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial import inner membrane translocase subunit Tim23;</li>
+<li><strong>Gene Information:</strong> Name=TIMM23; Synonyms=TIM23;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the Tim17/Tim22/Tim23 family. .</li>
+<li><strong>Key Domains:</strong> Tim23. (IPR005681); Tim23-like. (IPR045238); Tim17 (PF02466)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TIMM23" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TIMM23' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TIMM23</strong> (gene ID: TIMM23, UniProt: O14925) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> O14925</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial import inner membrane translocase subunit Tim23;</li>
+<li><strong>Gene Information:</strong> Name=TIMM23; Synonyms=TIM23;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the Tim17/Tim22/Tim23 family. .</li>
+<li><strong>Key Domains:</strong> Tim23. (IPR005681); Tim23-like. (IPR045238); Tim17 (PF02466)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TIMM23" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TIMM23' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TIMM23</strong> (gene ID: TIMM23, UniProt: O14925) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-human-timm23-uniprot-o14925-functional-annotation-and-current-evidence-20232024-prioritized">Research Report: Human <strong>TIMM23</strong> (UniProt <strong>O14925</strong>) — Functional Annotation and Current Evidence (2023–2024 prioritized)</h1>
+<h2 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h2>
+<p>The research target is <strong>human TIMM23</strong> (gene symbol <strong>TIMM23/TIM23</strong>), UniProt <strong>O14925</strong>, annotated as <strong>“mitochondrial import inner membrane translocase subunit Tim23”</strong> and belonging to the <strong>Tim17/Tim22/Tim23 family</strong>. A 2024 human-focused structural modeling study explicitly uses <strong>hTIMM23 (UniProt O14925)</strong> as input for modeling the human core TIM23 translocase, confirming that the literature summarized here concerns the intended protein identity and organism (Homo sapiens). (maruszczak2024structurepredictionanalysis pages 2-3)</p>
+<h2 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h2>
+<h3 id="11-the-presequence-pathway-and-the-tim23-presequence-translocase-concept">1.1 The presequence pathway and the TIM23 (“presequence translocase”) concept</h3>
+<p>Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The <strong>TIM23 complex</strong> (also called the <strong>presequence translocase</strong>) is the major inner-membrane translocase for <strong>presequence-containing precursor proteins</strong>, handling a large fraction of mitochondrial protein biogenesis. Current reviews and primary disease-mechanism work estimate that the TOM–TIM23 route delivers <strong>~60% of the mitochondrial proteome</strong>, covering <strong>the majority of matrix proteins</strong> and many inner membrane proteins (and some IMS proteins). (jain2024hotspotsfordiseasecausing pages 2-4, crameri2024reducedproteinimport pages 1-3, jain2024hotspotsfordiseasecausing pages 1-2)</p>
+<h3 id="12-timm23-molecular-role-what-timm23-does">1.2 TIMM23 molecular role (what TIMM23 “does”)</h3>
+<p>TIMM23 is a <strong>core subunit</strong> of the TIM23 inner membrane translocase. It functions in <strong>protein translocation/sorting</strong> by forming a conserved core with Tim17-family subunits and coordinating with the IMS receptor subunit Tim50 and with accessory modules that determine whether a precursor is:<br />
+- fully translocated into the <strong>matrix</strong>, or<br />
+- <strong>laterally inserted</strong> (stop-transfer) into the <strong>inner mitochondrial membrane</strong>.<br />
+Human TIM23 core composition is typically described as <strong>TIMM23 + TIMM17A/B + TIMM50</strong>, which dynamically associates with additional factors depending on the substrate and import mode. (crameri2024reducedproteinimport pages 1-3, jain2024hotspotsfordiseasecausing pages 11-12)</p>
+<h3 id="13-two-operational-modes-tim23motor-vs-tim23sort">1.3 Two operational modes: TIM23MOTOR vs TIM23SORT</h3>
+<p>Human TIM23 is frequently conceptualized as operating in two functional configurations:<br />
+- <strong>TIM23MOTOR</strong>: coupled to the presequence translocase-associated motor (PAM-like), driving complete translocation into the matrix via ATP-dependent chaperone activity.<br />
+- <strong>TIM23SORT</strong>: enabling <strong>lateral release</strong> of membrane proteins into the inner membrane.<br />
+A 2024 human study of TIM23 dysfunction in <strong>TIMM50-associated mitochondrial disease</strong> provides a clear, experimentally grounded description of these modules and their component sets. (crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12)</p>
+<h2 id="2-mechanism-and-pathway-placement-best-supported-model">2) Mechanism and pathway placement (best-supported model)</h2>
+<h3 id="21-core-architecture-and-channel-concept-updated-by-2023-structuralmechanistic-work">2.1 Core architecture and “channel” concept updated by 2023 structural/mechanistic work</h3>
+<p>Two 2023 Nature studies in yeast (highly informative for the conserved core mechanism) revise the classical idea that Tim23 alone forms the translocation pore:<br />
+- The TIM23 core is supported as a <strong>Tim17–Tim23 1:1 heterodimer</strong> arranged <strong>back-to-back</strong> in the idle state, arguing against stable Tim23 homo-oligomeric pore models. (sim2023structuralbasisof pages 1-4)<br />
+- Mechanistic mapping of arrested precursors indicates that <strong>Tim17</strong> provides the principal <strong>lateral transmembrane cavity</strong> for presequence translocation; the initiating interaction is driven by <strong>conserved negative charges</strong> (an acidic patch on the IMS side) that attract positively charged presequences. (fielden2023centralroleof pages 9-11, fielden2023centralroleof pages 11-13, fielden2023centralroleof pages 7-9)</p>
+<p>These studies support a model where <strong>TIMM23 remains essential</strong> but is increasingly interpreted as <strong>structural/regulatory</strong> within the core, while the primary translocation environment is centered on Tim17-family proteins. (fielden2023centralroleof pages 7-9, sim2023structuralbasisof pages 1-4)</p>
+<h3 id="22-human-conservation-why-yeast-data-is-directly-relevant-to-timm23-o14925">2.2 Human conservation: why yeast data is directly relevant to TIMM23 (O14925)</h3>
+<p>A 2024 human-focused structure prediction analysis (AlphaFold/ColabFold multimer) models the <strong>human core TIM23</strong> using <strong>hTIMM23 (O14925)</strong> along with <strong>TIMM17A or TIMM17B</strong>, <strong>ROMO1</strong>, and <strong>TIMM44</strong>, and reports that the predicted human core is <strong>highly similar</strong> to yeast Tim17–Tim23 cryo-EM structures. (maruszczak2024structurepredictionanalysis pages 2-3, maruszczak2024structurepredictionanalysis pages 3-5)</p>
+<p>The same work highlights conservation of key functional features implicated by 2023 mechanistic studies (e.g., electrostatic/hydrophobic character of the translocation cavity, including an <strong>acidic patch on the IMS side</strong> relevant to presequence capture), supporting mechanistic transferability from yeast Tim17/Tim23 to human TIMM17/TIMM23. (maruszczak2024structurepredictionanalysis pages 2-3, maruszczak2024structurepredictionanalysis pages 3-5)</p>
+<h3 id="23-key-interaction-partners-for-timm23-in-humans-experiment-expert-synthesis">2.3 Key interaction partners for TIMM23 in humans (experiment + expert synthesis)</h3>
+<p>Recent human disease-mechanism work and a 2024 disease-genetics mini-review converge on the following interacting partners/modules:</p>
+<p><strong>Core TIM23 (inner membrane):</strong><br />
+- <strong>TIMM23</strong> (O14925)<br />
+- <strong>TIMM17A or TIMM17B</strong> (two paralog-based pools)<br />
+- <strong>TIMM50</strong> (IMS receptor; required for proper complex function)</p>
+<p><strong>TIM23MOTOR (matrix translocation):</strong><br />
+- <strong>TIMM44</strong>, <strong>HSPA9 (mtHsp70/mortalin)</strong>, <strong>PAM16</strong>, <strong>GRPEL1/2</strong>, and DNAJC co-chaperones (<strong>DNAJC19/15</strong>) (crameri2024reducedproteinimport pages 1-3, jain2024hotspotsfordiseasecausing pages 2-4)</p>
+<p><strong>TIM23SORT (inner membrane insertion):</strong><br />
+- <strong>TIMM21</strong> and <strong>ROMO1</strong> (crameri2024reducedproteinimport pages 1-3)</p>
+<p>A key mechanistic point emphasized in expert synthesis is that <strong>Tim23–Tim50 interaction is essential</strong> for protein translocation, coordinating receptor/channel/motor functions across import steps. (jain2024hotspotsfordiseasecausing pages 11-12)</p>
+<h2 id="3-recent-developments-20232024-structures-regulation-and-human-relevance">3) Recent developments (2023–2024) — structures, regulation, and human relevance</h2>
+<h3 id="31-2023-mechanistic-pivot-toward-tim17-as-principal-translocation-cavity">3.1 2023: mechanistic “pivot” toward Tim17 as principal translocation cavity</h3>
+<p>Fielden et al. (Nature, Aug 2023) provide direct evidence that conserved negative charges in Tim17 are essential to initiate translocation; combined mutations strongly impair presequence import while not collapsing membrane potential or TIM22-dependent assembly, supporting a specific TIM23-core functional defect mechanism. (fielden2023centralroleof pages 9-11, fielden2023centralroleof pages 7-9)</p>
+<p>Sim et al. (Nature, Jun 2023) support a stable Tim17–Tim23 heterodimer and propose a laterally open Tim17 cavity enclosed by Mgr2 as a plausible translocation route, challenging simplified “aqueous pore by Tim23 alone” models. (sim2023structuralbasisof pages 1-4)</p>
+<h3 id="32-2024-human-core-tim23-architecture-and-paralog-pools-timm17a-vs-timm17b">3.2 2024: human core TIM23 architecture and paralog pools (TIMM17A vs TIMM17B)</h3>
+<p>Maruszczak et al. (FEBS Open Bio, Jun 2024) report two highly similar human core TIM23 populations containing <strong>TIMM23 + TIMM17A</strong> or <strong>TIMM23 + TIMM17B</strong>, with <strong>high structural similarity</strong> to yeast Tim17–Tim23. They propose that functional differences between TIMM17A- and TIMM17B-based translocases likely arise from <strong>regulatory factors</strong> rather than large structural divergence, and note involvement of ROMO1 as an associated factor in the modeled core. (maruszczak2024structurepredictionanalysis pages 1-2, maruszczak2024structurepredictionanalysis pages 3-5, maruszczak2024structurepredictionanalysis pages 9-11)</p>
+<h3 id="33-2024-disease-genetics-focus-and-mutation-hotspots-in-the-broader-tim23-system">3.3 2024: disease genetics focus and mutation “hotspots” in the broader TIM23 system</h3>
+<p>A 2024 mini-review synthesizing disease-causing variants across the TIM23 system concludes that, among core components, <strong>TIMM50</strong> is a prominent hotspot for disease-causing mutations, and that PAM/mortalin (mtHsp70) plus its J-domain regulators are also hotspots. The clinical phenotypes are summarized as predominantly <strong>early-age developmental and neurological defects</strong>, consistent with essential roles in mitochondrial biogenesis. (jain2024hotspotsfordiseasecausing pages 1-2)</p>
+<p>Notably, within the gathered evidence, specific disease-causing variants are emphasized for TIMM50 rather than TIMM23 itself, implying that (as of these sources) TIMM23 may be less frequently reported as a primary Mendelian disease gene compared with TIMM50/PAM components, even though TIMM23 is an essential core subunit. (jain2024hotspotsfordiseasecausing pages 1-2, crameri2024reducedproteinimport pages 1-3)</p>
+<h2 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h2>
+<h3 id="41-translationalclinical-implementation-pathway-resolved-proteomics-import-assays-to-explain-mitochondrial-disease">4.1 Translational/clinical implementation: pathway-resolved proteomics + import assays to explain mitochondrial disease</h3>
+<p>Crameri et al. (Molecular and Cellular Biology, Jun 2024) demonstrate a clinically anchored workflow for mechanistic resolution of mitochondrial disease caused by TIM23-pathway dysfunction:<br />
+- patient-derived cells and engineered cell models,<br />
+- <strong>BN-PAGE</strong> assessment of TIM23 complex integrity,<br />
+- <strong>quantitative proteomics</strong> to map proteome vulnerabilities,<br />
+- <strong>in vitro import assays</strong> to separate TIM23MOTOR vs TIM23SORT functional impacts.<br />
+This represents a direct real-world implementation of TIM23 biology in <strong>mitochondrial disease mechanism discovery</strong>. (crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12)</p>
+<h3 id="42-structure-guided-annotation-and-hypothesis-generation-alphafoldcolabfold">4.2 Structure-guided annotation and hypothesis generation (AlphaFold/ColabFold)</h3>
+<p>Maruszczak et al. (Jun 2024) exemplify the use of <strong>AlphaFold-multimer/ColabFold</strong> to model human TIM23 core assemblies with UniProt-defined sequences (including TIMM23 O14925), enabling mapping of conserved functional features and prioritization of regulatory hypotheses for TIMM17A vs TIMM17B-containing complexes. (maruszczak2024structurepredictionanalysis pages 2-3, maruszczak2024structurepredictionanalysis pages 9-11)</p>
+<h2 id="5-quantitative-data-and-statistics-recently-reported">5) Quantitative data and statistics (recently reported)</h2>
+<h3 id="51-proteome-fraction-handled-by-tim23">5.1 Proteome fraction handled by TIM23</h3>
+<p>Recent expert synthesis and primary disease-mechanism work reiterate that the TOM–TIM23 pathway imports <strong>~60% of the mitochondrial proteome</strong>, and anchors this estimate to a human mitochondrial proteome of roughly <strong>~1,100–1,500 proteins</strong> (13 mtDNA-encoded). (jain2024hotspotsfordiseasecausing pages 1-2, crameri2024reducedproteinimport pages 1-3)</p>
+<h3 id="52-module-selective-import-defects-when-tim23-complex-integrity-is-compromised">5.2 Module-selective import defects when TIM23 complex integrity is compromised</h3>
+<p>In TIMM50-associated disease models where TIM23 complex levels/activity are reduced, Crameri et al. quantify in vitro import decreases:<br />
+- <strong>TIM23MOTOR</strong> substrate OTC import reduced to <strong>~82% of control</strong><br />
+- <strong>TIM23SORT</strong> substrates: SURF1 <strong>~67% of control</strong>, SCO2 <strong>~62% of control</strong><br />
+They also report that TIM22-pathway substrates (n = 58) were largely unchanged, supporting specificity for TIM23 pathway dysfunction. (crameri2024reducedproteinimport pages 11-12)</p>
+<p>These measurements provide an experimentally grounded, quantitative view of how disruption of a core TIM23 component (TIMM50) propagates to functional impairment of the TIMM23-containing translocase and reveals substrate-class sensitivity. (crameri2024reducedproteinimport pages 11-12)</p>
+<h2 id="6-expert-opinion-and-integrative-analysis-authoritative-synthesis">6) Expert opinion and integrative analysis (authoritative synthesis)</h2>
+<h3 id="61-emerging-consensus-model-for-timm23s-role">6.1 Emerging consensus model for TIMM23’s role</h3>
+<p>Integrating 2023 structure/mechanism papers and 2024 human modeling and disease analyses supports the following interpretation:<br />
+1) <strong>TIMM23 is essential</strong> within the TIM23 presequence translocase core, but <strong>Tim17-family proteins</strong> appear to provide the dominant <strong>translocation cavity</strong> driven by conserved electrostatics (negative charges). (fielden2023centralroleof pages 9-11, fielden2023centralroleof pages 7-9, sim2023structuralbasisof pages 1-4)<br />
+2) TIMM23 likely plays a <strong>structural/regulatory role</strong> within the heterodimeric core and in coordinating accessory modules, consistent with the back-to-back heterodimer architecture and the difficulty of reconciling Tim23-only pore models with native structural observations. (sim2023structuralbasisof pages 1-4, fielden2023centralroleof pages 7-9)<br />
+3) In humans, the presence of <strong>two paralog-based cores</strong> (TIMM17A vs TIMM17B) suggests that regulation (stress responsiveness, complex stability, accessory binding) may tune import capacity without major remodeling of TIMM23 itself. (maruszczak2024structurepredictionanalysis pages 3-5, maruszczak2024structurepredictionanalysis pages 9-11)</p>
+<h3 id="62-disease-perspective-why-timm23-still-matters-even-when-timm50-is-the-hotspot">6.2 Disease perspective: why TIMM23 still matters even when TIMM50 is the “hotspot”</h3>
+<p>The 2024 review framing TIMM50 as a mutation hotspot, and the 2024 patient-centered TIMM50 study, both emphasize that mutations in one TIM23 component can reduce the steady-state levels/activity of the overall complex (including TIMM23), producing multisystem mitochondrial pathology—thus TIMM23 function is clinically relevant even when TIMM23 is not the primary mutated gene. (jain2024hotspotsfordiseasecausing pages 1-2, crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12)</p>
+<h2 id="7-visual-evidence-human-core-tim23-figures">7) Visual evidence (human core TIM23 figures)</h2>
+<p>The following figures from the 2024 human modeling study illustrate the <strong>subunit set of the human TIM23 complex</strong> and structural context for ROMO1 and the TIMM17 paralog variants, providing a visual anchor for TIMM23-centered functional annotation. (maruszczak2024structurepredictionanalysis media e620fbb9, maruszczak2024structurepredictionanalysis media 460c7670, maruszczak2024structurepredictionanalysis media 2ee6cbee)</p>
+<h2 id="summary-table-evidence-backed">Summary table (evidence-backed)</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key points (1-2 sentences)</th>
+<th>Best recent sources (with year)</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/Localization</td>
+<td>TIMM23 is the human inner mitochondrial membrane subunit of the TIM23/presequence translocase; the 2024 human structure-prediction study explicitly models hTIMM23 using UniProt O14925. Human core TIM23 complexes contain TIMM23 with either TIMM17A or TIMM17B and show strong conservation with yeast architecture. (maruszczak2024structurepredictionanalysis pages 2-3, maruszczak2024structurepredictionanalysis pages 1-2)</td>
+<td>Maruszczak et al., 2024; Jain et al., 2024</td>
+<td>https://doi.org/10.1002/2211-5463.13840; https://doi.org/10.3390/genes15121534</td>
+</tr>
+<tr>
+<td>Core function</td>
+<td>TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane. Reviews estimate this pathway handles ~60% of the mitochondrial proteome, including most matrix proteins and many inner-membrane proteins. (jain2024hotspotsfordiseasecausing pages 2-4, jain2024hotspotsfordiseasecausing pages 1-2)</td>
+<td>Jain et al., 2024; Crameri et al., 2024</td>
+<td>https://doi.org/10.3390/genes15121534; https://doi.org/10.1080/10985549.2024.2353652</td>
+</tr>
+<tr>
+<td>Complex modules</td>
+<td>Human TIM23 operates in at least two functional states: TIM23MOTOR for matrix translocation and TIM23SORT for lateral insertion of inner-membrane proteins. TIM23MOTOR includes DNAJC19/15, TIMM44, HSPA9, PAM16, and GRPEL1/2, whereas TIM23SORT includes TIMM21 and ROMO1. (jain2024hotspotsfordiseasecausing pages 2-4, crameri2024reducedproteinimport pages 1-3)</td>
+<td>Crameri et al., 2024; Jain et al., 2024</td>
+<td>https://doi.org/10.1080/10985549.2024.2353652; https://doi.org/10.3390/genes15121534</td>
+</tr>
+<tr>
+<td>Key partners</td>
+<td>Core/associated partners include TIMM17A or TIMM17B, TIMM50, TIMM21, ROMO1, TIMM44, mtHsp70/HSPA9, PAM16, DNAJC19/15, and GRPEL1/2. TIM23–Tim50 interaction is highlighted as essential for protein translocation and coordination of receptor, channel, and motor functions. (jain2024hotspotsfordiseasecausing pages 11-12, maruszczak2024structurepredictionanalysis pages 2-3)</td>
+<td>Jain et al., 2024; Maruszczak et al., 2024</td>
+<td>https://doi.org/10.3390/genes15121534; https://doi.org/10.1002/2211-5463.13840</td>
+</tr>
+<tr>
+<td>Mechanistic insights from 2023 Nature structures</td>
+<td>2023 structural/mechanistic work revised the classic view of the pore: Tim17 and Tim23 form a back-to-back heterodimer, and Tim17 appears to provide the principal lateral translocation cavity. Conserved negative charges in Tim17 are required to initiate presequence movement, while Tim23 is increasingly interpreted as having essential structural/regulatory roles rather than being the sole translocation channel. (sim2023structuralbasisof pages 1-4, fielden2023centralroleof pages 9-11, fielden2023centralroleof pages 7-9)</td>
+<td>Sim et al., 2023; Fielden et al., 2023</td>
+<td>https://doi.org/10.1038/s41586-023-06239-6; https://doi.org/10.1038/s41586-023-06477-8</td>
+</tr>
+<tr>
+<td>Human-specific variants/regulation</td>
+<td>Human cells contain two highly similar core TIM23 populations with TIMM17A- or TIMM17B-containing complexes; predicted structures suggest differences are more likely regulatory than architectural. TIMM17B-containing complexes are described as more housekeeping/import-competent, whereas TIMM17A is stress-sensitive and has been linked to cancer-associated regulation; ROMO1 is the likely human Mgr2 counterpart. (maruszczak2024structurepredictionanalysis pages 3-5, maruszczak2024structurepredictionanalysis pages 2-3, maruszczak2024structurepredictionanalysis pages 11-12, maruszczak2024structurepredictionanalysis pages 9-11, jain2024hotspotsfordiseasecausing pages 2-4)</td>
+<td>Maruszczak et al., 2024; Jain et al., 2024</td>
+<td>https://doi.org/10.1002/2211-5463.13840; https://doi.org/10.3390/genes15121534</td>
+</tr>
+<tr>
+<td>Disease associations</td>
+<td>Recent reviews of TIM23-complex disease genetics emphasize TIMM50 and PAM/mortalin-related components as mutation hotspots causing mainly early developmental and neurological disease; disease-causing TIMM23 variants themselves were not detailed in the gathered evidence. TIMM50 dysfunction secondarily lowers TIMM23-complex levels/activity and drives mitochondrial disease pathology. (crameri2024reducedproteinimport pages 1-3, jain2024hotspotsfordiseasecausing pages 1-2, crameri2024reducedproteinimport pages 11-12)</td>
+<td>Jain et al., 2024; Crameri et al., 2024</td>
+<td>https://doi.org/10.3390/genes15121534; https://doi.org/10.1080/10985549.2024.2353652</td>
+</tr>
+<tr>
+<td>Quantitative data/stats</td>
+<td>The TIM23 pathway is estimated to import ~60% of the ~1,100-1,500 mitochondrial proteome. In TIMM50-deficient human disease models, in vitro import fell to ~82% of control for the TIM23MOTOR substrate OTC and to ~67% and ~62% for TIM23SORT substrates SURF1 and SCO2, while TIM22-pathway substrates (n=58) were largely unchanged. (crameri2024reducedproteinimport pages 1-3, jain2024hotspotsfordiseasecausing pages 1-2, crameri2024reducedproteinimport pages 11-12)</td>
+<td>Crameri et al., 2024; Jain et al., 2024</td>
+<td>https://doi.org/10.1080/10985549.2024.2353652; https://doi.org/10.3390/genes15121534</td>
+</tr>
+<tr>
+<td>Applications/assays</td>
+<td>Current implementations are mainly mechanistic and translational: AlphaFold/ColabFold modeling of human TIM23 architecture, BN-PAGE/steady-state complex analysis, radiolabeled in vitro import assays, and quantitative proteomics to map pathway-specific substrate vulnerability in disease. These approaches are already being used to dissect TIM23SORT versus TIM23MOTOR defects in human mitochondrial disorders. (crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12, maruszczak2024structurepredictionanalysis pages 2-3)</td>
+<td>Crameri et al., 2024; Maruszczak et al., 2024</td>
+<td>https://doi.org/10.1080/10985549.2024.2353652; https://doi.org/10.1002/2211-5463.13840</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the supported functional annotation of human TIMM23 (UniProt O14925), emphasizing localization, molecular role in the TIM23 complex, recent 2023-2024 mechanistic insights, disease relevance, and quantitative findings. It is useful as a concise evidence-backed overview for report writing or annotation review.</em></p>
+<h2 id="key-references-with-publication-date-and-url">Key references (with publication date and URL)</h2>
+<ul>
+<li>Sim SI et al. <strong>“Structural basis of mitochondrial protein import by the TIM23 complex.”</strong> <em>Nature</em> (Jun <strong>2023</strong>). https://doi.org/10.1038/s41586-023-06239-6 (sim2023structuralbasisof pages 1-4)</li>
+<li>Fielden LF et al. <strong>“Central role of Tim17 in mitochondrial presequence protein translocation.”</strong> <em>Nature</em> (Aug <strong>2023</strong>). https://doi.org/10.1038/s41586-023-06477-8 (fielden2023centralroleof pages 9-11)</li>
+<li>Maruszczak KK et al. <strong>“Structure prediction analysis of human core TIM23 complex reveals conservation of the protein translocation mechanism.”</strong> <em>FEBS Open Bio</em> (Jun <strong>2024</strong>). https://doi.org/10.1002/2211-5463.13840 (maruszczak2024structurepredictionanalysis pages 2-3)</li>
+<li>Crameri JJ et al. <strong>“Reduced Protein Import via TIM23 SORT Drives Disease Pathology in TIMM50-Associated Mitochondrial Disease.”</strong> <em>Molecular and Cellular Biology</em> (Jun <strong>2024</strong>). https://doi.org/10.1080/10985549.2024.2353652 (crameri2024reducedproteinimport pages 11-12)</li>
+<li>Jain S et al. <strong>“Hotspots for Disease-Causing Mutations in the Mitochondrial TIM23 Import Complex.”</strong> <em>Genes</em> (Nov <strong>2024</strong>). https://doi.org/10.3390/genes15121534 (jain2024hotspotsfordiseasecausing pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(maruszczak2024structurepredictionanalysis pages 2-3): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jain2024hotspotsfordiseasecausing pages 2-4): Sahil Jain, Eyal Paz, and Abdussalam Azem. Hotspots for disease-causing mutations in the mitochondrial tim23 import complex. Genes, 15:1534, Nov 2024. URL: https://doi.org/10.3390/genes15121534, doi:10.3390/genes15121534. This article has 1 citations.</p>
+</li>
+<li>
+<p>(crameri2024reducedproteinimport pages 1-3): Jordan J. Crameri, Catherine S. Palmer, Tegan Stait, Thomas D. Jackson, Matthew Lynch, Adriane Sinclair, Leah E. Frajman, Alison G. Compton, David Coman, David R. Thorburn, Ann E. Frazier, and Diana Stojanovski. Reduced protein import via tim23 sort drives disease pathology in timm50-associated mitochondrial disease. Molecular and Cellular Biology, 44:226-244, Jun 2024. URL: https://doi.org/10.1080/10985549.2024.2353652, doi:10.1080/10985549.2024.2353652. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jain2024hotspotsfordiseasecausing pages 1-2): Sahil Jain, Eyal Paz, and Abdussalam Azem. Hotspots for disease-causing mutations in the mitochondrial tim23 import complex. Genes, 15:1534, Nov 2024. URL: https://doi.org/10.3390/genes15121534, doi:10.3390/genes15121534. This article has 1 citations.</p>
+</li>
+<li>
+<p>(jain2024hotspotsfordiseasecausing pages 11-12): Sahil Jain, Eyal Paz, and Abdussalam Azem. Hotspots for disease-causing mutations in the mitochondrial tim23 import complex. Genes, 15:1534, Nov 2024. URL: https://doi.org/10.3390/genes15121534, doi:10.3390/genes15121534. This article has 1 citations.</p>
+</li>
+<li>
+<p>(crameri2024reducedproteinimport pages 11-12): Jordan J. Crameri, Catherine S. Palmer, Tegan Stait, Thomas D. Jackson, Matthew Lynch, Adriane Sinclair, Leah E. Frajman, Alison G. Compton, David Coman, David R. Thorburn, Ann E. Frazier, and Diana Stojanovski. Reduced protein import via tim23 sort drives disease pathology in timm50-associated mitochondrial disease. Molecular and Cellular Biology, 44:226-244, Jun 2024. URL: https://doi.org/10.1080/10985549.2024.2353652, doi:10.1080/10985549.2024.2353652. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sim2023structuralbasisof pages 1-4): Sue Im Sim, Yuanyuan Chen, Diane L. Lynch, James C. Gumbart, and Eunyong Park. Structural basis of mitochondrial protein import by the tim23 complex. Nature, 621:620-626, Jun 2023. URL: https://doi.org/10.1038/s41586-023-06239-6, doi:10.1038/s41586-023-06239-6. This article has 105 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fielden2023centralroleof pages 9-11): Laura F. Fielden, Jakob D. Busch, Sandra G. Merkt, Iniyan Ganesan, Conny Steiert, Hanna B. Hasselblatt, Jon V. Busto, Christophe Wirth, Nicole Zufall, Sibylle Jungbluth, Katja Noll, Julia M. Dung, Ludmila Butenko, Karina von der Malsburg, Hans-Georg Koch, Carola Hunte, Martin van der Laan, and Nils Wiedemann. Central role of tim17 in mitochondrial presequence protein translocation. Nature, 621:627-634, Aug 2023. URL: https://doi.org/10.1038/s41586-023-06477-8, doi:10.1038/s41586-023-06477-8. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fielden2023centralroleof pages 11-13): Laura F. Fielden, Jakob D. Busch, Sandra G. Merkt, Iniyan Ganesan, Conny Steiert, Hanna B. Hasselblatt, Jon V. Busto, Christophe Wirth, Nicole Zufall, Sibylle Jungbluth, Katja Noll, Julia M. Dung, Ludmila Butenko, Karina von der Malsburg, Hans-Georg Koch, Carola Hunte, Martin van der Laan, and Nils Wiedemann. Central role of tim17 in mitochondrial presequence protein translocation. Nature, 621:627-634, Aug 2023. URL: https://doi.org/10.1038/s41586-023-06477-8, doi:10.1038/s41586-023-06477-8. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fielden2023centralroleof pages 7-9): Laura F. Fielden, Jakob D. Busch, Sandra G. Merkt, Iniyan Ganesan, Conny Steiert, Hanna B. Hasselblatt, Jon V. Busto, Christophe Wirth, Nicole Zufall, Sibylle Jungbluth, Katja Noll, Julia M. Dung, Ludmila Butenko, Karina von der Malsburg, Hans-Georg Koch, Carola Hunte, Martin van der Laan, and Nils Wiedemann. Central role of tim17 in mitochondrial presequence protein translocation. Nature, 621:627-634, Aug 2023. URL: https://doi.org/10.1038/s41586-023-06477-8, doi:10.1038/s41586-023-06477-8. This article has 64 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis pages 3-5): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis pages 1-2): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis pages 9-11): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis media e620fbb9): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis media 460c7670): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis media 2ee6cbee): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruszczak2024structurepredictionanalysis pages 11-12): Klaudia K. Maruszczak, Piotr Draczkowski, Artur Wnorowski, and Agnieszka Chacinska. Structure prediction analysis of human core tim23 complex reveals conservation of the protein translocation mechanism. FEBS Open Bio, 14:1656-1667, Jun 2024. URL: https://doi.org/10.1002/2211-5463.13840, doi:10.1002/2211-5463.13840. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>maruszczak2024structurepredictionanalysis pages 2-3</li>
+<li>sim2023structuralbasisof pages 1-4</li>
+<li>crameri2024reducedproteinimport pages 1-3</li>
+<li>jain2024hotspotsfordiseasecausing pages 11-12</li>
+<li>jain2024hotspotsfordiseasecausing pages 1-2</li>
+<li>crameri2024reducedproteinimport pages 11-12</li>
+<li>fielden2023centralroleof pages 9-11</li>
+<li>jain2024hotspotsfordiseasecausing pages 2-4</li>
+<li>fielden2023centralroleof pages 11-13</li>
+<li>fielden2023centralroleof pages 7-9</li>
+<li>maruszczak2024structurepredictionanalysis pages 3-5</li>
+<li>maruszczak2024structurepredictionanalysis pages 1-2</li>
+<li>maruszczak2024structurepredictionanalysis pages 9-11</li>
+<li>maruszczak2024structurepredictionanalysis pages 11-12</li>
+<li>https://doi.org/10.1002/2211-5463.13840;</li>
+<li>https://doi.org/10.3390/genes15121534</li>
+<li>https://doi.org/10.3390/genes15121534;</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652;</li>
+<li>https://doi.org/10.1002/2211-5463.13840</li>
+<li>https://doi.org/10.1038/s41586-023-06239-6;</li>
+<li>https://doi.org/10.1038/s41586-023-06477-8</li>
+<li>https://doi.org/10.1038/s41586-023-06239-6</li>
+<li>https://doi.org/10.1002/2211-5463.13840,</li>
+<li>https://doi.org/10.3390/genes15121534,</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652,</li>
+<li>https://doi.org/10.1038/s41586-023-06239-6,</li>
+<li>https://doi.org/10.1038/s41586-023-06477-8,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14925
+gene_symbol: TIMM23
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: TIMM23 encodes an essential inner mitochondrial membrane core subunit of the TIM23 presequence translocase. Together with TIMM17A/B and TIMM50, it supports import of nuclear-encoded, presequence-containing mitochondrial proteins into the matrix and lateral insertion of selected inner-membrane proteins; it also has a supported non-core role in PINK1-linked stress-induced mitophagy.
+existing_annotations:
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: &#39;**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: &#39;**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).&#39;
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct but too broad; the more specific supported function is protein transmembrane transporter activity in the TIM23 presequence translocase.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Use GO:0008320 protein transmembrane transporter activity and TIM23 complex annotations rather than generic transmembrane transporter activity.
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23260140
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23263864
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Accepted as TIMM23 contribution to TIM23-dependent protein translocation across the mitochondrial inner membrane. TIMM23 is essential in the translocase core, even though recent structural work emphasizes Tim17-family subunits as the dominant translocation cavity.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: &#39;**TIMM23 is essential** within the TIM23 presequence translocase core, but **Tim17-family proteins** appear to provide the dominant **translocation cavity** driven by conserved electrostatics (negative charges).&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct but broad. TIMM23 is specifically involved in mitochondrial protein import via the TIM23 presequence translocase.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: The specific mitochondrial matrix import and TIM23 translocase terms capture the supported biology better than generic intracellular protein transport.
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct and core. TIMM23-containing TIM23 translocase imports presequence-containing proteins into the mitochondrial matrix.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: Correct but broad. TIMM23 is specifically localized to the mitochondrial inner membrane and TIM23 complex.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Prefer mitochondrial inner membrane/TIM23 complex annotations over generic mitochondrion.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: Correct but broad. TIMM23 is specifically localized to the mitochondrial inner membrane and TIM23 complex.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Prefer mitochondrial inner membrane/TIM23 complex annotations over generic mitochondrion.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:37160114
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0061734
+    label: type 2 mitophagy
+  evidence_type: IMP
+  original_reference_id: PMID:37160114
+  review:
+    summary: Supported as a non-core stress-response role. TIMM23 can help PINK1 accumulate during depolarization-linked mitophagy, but its primary function is TIM23 presequence translocase protein import.
+    action: KEEP_AS_NON_CORE
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: Has a role in the activation of stress-induced mitophagy by protecting PINK1 from OMA1-mediated degradation and facilitating its accumulation at the outer mitochondrial membrane in response to depolarization
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:30598479
+  review:
+    summary: Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:25997101
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:20053669
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM23 is a core component of the TIM23 mitochondrial inner-membrane presequence translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: PMID:14726512
+  review:
+    summary: Correct. TIMM23 is an integral mitochondrial inner membrane component of the TIM23 translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15044455
+  review:
+    summary: Protein binding is too generic for TIMM23. The informative annotations are TIM23 complex membership, TIMM50/TIMM17/TIMM21/PINK1-related context, and translocase function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    reason: Documented interactions should be represented by specific complex or pathway annotations rather than generic protein binding.
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IDA
+  original_reference_id: PMID:15044455
+  review:
+    summary: Supported. TIMM23 has an intermembrane-space-facing region within the inner-membrane TIM23 machinery.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+      supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:10339406
+  title: Genetic and structural characterization of the human mitochondrial inner membrane translocase.
+  findings: []
+- id: PMID:14726512
+  title: Organization and function of the small Tim complexes acting along the import pathway of metabolite carriers into mammalian mitochondria.
+  findings: []
+- id: PMID:15044455
+  title: Tim50, a component of the mitochondrial translocator, regulates mitochondrial integrity and cell death.
+  findings: []
+- id: PMID:20053669
+  title: Role of Magmas in protein transport and human mitochondria biogenesis.
+  findings: []
+- id: PMID:23260140
+  title: MITRAC links mitochondrial protein translocation to respiratory-chain assembly and translational regulation.
+  findings: []
+- id: PMID:23263864
+  title: Methylation-controlled J-protein MCJ acts in the import of proteins into human mitochondria.
+  findings: []
+- id: PMID:25997101
+  title: QIL1 is a novel mitochondrial protein required for MICOS complex stability and cristae morphology.
+  findings: []
+- id: PMID:30598479
+  title: ROMO1 is a constituent of the human presequence translocase required for YME1L protease import.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings: []
+- id: PMID:37160114
+  title: TIM23 facilitates PINK1 activation by safeguarding against OMA1-mediated degradation in damaged mitochondria.
+  findings: []
+- id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+  title: Falcon deep research report for human TIMM23
+  findings: []
+core_functions:
+- description: TIMM23 is a core inner-membrane subunit of the TIM23 presequence translocase, supporting protein translocation into the mitochondrial matrix and sorting/insertion of selected presequence-containing inner-membrane proteins.
+  supported_by:
+  - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supporting_text: TIMM23 is a **core subunit** of the TIM23 inner membrane translocase.
+  - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supporting_text: Most mitochondrial proteins are nuclear encoded and must be imported into mitochondria. The **TIM23 complex** (also called the **presequence translocase**) is the major inner-membrane translocase for **presequence-containing precursor proteins**, handling a large fraction of mitochondrial protein biogenesis.
+  - reference_id: file:human/TIMM23/TIMM23-deep-research-falcon.md
+    supporting_text: TIMM23 is a core subunit of the presequence translocase that, together with TOM and other TIM23 subunits, mediates import of presequence-containing proteins into the matrix and inner membrane.
+  molecular_function:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0030150
+    label: protein import into mitochondrial matrix
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  - id: GO:0005758
+    label: mitochondrial intermembrane space
+  in_complex:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+proposed_new_terms: []
+suggested_questions:
+- question: Which human TIMM23-containing TIM23 cores differ functionally between TIMM17A and TIMM17B paralog contexts?
+  experts: []
+- question: How separable is TIMM23 structural support of the presequence translocase from its PINK1-linked mitophagy role under depolarizing stress?
+  experts: []
+suggested_experiments:
+- hypothesis: TIMM23 contributes primarily as an essential structural/regulatory core subunit while TIMM17-family proteins form the dominant presequence translocation cavity.
+  description: Use TIMM23 interface mutants in rescue cells and compare TIM23 complex assembly, matrix import substrates, TIM23SORT substrates, and Tim17/TIMM50 interactions by BN-PAGE and in vitro import assays.
+- hypothesis: TIMM23-PINK1 interaction during mitochondrial depolarization is a stress-specific function separable from basal TIM23 import.
+  description: Test TIMM23 mutants that preserve TIM23 complex assembly but disrupt PINK1 association, then measure PINK1 stabilization, PRKN recruitment, and matrix/import substrate flux.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
