@@ -1,0 +1,7 @@
+# VAT1 notes
+
+- The GOA file is header-only, so there are no existing GOA annotations to review or convert into NEW rows.
+- UniProt identifies VAT1 as acetolactate synthase small subunit 1 and places it in the acetolactate synthase small subunit family [file:MISSI/VAT1/VAT1-uniprot.txt "SubName: Full=Acetolactate synthase small subunit 1"] [file:MISSI/VAT1/VAT1-uniprot.txt "Belongs to the acetolactate synthase small subunit family"].
+- The core molecular role is regulatory small-subunit activity, while acetolactate synthase activity is represented as contributes_to because the small subunit participates in the complex rather than serving as the catalytic large subunit [file:MISSI/VAT1/VAT1-uniprot.txt "GO; GO:1990610; F:acetolactate synthase regulator activity"] [file:MISSI/VAT1/VAT1-uniprot.txt "GO; GO:0003984; F:acetolactate synthase activity"].
+- The biological-process terms are directly supported by UniPathway lines for the first steps of isoleucine and valine biosynthesis [file:MISSI/VAT1/VAT1-uniprot.txt "L-isoleucine from 2-oxobutanoate: step 1/4"] [file:MISSI/VAT1/VAT1-uniprot.txt "L-valine from pyruvate: step 1/4"].
+- I used chloroplast stroma as an explicit inference from the PANTHER subfamily assignment and plant family members, not from a direct Miscanthus UniProt location line. I did not propagate the isolated TreeGrafter cytosol or ARBA peroxisome locations as core [file:MISSI/VAT1/VAT1-uniprot.txt "PANTHER; PTHR30239:SF0; ACETOLACTATE SYNTHASE SMALL SUBUNIT 1, CHLOROPLASTIC"].
