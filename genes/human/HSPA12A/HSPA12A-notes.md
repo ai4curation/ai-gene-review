@@ -18,3 +18,21 @@
 - Broad nucleus/cytoplasm localizations are plausible context but not core biology.
 - The urinary exosome proteomics hit is worth retaining only as non-core context; it does not establish exosome function as central to HSPA12A.
 - At present, the literature supports HSPA12A as a poorly characterized intracellular adaptor/scaffold-like protein with one reasonably specific SorLA trafficking connection, not as a confirmed canonical HSP70 proteostasis factor.
+
+## Falcon deep research integration - 2026-05-12
+
+Falcon deep research was added as `HSPA12A-deep-research-falcon.md` and supports
+the conservative review framing. It found that direct canonical HSP70 folding
+activity remains unsupported [file:human/HSPA12A/HSPA12A-deep-research-falcon.md
+"Current evidence in retrieved primary literature is insufficient to support
+canonical HSP70 chaperone/protein-folding activity for HSPA12A."].
+
+The report reinforces that the best-supported function is SorLA/SORL1 cytosolic
+tail binding and receptor trafficking control [file:human/HSPA12A/HSPA12A-deep-research-falcon.md
+"HSPA12A was identified as a **specific SorLA cytosolic-tail interactor**; Y2H
+recovered C-terminal HSPA12A clones, GST-HSPA12A pulled down full-length SorLA,
+and binding mapped to SorLA cytosolic acidic clusters including E34-D38 and D47D48."]
+and [file:human/HSPA12A/HSPA12A-deep-research-falcon.md "HSPA12A **delays SorLA
+internalization/endocytosis**: surface SorLA staining persisted longer in
+HSPA12A-expressing cells, and labeled SorLA accumulated in HSPA12A-positive
+vesicles."].
