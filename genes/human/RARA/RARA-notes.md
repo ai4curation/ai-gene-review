@@ -33,9 +33,10 @@ Several terms were removed or marked over-annotated:
 - `protein binding` rows were marked over-annotated because the informative
   biology is RXR/cofactor complex membership and DNA-bound nuclear receptor
   transcriptional regulation.
-- mRNA/translation-repressor annotations were removed because the evidence
-  supports DNA-bound transcriptional regulation, not mRNA 5'-UTR binding or
-  translation repression.
+- mRNA/translation-repressor annotations were changed to UNDECIDED because the
+  GOA rows are Ensembl Compara transfers from rat RARalpha evidence, and the
+  relevant neuronal translation-regulatory literature was not evaluated in this
+  Falcon synthesis.
 - protein phosphorylation was removed because RARA is a phosphorylation substrate
   rather than a kinase [PMID:16417524 "Akt, which is constitutively activated in
   NSCLC cells, phosphorylates RARalpha and inhibits its transactivation."].
