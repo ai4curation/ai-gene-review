@@ -68,3 +68,27 @@ Key distinction: ATP7B primarily mediates copper excretion via **vesicular seque
 - Isoform 1 (canonical): Golgi membrane localization
 - Isoform 2: Lacks transmembrane domains, cytoplasmic localization, expressed in brain but not liver [PMID:9307043]
 - Isoform 1 may be proteolytically cleaved to produce WND/140 kDa form (mitochondrial)
+
+## Falcon deep research integration - 2026-05-12
+
+Falcon deep research was added as `ATP7B-deep-research-falcon.md` and supports
+the same core curation model: ATP7B is a P1B-type ATP-dependent Cu(I) transporter
+whose central biology is copper export into the TGN and copper-induced
+vesicular/pericanalicular trafficking for detoxification and biliary excretion
+[file:human/ATP7B/ATP7B-deep-research-falcon.md "ATP7B encodes the Wilson disease
+copper transporter, a **P1B-type (P-type) Cu(I)-transporting ATPase** whose
+well-supported GO-relevant biology centers on: (i) **ATP-driven Cu(I) export from
+the cytosol into the trans-Golgi network (TGN) lumen** for metallation of secretory
+cuproproteins, and (ii) **copper-induced trafficking** to post-Golgi
+vesicles/pericanalicular compartments to enable **cellular copper detoxification
+and biliary copper excretion** in hepatocytes."].
+
+The Falcon report also reinforces the key caveats already captured in the YAML:
+ATP7B is not a copper importer [file:human/ATP7B/ATP7B-deep-research-falcon.md
+"The supported directionality is **export from cytosol into TGN/vesicle lumen and
+ultimately bile**, not import into cytosol."] and constitutive plasma membrane
+annotation should be avoided in favor of condition-dependent TGN-to-vesicle or
+apical/canalicular-associated trafficking [file:human/ATP7B/ATP7B-deep-research-falcon.md
+"A cautious annotation should emphasize **copper-induced apical/canalicular-associated
+trafficking** and/or “TGN → pericanalicular vesicles” rather than constitutive
+“plasma membrane.”"].
