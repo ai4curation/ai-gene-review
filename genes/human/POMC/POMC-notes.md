@@ -73,3 +73,26 @@ Both peptides are produced in the same hypothalamic neurons! The balance between
 1. Should annotations be made at the PRO level for peptide-specific functions?
 2. How to handle antagonistic functions from the same gene?
 3. Is "regulation of appetite" appropriate when the gene produces both appetite-increasing and appetite-decreasing peptides?
+
+## Falcon deep research integration - 2026-05-12
+
+Falcon deep research was added as `POMC-deep-research-falcon.md`. It reinforces
+the existing review's main caution: POMC should be treated as a secreted
+prohormone precursor whose cleavage products carry distinct receptor-binding and
+physiological activities [file:human/POMC/POMC-deep-research-falcon.md
+"**Pro-opiomelanocortin (POMC)** is best curated in GO as a **secreted
+prohormone precursor** that is sorted to regulated secretory granules and
+**proteolytically processed in a tissue-specific manner** to yield multiple
+bioactive peptides (ACTH, α/β/γ-MSH, β-endorphin; enkephalin motifs embedded in
+the β-LPH/β-endorphin region)."].
+
+The report specifically supports keeping the generic protein-binding annotation
+removed and preferring peptide/receptor-specific terms over broad GPCR or
+behavior terms [file:human/POMC/POMC-deep-research-falcon.md "**Generic protein
+binding / identical protein binding:** Do not annotate generic binding
+(including “identical protein binding”) unless there is direct biochemical
+interaction evidence for the relevant molecular entity (precursor vs peptide)."]
+and [file:human/POMC/POMC-deep-research-falcon.md "**Melanocortin receptor
+binding vs generic GPCR binding:** Prefer **melanocortin receptor binding**
+terms, with **MC2R specificity for ACTH** explicitly supported; do not use
+generic “GPCR binding” for POMC gene product as a catch-all."].
