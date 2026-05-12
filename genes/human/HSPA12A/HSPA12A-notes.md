@@ -14,7 +14,7 @@
 
 ## Curation take
 
-- Current GOA protein-binding annotations from large interactome resources are not useful as core function statements. They mostly recover generic `protein binding` and, for the high-throughput records here, mainly point to HSPA12B as the interactor rather than defining a specific HSPA12A mechanism.
+- Current GOA protein-binding annotations from large interactome resources are not useful as core function statements. The high-throughput records capture HSPA12A-HSPA12B physical associations, but generic `protein binding` still does not define a specific HSPA12A mechanism.
 - Broad nucleus/cytoplasm localizations are plausible context but not core biology.
 - The urinary exosome proteomics hit is worth retaining only as non-core context; it does not establish exosome function as central to HSPA12A.
 - At present, the literature supports HSPA12A as a poorly characterized intracellular adaptor/scaffold-like protein with one reasonably specific SorLA trafficking connection, not as a confirmed canonical HSP70 proteostasis factor.
@@ -36,3 +36,18 @@ and [file:human/HSPA12A/HSPA12A-deep-research-falcon.md "HSPA12A **delays SorLA
 internalization/endocytosis**: surface SorLA staining persisted longer in
 HSPA12A-expressing cells, and labeled SorLA accumulated in HSPA12A-positive
 vesicles."].
+
+After review feedback, the receptor internalization consequence was split out
+as a separate NEW BP annotation rather than listed as a cross-aspect replacement
+for the MF `protein binding` annotation. The HSPA12B high-throughput interaction
+rows were also reframed as valid but uninformative physical-association evidence.
+
+Two additional references were cached for traceability around the canonical HSP70
+exclusion. Han et al. support distant HSP70-family/domain placement while warning
+against assuming canonical HSP70 function [PMID:12552099 "Despite HspA12A and
+HspA12B localization to macrophages in lesions and their placement into the Hsp70
+family by computer algorithms, we cannot be certain that they share any of the
+functions of Hsp70s."]. Cheng et al. report PCNA binding in a hepatocellular
+carcinoma context, not folding-chaperone biochemistry [PMID:32128976 "HSPA12A
+directly binds to PCNA and promotes its trimerization, which is an essential
+functional conformation of PCNA for carcinogenesis."].
