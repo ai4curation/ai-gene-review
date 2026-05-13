@@ -47,6 +47,12 @@ enzymatic functions."]. I marked a small set of automated broad developmental
 or transcriptional annotations as over-annotated and retained some source-backed
 downstream processes as non-core.
 
+Review follow-up: stress-activated MAPK cascade terms should not be treated as
+valid non-core ERK2 biology, because GO:0051403/GO:0032872 are JNK/p38-oriented
+stress MAPK terms rather than canonical ERK cascade terms. I marked the
+automated stress-cascade rows as over-annotated and left the PMID-backed rows
+UNDECIDED pending source-level review.
+
 Protein binding: MAPK1 has many reported interacting partners, but the generic
 GO:0005515 term is not useful for this gene. Falcon notes that ERK docking is
 motif/exosite-mediated and that generic protein binding risks over-annotation
