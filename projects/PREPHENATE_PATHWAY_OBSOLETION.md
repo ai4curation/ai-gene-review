@@ -14,10 +14,12 @@ combined parent term is redundant.
 
 The four experimental annotations on the upstream list are spread across three
 genes/proteins in three organisms (Arabidopsis, Petunia, Mycobacterium
-tuberculosis). The reviewer (Raymond Lee, WormBase) has already inspected each
-publication and proposed concrete actions — for the most part, removal rather
-than relabeling, because none of the cited papers actually establish a BP role
-in either component pathway.
+tuberculosis). The upstream issue was opened by Raymond Lee (WormBase), who
+inspected each publication and proposed concrete actions — for the most part,
+removal rather than relabeling, because none of the cited papers actually
+establish a BP role in either component pathway. The annotation review ticket
+itself (geneontology/go-annotation#6395) is assigned to Antonia Lock for
+coordination of the per-group cleanup.
 
 ## Upstream tickets
 
@@ -49,7 +51,7 @@ is removal.
 |---|---|---|---|---|---|---|---|
 | 1 | UniProt | UniProtKB:Q9SIE1 | PAT | NCBITaxon:3702 (Arabidopsis thaliana) | PMID:21102469 | EXP | Remove — paper does not show a BP role for Arabidopsis PAT |
 | 2 | UniProt | UniProtKB:E9L7A5 | PPA-AT | NCBITaxon:4102 (Petunia hybrida) | PMID:21102469 | EXP | Reannotate to GO:0009094 L-phenylalanine biosynthetic process — Fig 1 shows PPA-AT RNAi affects L-Phe biosynthesis |
-| 3 | TAIR | TAIR:locus:Q9SIE1 / AT2G22250 (Arabidopsis PAT) | PAT | NCBITaxon:3702 | PMID:20883697 | EXP | Remove — biochemical paper, no BP information |
+| 3 | TAIR | UniProtKB:Q9SIE1 (AGI: AT2G22250; Arabidopsis PAT) | PAT | NCBITaxon:3702 | PMID:20883697 | EXP | Remove — biochemical paper, no BP information |
 | 4 | MTBBASE | UniProtKB:P9WIC1 | Rv0948c (intracellular chorismate mutase) | NCBITaxon:83332 (Mycobacterium tuberculosis H37Rv) | PMID:18727669 | EXP | Remove — biochemical/structural paper, no BP information |
 
 Group impact tally (from upstream): UniProt 2, TAIR 1, MTBBASE 1.
