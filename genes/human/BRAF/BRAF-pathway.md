@@ -6,7 +6,7 @@ BRAF is a RAF-family serine/threonine protein kinase (EC 2.7.11.1) that serves a
 ## Core Pathways
 
 ### Autoinhibition and RAS-GTP–Driven Release
-In the basal state BRAF is a closed, autoinhibited monomer in which the N-terminal CR1/CR2 regulatory region folds back onto the CR3 kinase domain; 14-3-3 proteins clamp phosphorylated S365 (regulatory) and S729 (C-terminal) sites to stabilize this closed conformation [PMID:36931259, PMID:15161933, PMID:15778465]. Receptor-driven accumulation of RAS-GTP recruits BRAF to the membrane via the RBD; RBD occupancy is allosterically coupled to the kinase domain and, together with displacement of the inhibitory 14-3-3 bridge, opens the kinase for activation [PMID:26165597, PMID:24441586, PMID:16888650]. The N-terminal B-Raf–specific region additionally supports Ca2+/calmodulin-responsive membrane recruitment and dimerization, and diacylglycerol kinase eta potentiates B-Raf/C-Raf heterodimer formation in this step [PMID:16858395, PMID:18567582, PMID:19710016].
+In the basal state BRAF is a closed, autoinhibited monomer in which the N-terminal CR1/CR2 regulatory region folds back onto the CR3 kinase domain; 14-3-3 proteins clamp phosphorylated S365 (regulatory) and S729 (C-terminal) sites to stabilize this closed conformation [PMID:36931259, PMID:15161933, PMID:15778465]. Receptor-driven accumulation of RAS-GTP recruits BRAF to the membrane via the RBD; RBD occupancy is allosterically coupled to the kinase domain and, together with displacement of the inhibitory 14-3-3 bridge, opens the kinase for activation [PMID:26165597, PMID:24441586]. The N-terminal B-Raf–specific region additionally supports Ca2+/calmodulin-responsive membrane recruitment and dimerization, and diacylglycerol kinase eta potentiates B-Raf/C-Raf heterodimer formation in this step [PMID:16858395, PMID:18567582, PMID:19710016].
 
 ### Dimerization-Dependent Kinase Activation
 RAF catalytic output is governed by side-to-side dimerization rather than by activation-loop phosphorylation alone: an intact dimer interface is required for activity of wild-type BRAF, and the relative activity of BRAF homodimers versus the more potent BRAF-RAF1 (CRAF) heterodimer sets pathway gain [PMID:19727074, PMID:22510884, PMID:37045861]. 14-3-3 proteins act as a central chaperone-like scaffold that bridges the C-terminal pS729 sites of partner protomers and stabilizes the active dimer once the autoinhibitory clamp is released [PMID:36931259]. The HSP90/CDC37 chaperone machinery, modulated by FNIP co-chaperones, maintains BRAF foldability and is required to keep the kinase competent for activation [PMID:22939624, PMID:27353360]. Scaffold proteins organize productive dimers and substrate presentation in specific contexts, including KSR (a pseudokinase that allosterically couples to BRAF), IQGAP1, and RGS12 [PMID:21441910, PMID:29433126, PMID:17563371, PMID:18567582, PMID:17380122].
@@ -34,7 +34,7 @@ graph TD
     H -->|"nuclear + cytoplasmic substrates"| I["Proliferation, differentiation, survival"]
 
     H -.->|"ERK negative feedback; RAF isoform switching"| E
-    J["V600E activating mutation"] -.->|"RAS-independent constitutively active monomer"| E
+    J["V600E activating mutation"] -.->|"RAS-independent constitutively active monomer"| G
     K["ATP-competitive RAF inhibitor on one protomer"] -.->|"paradoxical transactivation of drug-free partner"| E
 
     style E fill:#f9f,stroke:#333,stroke-width:2px
@@ -50,7 +50,7 @@ graph TD
 
 ## Upstream Inputs
 - **Receptor-driven RAS-GTP** generated downstream of growth-factor and other receptors, recruiting BRAF to the membrane through the RBD [PMID:26165597, PMID:24441586, Reactome:R-HSA-5672966]
-- **14-3-3 proteins** acting as bidirectional regulators — enforcing autoinhibition in the closed state and stabilizing the active dimer once released [PMID:36931259, PMID:15161933, PMID:15778465, PMID:16888650]
+- **14-3-3 proteins** acting as bidirectional regulators — enforcing autoinhibition in the closed state and stabilizing the active dimer once released [PMID:36931259, PMID:15161933, PMID:15778465]
 - **HSP90/CDC37/FNIP chaperone system** maintaining BRAF stability and activation competence [PMID:22939624, PMID:27353360]
 - **Ca2+/calmodulin and lipid signals** (via the N-terminal B-Raf–specific region, IQGAP1, and diacylglycerol kinase eta) modulating dimerization and membrane recruitment [PMID:16858395, PMID:17563371, PMID:18567582, PMID:19710016]
 - **Scaffold availability** (KSR, IQGAP1, RGS12) organizing where and with which partners BRAF assembles productive signaling complexes [PMID:21441910, PMID:29433126, PMID:17380122]
