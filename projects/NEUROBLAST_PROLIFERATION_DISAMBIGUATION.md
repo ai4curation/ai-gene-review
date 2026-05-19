@@ -60,11 +60,14 @@ on 2026-05-18.
 
 ## Scope analysis
 
-- **Organisms**: Mouse (NCBITaxon:10090) 35 annotations, Human (9606) 4, Rat
-  (10116) 3 — i.e. **100% vertebrate**, confirming the conceptual mismatch.
-  No fly/protostome annotations appear in this export.
-- **Distinct genes**: ~33 (28 mouse, 4 human — ARHGEF2 appears in both mouse
-  and human, 3 rat).
+- **Organisms (annotation rows)**: Mouse (NCBITaxon:10090) 35 rows, Human
+  (9606) 4 rows, Rat (10116) 3 rows = 42 rows total — i.e. **100% vertebrate**,
+  confirming the conceptual mismatch. No fly/protostome annotations appear in
+  this export.
+- **Distinct genes**: ~33 (some mouse genes carry multiple annotations across
+  the 6 affected terms; ARHGEF2 additionally appears in both mouse and human).
+  The gene-count is approximate pending the per-gene review pass; the
+  authoritative figure is the 42-row annotation count.
 - **Evidence**: All experimental (IMP / IGI / IDA / IEP). Many are
   `acts_upstream_of_or_within` MGI annotations (regulatory/upstream genes that
   modulate progenitor proliferation, not neuroblast division per se).
@@ -87,8 +90,8 @@ where the correct term is unambiguous.
 
 | # | Gene | Acc | Taxon | Term annotated | Ev | PMID | In repo? | Likely action |
 |---|---|---|---|---|---|---|---|---|
-| 1 | ASCL1 | Q02067 | mouse | GO:0007405 | IGI | PMID:15976074 | **genes/human/ASCL1** | MODIFY → GO:0061351 (Mash1 drives progenitor proliferation/neurogenesis) |
-| 2 | FGFR2 | P21803 | mouse | GO:0021847 | IMP | PMID:20410112 | **genes/human/FGFR2** | MODIFY → vertebrate VZ neural-precursor proliferation |
+| 1 | ASCL1 (Mash1) | Q02067 | mouse | GO:0007405 | IGI | PMID:15976074 | human ortholog only (genes/human/ASCL1); human ASCL1 P50553 has no GO:0007405 annotation | MODIFY → GO:0061351 on the mouse Mash1 annotation (Mash1 drives progenitor proliferation/neurogenesis) |
+| 2 | FGFR2 | P21802 | human | GO:0021847 | ISS | GO_REF:0000024 (with/from UniProtKB:P21803 mouse) | **genes/human/FGFR2** (already KEEP_AS_NON_CORE) | revisit: existing review action is KEEP_AS_NON_CORE; under this project consider MODIFY → vertebrate VZ neural-precursor proliferation |
 | 3 | SOX5 | — | human | GO:0055059 | IGI | PMID:23946438 | no (genes/human) | review — likely MODIFY/REMOVE (asymmetric *neuroblast* division is protostome) |
 | 4 | ARHGEF2 | Q60875 | human+mouse | GO:0055059 | IDA/IMP | PMID:28453519 | no | MODIFY → progenitor mitotic spindle / asymmetric progenitor division |
 | 5 | DOCK7 | — | human | GO:0045200 | IMP | PMID:16982419 | no | review progenitor-polarity context |
@@ -104,13 +107,21 @@ Ckap2l, Akna, Frs2, Acsl6, Racgap1, Fzd9; rat Gh1, Ifrd1, Rab10.
 
 ## Proposed approach
 
-1. **Start with the two genes already in the repo** (ASCL1, FGFR2 — both
-   `genes/human/`). Add a `MODIFY` review of the mouse-derived
-   neuroblast-proliferation/VZ-division annotation, with
-   `proposed_replacement_terms` → GO:0061351 (or a VZ-specific neural
-   precursor child confirmed via OLS), referencing the cited mouse PMID under
-   `existing_annotations`. This is low-friction and immediately demonstrates
-   the pattern.
+1. **Use the two repo genes (ASCL1, FGFR2) to demonstrate the pattern**, but
+   note that neither carries the offending annotation on the human gene as
+   listed in the human GOA:
+   - `genes/human/ASCL1` has **no** GO:0007405 annotation; the upstream
+     annotation is on **mouse Mash1 (Q02067)** via IGI in PMID:15976074. The
+     `existing_annotations` block on the human ASCL1 review cannot be used
+     here; the appropriate channel is a new mouse-ASCL1 review under
+     `genes/mouse/ASCL1` (or to record the recommendation in the project doc
+     and propagate upstream via geneontology/go-annotation#6393).
+   - `genes/human/FGFR2` already reviews GO:0021847 with
+     `action: KEEP_AS_NON_CORE` (ISS via GO_REF:0000024, with/from mouse
+     P21803). Under this project the action should be revisited — the
+     candidate replacement is GO:0061351 or a VZ-specific neural-precursor
+     proliferation child confirmed via OLS — but this is an `action` update
+     on an existing review, not a new `existing_annotations` entry.
 2. **Then the four human-annotated genes** (SOX5, ARHGEF2, DOCK7, TEAD3) —
    these live directly in `genes/human` and are the upstream-impacted
    *human* set. `just fetch-gene human <SYMBOL>` then `/review`.
