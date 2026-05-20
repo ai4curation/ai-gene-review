@@ -2,80 +2,21 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-11T02:08:36.993256'
-end_time: '2026-05-11T02:26:19.698530'
-duration_seconds: 1062.71
-template_file: templates/gene_research_go_focused.md
-template_variables:
-  organism: human
-  gene_id: ATP7B
-  gene_symbol: ATP7B
-  uniprot_accession: P35670
-  protein_description: 'RecName: Full=Copper-transporting ATPase 2; EC=7.2.2.8 {ECO:0000269|PubMed:22240481};
-    AltName: Full=Copper pump 2; AltName: Full=Wilson disease-associated protein;
-    Contains: RecName: Full=WND/140 kDa {ECO:0000303|PubMed:9600907};'
-  gene_info: Name=ATP7B; Synonyms=PWD, WC1, WND;
-  organism_full: Homo sapiens (Human).
-  protein_family: Belongs to the cation transport ATPase (P-type) (TC 3.A.3)
-  protein_domains: ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303);
-    ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250);
-    ATPase_P-type_domA. (IPR059000)
+start_time: '2026-05-12T13:09:03.086296'
+end_time: '2026-05-12T13:22:47.760977'
+duration_seconds: 824.67
 provider_config:
   timeout: 600
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 32
+citation_count: 36
 ---
 
 ## Question
 
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** P35670
-- **Protein Description:** RecName: Full=Copper-transporting ATPase 2; EC=7.2.2.8 {ECO:0000269|PubMed:22240481}; AltName: Full=Copper pump 2; AltName: Full=Wilson disease-associated protein; Contains: RecName: Full=WND/140 kDa {ECO:0000303|PubMed:9600907};
-- **Gene Information:** Name=ATP7B; Synonyms=PWD, WC1, WND;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the cation transport ATPase (P-type) (TC 3.A.3)
-- **Key Domains:** ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303); ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250); ATPase_P-type_domA. (IPR059000)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "ATP7B" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'ATP7B' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **ATP7B** (gene ID: ATP7B, UniProt: P35670) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+Concise GO annotation research for human ATP7B / UniProt P35670. Focus only on: P-type Cu(I)-transporting ATPase molecular function; ATP hydrolysis/copper binding/ATOX1 copper transfer mechanism; trans-Golgi network membrane localization; copper-induced trafficking to vesicles/pericanalicular vesicles; roles in copper ion transport, copper homeostasis, cellular copper detoxification, ceruloplasmin copper loading and biliary copper excretion; caveats for plasma membrane, copper import, xenobiotic export, mitochondrion, late endosome, and generic protein binding GO annotations. Include PMID/DOI citations. Keep under 1500 words.
 
 ## Output
 
@@ -91,298 +32,178 @@ Provide detailed information focusing on:
 Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
 Always prioritize recent, authoritative sources and provide specific citations for all major claims.
 
-# Gene Research for Functional Annotation
+Concise GO annotation research for human ATP7B / UniProt P35670. Focus only on: P-type Cu(I)-transporting ATPase molecular function; ATP hydrolysis/copper binding/ATOX1 copper transfer mechanism; trans-Golgi network membrane localization; copper-induced trafficking to vesicles/pericanalicular vesicles; roles in copper ion transport, copper homeostasis, cellular copper detoxification, ceruloplasmin copper loading and biliary copper excretion; caveats for plasma membrane, copper import, xenobiotic export, mitochondrion, late endosome, and generic protein binding GO annotations. Include PMID/DOI citations. Keep under 1500 words.
 
-## ⚠️ CRITICAL: Gene/Protein Identification Context
+## Concise GO-annotation research report: Human **ATP7B** (UniProt **P35670**)
 
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
+### Scope and GO framing
+ATP7B encodes the Wilson disease copper transporter, a **P1B-type (P-type) Cu(I)-transporting ATPase** whose well-supported GO-relevant biology centers on: (i) **ATP-driven Cu(I) export from the cytosol into the trans-Golgi network (TGN) lumen** for metallation of secretory cuproproteins, and (ii) **copper-induced trafficking** to post-Golgi vesicles/pericanalicular compartments to enable **cellular copper detoxification and biliary copper excretion** in hepatocytes. The evidence base also supports a specific **ATOX1→ATP7B copper transfer mechanism** via transient Cu-bridged complexes with ATP7B N-terminal metal-binding domains (MBDs). (polishchuk2013golgiincopper pages 1-2, yu2017themetalchaperone pages 1-2, roelofsen2000copperinducedapicaltrafficking pages 1-2)
 
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** P35670
-- **Protein Description:** RecName: Full=Copper-transporting ATPase 2; EC=7.2.2.8 {ECO:0000269|PubMed:22240481}; AltName: Full=Copper pump 2; AltName: Full=Wilson disease-associated protein; Contains: RecName: Full=WND/140 kDa {ECO:0000303|PubMed:9600907};
-- **Gene Information:** Name=ATP7B; Synonyms=PWD, WC1, WND;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the cation transport ATPase (P-type) (TC 3.A.3)
-- **Key Domains:** ATPase_P-typ_cyto_dom_N. (IPR023299); ATPase_P-typ_P_site. (IPR018303); ATPase_P-typ_TM_dom_sf. (IPR023298); ATPase_P-typ_transduc_dom_A_sf. (IPR008250); ATPase_P-type_domA. (IPR059000)
+| GO aspect | Concise claim | Key supporting experimental/review evidence | Quantitative/statistical details | Best citation IDs |
+|---|---|---|---|---|
+| MF | ATP7B is a P-type Cu(I)-transporting ATPase | Reviews and mechanistic studies describe ATP7B as a P1B-type ATPase that uses ATP hydrolysis to move Cu(I) across membranes; Cu binding is required for formation of the phosphorylated catalytic intermediate | ATP7B has 8 TM segments and 6 N-terminal metal-binding domains | (yu2017themetalchaperone pages 1-2, polishchuk2013golgiincopper pages 1-2, polishchuk2019cellularfunctionof pages 1-3) |
+| MF | ATP hydrolysis/Cu-binding mechanism involves canonical P-type motifs and TM Cu site | ATP binds the N-domain; the conserved DKTG/T motif in the P-domain is phosphorylated; Cu(I) binds a high-affinity CPC motif in TM6 and is released during E1/E2 transitions | DKTGT and TGE motifs highlighted in 2024 structural work; CPC site central to uptake/release | (yu2017dynamicsandinteractions pages 18-22, guo2024diverserolesof pages 1-2, valverde2024proteinkinasesin pages 6-7) |
+| MF/BP | ATOX1 transfers Cu(I) to ATP7B regulatory metal-binding domains and activates transport | ATOX1 forms transient Cu-bridged complexes with ATP7B MBDs; transfer alters MBD dynamics and stimulates catalytic phosphorylation/ATPase activity; delivery likely favors regulatory MBD2/3 region, while recent structural work suggests an MBD near the core has a delivery role | ATOX1 binds ~0.85±0.1 Cu; ATP7B N-terminus binds ~6.5–7.3 Cu; apo-ATOX1 can remove 3–4 Cu, leaving ~1.11±0.11 Cu and ~50% activity | (yu2017themetalchaperone pages 1-2, gloria2006functionalassessmentof pages 45-48, guo2024diverserolesof pages 1-2) |
+| CC | ATP7B localizes to the trans-Golgi network membrane at basal copper | Multiple hepatocyte/hepatoma studies place ATP7B in the TGN under low Cu, where it transfers Cu into the secretory pathway | Basal localization observed below ~1 µM extracellular Cu in polarized hepatoma cells | (roelofsen2000copperinducedapicaltrafficking pages 1-2, cater2006atp7bmediatesvesicular pages 1-2, lalioti2016basolateralsortingand pages 1-2) |
+| CC/BP | Elevated copper drives trafficking from TGN to cytosolic/pericanalicular vesicles | Copper induces reversible redistribution from perinuclear TGN to peripheral vesicles clustered near the canalicular region; trafficking is vesicle- and microtubule-dependent | Redistribution seen from ~5 µM Cu, stronger at 20–40 µM after 4 h; reversed by 100 µM BCS; no stable canalicular localization even at 100 µM or 16 h in one study | (cater2006atp7bmediatesvesicular pages 4-6, roelofsen2000copperinducedapicaltrafficking pages 1-2, cater2006atp7bmediatesvesicular pages 1-2) |
+| BP | ATP7B mediates copper ion transport, copper homeostasis, and cellular copper detoxification | ATP7B exports cytosolic Cu into the Golgi lumen and Cu-sequestering vesicles, supporting homeostasis and protection from Cu excess; Wilson disease results from loss of these functions | 2024 review reports 24 ATP7B phospho-Ser/Thr sites, with several Cu-induced sites linked to regulation/trafficking | (polishchuk2019cellularfunctionof pages 1-3, polishchuk2013golgiincopper pages 1-2, valverde2024proteinkinasesin pages 9-10) |
+| BP | ATP7B is required for ceruloplasmin copper loading in the secretory pathway | At low Cu, ATP7B in the TGN loads Cu onto newly synthesized secretory cuproproteins, especially ceruloplasmin; ATP7B deficiency reduces serum ceruloplasmin metallation/activity | Functional rescue studies in rodent Wilson disease models restored ceruloplasmin copper incorporation | (roelofsen2000copperinducedapicaltrafficking pages 1-2, polishchuk2019cellularfunctionof pages 3-5, gloria2006functionalassessmentof pages 42-45) |
+| BP | ATP7B supports biliary copper excretion | Cu-induced ATP7B trafficking to apical/pericanalicular compartments enables hepatocyte Cu disposal into bile; proposed routes include vesicular sequestration/exocytosis and transcytosis to bile canaliculus | In perfused liver, biliary 64Cu showed an early wave detected at 9 min and peak 9 min later plus a later ATP7B-dependent wave reduced by BCS | (cater2006atp7bmediatesvesicular pages 1-2, lalioti2016basolateralsortingand pages 1-2, hernandez2008atp7bcopperregulatedtraffic pages 5-8) |
+| Caveat | Plasma membrane annotation should be narrow, not generic | Evidence is mixed: some studies detect canalicular/apical membrane-associated ATP7B or tight-junction pools during Cu response, whereas others fail to detect stable canalicular membrane residence and support vesicular intermediates instead | Best interpreted as copper-induced, hepatocyte apical/canalicular-associated trafficking rather than constitutive plasma membrane localization | (hernandez2008atp7bcopperregulatedtraffic pages 5-8, cater2006atp7bmediatesvesicular pages 4-6, polishchuk2013golgiincopper pages 7-8) |
+| Caveat | Copper import is not supported | ATP7B moves Cu out of the cytosol into Golgi/vesicle lumen and ultimately bile; import into cytosol is performed by other systems, not ATP7B | No primary evidence in retrieved sources for ATP7B-mediated Cu uptake | (yu2017dynamicsandinteractions pages 18-22, polishchuk2013golgiincopper pages 1-2, polishchuk2019cellularfunctionof pages 1-3) |
+| Caveat | Xenobiotic export should not be used as core GO annotation here | ATP7B can bind/traffic platinum drugs in cancer contexts, but this is distinct from its physiological copper-transport function and not the focus of requested GO annotation | Evidence for platinum handling is contextual and secondary to Cu homeostasis | (polishchuk2019cellularfunctionof pages 1-3) |
+| Caveat | Mitochondrion localization is unsupported for ATP7B | Reviews note mitochondrial Cu delivery is mediated by COX17 and related factors; ATP7B’s established sites are TGN and Cu-responsive vesicular/apical compartments | No direct support here for mitochondrial ATP7B localization | (polishchuk2019cellularfunctionof pages 1-3) |
+| Caveat | Late endosome annotation is context-dependent and should be cautious | Some studies/reviews report overlap with late endosome/lysosome markers in certain cell systems, but vesicle identity and route remain debated across models | Not a robust default CC annotation compared with TGN/pericanalicular vesicles | (polishchuk2019cellularfunctionof pages 3-5, polishchuk2013golgiincopper pages 7-8, lalioti2016basolateralsortingand pages 1-2) |
+| Caveat | Generic protein binding is too broad to be useful | The informative interaction is specific Cu-dependent ATOX1-to-ATP7B docking/transfer and intramolecular MBD-core regulation, not nonspecific protein binding | Prefer specific mechanistic annotations over generic binding | (yu2017themetalchaperone pages 1-2, gloria2006functionalassessmentof pages 45-48) |
 
-### MANDATORY VERIFICATION STEPS:
 
-1. **Check if the gene symbol "ATP7B" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
+*Table: This table summarizes GO-relevant evidence for human ATP7B, focusing on its core copper-transporting molecular function, trafficking/localization, physiological roles, and annotation caveats. It is designed to support concise, evidence-based GO annotation decisions.*
 
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
+### 1) Key concepts and definitions (current understanding)
 
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'ATP7B' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
+#### 1.1 Molecular function: P-type Cu(I)-transporting ATPase activity
+ATP7B is described as a **P-type ATPase** that uses **ATP hydrolysis** to drive Cu(I) translocation across a membrane (from cytosol into lumenal/extracellular-facing compartments), consistent with the general Post–Albers P-type cycle. Copper binding is required to form the **phosphorylated catalytic intermediate**, making ATPase activity **copper-dependent**. (yu2017themetalchaperone pages 1-2, polishchuk2019cellularfunctionof pages 1-3)
 
-### Research Target:
+Mechanistically, ATP7B follows canonical P-type ATPase logic: ATP binding at the **N-domain** and phosphorylation of a conserved **P-domain Asp in a DKTG/T motif** generate a transient phosphorylated intermediate that is linked to conformational transitions for substrate release and enzyme reset. (yu2017dynamicsandinteractions pages 18-22, valverde2024proteinkinasesin pages 6-7)
 
-Please provide a comprehensive research report on the gene **ATP7B** (gene ID: ATP7B, UniProt: P35670) in human.
+A key annotation-relevant Cu(I) binding site is the **high-affinity transmembrane CPC motif** (TM6) used in Cu(I) handling during the transport cycle. (yu2017dynamicsandinteractions pages 18-22)
 
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
+#### 1.2 Copper binding/ATOX1 copper transfer mechanism
+The cytosolic copper chaperone **ATOX1** delivers Cu(I) to ATP7B by forming **transient Cu-bridged protein–protein complexes**, stabilized largely by the copper-coordinating cysteines, transferring Cu(I) to ATP7B’s N-terminal MBDs and (directly or indirectly) onward to the transmembrane transport site. (yu2017themetalchaperone pages 1-2, arioz2018foldingofcopper pages 17-19)
 
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
+Quantitative/biophysical details useful for evidence-based annotation include: ATOX1 binds ~**0.85 ± 0.1 Cu/ATOX1**; the ATP7B N-terminal region can bind ~**6.5–7.3 Cu/protein** (consistent with multiple MBD sites); apo-ATOX1 can remove **3–4 Cu** from ATP7B relatively easily but ~**1.11 ± 0.11 Cu** can remain, with ATP7B retaining ~**50% activity**, supporting a regulatory (not purely catalytic) role for full MBD occupancy. (gloria2006functionalassessmentof pages 45-48)
 
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
+#### 1.3 Cellular component: TGN membrane localization and copper-induced trafficking
+At **basal/low copper**, ATP7B localizes predominantly to the **trans-Golgi network** (TGN), consistent with its biosynthetic role in delivering Cu into the secretory pathway. (roelofsen2000copperinducedapicaltrafficking pages 1-2, cater2006atp7bmediatesvesicular pages 1-2)
 
-We are interested in where in or outside the cell the gene product carries out its function.
+Upon **copper elevation**, ATP7B exits the TGN and redistributes to **cytosolic vesicles/pericanalicular vesicles** and subapical compartments in hepatocyte-derived polarized models; this trafficking is reversible upon copper chelation. (roelofsen2000copperinducedapicaltrafficking pages 1-2, cater2006atp7bmediatesvesicular pages 4-6)
 
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+### 2) Recent developments and latest research (prioritizing 2023–2024)
 
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+#### 2.1 2024 structural/transport-mechanism synthesis for Cu+ P-type ATPases
+A 2024 cryo-EM/MD study of a Cu+-transporting P1B-1 ATPase clarifies how **MBDs near the core** can serve distinct roles, with one proximal MBD acting structurally to remodel uptake regions and another likely assisting copper delivery to the core, and emphasizes conserved P-type motifs (DKTGT; A-domain TGE) and transmembrane residues that position sulfur ligands for Cu uptake/binding/release. While not ATP7B-specific structures, these data are directly relevant to ATP7B GO MF mechanism annotation because ATP7B is a homologous P1B-1 Cu+ pump and shares these conserved mechanistic motifs/principles. (guo2024diverserolesof pages 1-2, guo2024diverserolesof pages 4-5)
 
-## Comprehensive Research Report: Human **ATP7B** (UniProt **P35670**) — Functional Annotation, Mechanism, Localization, and Translational Landscape
+#### 2.2 2024 phosphorylation/trafficking regulation: quantitative site mapping
+A 2024 review summarizes a proteomics-derived ATP7B phosphorylation landscape and links Cu-dependent phosphorylation to trafficking and stability. Reported quantitative points include **24 phosphorylatable Ser/Thr sites**, conserved C-terminal diphosphopeptides (e.g., **Ser1429/1432** and **Ser1442/1453**), and Cu-induced phosphorylation at **Ser246, Ser1121, Ser1431, Ser1442**; PKD inhibition can abolish phosphorylation at several sites (e.g., Ser478/Ser481/Ser1121/Ser1453) and correlates phosphorylation with trafficking from TGN to vesicles in some contexts. These data support a “regulation of localization/trafficking” layer relevant to CC annotations (though not requested as a primary focus, it informs mechanism). (valverde2024proteinkinasesin pages 9-10)
 
-### 1) Target verification (critical identity check)
-The UniProt accession **P35670** corresponds to **human ATP7B** (ATPase copper transporting beta), historically termed the **Wilson disease protein**. The literature reviewed here describes ATP7B as a **P1B-1 (Cu+) P-type ATPase** with canonical cytosolic **A/N/P** catalytic domains and multiple N-terminal **copper-binding metal-binding domains (MBDs)**, consistent with the UniProt entry and distinguishing it from the homolog **ATP7A** (Menkes disease protein). (ovchinnikova2024epidemiologyofwilson’s pages 3-6, guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4)
+#### 2.3 2023 synthesis of P-type ATPase mechanistic advances
+A 2023 review highlights cryo-EM-driven advances across P-type ATPases and notes Cu+-ATPases exhibit distinctive uptake/release features and regulation via terminal tails/PTMs and chaperone interactions, supporting the current expert consensus that ATP7B function cannot be annotated purely as a static membrane transporter but must include regulated trafficking. (stock2023fastforwardonptype pages 13-16)
 
-### 2) Key concepts and definitions (current understanding)
+### 3) Current applications and real-world implementations
+ATP7B biology is implemented clinically in **Wilson disease**: ATP7B dysfunction causes impaired copper export, leading to hepatic copper accumulation, defective **ceruloplasmin metallation**, and reduced **biliary copper excretion**. These mechanistic links (TGN biosynthetic role + Cu-stimulated excretory trafficking) underpin diagnostic interpretation (e.g., low ceruloplasmin activity) and therapeutic rationale for copper chelation and strategies aimed at restoring ATP7B function/trafficking. (roelofsen2000copperinducedapicaltrafficking pages 1-2, gloria2006functionalassessmentof pages 42-45)
 
-#### 2.1 What ATP7B is (protein class) and what it transports
-ATP7B is an **ATP-dependent primary active transporter** (P-type ATPase) that translocates **copper, predominantly Cu(I)** across membranes as part of mammalian copper homeostasis. It is particularly important in **hepatocytes**, where it supports both **copper incorporation into secretory cuproproteins** and **copper excretion into bile**. (ovchinnikova2024epidemiologyofwilson’s pages 3-6, guo2024diverserolesof pages 1-2, petruzzelli2026copperinhuman pages 3-4)
+### 4) Expert opinions/analysis (authoritative sources)
+Authoritative trafficking-focused reviews emphasize a dual functional model: ATP7B at the **TGN** supplies copper to secretory enzymes (including ceruloplasmin), while copper overload triggers ATP7B redistribution to **peripheral/endolysosomal or pericanalicular compartments** that sequester copper and promote efflux/excretion; the exact identity of the vesicular carriers and whether ATP7B transiently resides at the canalicular membrane remain debated. (polishchuk2019cellularfunctionof pages 3-5, polishchuk2013golgiincopper pages 7-8)
 
-#### 2.2 “Post-Albers cycle” and P-type ATPase catalysis (definition)
-ATP7B follows the **Post-Albers E1/E1P/E2P/E2** conformational cycle typical of P-type ATPases, coupling **ATP binding/hydrolysis** to **transient autophosphorylation** of a conserved Asp in the P-domain and subsequent dephosphorylation to drive ion transport. This framework is central to interpreting ATP7B variant effects (e.g., catalytic vs trafficking defects). (guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4)
+### 5) Relevant statistics and data from studies
+Key quantitative details directly supporting GO-relevant trafficking/mechanism include:
 
-#### 2.3 ATP7B’s two principal hepatic functions (definition)
-A widely used functional partitioning (also reflected in modern reviews) is:
-1) **Biosynthetic role**: delivering Cu into the **trans-Golgi network (TGN)** lumen for **ceruloplasmin metallation**; and
-2) **Detox/excretory role**: exporting excess Cu into bile via **copper-responsive vesicles/lysosomes and apical (canalicular) routes**. (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6, petruzzelli2026copperinhuman pages 3-4)
+* **Copper thresholds for trafficking:** ATP7B redistribution from TGN to vesicles observed at ~**5 µM Cu**, more pronounced at **20–40 µM** after **4 h**, and reversible with chelation (e.g., BCS). Prolonged exposure (up to **16 h**) or higher copper (e.g., **100 µM**) did **not** necessarily yield stable canalicular membrane localization in one widely cited model system, supporting a vesicle-centric interpretation. (cater2006atp7bmediatesvesicular pages 4-6)
+* **Biliary copper excretion kinetics:** In perfused liver, biliary 64Cu showed an **early wave detected at 9 min** and peaking **9 min later**, plus a later, longer transcytotic component reduced by copper chelation and associated with ATP7B Golgi sequestration—data linking ATP7B trafficking to copper excretion dynamics. (hernandez2008atp7bcopperregulatedtraffic pages 5-8)
+* **ATOX1/ATP7B copper stoichiometry:** ATOX1 binds ~**0.85 ± 0.1 Cu**; ATP7B N-terminus binds ~**6.5–7.3 Cu**; apo-ATOX1 can remove **3–4 Cu** leaving ~**1.11 ± 0.11 Cu**, with ~**50%** residual ATP7B activity. (gloria2006functionalassessmentof pages 45-48)
 
-### 3) Molecular function: domains, motifs, and biochemical mechanism
+### Annotation caveats requested (avoid over-broad GO claims)
 
-#### 3.1 Domain architecture and key motifs
-ATP7B is described as having:
-- **Six N-terminal MBDs** with surface-exposed **CXXC** motifs (Cu-binding);
-- Cytosolic catalytic **N domain** (nucleotide-binding), **P domain** (phosphorylation), and **A domain** (actuator);
-- A multi-pass **transmembrane core** (reviews describe eight TM segments for ATP7B), forming the copper-translocation pathway; and
-- A C-terminal region containing trafficking signals (e.g., **trileucine motif**) implicated in intracellular routing. (ovchinnikova2024epidemiologyofwilson’s pages 3-6, gourdon2012structuralmodelsof pages 1-4, guo2024diverserolesof media 2f81ca0e)
+1. **Plasma membrane (generic) localization:** Evidence supports copper-stimulated redistribution toward apical/canalicular regions, but stable canalicular plasma membrane residence is **variable across systems**; some studies support vesicular sequestration/exocytosis without clear canalicular membrane labeling, while others report canalicular fractions and/or tight junction pools. A cautious annotation should emphasize **copper-induced apical/canalicular-associated trafficking** and/or “TGN → pericanalicular vesicles” rather than constitutive “plasma membrane.” (hernandez2008atp7bcopperregulatedtraffic pages 5-8, cater2006atp7bmediatesvesicular pages 4-6, cater2006atp7bmediatesvesicular pages 1-2)
 
-Catalytic motifs emphasized across mechanistic sources include the **DKTGT** P-domain motif (phosphorylation loop) and **TGE** motif in the A-domain that mediates dephosphorylation. (guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4, guo2024diverserolesof media 2f81ca0e)
+2. **Copper import:** The supported directionality is **export from cytosol into TGN/vesicle lumen and ultimately bile**, not import into cytosol. Copper uptake into cells is mediated by other proteins (e.g., CTR1), not ATP7B. (polishchuk2013golgiincopper pages 1-2, yu2017dynamicsandinteractions pages 18-22)
 
-A specific ATP7B residue highlighted in a 2024 review is the invariant phosphorylated Asp **Asp1027**, consistent with P-type ATPase chemistry. (ovchinnikova2024epidemiologyofwilson’s pages 3-6)
+3. **Xenobiotic export:** ATP7B has context-dependent roles in platinum drug resistance, but this is mechanistically distinct from the core GO focus requested here (copper transport/homeostasis) and should not be substituted for copper-transport annotations. (polishchuk2019cellularfunctionof pages 1-3)
 
-#### 3.2 Copper delivery to ATP7B (substrate handling)
-Mechanistically, copper is thought to be delivered to ATP7B from the cytosol via chaperones such as **ATOX1** to the N-terminal MBDs and/or near-core sites, supporting vectorial copper transfer into the transport pathway. (guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4)
+4. **Mitochondrion:** No strong support in the provided evidence set for ATP7B being a mitochondrial protein; reviews instead highlight other mitochondrial copper delivery factors (e.g., COX17). Avoid “mitochondrion” CC annotation unless direct experimental evidence exists in the specific curated dataset. (polishchuk2019cellularfunctionof pages 1-3)
 
-#### 3.3 Recent mechanistic advances (2024): roles of near-core metal-binding domains
-A 2024 structural/mechanistic study (cryo-EM + MD) of a eukaryotic P1B-1 ATPase system provides an updated model in which the MBD immediately proximal to the ATPase core (**MBD−1**) can serve a **structural role** (remodeling the ion-uptake region), while an adjacent domain (**MBD−2**) more likely supports **copper delivery** to the core. While not exclusive to ATP7B, the authors explicitly connect these findings to the mechanistic interpretation of ATP7B/ATP7A-like Cu+-ATPases. (guo2024diverserolesof pages 1-2)
+5. **Late endosome:** Some models report overlap with endosomal/lysosomal markers and describe endolysosomal participation in copper sequestration/efflux; however, vesicle identity and routes (lysosomal exocytosis vs basolateral sorting/transcytosis vs other post-Golgi vesicles) remain debated. Thus “late endosome” should be used cautiously (context-/cell-type-specific) relative to the robust TGN assignment. (lalioti2016basolateralsortingand pages 1-2, polishchuk2019cellularfunctionof pages 3-5)
 
-A visual summary of this domain organization and the transport cycle is provided in **Figure 1** of Guo et al. 2024. (guo2024diverserolesof media 2f81ca0e, guo2024diverserolesof media 44828a63)
+6. **Generic protein binding:** A generic “protein binding” GO MF term is not informative compared to specific, mechanistically supported interactions such as **ATOX1 docking/copper transfer** and MBD-mediated intramolecular regulation. Prefer specific interaction/process annotations over generic binding. (yu2017themetalchaperone pages 1-2, gloria2006functionalassessmentof pages 45-48)
 
-### 4) Cellular localization and copper-dependent trafficking (where ATP7B functions)
+### Key sources (with publication dates and URLs)
+* Guo Z. et al. **Nature Communications** (2024-03). “Diverse roles of the metal binding domains and transport mechanism of copper transporting P-type ATPases.” https://doi.org/10.1038/s41467-024-47001-4 (guo2024diverserolesof pages 1-2)
+* Valverde R.H.F., Lowe J. **Kinases and Phosphatases** (2024-07). “Protein Kinases in Copper Homeostasis: A Review on Cu+-ATPase Modulation.” https://doi.org/10.3390/kinasesphosphatases2030015 (valverde2024proteinkinasesin pages 9-10)
+* Stock C. et al. **Biochemical Society Transactions** (2023-06). “Fast-forward on P-type ATPases: recent advances on structure and function.” https://doi.org/10.1042/BST20221543 (stock2023fastforwardonptype pages 13-16)
+* Roelofsen H. et al. **Gastroenterology** (2000-09). “Copper-induced apical trafficking of ATP7B…” https://doi.org/10.1053/gast.2000.17834 (roelofsen2000copperinducedapicaltrafficking pages 1-2)
+* Cater M.A. et al. **Gastroenterology** (2006-02). “ATP7B mediates vesicular sequestration of copper…” https://doi.org/10.1053/j.gastro.2005.10.054 (cater2006atp7bmediatesvesicular pages 4-6)
+* Hernandez S. et al. **Gastroenterology** (2008-04). “ATP7B copper-regulated traffic…” https://doi.org/10.1053/j.gastro.2008.01.043 (hernandez2008atp7bcopperregulatedtraffic pages 5-8)
+* Lalioti V. et al. **Journal of Cell Science** (2016-06). “Basolateral sorting and transcytosis define the Cu+-regulated translocation of ATP7B…” https://doi.org/10.1242/jcs.184663 (lalioti2016basolateralsortingand pages 1-2)
+* Yu C.H. et al. **Journal of Biological Chemistry** (2017-11). “Atox1 regulates the activity of ATP7B…” https://doi.org/10.1074/jbc.M117.811752 (yu2017themetalchaperone pages 1-2)
 
-#### 4.1 Basal localization: TGN-centric biosynthetic role
-Under low/basal copper, ATP7B localizes predominantly to the **TGN**, consistent with its role in loading copper into newly synthesized secretory proteins such as ceruloplasmin. (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6, petruzzelli2026copperinhuman pages 3-4)
-
-#### 4.2 Copper-stimulated relocation to vesicular/lysosomal and apical compartments
-When cellular copper increases, ATP7B redistributes from the TGN to **endo-lysosomal / copper-responsive vesicular compartments** and ultimately toward the **apical (canalicular) domain** in hepatocytes. This trafficking enables copper detoxification and biliary elimination. (petruzzelli2026copperinhuman pages 30-35, petruzzelli2026copperinhuman pages 18-19, petruzzelli2026copperinhuman pages 3-4)
-
-A detailed trafficking model described in a recent physiology review proposes that ATP7B-positive lysosomes can reach the canalicular region and remove copper by two complementary mechanisms:
-- **Lysosomal exocytosis** (releasing stored copper into canalicular space), and
-- **Lysosomal fusion with the apical membrane** (delivering ATP7B to the canalicular membrane to export copper directly into bile). (petruzzelli2026copperinhuman pages 18-19)
-
-#### 4.3 Regulators of polarity and trafficking (adaptor complexes and cytoskeleton)
-Trafficking polarity of ATP7B involves adaptor machinery. In polarized epithelial models, **AP-1 complexes** influence TGN retention and apical delivery, with AP-1A implicated in TGN retention/directional trafficking and AP-1B in copper-independent apical delivery in MDCK systems; however, hepatocyte-specific rules may differ and remain an active area for clarification. (petruzzelli2026copperinhuman pages 19-21)
-
-A microtubule linkage mechanism is also described: a **copper-dependent interaction with p62/DNCT4** can connect ATP7B-positive lysosomes to microtubules and promote apical trafficking; p62 knockdown reduces ATP7B delivery/exocytosis in the cited model. (petruzzelli2026copperinhuman pages 18-19)
-
-### 5) Pathways and biological processes
-
-#### 5.1 Copper homeostasis pathway placement
-ATP7B sits at a key hepatic “node” integrating:
-- **Secretory pathway copper loading** (TGN lumen; ceruloplasmin maturation), and
-- **Systemic copper elimination** via **biliary excretion**.
-Loss of ATP7B disrupts both processes, leading to hepatic copper overload and downstream multi-organ toxicity (Wilson disease). (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6, petruzzelli2026copperinhuman pages 3-4)
-
-#### 5.2 Wilson disease (ATP7B loss-of-function) as a functional readout
-Wilson disease is caused by pathogenic ATP7B variants that can impair **enzymatic activity** and/or **trafficking**, preventing ceruloplasmin metallation and biliary copper excretion. A common European variant, **p.H1069Q**, is highlighted as causing misfolding with ER retention/degradation and low ceruloplasmin/high free copper, illustrating how variant class maps onto functional outcomes. (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6)
-
-### 6) Recent developments and latest research (prioritizing 2023–2024)
-
-#### 6.1 2023: C-terminal trafficking mutations and cell polarization effects
-A 2023 Metallomics study tested Wilson-disease–associated ATP7B mutations (including C-terminal variants **S1423N, S1426I, T1434M**) in polarized vs unpolarized/differentiation-state cell models. It concluded that the **distal C-terminus** dictates **cell-type/polarization-specific TGN retention and Golgi exit**, with some C-terminal mutants showing corrected localization/trafficking in differentiated cells—proposed as a mechanism for milder clinical phenotypes for certain variants. (Chakraborty et al., 2023, https://doi.org/10.1093/mtomcs/mfad051; published Sep 2023) (chakraborty2023wilsondiseasecausing pages 1-2)
-
-#### 6.2 2024: Cryo-EM/MD-driven refinement of Cu+-ATPase transport mechanism
-A 2024 Nature Communications paper provides cryo-EM structures and mechanistic interpretation for P1B-1 Cu+-ATPases, clarifying how near-core MBDs can contribute differently to structural remodeling vs copper delivery, and implicating conserved TM residues in copper handling. This supports more precise hypotheses about how ATP7B variants in MBDs/TMs alter copper uptake/release and conformational cycling. (Guo et al., 2024, https://doi.org/10.1038/s41467-024-47001-4; published Mar 2024) (guo2024diverserolesof pages 1-2, guo2024diverserolesof media 2f81ca0e)
-
-#### 6.3 2024: Updated epidemiology and variant landscape synthesis
-A 2024 review consolidates ATP7B structure/function and highlights that **>900 pathogenic ATP7B variants** have been described, with strong geographic variability and persistent gaps in experimental functional characterization for most variants. (Ovchinnikova et al., 2024, https://doi.org/10.3390/ijms25042402; published Feb 2024) (ovchinnikova2024epidemiologyofwilson’s pages 3-6, ovchinnikova2024epidemiologyofwilson’s pages 2-3)
-
-#### 6.4 2024: Translational emphasis on delivery constraints for genetic medicines
-A 2024 review on CRISPR/Cas for Wilson disease emphasizes that **in vivo delivery** is the key limiting factor, with AAV payload capacity driving strategies such as **mini-ATP7B**, split approaches, and compact regulatory elements; it also notes two AAV programs in clinical testing (UX701 and VTX-801). (Choi et al., 2024, https://doi.org/10.3390/cells13141214; published Jul 2024) (choi2024navigatingthecrisprcas pages 16-17)
-
-### 7) Current applications and real-world implementations
-
-#### 7.1 Diagnostics and monitoring
-**Epidemiologic/diagnostic shift with NGS:** historical clinical prevalence estimates cited in a 2024 review are ~**1:35,000–45,000**, whereas large molecular genetic studies cited there suggest a detected frequency around **1:7,026**, reflecting increased ascertainment using NGS and registries. (Ovchinnikova et al., 2024, https://doi.org/10.3390/ijms25042402; published Feb 2024) (ovchinnikova2024epidemiologyofwilson’s pages 1-2)
-
-**Copper speciation / non-ceruloplasmin copper metrics (diagnostic/monitoring):** a 2025 review describes a speciation method (SAX-ICP-MS-MS) to directly measure ceruloplasmin and its copper content and compute **ANCC** and **RelANCC**. In the cited cohort, **RelANCC** was higher in a naive WD patient (37.07%) and treated WD patients (median 30.64%) than non-WD (median 9.66%; p<0.05). (Mariño & Schilsky, 2025, https://doi.org/10.1055/a-2460-8999; published Nov 2025) (marino2025wilsondiseasenovel pages 7-8)
-
-**Newborn screening–adjacent approach (DBS ATP7B peptides):** the same 2025 review describes an immunoaffinity enrichment + SRM method to quantify **ATP7B peptides from dried blood spots**, reported across **206 WD patients**, positioning blood ATP7B as a surrogate for hepatic ATP7B and a candidate tool for screening/diagnosis. (Mariño & Schilsky, 2025, https://doi.org/10.1055/a-2460-8999; published Nov 2025) (marino2025wilsondiseasenovel pages 7-8)
-
-#### 7.2 Standard therapies in practice
-Recent reviews summarize standard-of-care as **chelators (D-penicillamine, trientine)** and **zinc salts**, with **liver transplantation** as definitive therapy for acute liver failure or refractory/end-stage disease. Zinc is described as better tolerated but slower acting and not suitable for acute presentations, whereas chelators can have significant adverse effects (including neurologic worsening in some contexts). (ivanenko2025therapeuticstrategiesfor pages 1-2, teschke2024wilsondiseasecoppermediated pages 19-21)
-
-#### 7.3 Emerging therapies and real-world clinical trials (gene/mRNA)
-Multiple **in-human trials** are active or initiating, targeting restoration of ATP7B function via AAV gene transfer or mRNA delivery.
-
-| Program/Intervention | Modality | Trial ID (NCT) | Phase | Status | Enrollment | Dosing/Regimen | Primary outcomes (brief) | Key notes |
-|---|---|---|---|---|---:|---|---|---|
-| UX701 (rivunatpagene miziparvovec) | AAV gene therapy | NCT04884815 | Phase 1/2/3 | Active, not recruiting | 82 | Single peripheral IV infusion; Stage 1 dose-finding across 4 dose levels, Stage 2 randomized open-label vs standard of care, Stage 3 long-term follow-up ≥5 years | Safety through Week 52 (TEAEs/TESAEs/AESIs) plus copper biomarkers including 24-hour urinary copper, total copper, ceruloplasmin-bound copper, NCC/free copper, ceruloplasmin activity | AAV9-based; requires biallelic ATP7B mutations; excludes detectable anti-AAV9 antibodies, prior liver transplant, MELD >13, prior gene transfer exposure (NCT04884815 chunk 1, NCT04884815 chunk 2) |
-| VTX-801 | AAV gene therapy | NCT04537377 | Phase 1/2 | Active, not recruiting | 4 | Single IV dose-escalation, up to 3 dose levels; 5-year follow-up | Safety/tolerability (including TEAEs) through ~1 year; secondary measures include free serum Cu, total serum Cu, 24-hour urinary Cu, ceruloplasmin activity, responder status using radiocopper PK and copper parameters | Replication-deficient rAAV carrying a shortened/mini ATP7B transgene; adult Wilson disease patients; multicenter, non-randomized, open-label GATEWAY study (NCT04537377 chunk 1, choi2024navigatingthecrisprcas pages 16-17) |
-| DSL101 (ATP7B mRNA/LNP) | mRNA-LNP replacement therapy | NCT07240896 | Early Phase 1 | Recruiting | 18 | IV infusion every 4 weeks; low-dose accelerated titration, medium/high-dose 3+3 with sentinel approach | Incidence of AEs/SAEs up to 56 weeks; secondary outcomes include 24-hour urine copper, serum free copper, ceruloplasmin and activity, liver tests, UWDRS score, PK, immunogenicity | Requires confirmed biallelic ATP7B mutations, Leipzig score ≥4, ceruloplasmin <0.1 g/L; participants may continue standard copper therapies (NCT07240896 chunk 1) |
-| GC310 injection | AAV gene therapy | NCT07173933 | Phase 1/2 | Not yet recruiting | 15 | Single IV administration; 2 dose cohorts (3.0E+13 and 6.0E+13 d.vg/kg); 52-week follow-up | Incidence of AEs (12 weeks), dose-limiting toxicities (4 weeks), change in serum ceruloplasmin and 24-hour urinary copper excretion (52 weeks) | AAV5 vector delivering truncated human ATP7B; secondary measures include ALT/AST, imaging, Kayser-Fleischer ring change, anti-AAV5/anti-ATP7B antibodies, vector genomes, shedding; excludes anti-AAV5 NAb titre >1:100 (NCT07173933 chunk 1) |
-| Prime Medicine prescreening study | Gene-editing trial prescreening / observational genomics | NCT07226622 | Observational | Recruiting | 30 | No therapeutic intervention; single blood draw, targeted ATP7B sequencing if needed, chart review, patient attitudes survey; ~90-day participation | Primary outcome is gene-editing interest/attitudes survey; secondary outcomes include serum ceruloplasmin distribution, ATP7B mutational landscape, aggregated WD-related health characteristics | Designed to identify candidates for future gene-editing trial; enriches for p.H1069Q and p.R778L carriers; excludes prior liver transplant or prior WD gene therapy (NCT07226622 chunk 1) |
-| LY-M003 injection | Gene therapy / advanced therapeutic candidate | NCT06650319 | Early Phase 1 | Recruiting | 18 | Regimen details not available in gathered evidence | Safety and efficacy study in Wilson disease | Listed in ClinicalTrials.gov search results as a recruiting early-phase study; detailed vector/platform and endpoints were not available in the gathered evidence, so specifics should be interpreted cautiously (OpenTargets Search: Wilson disease-ATP7B) |
-| TETA4 (trientine tetrahydrochloride) | Improved chelator formulation | NCT06128954 | Phase 1 | Completed/performed in healthy volunteers; results pending in review summary | 26 | Single-dose phase 1 study | Pharmacokinetics/safety supporting potential once-daily regimen | Not ATP7B replacement/editing, but a recent advanced therapeutic development in WD care pipeline; reviewed as a new formulation intended to improve maintenance treatment convenience (marino2025wilsondiseasenovel pages 11-12) |
-| miniATP7B hepatotropic AAV8 programs (preclinical/ongoing company programs referenced in review) | AAV gene therapy | Not specified in gathered evidence | Preclinical to clinical transition | Ongoing clinical development referenced | Not specified | Single-dose liver-directed AAV delivery in preclinical studies | Restoration of copper metabolism and physiologic copper excretion in rodent models | Full-length ATP7B is too large for standard AAV packaging, prompting truncated/miniATP7B constructs; Vivet and other companies referenced as pursuing clinical translation (marino2025wilsondiseasenovel pages 11-12, choi2024navigatingthecrisprcas pages 16-17, zeng2025evaluationofefficacy pages 1-2) |
-
-
-*Table: This table summarizes current clinical trials and advanced therapeutic programs targeting ATP7B/Wilson disease, including AAV gene therapies, mRNA-LNP replacement, and gene-editing prescreening. It is useful for quickly comparing modality, development stage, dosing, endpoints, and trial-specific design features from the gathered evidence.*
-
-Key examples from ClinicalTrials.gov include:
-- **UX701 (AAV9)**: operationally seamless Phase 1/2/3 trial with copper biomarkers as key endpoints (NCT04884815; started 2021-09-27). (https://clinicaltrials.gov/study/NCT04884815; posted/record 2021; see record for updates) (NCT04884815 chunk 1)
-- **VTX-801 (rAAV, miniATP7B)**: Phase 1/2, single-dose escalation, long-term follow-up, with copper measures and responder definitions including radiocopper PK elements (NCT04537377). (https://clinicaltrials.gov/study/NCT04537377; posted/record 2021; see record for updates) (NCT04537377 chunk 1)
-- **DSL101 (ATP7B mRNA/LNP)**: Early Phase 1, repeated IV infusions every 4 weeks with copper biochemistry and UWDRS as outcomes (NCT07240896). (https://clinicaltrials.gov/study/NCT07240896; posted/record 2025; see record for updates) (NCT07240896 chunk 1)
-- **GC310 (AAV5 truncated ATP7B)**: Phase 1/2, single-dose escalation; includes immunogenicity, vector shedding, and copper endpoints (NCT07173933). (https://clinicaltrials.gov/study/NCT07173933; posted/record 2025; see record for updates) (NCT07173933 chunk 1)
-
-### 8) Expert opinions and analysis (authoritative synthesis)
-
-1) **Mechanism-to-phenotype framing:** Contemporary reviews emphasize that Wilson disease mutations can impair ATP7B via **catalytic defects** or **trafficking defects**, and both mechanisms can converge on the same physiological outcomes (low ceruloplasmin metallation and reduced biliary copper excretion). This classification is essential for precision strategies (e.g., trafficking-correctors vs gene replacement). (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6)
-
-2) **Delivery is the bottleneck for curative genetic therapies:** The 2024 CRISPR/gene-therapy review emphasizes that vector payload limits and in vivo delivery constraints dominate translational feasibility, explaining why **miniATP7B** and other engineered constructs are prominent in clinical programs. (choi2024navigatingthecrisprcas pages 16-17)
-
-3) **Trafficking is cell-context dependent:** The 2023 mutation study provides experimental evidence that ATP7B localization and copper-responsive Golgi exit can depend on cellular differentiation/polarization state, implying that variant interpretation should consider tissue context and polarity-specific trafficking pathways. (chakraborty2023wilsondiseasecausing pages 1-2)
-
-### 9) Relevant statistics and recent data points
-
-#### 9.1 Prevalence and carrier frequency
-- Historical clinical prevalence estimates summarized in a 2024 review: **~1:35,000–45,000**. (ovchinnikova2024epidemiologyofwilson’s pages 1-2)
-- Carrier frequency estimate cited in the same review: **~1 in 90** heterozygous carriers of ATP7B pathogenic variants. (ovchinnikova2024epidemiologyofwilson’s pages 2-3)
-- Genetic-screening–based frequency reported by large molecular genetic studies cited in that review: **~1:7,026**. (ovchinnikova2024epidemiologyofwilson’s pages 1-2)
-- Regional prevalence values summarized in 2024 include (examples): **Sardinia 36.6/100,000**, **Great Britain 14.2/100,000**, **Korea 13/100,000**. (ovchinnikova2024epidemiologyofwilson’s pages 3-6)
-
-#### 9.2 Variant burden
-A 2024 review highlights that **>900 ATP7B pathogenic variants** have been identified and that variant spectra differ by geography/ethnicity; most variants still lack deep functional characterization. (ovchinnikova2024epidemiologyofwilson’s pages 2-3, ovchinnikova2024epidemiologyofwilson’s pages 3-6)
-
-#### 9.3 Biomarker performance data (recent)
-Copper-speciation monitoring: **RelANCC** discrimination (treated vs non-WD medians) is reported as above, supporting a quantitative monitoring/diagnostic approach based on copper speciation rather than indirect calculations. (marino2025wilsondiseasenovel pages 7-8)
-
-### 10) Visual evidence (domain architecture and transport cycle)
-Guo et al. 2024 provide a schematic of P1B-ATPase domain architecture and the Post-Albers transport cycle (including E1/E1P/E2P/E2 states) that is directly relevant to ATP7B’s mechanism and domain organization. (guo2024diverserolesof media 2f81ca0e, guo2024diverserolesof media 44828a63)
-
-### 11) Consolidated functional annotation summary
-The table below consolidates ATP7B’s primary function, mechanism, domain organization, localization/trafficking, and variant-driven dysfunction.
-
-| Aspect | Key points | Key evidence |
-|---|---|---|
-| Protein class / substrate | ATP7B (UniProt P35670) is the human Wilson disease protein, a P1B-1 copper-transporting P-type ATPase that transports Cu(I) and functions in hepatocytes to lower cytosolic copper and support cuproenzyme biosynthesis. It is distinct from ATP7A, the related Menkes protein. | (ovchinnikova2024epidemiologyofwilson’s pages 3-6, guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4) |
-| Catalytic mechanism | ATP7B uses the canonical P-type ATPase/Post-Albers cycle (E1-E1P-E2P-E2). ATP binding and hydrolysis drive transient phosphorylation of the invariant Asp in the P-domain (Asp1027 in ATP7B), while the A-domain TGE motif mediates dephosphorylation and interdomain rearrangements required for Cu translocation. | (ovchinnikova2024epidemiologyofwilson’s pages 3-6, guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4) |
-| Domain architecture / motifs | ATP7B contains six N-terminal metal-binding domains with CXXC motifs, cytosolic N, P, and A domains, and a transmembrane core with eight helices in ATP7B-specific descriptions; conserved catalytic motifs include DKTGT in the P-domain and TGE in the A-domain. Structural modeling/review literature also highlights the CPC motif in TM4 and a C-terminal trileucine motif important for trafficking regulation. | (ovchinnikova2024epidemiologyofwilson’s pages 3-6, gourdon2012structuralmodelsof pages 1-4, guo2024diverserolesof media 2f81ca0e) |
-| Copper chaperone delivery | Cytosolic copper is delivered to ATP7B primarily by the copper chaperone ATOX1; thermodynamic studies support vectorial transfer from ATOX1 to ATP7B metal-binding domains, and recent structural work suggests distinct roles for the two MBDs nearest the core in copper delivery versus structural remodeling. | (guo2024diverserolesof pages 1-2, gourdon2012structuralmodelsof pages 1-4) |
-| Baseline localization | Under low/basal copper, ATP7B localizes mainly to the trans-Golgi network (TGN); in hepatocytes it can also occupy a TGN-proximal lysosomal compartment. This positioning supports biosynthetic copper delivery to the secretory pathway. | (petruzzelli2026copperinhuman pages 30-35, petruzzelli2026copperinhuman pages 19-21, petruzzelli2026copperinhuman pages 18-19, petruzzelli2026copperinhuman pages 3-4) |
-| Copper-stimulated trafficking route(s) | As cellular copper rises, ATP7B exits the TGN and traffics to endo-lysosomal/copper-responsive vesicles and then toward apical/canalicular compartments. In hepatocytes, ATP7B-positive lysosomes can undergo lysosomal exocytosis into the canalicular space or fuse with the apical membrane, placing ATP7B at the canalicular surface for direct biliary copper export. AP-1 adaptors and microtubule-linked factors such as p62/DNCT4 regulate polarity and apical delivery. | (petruzzelli2026copperinhuman pages 30-35, petruzzelli2026copperinhuman pages 19-21, petruzzelli2026copperinhuman pages 18-19, petruzzelli2026copperinhuman pages 3-4) |
-| Physiological roles | ATP7B has two principal hepatic functions: loading copper into the secretory pathway for ceruloplasmin metallation and exporting excess copper into bile. These functions integrate ATP7B into systemic copper homeostasis by coupling copper storage, secretory maturation, and detoxifying excretion. | (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6, petruzzelli2026copperinhuman pages 3-4) |
-| Consequences of loss-of-function | Pathogenic ATP7B variants impair enzymatic activity and/or trafficking, blocking ceruloplasmin metallation and biliary copper excretion. The result is hepatic copper accumulation, elevated free copper, and subsequent injury to liver and extrahepatic organs; His1069Gln is specifically associated with folding defects, ER retention/degradation, low ceruloplasmin, and neuropsychiatric-predominant disease. | (petruzzelli2026copperinhuman pages 30-35, ovchinnikova2024epidemiologyofwilson’s pages 3-6) |
-| Example mutations affecting trafficking | C-terminal ATP7B variants S1423N, S1426I, and T1434M alter TGN retention and Cu-responsive Golgi exit in a cell-polarization-dependent manner; S1423N shows incomplete rescue of trafficking in differentiated cells, whereas S1426I and T1434M show corrected localization/trafficking in differentiated models. The study concludes that distal C-terminus helps govern cell-specific TGN localization and exit. | (chakraborty2023wilsondiseasecausing pages 1-2) |
-
-
-*Table: This table summarizes the core functional annotation of human ATP7B, including substrate, mechanism, domain features, localization, copper-dependent trafficking, and disease-relevant consequences. It condenses the most relevant evidence gathered for a functional annotation-focused research report.*
-
-### 12) Notes on evidence scope and recency
-This report prioritizes 2023–2024 sources for mechanistic and trafficking updates (e.g., Chakraborty 2023; Guo 2024; Ovchinnikova 2024; Choi 2024). For some clinically actionable diagnostic details (DBS ATP7B peptide quantification; copper speciation metrics), the most explicit data located in the retrieved corpus came from a 2025 hepatology review, which is included because it provides concrete quantitative performance details and describes ongoing trial directions. (marino2025wilsondiseasenovel pages 7-8)
+Note on PMIDs: The evidence retrieved here provides DOIs/URLs; PMIDs were not included in the extracted text snippets. Where needed for GO curation workflows, PMIDs can be obtained by DOI-to-PMID mapping via PubMed.
 
 
 References
 
-1. (ovchinnikova2024epidemiologyofwilson’s pages 3-6): Elena Vasilievna Ovchinnikova, Mikhail Maksimovich Garbuz, Anna Aleksandrovna Ovchinnikova, and Vadim Vladimirovich Kumeiko. Epidemiology of wilson’s disease and pathogenic variants of the atp7b gene leading to diversified protein disfunctions. International Journal of Molecular Sciences, 25:2402, Feb 2024. URL: https://doi.org/10.3390/ijms25042402, doi:10.3390/ijms25042402. This article has 51 citations.
+1. (polishchuk2013golgiincopper pages 1-2): Roman Polishchuk and Svetlana Lutsenko. Golgi in copper homeostasis: a view from the membrane trafficking field. Histochemistry and Cell Biology, 140:285-295, Jul 2013. URL: https://doi.org/10.1007/s00418-013-1123-8, doi:10.1007/s00418-013-1123-8. This article has 149 citations and is from a peer-reviewed journal.
 
-2. (guo2024diverserolesof pages 1-2): Zongxin Guo, Fredrik Orädd, Viktoria Bågenholm, Christina Grønberg, Jian Feng Ma, Peter Ott, Yong Wang, Magnus Andersson, Per Amstrup Pedersen, Kaituo Wang, and Pontus Gourdon. Diverse roles of the metal binding domains and transport mechanism of copper transporting p-type atpases. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-47001-4, doi:10.1038/s41467-024-47001-4. This article has 20 citations and is from a highest quality peer-reviewed journal.
+2. (yu2017themetalchaperone pages 1-2): Corey H. Yu, Nan Yang, Jameson Bothe, Marco Tonelli, Sergiy Nokhrin, Natalia V. Dolgova, Lelita Braiterman, Svetlana Lutsenko, and Oleg Y. Dmitriev. The metal chaperone atox1 regulates the activity of the human copper transporter atp7b by modulating domain dynamics. Journal of Biological Chemistry, 292:18169-18177, Nov 2017. URL: https://doi.org/10.1074/jbc.m117.811752, doi:10.1074/jbc.m117.811752. This article has 76 citations and is from a domain leading peer-reviewed journal.
 
-3. (gourdon2012structuralmodelsof pages 1-4): Pontus Gourdon, Oleg Sitsel, Jesper Lykkegaard Karlsen, Lisbeth Birk Møller, and Poul Nissen. Structural models of the human copper p-type atpases atp7a and atp7b. bchm, 393:205-216, Apr 2012. URL: https://doi.org/10.1515/hsz-2011-0249, doi:10.1515/hsz-2011-0249. This article has 74 citations.
+3. (roelofsen2000copperinducedapicaltrafficking pages 1-2): Han Roelofsen, Henk Wolters, Marja J.A. Van Luyn, Naoyuki Miura, Folkert Kuipers, and Roel J. Vonk. Copper-induced apical trafficking of atp7b in polarized hepatoma cells provides a mechanism for biliary copper excretion. Gastroenterology, 119 3:782-93, Sep 2000. URL: https://doi.org/10.1053/gast.2000.17834, doi:10.1053/gast.2000.17834. This article has 334 citations and is from a highest quality peer-reviewed journal.
 
-4. (petruzzelli2026copperinhuman pages 3-4): Raffaella Petruzzelli, Elena Polishchuk, and Roman Polishchuk. Copper in human health and disease: insights from inherited disorders. Physiology, Nov 2026. URL: https://doi.org/10.1152/physiol.00032.2025, doi:10.1152/physiol.00032.2025. This article has 6 citations and is from a peer-reviewed journal.
+4. (polishchuk2019cellularfunctionof pages 1-3): Roman S. Polishchuk. Cellular function of atp7b (wilson atpase). Clinical and Translational Perspectives on WILSON DISEASE, pages 45-56, Jan 2019. URL: https://doi.org/10.1016/b978-0-12-810532-0.00006-9, doi:10.1016/b978-0-12-810532-0.00006-9. This article has 9 citations.
 
-5. (petruzzelli2026copperinhuman pages 30-35): Raffaella Petruzzelli, Elena Polishchuk, and Roman Polishchuk. Copper in human health and disease: insights from inherited disorders. Physiology, Nov 2026. URL: https://doi.org/10.1152/physiol.00032.2025, doi:10.1152/physiol.00032.2025. This article has 6 citations and is from a peer-reviewed journal.
+5. (yu2017dynamicsandinteractions pages 18-22): CH Yu. Dynamics and interactions of metal-binding domains in the function of wilson disease protein. Unknown journal, 2017.
 
-6. (guo2024diverserolesof media 2f81ca0e): Zongxin Guo, Fredrik Orädd, Viktoria Bågenholm, Christina Grønberg, Jian Feng Ma, Peter Ott, Yong Wang, Magnus Andersson, Per Amstrup Pedersen, Kaituo Wang, and Pontus Gourdon. Diverse roles of the metal binding domains and transport mechanism of copper transporting p-type atpases. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-47001-4, doi:10.1038/s41467-024-47001-4. This article has 20 citations and is from a highest quality peer-reviewed journal.
+6. (guo2024diverserolesof pages 1-2): Zongxin Guo, Fredrik Orädd, Viktoria Bågenholm, Christina Grønberg, Jian Feng Ma, Peter Ott, Yong Wang, Magnus Andersson, Per Amstrup Pedersen, Kaituo Wang, and Pontus Gourdon. Diverse roles of the metal binding domains and transport mechanism of copper transporting p-type atpases. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-47001-4, doi:10.1038/s41467-024-47001-4. This article has 20 citations and is from a highest quality peer-reviewed journal.
 
-7. (guo2024diverserolesof media 44828a63): Zongxin Guo, Fredrik Orädd, Viktoria Bågenholm, Christina Grønberg, Jian Feng Ma, Peter Ott, Yong Wang, Magnus Andersson, Per Amstrup Pedersen, Kaituo Wang, and Pontus Gourdon. Diverse roles of the metal binding domains and transport mechanism of copper transporting p-type atpases. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-47001-4, doi:10.1038/s41467-024-47001-4. This article has 20 citations and is from a highest quality peer-reviewed journal.
+7. (valverde2024proteinkinasesin pages 6-7): Rafael Hospodar Felippe Valverde and Jennifer Lowe. Protein kinases in copper homeostasis: a review on cu+-atpase modulation. Kinases and Phosphatases, 2:240-254, Jul 2024. URL: https://doi.org/10.3390/kinasesphosphatases2030015, doi:10.3390/kinasesphosphatases2030015. This article has 2 citations.
 
-8. (petruzzelli2026copperinhuman pages 18-19): Raffaella Petruzzelli, Elena Polishchuk, and Roman Polishchuk. Copper in human health and disease: insights from inherited disorders. Physiology, Nov 2026. URL: https://doi.org/10.1152/physiol.00032.2025, doi:10.1152/physiol.00032.2025. This article has 6 citations and is from a peer-reviewed journal.
+8. (gloria2006functionalassessmentof pages 45-48): Gloria Hsi. Functional assessment of the human copper transporter, atp7b. Text, 2006. URL: https://doi.org/10.7939/r3-hwv9-3r15, doi:10.7939/r3-hwv9-3r15. This article has 0 citations and is from a peer-reviewed journal.
 
-9. (petruzzelli2026copperinhuman pages 19-21): Raffaella Petruzzelli, Elena Polishchuk, and Roman Polishchuk. Copper in human health and disease: insights from inherited disorders. Physiology, Nov 2026. URL: https://doi.org/10.1152/physiol.00032.2025, doi:10.1152/physiol.00032.2025. This article has 6 citations and is from a peer-reviewed journal.
+9. (cater2006atp7bmediatesvesicular pages 1-2): Michael A. Cater, Sharon La Fontaine, Kristy Shield, Yolanda Deal, and Julian F.B. Mercer. Atp7b mediates vesicular sequestration of copper: insight into biliary copper excretion. Gastroenterology, 130 2:493-506, Feb 2006. URL: https://doi.org/10.1053/j.gastro.2005.10.054, doi:10.1053/j.gastro.2005.10.054. This article has 174 citations and is from a highest quality peer-reviewed journal.
 
-10. (chakraborty2023wilsondiseasecausing pages 1-2): Kaustav Chakraborty, Santanu Das, Anusree Pal, Saptarshi Maji, Bhawana Rai, Arnab Gupta, and Ashima Bhattacharjee. Wilson disease causing mutations in the carboxyl terminus of atp7b regulates its localization and golgi exit selectively in the unpolarized cells. Metallomics : integrated biometal science, Sep 2023. URL: https://doi.org/10.1093/mtomcs/mfad051, doi:10.1093/mtomcs/mfad051. This article has 3 citations.
+10. (lalioti2016basolateralsortingand pages 1-2): Vasiliki Lalioti, Ramón Peiró, Manuela Pérez-Berlanga, Yo Tsuchiya, Angeles Muñoz, Teresa Villalba, Carlos Sanchez, and Ignacio V. Sandoval. Basolateral sorting and transcytosis define the cu+-regulated translocation of atp7b to the bile canaliculus. Journal of Cell Science, 129:2190-2201, Jun 2016. URL: https://doi.org/10.1242/jcs.184663, doi:10.1242/jcs.184663. This article has 32 citations and is from a domain leading peer-reviewed journal.
 
-11. (ovchinnikova2024epidemiologyofwilson’s pages 2-3): Elena Vasilievna Ovchinnikova, Mikhail Maksimovich Garbuz, Anna Aleksandrovna Ovchinnikova, and Vadim Vladimirovich Kumeiko. Epidemiology of wilson’s disease and pathogenic variants of the atp7b gene leading to diversified protein disfunctions. International Journal of Molecular Sciences, 25:2402, Feb 2024. URL: https://doi.org/10.3390/ijms25042402, doi:10.3390/ijms25042402. This article has 51 citations.
+11. (cater2006atp7bmediatesvesicular pages 4-6): Michael A. Cater, Sharon La Fontaine, Kristy Shield, Yolanda Deal, and Julian F.B. Mercer. Atp7b mediates vesicular sequestration of copper: insight into biliary copper excretion. Gastroenterology, 130 2:493-506, Feb 2006. URL: https://doi.org/10.1053/j.gastro.2005.10.054, doi:10.1053/j.gastro.2005.10.054. This article has 174 citations and is from a highest quality peer-reviewed journal.
 
-12. (choi2024navigatingthecrisprcas pages 16-17): Woong Choi, Seongkwang Cha, and Kyoungmi Kim. Navigating the crispr/cas landscape for enhanced diagnosis and treatment of wilson’s disease. Cells, 13:1214, Jul 2024. URL: https://doi.org/10.3390/cells13141214, doi:10.3390/cells13141214. This article has 12 citations.
+12. (valverde2024proteinkinasesin pages 9-10): Rafael Hospodar Felippe Valverde and Jennifer Lowe. Protein kinases in copper homeostasis: a review on cu+-atpase modulation. Kinases and Phosphatases, 2:240-254, Jul 2024. URL: https://doi.org/10.3390/kinasesphosphatases2030015, doi:10.3390/kinasesphosphatases2030015. This article has 2 citations.
 
-13. (ovchinnikova2024epidemiologyofwilson’s pages 1-2): Elena Vasilievna Ovchinnikova, Mikhail Maksimovich Garbuz, Anna Aleksandrovna Ovchinnikova, and Vadim Vladimirovich Kumeiko. Epidemiology of wilson’s disease and pathogenic variants of the atp7b gene leading to diversified protein disfunctions. International Journal of Molecular Sciences, 25:2402, Feb 2024. URL: https://doi.org/10.3390/ijms25042402, doi:10.3390/ijms25042402. This article has 51 citations.
+13. (polishchuk2019cellularfunctionof pages 3-5): Roman S. Polishchuk. Cellular function of atp7b (wilson atpase). Clinical and Translational Perspectives on WILSON DISEASE, pages 45-56, Jan 2019. URL: https://doi.org/10.1016/b978-0-12-810532-0.00006-9, doi:10.1016/b978-0-12-810532-0.00006-9. This article has 9 citations.
 
-14. (marino2025wilsondiseasenovel pages 7-8): Zoe Mariño and Michael L. Schilsky. Wilson disease: novel diagnostic and therapeutic approaches. Seminars in Liver Disease, 45:221-235, Nov 2025. URL: https://doi.org/10.1055/a-2460-8999, doi:10.1055/a-2460-8999. This article has 18 citations and is from a peer-reviewed journal.
+14. (gloria2006functionalassessmentof pages 42-45): Gloria Hsi. Functional assessment of the human copper transporter, atp7b. Text, 2006. URL: https://doi.org/10.7939/r3-hwv9-3r15, doi:10.7939/r3-hwv9-3r15. This article has 0 citations and is from a peer-reviewed journal.
 
-15. (ivanenko2025therapeuticstrategiesfor pages 1-2): A.L. Ivanenko, VD Starodubova, and AG Shokhina. Therapeutic strategies for wilson’s disease: current state and prospects. Bulletin of Russian State Medical University, Apr 2025. URL: https://doi.org/10.24075/brsmu.2025.022, doi:10.24075/brsmu.2025.022. This article has 0 citations.
+15. (hernandez2008atp7bcopperregulatedtraffic pages 5-8): Sonia Hernandez, Yo Tsuchiya, Josefa P. García–Ruiz, Vassiliki Lalioti, Søren Nielsen, Doris Cassio, and Ignacio V. Sandoval. Atp7b copper-regulated traffic and association with the tight junctions: copper excretion into the bile. Gastroenterology, 134 4:1215-23, Apr 2008. URL: https://doi.org/10.1053/j.gastro.2008.01.043, doi:10.1053/j.gastro.2008.01.043. This article has 76 citations and is from a highest quality peer-reviewed journal.
 
-16. (teschke2024wilsondiseasecoppermediated pages 19-21): Rolf Teschke and Axel Eickhoff. Wilson disease: copper-mediated cuproptosis, iron-related ferroptosis, and clinical highlights, with comprehensive and critical analysis update. International Journal of Molecular Sciences, 25:4753, Apr 2024. URL: https://doi.org/10.3390/ijms25094753, doi:10.3390/ijms25094753. This article has 116 citations.
+16. (polishchuk2013golgiincopper pages 7-8): Roman Polishchuk and Svetlana Lutsenko. Golgi in copper homeostasis: a view from the membrane trafficking field. Histochemistry and Cell Biology, 140:285-295, Jul 2013. URL: https://doi.org/10.1007/s00418-013-1123-8, doi:10.1007/s00418-013-1123-8. This article has 149 citations and is from a peer-reviewed journal.
 
-17. (NCT04884815 chunk 1):  A Phase 1/2/3 Study of UX701 Gene Therapy in Adults With Wilson Disease. Ultragenyx Pharmaceutical Inc. 2021. ClinicalTrials.gov Identifier: NCT04884815
+17. (arioz2018foldingofcopper pages 17-19): Candan Ariöz and Pernilla Wittung-Stafshede. Folding of copper proteins: role of the metal? Quarterly Reviews of Biophysics, Mar 2018. URL: https://doi.org/10.1017/s0033583518000021, doi:10.1017/s0033583518000021. This article has 51 citations and is from a peer-reviewed journal.
 
-18. (NCT04884815 chunk 2):  A Phase 1/2/3 Study of UX701 Gene Therapy in Adults With Wilson Disease. Ultragenyx Pharmaceutical Inc. 2021. ClinicalTrials.gov Identifier: NCT04884815
+18. (guo2024diverserolesof pages 4-5): Zongxin Guo, Fredrik Orädd, Viktoria Bågenholm, Christina Grønberg, Jian Feng Ma, Peter Ott, Yong Wang, Magnus Andersson, Per Amstrup Pedersen, Kaituo Wang, and Pontus Gourdon. Diverse roles of the metal binding domains and transport mechanism of copper transporting p-type atpases. Nature Communications, Mar 2024. URL: https://doi.org/10.1038/s41467-024-47001-4, doi:10.1038/s41467-024-47001-4. This article has 20 citations and is from a highest quality peer-reviewed journal.
 
-19. (NCT04537377 chunk 1):  A Phase I/II Study of VTX-801 in Adult Patients With Wilson's Disease. Vivet Therapeutics SAS. 2021. ClinicalTrials.gov Identifier: NCT04537377
-
-20. (NCT07240896 chunk 1):  A Clinical Study on the Treatment of Wilson Disease With ATP7B mRNA/LNP (DSL101). DSciLab Co., Ltd.. 2025. ClinicalTrials.gov Identifier: NCT07240896
-
-21. (NCT07173933 chunk 1):  Phase I/II Clinical Study to Evaluate the Safety, Tolerability, and Efficacy of GC310 Injection in Patients With Wilson's Disease (WD). GeneCradle Inc. 2025. ClinicalTrials.gov Identifier: NCT07173933
-
-22. (NCT07226622 chunk 1):  Prescreening Study to Identify Potential Wilson Disease Participants for Gene-Editing Clinical Trial. Prime Medicine, Inc.. 2025. ClinicalTrials.gov Identifier: NCT07226622
-
-23. (OpenTargets Search: Wilson disease-ATP7B): Open Targets Query (Wilson disease-ATP7B, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-24. (marino2025wilsondiseasenovel pages 11-12): Zoe Mariño and Michael L. Schilsky. Wilson disease: novel diagnostic and therapeutic approaches. Seminars in Liver Disease, 45:221-235, Nov 2025. URL: https://doi.org/10.1055/a-2460-8999, doi:10.1055/a-2460-8999. This article has 18 citations and is from a peer-reviewed journal.
-
-25. (zeng2025evaluationofefficacy pages 1-2): Chunhua Zeng, Yunting Lin, Xinshuo Lu, Shehong Chen, Yan Xia, Kangdi Zhang, Yongxian Shao, Zhihong Guan, Rong Du, Zongcai Liu, Mingqi Zhao, Xiaoling Jiang, Yanna Cai, Taolin Li, Xueying Su, Yaoyong Chen, Xiaoyan Dong, Wen Zhang, Li Liu, and Wenhao Zhou. Evaluation of efficacy and safety of aav8-δc4atp7b gene therapy in a mutant mouse model of wilson’s disease. Molecular Therapy Methods &amp; Clinical Development, 33:101435, Mar 2025. URL: https://doi.org/10.1016/j.omtm.2025.101435, doi:10.1016/j.omtm.2025.101435. This article has 1 citations.
+19. (stock2023fastforwardonptype pages 13-16): Charlott Stock, Tomáš Heger, Sara Basse Hansen, Sigrid Thirup Larsen, Michael Habeck, Thibaud Dieudonné, Ronja Driller, and Poul Nissen. Fast-forward on p-type atpases: recent advances on structure and function. Biochemical Society transactions, 51:1347-1360, Jun 2023. URL: https://doi.org/10.1042/bst20221543, doi:10.1042/bst20221543. This article has 30 citations and is from a peer-reviewed journal.
 
 ## Citations
 
-1. guo2024diverserolesof pages 1-2
-2. petruzzelli2026copperinhuman pages 18-19
-3. petruzzelli2026copperinhuman pages 19-21
-4. chakraborty2023wilsondiseasecausing pages 1-2
-5. choi2024navigatingthecrisprcas pages 16-17
-6. marino2025wilsondiseasenovel pages 7-8
-7. marino2025wilsondiseasenovel pages 11-12
-8. gourdon2012structuralmodelsof pages 1-4
-9. petruzzelli2026copperinhuman pages 3-4
-10. petruzzelli2026copperinhuman pages 30-35
-11. ivanenko2025therapeuticstrategiesfor pages 1-2
-12. teschke2024wilsondiseasecoppermediated pages 19-21
-13. zeng2025evaluationofefficacy pages 1-2
-14. https://doi.org/10.1093/mtomcs/mfad051;
-15. https://doi.org/10.1038/s41467-024-47001-4;
-16. https://doi.org/10.3390/ijms25042402;
-17. https://doi.org/10.3390/cells13141214;
-18. https://doi.org/10.1055/a-2460-8999;
-19. https://clinicaltrials.gov/study/NCT04884815;
-20. https://clinicaltrials.gov/study/NCT04537377;
-21. https://clinicaltrials.gov/study/NCT07240896;
-22. https://clinicaltrials.gov/study/NCT07173933;
-23. https://doi.org/10.3390/ijms25042402,
-24. https://doi.org/10.1038/s41467-024-47001-4,
-25. https://doi.org/10.1515/hsz-2011-0249,
-26. https://doi.org/10.1152/physiol.00032.2025,
-27. https://doi.org/10.1093/mtomcs/mfad051,
-28. https://doi.org/10.3390/cells13141214,
-29. https://doi.org/10.1055/a-2460-8999,
-30. https://doi.org/10.24075/brsmu.2025.022,
-31. https://doi.org/10.3390/ijms25094753,
-32. https://doi.org/10.1016/j.omtm.2025.101435,
+1. polishchuk2019cellularfunctionof pages 1-3
+2. yu2017dynamicsandinteractions pages 18-22
+3. gloria2006functionalassessmentof pages 45-48
+4. valverde2024proteinkinasesin pages 9-10
+5. stock2023fastforwardonptype pages 13-16
+6. guo2024diverserolesof pages 1-2
+7. roelofsen2000copperinducedapicaltrafficking pages 1-2
+8. lalioti2016basolateralsortingand pages 1-2
+9. yu2017themetalchaperone pages 1-2
+10. polishchuk2013golgiincopper pages 1-2
+11. valverde2024proteinkinasesin pages 6-7
+12. polishchuk2019cellularfunctionof pages 3-5
+13. gloria2006functionalassessmentof pages 42-45
+14. polishchuk2013golgiincopper pages 7-8
+15. arioz2018foldingofcopper pages 17-19
+16. guo2024diverserolesof pages 4-5
+17. https://doi.org/10.1038/s41467-024-47001-4
+18. https://doi.org/10.3390/kinasesphosphatases2030015
+19. https://doi.org/10.1042/BST20221543
+20. https://doi.org/10.1053/gast.2000.17834
+21. https://doi.org/10.1053/j.gastro.2005.10.054
+22. https://doi.org/10.1053/j.gastro.2008.01.043
+23. https://doi.org/10.1242/jcs.184663
+24. https://doi.org/10.1074/jbc.M117.811752
+25. https://doi.org/10.1007/s00418-013-1123-8,
+26. https://doi.org/10.1074/jbc.m117.811752,
+27. https://doi.org/10.1053/gast.2000.17834,
+28. https://doi.org/10.1016/b978-0-12-810532-0.00006-9,
+29. https://doi.org/10.1038/s41467-024-47001-4,
+30. https://doi.org/10.3390/kinasesphosphatases2030015,
+31. https://doi.org/10.7939/r3-hwv9-3r15,
+32. https://doi.org/10.1053/j.gastro.2005.10.054,
+33. https://doi.org/10.1242/jcs.184663,
+34. https://doi.org/10.1053/j.gastro.2008.01.043,
+35. https://doi.org/10.1017/s0033583518000021,
+36. https://doi.org/10.1042/bst20221543,
