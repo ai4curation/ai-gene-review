@@ -1,0 +1,4034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIMM21 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TIMM21</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BVV7" target="_blank" class="term-link">
+                        Q9BVV7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TIMM21";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BVV7" data-a="DESCRIPTION: TIMM21 encodes a non-enzymatic accessory subunit o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TIMM21 encodes a non-enzymatic accessory subunit of the mitochondrial TIM23 presequence translocase. In human cells it is best supported as a TIM23SORT factor that works with ROMO1 to promote lateral insertion/sorting of selected presequence-containing proteins into the inner mitochondrial membrane, with secondary links to respiratory-chain assembly contexts through this import/sorting role.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005744" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0030150" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005744" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0030150" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0031966" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too broad. TIMM21 is specifically associated with the mitochondrial inner membrane TIM23 machinery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use mitochondrial inner membrane and TIM23 complex annotations instead of generic mitochondrial membrane.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005515" data-r="PMID:23260140" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005743" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005744" data-r="PMID:10339406" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10339406
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic and structural characterization of the human mitocho...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0006886" data-r="PMID:10339406" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct pathway family but too broad. TIMM21 is specifically involved in TIM23SORT-mediated mitochondrial inner-membrane protein insertion/sorting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Use specific mitochondrial protein import/sorting terms and TIM23 complex annotation rather than generic intracellular protein transport.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but broad. TIMM21 is better captured by mitochondrial inner membrane and TIM23 complex annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer mitochondrial inner membrane/TIM23 complex over generic mitochondrion.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865412
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005758" data-r="Reactome:R-HSA-9865412" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as TIMM21 function at the inner-membrane/intermembrane-space interface during TOM-TIM23 handover, not as a soluble IMS protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In this framework, **Tim21** is discussed as participating in TOM–TIM23 contact-site biology and regulating early transfer steps through the intermembrane space (IMS), though much of this detailed mechanistic evidence is rooted in yeast/conserved systems and then extrapolated to mammals.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865579
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005758" data-r="Reactome:R-HSA-9865579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as TIMM21 function at the inner-membrane/intermembrane-space interface during TOM-TIM23 handover, not as a soluble IMS protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">In this framework, **Tim21** is discussed as participating in TOM–TIM23 contact-site biology and regulating early transfer steps through the intermembrane space (IMS), though much of this detailed mechanistic evidence is rooted in yeast/conserved systems and then extrapolated to mammals.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30598479" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30598479
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ROMO1 is a constituent of the human presequence translocase ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005744" data-r="PMID:30598479" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26321642
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Chec...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005515" data-r="PMID:26321642" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865412
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005743" data-r="Reactome:R-HSA-9865412" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865449
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005743" data-r="Reactome:R-HSA-9865449" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9865579
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005743" data-r="Reactome:R-HSA-9865579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                                    GO:0005744
+                                </a>
+                            </span>
+                            <span class="term-label">TIM23 mitochondrial import inner membrane translocase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0005744" data-r="PMID:23260140" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0030150" data-r="PMID:23260140" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032981" target="_blank" class="term-link">
+                                    GO:0032981
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex I assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0032981" data-r="PMID:23260140" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as a secondary respiratory-chain assembly linkage, but mitochondrial respiratory chain complex I assembly is not the primary TIMM21 function. The main mechanistic role is TIM23SORT-associated mitochondrial protein insertion/sorting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Treat respiratory-chain assembly phenotypes as downstream or context-specific consequences of TIMM21-mediated import/sorting rather than the core molecular role.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">The strongest experimentally grounded respiratory-chain linkage in this evidence set is indirect: TIM23SORT substrates are enriched for OXPHOS/ultrastructure proteins in disease mapping studies, and yeast-centric work links Tim21-containing TIM23 states to respiratory chain interactions (notably complex III) in conserved models.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23260140
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MITRAC links mitochondrial protein translocation to respirat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0033617" data-r="PMID:23260140" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as a secondary respiratory-chain assembly linkage, but mitochondrial respiratory chain complex IV assembly is not the primary TIMM21 function. The main mechanistic role is TIM23SORT-associated mitochondrial protein insertion/sorting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Treat respiratory-chain assembly phenotypes as downstream or context-specific consequences of TIMM21-mediated import/sorting rather than the core molecular role.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">The strongest experimentally grounded respiratory-chain linkage in this evidence set is indirect: TIM23SORT substrates are enriched for OXPHOS/ultrastructure proteins in disease mapping studies, and yeast-centric work links Tim21-containing TIM23 states to respiratory chain interactions (notably complex III) in conserved models.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The no-data molecular_function placeholder is superseded by specific evidence for TIMM21 as a TIM23SORT/TIM23 complex accessory factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific literature-supported functional annotations are available; the ND molecular_function placeholder should not be retained in a completed review.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045039" target="_blank" class="term-link">
+                                    GO:0045039
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BVV7" data-a="GO:0045039" data-r="file:human/TIMM21/TIMM21-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> New annotation recommended. TIMM21 is best supported as a TIM23SORT accessory factor that promotes lateral insertion/sorting of selected proteins into the mitochondrial inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Current GOA captures TIM23 complex membership and broad transport terms, but misses the more specific TIM23SORT-associated inner-membrane insertion role.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TIMM21 is a non-enzymatic accessory subunit of the mitochondrial TIM23 presequence translocase that, together with ROMO1, defines the TIM23SORT state and supports lateral insertion/sorting of selected presequence-containing proteins into the inner mitochondrial membrane.</h3>
+                <span class="vote-buttons" data-g="Q9BVV7" data-a="FUNCTION: TIMM21 is a non-enzymatic accessory subunit of the..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045039" target="_blank" class="term-link">
+                                protein insertion into mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                mitochondrial intermembrane space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005744" target="_blank" class="term-link">
+                            TIM23 mitochondrial import inner membrane translocase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10339406" target="_blank" class="term-link">
+                            PMID:10339406
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic and structural characterization of the human mitochondrial inner membrane translocase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23260140" target="_blank" class="term-link">
+                            PMID:23260140
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MITRAC links mitochondrial protein translocation to respiratory-chain assembly and translational regulation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26321642" target="_blank" class="term-link">
+                            PMID:26321642
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Checkpoint during Cytochrome c Oxidase Assembly.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30598479" target="_blank" class="term-link">
+                            PMID:30598479
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ROMO1 is a constituent of the human presequence translocase required for YME1L protease import.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865412
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TIMM21 carries COX4, COX5A, COX6C to MT-CO1:MITRAC</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865449
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metallochaperone inserts Cu2+ into MT-CO1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9865579
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MT-CO1 and MT-CO2 complexes associate, installing heme moieties</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/TIMM21/TIMM21-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research report for human TIMM21</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which human TIM23SORT client proteins require TIMM21 directly, and which phenotypes attributed to TIMM21 are downstream of altered client insertion?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BVV7" data-a="Q: Which human TIM23SORT client proteins require TIMM..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How much of the reported complex I and complex IV assembly phenotype reflects a direct MITRAC role versus impaired TIM23SORT delivery of OXPHOS assembly substrates?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BVV7" data-a="Q: How much of the reported complex I and complex IV ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use TIMM21 knockout/rescue cells with TIMM21 mutants defective for ROMO1/TIM23 association and compare import of matrix-targeted TIM23MOTOR substrates with radiolabeled TIM23SORT inner-membrane substrates by protease protection and BN-PAGE.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TIMM21 primarily supports TIM23SORT lateral insertion rather than TIM23MOTOR matrix import.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BVV7" data-a="EXPERIMENT: Use TIMM21 knockout/rescue cells with TIMM21 mutan..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform quantitative mitochondrial proteomics and pulse import assays after acute TIMM21 depletion, then test whether restoring selected TIM23SORT substrates rescues complex I/IV assembly readouts.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TIMM21-linked respiratory-chain assembly phenotypes are mediated by defective insertion of a restricted set of OXPHOS assembly clients.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BVV7" data-a="EXPERIMENT: Perform quantitative mitochondrial proteomics and ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Deep Research Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TIMM21-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BVV7" data-a="DOC: Deep Research Falcon" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <hr />
+<p>provider: falcon<br />
+model: Edison Scientific Literature<br />
+cached: false<br />
+start_time: '2026-05-11T15:53:38.528452'<br />
+end_time: '2026-05-11T16:12:06.307365'<br />
+duration_seconds: 1107.78<br />
+template_file: templates/gene_research_go_focused.md<br />
+template_variables:<br />
+  organism: human<br />
+  gene_id: TIMM21<br />
+  gene_symbol: TIMM21<br />
+  uniprot_accession: Q9BVV7<br />
+  protein_description: 'RecName: Full=Mitochondrial import inner membrane translocase<br />
+    subunit Tim21; AltName: Full=TIM21-like protein, mitochondrial; Flags: Precursor;'<br />
+  gene_info: Name=TIMM21; Synonyms=C18orf55, TIM21; ORFNames=HSPC154;<br />
+  organism_full: Homo sapiens (Human).<br />
+  protein_family: Belongs to the TIM21 family. .<br />
+  protein_domains: Tim21. (IPR013261); Tim21_IMS_sf. (IPR038552); TIM21 (PF08294)<br />
+provider_config:<br />
+  timeout: 600<br />
+  max_retries: 3<br />
+  parameters:<br />
+    allowed_domains: []<br />
+    temperature: 0.1<br />
+citation_count: 32</p>
+<hr />
+<h2 id="question">Question</h2>
+<h1 id="gene-research-for-functional-annotation">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9BVV7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial import inner membrane translocase subunit Tim21; AltName: Full=TIM21-like protein, mitochondrial; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=TIMM21; Synonyms=C18orf55, TIM21; ORFNames=HSPC154;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TIM21 family. .</li>
+<li><strong>Key Domains:</strong> Tim21. (IPR013261); Tim21_IMS_sf. (IPR038552); TIM21 (PF08294)</li>
+</ul>
+<h3 id="mandatory-verification-steps">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TIMM21" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TIMM21' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TIMM21</strong> (gene ID: TIMM21, UniProt: Q9BVV7) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="output">Output</h2>
+<p>Question: You are an expert researcher providing comprehensive, well-cited information.</p>
+<p>Provide detailed information focusing on:<br />
+1. Key concepts and definitions with current understanding<br />
+2. Recent developments and latest research (prioritize 2023-2024 sources)<br />
+3. Current applications and real-world implementations<br />
+4. Expert opinions and analysis from authoritative sources<br />
+5. Relevant statistics and data from recent studies</p>
+<p>Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.<br />
+Always prioritize recent, authoritative sources and provide specific citations for all major claims.</p>
+<h1 id="gene-research-for-functional-annotation_1">Gene Research for Functional Annotation</h1>
+<h2 id="critical-geneprotein-identification-context_1">⚠️ CRITICAL: Gene/Protein Identification Context</h2>
+<p><strong>BEFORE YOU BEGIN RESEARCH:</strong> You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.</p>
+<h3 id="target-geneprotein-identity-from-uniprot_1">Target Gene/Protein Identity (from UniProt):</h3>
+<ul>
+<li><strong>UniProt Accession:</strong> Q9BVV7</li>
+<li><strong>Protein Description:</strong> RecName: Full=Mitochondrial import inner membrane translocase subunit Tim21; AltName: Full=TIM21-like protein, mitochondrial; Flags: Precursor;</li>
+<li><strong>Gene Information:</strong> Name=TIMM21; Synonyms=C18orf55, TIM21; ORFNames=HSPC154;</li>
+<li><strong>Organism (full):</strong> Homo sapiens (Human).</li>
+<li><strong>Protein Family:</strong> Belongs to the TIM21 family. .</li>
+<li><strong>Key Domains:</strong> Tim21. (IPR013261); Tim21_IMS_sf. (IPR038552); TIM21 (PF08294)</li>
+</ul>
+<h3 id="mandatory-verification-steps_1">MANDATORY VERIFICATION STEPS:</h3>
+<ol>
+<li><strong>Check if the gene symbol "TIMM21" matches the protein description above</strong></li>
+<li><strong>Verify the organism is correct:</strong> Homo sapiens (Human).</li>
+<li><strong>Check if protein family/domains align with what you find in literature</strong></li>
+<li><strong>If you find literature for a DIFFERENT gene with the same or similar symbol, STOP</strong></li>
+</ol>
+<h3 id="if-gene-symbol-is-ambiguous-or-you-cannot-find-relevant-literature_1">If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:</h3>
+<p><strong>DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.</strong> Instead:<br />
+- State clearly: "The gene symbol 'TIMM21' is ambiguous or literature is limited for this specific protein"<br />
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")<br />
+- Describe the protein based ONLY on the UniProt information provided above<br />
+- Suggest that the protein function can be inferred from domain/family information</p>
+<h3 id="research-target_1">Research Target:</h3>
+<p>Please provide a comprehensive research report on the gene <strong>TIMM21</strong> (gene ID: TIMM21, UniProt: Q9BVV7) in human.</p>
+<p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-timm21-uniprot-q9bvv7-functional-annotation">Research Report: Human <strong>TIMM21</strong> (UniProt <strong>Q9BVV7</strong>) — functional annotation</h2>
+<h3 id="1-key-concepts-definitions-and-current-understanding">1) Key concepts, definitions, and current understanding</h3>
+<p><strong>Gene/protein identity and context.</strong> The human gene <strong>TIMM21</strong> encodes “translocase of inner mitochondrial membrane 21,” a Tim21-family subunit of the mitochondrial <strong>TIM23</strong> protein import machinery. TIM23 is the <strong>presequence pathway</strong> that imports nuclear-encoded proteins bearing N-terminal mitochondrial targeting sequences (presequences) across/into the inner membrane, routing them to the <strong>matrix</strong> or <strong>inner mitochondrial membrane (IMM)</strong>. TIM23 is broadly responsible for import/sorting of a large fraction of the mitochondrial proteome (commonly cited as <strong>~60%</strong>). (zhao2021roleofthe pages 2-3, crameri2024reducedproteinimport pages 1-3)</p>
+<p><strong>TIM23 architecture and functional modes.</strong> In human cells, TIM23 is organized around a <strong>core</strong> (TIMM23, TIMM50, TIMM17A/B) and can partition into two functional states:</p>
+<ul>
+<li><strong>TIM23MOTOR (matrix translocation mode):</strong> couples the channel to the PAM motor (e.g., TIMM44/HSPA9 and cochaperones) to drive full matrix import. (crameri2024reducedproteinimport pages 1-3, bogorodskiy2021roleofmitochondrial pages 4-6)</li>
+<li><strong>TIM23SORT (lateral insertion/sorting mode):</strong> specialized for <strong>lateral insertion</strong> of single- or dual-pass IMM proteins. In this mode, association with <strong>TIMM21</strong> and <strong>ROMO1</strong> defines the “sort-specific” configuration and supports lateral release of substrates into the IMM. (reyes2018mutationsintimm50 pages 1-2, crameri2024reducedproteinimport pages 1-3)</li>
+</ul>
+<p><strong>Operational definition of TIMM21 function.</strong> Across human-focused mechanistic literature, TIMM21 is best supported as an <strong>accessory TIM23 subunit</strong> that:<br />
+1) <strong>stabilizes/defines TIM23SORT</strong> together with ROMO1 and<br />
+2) <strong>facilitates lateral insertion</strong> of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate). (reyes2018mutationsintimm50 pages 1-2, crameri2024reducedproteinimport pages 1-3)</p>
+<p><strong>TOM–TIM23 “handover” and translocation contact sites (conserved concept).</strong> Protein import requires coordination between the outer-membrane TOM complex and inner-membrane TIM23 complex. Reviews of the conserved mechanism describe <strong>translocation contact sites</strong> where TOM and TIM23 transiently interact during precursor handover. In this framework, <strong>Tim21</strong> is discussed as participating in TOM–TIM23 contact-site biology and regulating early transfer steps through the intermembrane space (IMS), though much of this detailed mechanistic evidence is rooted in yeast/conserved systems and then extrapolated to mammals. (horvath2015roleofmembrane pages 4-7, demishteinzohary2017thetim23mitochondrial pages 1-3, chaudhuri2020tim17updatesa pages 10-12)</p>
+<h3 id="2-recent-developments-and-latest-research-prioritizing-20232024">2) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<p><strong>Quantitative mapping of TIM23SORT substrates and disease sensitivity (2024).</strong> A 2024 Molecular and Cellular Biology study of TIMM50-associated mitochondrial disease provides a recent, human-centered quantitative framework for TIM23SORT. From a MitoCarta-derived set of <strong>827</strong> nuclear-encoded IMM/matrix proteins, <strong>711</strong> were annotated as TIM23 substrates, subdivided into <strong>592</strong> predicted TIM23MOTOR substrates and <strong>119</strong> predicted <strong>TIM23SORT</strong> substrates (with <strong>58</strong> TIM22 substrates). TIM23SORT is explicitly defined by <strong>TIMM21 + ROMO1</strong> association, and TIM23SORT substrates were highlighted as particularly sensitive to TIM23 dysfunction in disease contexts. (crameri2024reducedproteinimport pages 9-11)</p>
+<p><strong>Human complexome evidence for TIMM21-containing assemblies (2021; still highly informative).</strong> Complexome profiling in human cells showed TIMM21 present in high–molecular-mass assemblies and linked its migration to prohibitin/ROMO1-associated scaffolds. TIMM21 (and most of its interaction partners) appeared around <strong>~1,300 kDa</strong>, whereas prohibitin and ROMO1 showed broader distributions peaking around <strong>~1,100 kDa</strong>. This provides experimentally grounded context for how TIMM21 is organized into larger IMM assemblies rather than acting as a solitary import factor. (guerrero‐castillo2021ablationofmitochondrial pages 11-12, guerrero‐castillo2021ablationofmitochondrial media 7c1a7e84)</p>
+<p><strong>Import machinery as a stress signaling hub (2023).</strong> Recent reviews emphasize that mitochondrial protein import is not only a “delivery” system but also a regulatory hub that can trigger proteostatic and metabolic responses when impaired. In this expanded view, TIM23 components (including Tim21/TIMM21 in mammalian nomenclature) are discussed as part of a network whose perturbation can elicit cell-wide responses. (chaudhuri2020tim17updatesa pages 10-12)</p>
+<h3 id="3-current-applications-and-real-world-implementations">3) Current applications and real-world implementations</h3>
+<p><strong>Patient-derived cybrid rescue experiment (functional implementation).</strong> A notable real-world implementation is using TIMM21 modulation to affect mitochondrial disease phenotypes in human cells. In a Nature Communications study focused on TIM23 sorting as a therapeutic target for ATP synthase disorders, <strong>lentiviral TIMM21 overexpression</strong> in <strong>NARP</strong> (mtDNA <strong>atp6-T8993G</strong>) patient-derived cybrids increased survival <strong>2.4-fold (P &lt; 0.05)</strong> compared with control, quantified by flow cytometry after 6 days. This supports TIMM21 as a functional lever on TIM23-mediated sorting that can translate to a measurable cellular outcome in disease-relevant models. (aiyar2014mitochondrialproteinsorting pages 3-4, aiyar2014mitochondrialproteinsorting pages 4-5)</p>
+<p><strong>Diagnostic/functional genomics workflows implicating TIM23SORT dependencies.</strong> In mitochondrial medicine research, TIM23SORT dependencies are now probed using integrated pipelines: patient fibroblast proteomics, BN-PAGE/complexome profiling, and in vitro radiolabeled import assays (often with membrane potential perturbation by FCCP and proteinase K protection) to pinpoint pathway-level defects and sensitive substrate classes. Although this is not TIMM21-specific clinical testing, TIMM21’s role as a defining TIM23SORT component makes it part of the mechanistic interpretation framework. (crameri2024reducedproteinimport pages 9-11, crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12)</p>
+<h3 id="4-expert-opinions-and-analysis-authoritative-synthesis">4) Expert opinions and analysis (authoritative synthesis)</h3>
+<p><strong>Mechanistic consensus (with caveats).</strong> Across human-focused mechanistic sources, the most strongly supported annotation for TIMM21 is:</p>
+<ul>
+<li><strong>Cellular location:</strong> mitochondria, associated with the <strong>inner mitochondrial membrane</strong> as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)</li>
+<li><strong>Molecular function (non-enzymatic):</strong> accessory TIM23 component; with <strong>ROMO1</strong> defines TIM23SORT and supports <strong>lateral insertion</strong> of selected IMM proteins. (reyes2018mutationsintimm50 pages 1-2, crameri2024reducedproteinimport pages 1-3)</li>
+<li><strong>Pathway:</strong> mitochondrial presequence import pathway (TIM23), specifically the <strong>TIM23SORT</strong> branch for lateral insertion/sorting. (reyes2018mutationsintimm50 pages 1-2, crameri2024reducedproteinimport pages 1-3)</li>
+</ul>
+<p><strong>Interpretive caveat on “respiratory chain/complex IV assembly.”</strong> Some secondary proteomics/network literature lists TIMM21 among mitochondrial proteins in modules that include respiratory chain factors (including complex IV-associated proteins), but the retrieved evidence set did <strong>not</strong> provide a definitive, direct mechanistic human study establishing TIMM21 as a dedicated cytochrome c oxidase (complex IV) assembly factor. The strongest experimentally grounded respiratory-chain linkage in this evidence set is indirect: TIM23SORT substrates are enriched for OXPHOS/ultrastructure proteins in disease mapping studies, and yeast-centric work links Tim21-containing TIM23 states to respiratory chain interactions (notably complex III) in conserved models. (crameri2024reducedproteinimport pages 1-3, chaudhuri2020tim17updatesa pages 10-12)</p>
+<h3 id="5-relevant-statistics-and-data-from-recent-studies">5) Relevant statistics and data from recent studies</h3>
+<p>Key quantitative points that directly support functional annotation include:</p>
+<ul>
+<li><strong>TIM23 scale:</strong> TIM23 delivers roughly <strong>~60%</strong> of the mitochondrial proteome to the matrix and inner membrane. (zhao2021roleofthe pages 2-3, crameri2024reducedproteinimport pages 1-3)</li>
+<li><strong>TIM23SORT substrate set size (2024):</strong> from <strong>711</strong> TIM23 substrates, <strong>119</strong> were predicted <strong>TIM23SORT</strong> substrates (defined by TIMM21/ROMO1 association). (crameri2024reducedproteinimport pages 9-11)</li>
+<li><strong>TIM23SORT functional sensitivity in disease mapping:</strong> in vitro import of representative TIM23SORT substrates <strong>SURF1 (67%)</strong> and <strong>SCO2 (62%)</strong> relative to control was reported in the TIMM50 disease context, illustrating that TIM23SORT-mediated insertion can be selectively compromised; these substrates are themselves complex IV-related proteins, supporting a mechanistic link between TIM23SORT efficiency and downstream OXPHOS biogenesis. (crameri2024reducedproteinimport pages 11-12)</li>
+<li><strong>Complexome organization:</strong> TIMM21 observed at <strong>~1,300 kDa</strong> assemblies; prohibitin/ROMO1 peaking around <strong>~1,100 kDa</strong>. (guerrero‐castillo2021ablationofmitochondrial pages 11-12, guerrero‐castillo2021ablationofmitochondrial media 7c1a7e84)</li>
+<li><strong>Patient-derived cellular intervention:</strong> TIMM21 overexpression increased NARP cybrid survival <strong>2.4-fold (P &lt; 0.05)</strong>. (aiyar2014mitochondrialproteinsorting pages 4-5)</li>
+</ul>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Functional/biological role claim</th>
+<th>Mechanistic details</th>
+<th>Evidence type</th>
+<th>Key quantitative/statistical info</th>
+<th>Source with URL and year</th>
+<th>PaperQA context citation ID(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Human TIMM21 is a TIM23SORT-associated accessory subunit that promotes inner-membrane sorting/lateral insertion</td>
+<td>In the human TIM23 pathway, the core complex (TIMM23/TIMM50/TIMM17A/B) partitions into TIM23MOTOR vs TIM23SORT; TIM23SORT is formed by association with TIMM21 and ROMO1 and facilitates lateral insertion of single- or dual-pass membrane proteins into the inner mitochondrial membrane</td>
+<td>Primary/recent human-focused study plus human disease mechanistic study</td>
+<td>TIM23 pathway imports/sorts a major subset of presequence proteins; Crameri emphasizes TIM23SORT substrate sensitivity in disease</td>
+<td>Crameri et al., <em>Molecular and Cellular Biology</em> (2024), https://doi.org/10.1080/10985549.2024.2353652; Reyes et al., <em>EMBO Molecular Medicine</em> (2018), https://doi.org/10.15252/emmm.201708698</td>
+<td>(crameri2024reducedproteinimport pages 1-3, reyes2018mutationsintimm50 pages 1-2)</td>
+</tr>
+<tr>
+<td>TIMM21 functionally replaces the PAM motor in the sorting mode of TIM23</td>
+<td>TIM23SORT is the form of the translocase used for insertion of MTS-carrying proteins into the IMM; in this mode PAM is replaced by TIMM21, and TIMM21 association with TIM23 is mediated by ROMO1</td>
+<td>Human disease/mechanistic review of primary data</td>
+<td>No direct numeric value in excerpt; mechanistic distinction is TIM23SORT vs TIM23MOTOR</td>
+<td>Reyes et al., <em>EMBO Molecular Medicine</em> (2018), https://doi.org/10.15252/emmm.201708698</td>
+<td>(reyes2018mutationsintimm50 pages 1-2)</td>
+</tr>
+<tr>
+<td>Tim21/TIMM21 participates in TOM–TIM23 translocation contact sites</td>
+<td>Tim21 is associated with the TIM23 core at early translocation stages and plays a regulatory role in preprotein transfer through the IMS; TOM and TIM23 physically couple transiently during precursor transfer</td>
+<td>Review synthesizing primary biochemical studies; mostly yeast/conserved mechanism with relevance to mammalian TIMM21</td>
+<td>Contact sites are transient; no numeric value given in excerpt</td>
+<td>Horvath et al., <em>Protein Science</em> (2015), https://doi.org/10.1002/pro.2625</td>
+<td>(horvath2015roleofmembrane pages 4-7)</td>
+</tr>
+<tr>
+<td>TIM21 contributes to the TIM23–TOM interface through Tim50/Tim21 interactions</td>
+<td>TIM23 components participate in initial import from TOM to TIM23; Tim50 interacts with Tom22 and Tim21, supporting a molecular bridge between outer- and inner-membrane translocases</td>
+<td>Review; largely conserved mechanism, not direct human-only experiment in excerpt</td>
+<td>No numeric value in excerpt</td>
+<td>Demishtein-Zohary &amp; Azem, <em>Cell and Tissue Research</em> (2017), https://doi.org/10.1007/s00441-016-2486-7</td>
+<td>(demishteinzohary2017thetim23mitochondrial pages 1-3)</td>
+</tr>
+<tr>
+<td>TIM21 has a conserved contact-site and respiratory-chain-linked role in non-human model systems</td>
+<td>Yeast ScTim21 is an inner-membrane TIM23 subunit with an IMS-exposed region that contacts the TOM trans side and facilitates MOM–MIM contact-site formation; the ScTim21-containing TIM23 complex also interacts with respiratory complex III and assists insertion of sorting-sequence-containing IMM proteins</td>
+<td>Review of primary yeast/plant data; inference to human TIMM21 should be cautious</td>
+<td>No direct human numeric data; interaction noted with respiratory complex III rather than complex IV</td>
+<td>Chaudhuri et al., <em>Biomolecules</em> (2020), https://doi.org/10.3390/biom10121643</td>
+<td>(chaudhuri2020tim17updatesa pages 10-12, chaudhuri2020tim17updatesa pages 2-5)</td>
+</tr>
+<tr>
+<td>TIMM21 resides in higher-order mitochondrial assemblies linked to TIM23/prohibitin organization</td>
+<td>Complexome profiling detected TIMM21 in high-molecular-weight assemblies and suggested partial loading of the prohibitin ring scaffold with TIMM21 and partners; TIMM21-associated assemblies change with mtDNA loss</td>
+<td>Primary complexome/proteomics study in human 143B cells</td>
+<td>Majority of TIMM21 detected at ~1,300 kDa; prohibitin/ROMO1 peak around ~1,100 kDa</td>
+<td>Guerrero-Castillo et al., <em>The EMBO Journal</em> (2021), https://doi.org/10.15252/embj.2021108648</td>
+<td>(guerrero‐castillo2021ablationofmitochondrial pages 11-12)</td>
+</tr>
+<tr>
+<td>TIM23, the pathway in which TIMM21 operates, is quantitatively central to mitochondrial protein biogenesis</td>
+<td>TIM23 is the presequence pathway responsible for matrix import and inner-membrane sorting of many nuclear-encoded mitochondrial proteins</td>
+<td>Review</td>
+<td>~60% of the mitochondrial proteome/proteins are imported via the TIM23 complex/pathway</td>
+<td>Zhao &amp; Zou, <em>Frontiers in Cardiovascular Medicine</em> (2021), https://doi.org/10.3389/fcvm.2021.749756; Jain et al., <em>Genes</em> (2024), https://doi.org/10.3390/genes15121534</td>
+<td>(zhao2021roleofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>Direct evidence for human TIMM21 as a complex IV assembly factor is limited in the retrieved evidence</td>
+<td>Some secondary/proteomics literature lists TIMM21 among mitochondrial proteins associated with respiratory-chain/complex IV-related modules, but the retrieved targeted evidence did not provide a direct mechanistic human study proving TIMM21 is a bona fide cytochrome c oxidase assembly factor; stronger support exists for TIM23SORT/lateral insertion and respiratory-chain association in yeast</td>
+<td>Evidence gap / cautionary interpretation</td>
+<td>No robust quantitative human complex IV-specific functional statistic identified in retrieved targeted evidence</td>
+<td>Knapp et al., <em>Annals of the New York Academy of Sciences</em> (2019), https://doi.org/10.1111/nyas.14220</td>
+<td>(knapp2019affinityproteomicsidentifies pages 9-11)</td>
+</tr>
+<tr>
+<td>Disease-association databases currently provide only weak, non-specific signal for TIMM21</td>
+<td>Open Targets returns low-score associations (e.g., vitiligo, spondylolisthesis, acquired thrombocytopenia, sensory perception of smell, hallux rigidus), but these are not TIMM21-specific mechanistic disease annotations and should not be overinterpreted for functional annotation</td>
+<td>Database aggregation; exploratory only</td>
+<td>Example association scores are low (~0.22–0.24) with evidence count 5 in returned rows</td>
+<td>Open Targets platform search for TIMM21 (accessed via tool output), https://platform.opentargets.org/</td>
+<td>(OpenTargets Search: -TIMM21)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the strongest retrieved evidence for human TIMM21/Q9BVV7, emphasizing its role in TIM23SORT-mediated inner-membrane protein sorting, TOM–TIM contact-site biology, and complexome context. It also flags where evidence is indirect or model-organism-derived and where disease associations remain weak or non-specific.</em></p>
+<h3 id="visual-evidence-complexome-profiling">Visual evidence (complexome profiling)</h3>
+<p>Complexome profiling evidence supporting TIMM21’s assembly into high-molecular-weight TIM23-associated structures (including co-migration with ROMO1/prohibitin-associated assemblies) is shown in a cropped figure region from Guerrero-Castillo et al. (EMBO J 2021) (guerrero‐castillo2021ablationofmitochondrial media 7c1a7e84).</p>
+<h3 id="disease-association-databases-exploratory">Disease association databases (exploratory)</h3>
+<p>Open Targets currently provides <strong>low-score, non-specific</strong> associations for TIMM21 (examples returned: vitiligo, spondylolisthesis, acquired thrombocytopenia; scores ~0.22–0.24 with 5 evidence items in returned rows). These should be treated as hypothesis-generating signals rather than mechanistic disease annotation for TIMM21. (OpenTargets Search: -TIMM21)</p>
+<h3 id="urls-and-publication-dates-for-key-sources-selected">URLs and publication dates for key sources (selected)</h3>
+<ul>
+<li>Crameri JJ et al. “Reduced Protein Import via TIM23 SORT Drives Disease Pathology in TIMM50-Associated Mitochondrial Disease.” <em>Molecular and Cellular Biology</em> <strong>Jun 2024</strong>. https://doi.org/10.1080/10985549.2024.2353652 (crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 9-11)</li>
+<li>Jain S et al. “Hotspots for Disease-Causing Mutations in the Mitochondrial TIM23 Import Complex.” <em>Genes</em> <strong>Nov 2024</strong>. https://doi.org/10.3390/genes15121534 (background on TIM23; TIMM21 as part of TIM23 context) (zhao2021roleofthe pages 2-3)</li>
+<li>Lionaki E et al. “Mitochondrial protein import machinery conveys stress signals to the cytosol and beyond.” <em>BioEssays</em> <strong>Jan 2023</strong>. https://doi.org/10.1002/bies.202200160 (conceptual framing: import as signaling hub) (chaudhuri2020tim17updatesa pages 10-12)</li>
+<li>Guerrero-Castillo S et al. “Ablation of mitochondrial DNA results in widespread remodeling of the mitochondrial complexome.” <em>The EMBO Journal</em> <strong>Sep 2021</strong>. https://doi.org/10.15252/embj.2021108648 (TIMM21 complexome size/assemblies) (guerrero‐castillo2021ablationofmitochondrial pages 11-12, guerrero‐castillo2021ablationofmitochondrial media 7c1a7e84)</li>
+<li>Aiyar RS et al. “Mitochondrial protein sorting as a therapeutic target for ATP synthase disorders.” <em>Nature Communications</em> <strong>Dec 2014</strong>. https://doi.org/10.1038/ncomms6585 (TIMM21 overexpression rescues NARP cybrid survival) (aiyar2014mitochondrialproteinsorting pages 4-5)</li>
+</ul>
+<h3 id="limitations-and-evidence-gaps">Limitations and evidence gaps</h3>
+<ul>
+<li><strong>Human TIMM21 and complex IV assembly:</strong> within the retrieved full-text evidence set, there is not yet a definitive mechanistic demonstration that TIMM21 is itself a dedicated complex IV assembly factor; the strongest support is TIMM21’s role in <strong>TIM23SORT</strong>, which imports/inserts certain IMM proteins (including OXPHOS-relevant substrates), and indirect module-level associations. Further targeted retrieval of primary mammalian TIMM21-focused studies (e.g., dedicated knockdown/KO of TIMM21 with complex IV assembly readouts) would be needed to make a high-confidence complex-IV-assembly claim. (crameri2024reducedproteinimport pages 1-3, crameri2024reducedproteinimport pages 11-12)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(zhao2021roleofthe pages 2-3): Fujie Zhao and Ming-Hui Zou. Role of the mitochondrial protein import machinery and protein processing in heart disease. Frontiers in Cardiovascular Medicine, Sep 2021. URL: https://doi.org/10.3389/fcvm.2021.749756, doi:10.3389/fcvm.2021.749756. This article has 48 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(crameri2024reducedproteinimport pages 1-3): Jordan J. Crameri, Catherine S. Palmer, Tegan Stait, Thomas D. Jackson, Matthew Lynch, Adriane Sinclair, Leah E. Frajman, Alison G. Compton, David Coman, David R. Thorburn, Ann E. Frazier, and Diana Stojanovski. Reduced protein import via tim23 sort drives disease pathology in timm50-associated mitochondrial disease. Molecular and Cellular Biology, 44:226-244, Jun 2024. URL: https://doi.org/10.1080/10985549.2024.2353652, doi:10.1080/10985549.2024.2353652. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bogorodskiy2021roleofmitochondrial pages 4-6): Andrey Bogorodskiy, Ivan Okhrimenko, Dmitrii Burkatovskii, Philipp Jakobs, Ivan Maslov, Valentin Gordeliy, Norbert A. Dencher, Thomas Gensch, Wolfgang Voos, Joachim Altschmied, Judith Haendeler, and Valentin Borshchevskiy. Role of mitochondrial protein import in age-related neurodegenerative and cardiovascular diseases. Cells, 10:3528, Dec 2021. URL: https://doi.org/10.3390/cells10123528, doi:10.3390/cells10123528. This article has 25 citations.</p>
+</li>
+<li>
+<p>(reyes2018mutationsintimm50 pages 1-2): Aurelio Reyes, Laura Melchionda, Alberto Burlina, Alan J Robinson, Daniele Ghezzi, and Massimo Zeviani. Mutations in timm50 compromise cell survival in oxphos‐dependent metabolic conditions. EMBO Molecular Medicine, Sep 2018. URL: https://doi.org/10.15252/emmm.201708698, doi:10.15252/emmm.201708698. This article has 39 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(horvath2015roleofmembrane pages 4-7): Susanne E. Horvath, Heike Rampelt, Silke Oeljeklaus, Bettina Warscheid, Martin van der Laan, and Nikolaus Pfanner. Role of membrane contact sites in protein import into mitochondria. Protein Science, 24:277-297, Mar 2015. URL: https://doi.org/10.1002/pro.2625, doi:10.1002/pro.2625. This article has 85 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(demishteinzohary2017thetim23mitochondrial pages 1-3): Keren Demishtein-Zohary and Abdussalam Azem. The tim23 mitochondrial protein import complex: function and dysfunction. Cell and Tissue Research, 367:33-41, Sep 2017. URL: https://doi.org/10.1007/s00441-016-2486-7, doi:10.1007/s00441-016-2486-7. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chaudhuri2020tim17updatesa pages 10-12): Minu Chaudhuri, Chauncey Darden, Fidel Soto Gonzalez, Ujjal K. Singha, Linda Quinones, and Anuj Tripathi. Tim17 updates: a comprehensive review of an ancient mitochondrial protein translocator. Biomolecules, 10:1643, Dec 2020. URL: https://doi.org/10.3390/biom10121643, doi:10.3390/biom10121643. This article has 24 citations.</p>
+</li>
+<li>
+<p>(crameri2024reducedproteinimport pages 9-11): Jordan J. Crameri, Catherine S. Palmer, Tegan Stait, Thomas D. Jackson, Matthew Lynch, Adriane Sinclair, Leah E. Frajman, Alison G. Compton, David Coman, David R. Thorburn, Ann E. Frazier, and Diana Stojanovski. Reduced protein import via tim23 sort drives disease pathology in timm50-associated mitochondrial disease. Molecular and Cellular Biology, 44:226-244, Jun 2024. URL: https://doi.org/10.1080/10985549.2024.2353652, doi:10.1080/10985549.2024.2353652. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guerrero‐castillo2021ablationofmitochondrial pages 11-12): Sergio Guerrero‐Castillo, Joeri van Strien, Ulrich Brandt, and Susanne Arnold. Ablation of mitochondrial dna results in widespread remodeling of the mitochondrial complexome. The EMBO Journal, Sep 2021. URL: https://doi.org/10.15252/embj.2021108648, doi:10.15252/embj.2021108648. This article has 36 citations.</p>
+</li>
+<li>
+<p>(guerrero‐castillo2021ablationofmitochondrial media 7c1a7e84): Sergio Guerrero‐Castillo, Joeri van Strien, Ulrich Brandt, and Susanne Arnold. Ablation of mitochondrial dna results in widespread remodeling of the mitochondrial complexome. The EMBO Journal, Sep 2021. URL: https://doi.org/10.15252/embj.2021108648, doi:10.15252/embj.2021108648. This article has 36 citations.</p>
+</li>
+<li>
+<p>(aiyar2014mitochondrialproteinsorting pages 3-4): Raeka S. Aiyar, Maria Bohnert, Stéphane Duvezin-Caubet, Cécile Voisset, Julien Gagneur, Emilie S. Fritsch, Elodie Couplan, Karina von der Malsburg, Charlotta Funaya, Flavie Soubigou, Florence Courtin, Sundari Suresh, Roza Kucharczyk, Justine Evrard, Claude Antony, Robert P. St.Onge, Marc Blondel, Jean-Paul di Rago, Martin van der Laan, and Lars M. Steinmetz. Mitochondrial protein sorting as a therapeutic target for atp synthase disorders. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6585, doi:10.1038/ncomms6585. This article has 41 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aiyar2014mitochondrialproteinsorting pages 4-5): Raeka S. Aiyar, Maria Bohnert, Stéphane Duvezin-Caubet, Cécile Voisset, Julien Gagneur, Emilie S. Fritsch, Elodie Couplan, Karina von der Malsburg, Charlotta Funaya, Flavie Soubigou, Florence Courtin, Sundari Suresh, Roza Kucharczyk, Justine Evrard, Claude Antony, Robert P. St.Onge, Marc Blondel, Jean-Paul di Rago, Martin van der Laan, and Lars M. Steinmetz. Mitochondrial protein sorting as a therapeutic target for atp synthase disorders. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6585, doi:10.1038/ncomms6585. This article has 41 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(crameri2024reducedproteinimport pages 11-12): Jordan J. Crameri, Catherine S. Palmer, Tegan Stait, Thomas D. Jackson, Matthew Lynch, Adriane Sinclair, Leah E. Frajman, Alison G. Compton, David Coman, David R. Thorburn, Ann E. Frazier, and Diana Stojanovski. Reduced protein import via tim23 sort drives disease pathology in timm50-associated mitochondrial disease. Molecular and Cellular Biology, 44:226-244, Jun 2024. URL: https://doi.org/10.1080/10985549.2024.2353652, doi:10.1080/10985549.2024.2353652. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chaudhuri2020tim17updatesa pages 2-5): Minu Chaudhuri, Chauncey Darden, Fidel Soto Gonzalez, Ujjal K. Singha, Linda Quinones, and Anuj Tripathi. Tim17 updates: a comprehensive review of an ancient mitochondrial protein translocator. Biomolecules, 10:1643, Dec 2020. URL: https://doi.org/10.3390/biom10121643, doi:10.3390/biom10121643. This article has 24 citations.</p>
+</li>
+<li>
+<p>(knapp2019affinityproteomicsidentifies pages 9-11): Barbara Knapp, Jens Roedig, Karsten Boldt, Jacek Krzysko, Nicola Horn, Marius Ueffing, and Uwe Wolfrum. Affinity proteomics identifies novel functional modules related to adhesion gpcrs. Annals of the New York Academy of Sciences, 1456:144-167, Nov 2019. URL: https://doi.org/10.1111/nyas.14220, doi:10.1111/nyas.14220. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -TIMM21): Open Targets Query (-TIMM21, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>crameri2024reducedproteinimport pages 9-11</li>
+<li>crameri2024reducedproteinimport pages 1-3</li>
+<li>crameri2024reducedproteinimport pages 11-12</li>
+<li>aiyar2014mitochondrialproteinsorting pages 4-5</li>
+<li>horvath2015roleofmembrane pages 4-7</li>
+<li>zhao2021roleofthe pages 2-3</li>
+<li>knapp2019affinityproteomicsidentifies pages 9-11</li>
+<li>bogorodskiy2021roleofmitochondrial pages 4-6</li>
+<li>aiyar2014mitochondrialproteinsorting pages 3-4</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652;</li>
+<li>https://doi.org/10.15252/emmm.201708698</li>
+<li>https://doi.org/10.1002/pro.2625</li>
+<li>https://doi.org/10.1007/s00441-016-2486-7</li>
+<li>https://doi.org/10.3390/biom10121643</li>
+<li>https://doi.org/10.15252/embj.2021108648</li>
+<li>https://doi.org/10.3389/fcvm.2021.749756;</li>
+<li>https://doi.org/10.3390/genes15121534</li>
+<li>https://doi.org/10.1111/nyas.14220</li>
+<li>https://platform.opentargets.org/</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652</li>
+<li>https://doi.org/10.1002/bies.202200160</li>
+<li>https://doi.org/10.1038/ncomms6585</li>
+<li>https://doi.org/10.3389/fcvm.2021.749756,</li>
+<li>https://doi.org/10.1080/10985549.2024.2353652,</li>
+<li>https://doi.org/10.3390/cells10123528,</li>
+<li>https://doi.org/10.15252/emmm.201708698,</li>
+<li>https://doi.org/10.1002/pro.2625,</li>
+<li>https://doi.org/10.1007/s00441-016-2486-7,</li>
+<li>https://doi.org/10.3390/biom10121643,</li>
+<li>https://doi.org/10.15252/embj.2021108648,</li>
+<li>https://doi.org/10.1038/ncomms6585,</li>
+<li>https://doi.org/10.1111/nyas.14220,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BVV7
+gene_symbol: TIMM21
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: TIMM21 encodes a non-enzymatic accessory subunit of the mitochondrial TIM23 presequence translocase. In human cells it is best supported as a TIM23SORT factor that works with ROMO1 to promote lateral insertion/sorting of selected presequence-containing proteins into the inner mitochondrial membrane, with secondary links to respiratory-chain assembly contexts through this import/sorting role.
+existing_annotations:
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: Correct but too broad. TIMM21 is specifically associated with the mitochondrial inner membrane TIM23 machinery.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Use mitochondrial inner membrane and TIM23 complex annotations instead of generic mitochondrial membrane.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23260140
+  review:
+    summary: Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  review:
+    summary: Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: NAS
+  original_reference_id: PMID:10339406
+  review:
+    summary: Correct pathway family but too broad. TIMM21 is specifically involved in TIM23SORT-mediated mitochondrial inner-membrane protein insertion/sorting.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Use specific mitochondrial protein import/sorting terms and TIM23 complex annotation rather than generic intracellular protein transport.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: Correct but broad. TIMM21 is better captured by mitochondrial inner membrane and TIM23 complex annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Prefer mitochondrial inner membrane/TIM23 complex over generic mitochondrion.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865412
+  review:
+    summary: Supported as TIMM21 function at the inner-membrane/intermembrane-space interface during TOM-TIM23 handover, not as a soluble IMS protein.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: In this framework, **Tim21** is discussed as participating in TOM–TIM23 contact-site biology and regulating early transfer steps through the intermembrane space (IMS), though much of this detailed mechanistic evidence is rooted in yeast/conserved systems and then extrapolated to mammals.
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865579
+  review:
+    summary: Supported as TIMM21 function at the inner-membrane/intermembrane-space interface during TOM-TIM23 handover, not as a soluble IMS protein.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: In this framework, **Tim21** is discussed as participating in TOM–TIM23 contact-site biology and regulating early transfer steps through the intermembrane space (IMS), though much of this detailed mechanistic evidence is rooted in yeast/conserved systems and then extrapolated to mammals.
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:30598479
+  review:
+    summary: Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26321642
+  review:
+    summary: Protein binding is too generic for TIMM21. The informative biology is TIM23SORT/TIM23-complex association with ROMO1/TIM23 machinery rather than undifferentiated binding.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Replace generic protein binding interpretation with specific TIM23 complex and TIM23SORT functional context.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865412
+  review:
+    summary: Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865449
+  review:
+    summary: Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9865579
+  review:
+    summary: Correct. TIMM21 is associated with the mitochondrial inner membrane as part of TIM23-related assemblies.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+- term:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:23260140
+  review:
+    summary: Correct. TIMM21 is a TIM23-associated accessory subunit and, with ROMO1, defines the TIM23SORT state of the TIM23 presequence translocase.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IMP
+  original_reference_id: PMID:23260140
+  review:
+    summary: TIMM21 participates in the TIM23 pathway, but the best-supported human role is TIM23SORT-mediated lateral insertion into the inner membrane rather than matrix-import motor function.
+    action: MARK_AS_OVER_ANNOTATED
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Prefer TIM23 complex membership and protein insertion into mitochondrial inner membrane for TIMM21; matrix import is primarily a TIM23MOTOR/core translocase output rather than TIMM21-specific activity.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+- term:
+    id: GO:0032981
+    label: mitochondrial respiratory chain complex I assembly
+  evidence_type: IMP
+  original_reference_id: PMID:23260140
+  review:
+    summary: Supported as a secondary respiratory-chain assembly linkage, but mitochondrial respiratory chain complex I assembly is not the primary TIMM21 function. The main mechanistic role is TIM23SORT-associated mitochondrial protein insertion/sorting.
+    action: KEEP_AS_NON_CORE
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Treat respiratory-chain assembly phenotypes as downstream or context-specific consequences of TIMM21-mediated import/sorting rather than the core molecular role.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;The strongest experimentally grounded respiratory-chain linkage in this evidence set is indirect: TIM23SORT substrates are enriched for OXPHOS/ultrastructure proteins in disease mapping studies, and yeast-centric work links Tim21-containing TIM23 states to respiratory chain interactions (notably complex III) in conserved models.&#39;
+- term:
+    id: GO:0033617
+    label: mitochondrial respiratory chain complex IV assembly
+  evidence_type: IMP
+  original_reference_id: PMID:23260140
+  review:
+    summary: Supported as a secondary respiratory-chain assembly linkage, but mitochondrial respiratory chain complex IV assembly is not the primary TIMM21 function. The main mechanistic role is TIM23SORT-associated mitochondrial protein insertion/sorting.
+    action: KEEP_AS_NON_CORE
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Treat respiratory-chain assembly phenotypes as downstream or context-specific consequences of TIMM21-mediated import/sorting rather than the core molecular role.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;The strongest experimentally grounded respiratory-chain linkage in this evidence set is indirect: TIM23SORT substrates are enriched for OXPHOS/ultrastructure proteins in disease mapping studies, and yeast-centric work links Tim21-containing TIM23 states to respiratory chain interactions (notably complex III) in conserved models.&#39;
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  review:
+    summary: The no-data molecular_function placeholder is superseded by specific evidence for TIMM21 as a TIM23SORT/TIM23 complex accessory factor.
+    action: REMOVE
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Specific literature-supported functional annotations are available; the ND molecular_function placeholder should not be retained in a completed review.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+- term:
+    id: GO:0045039
+    label: protein insertion into mitochondrial inner membrane
+  evidence_type: NAS
+  original_reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+  review:
+    summary: New annotation recommended. TIMM21 is best supported as a TIM23SORT accessory factor that promotes lateral insertion/sorting of selected proteins into the mitochondrial inner membrane.
+    action: NEW
+    additional_reference_ids:
+    - file:human/TIMM21/TIMM21-deep-research-falcon.md
+    reason: Current GOA captures TIM23 complex membership and broad transport terms, but misses the more specific TIM23SORT-associated inner-membrane insertion role.
+    supported_by:
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+    - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+      supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:10339406
+  title: Genetic and structural characterization of the human mitochondrial inner membrane translocase.
+  findings: []
+- id: PMID:23260140
+  title: MITRAC links mitochondrial protein translocation to respiratory-chain assembly and translational regulation.
+  findings: []
+- id: PMID:26321642
+  title: MITRAC7 Acts as a COX1-Specific Chaperone and Reveals a Checkpoint during Cytochrome c Oxidase Assembly.
+  findings: []
+- id: PMID:30598479
+  title: ROMO1 is a constituent of the human presequence translocase required for YME1L protease import.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.
+  findings: []
+- id: Reactome:R-HSA-9865412
+  title: TIMM21 carries COX4, COX5A, COX6C to MT-CO1:MITRAC
+  findings: []
+- id: Reactome:R-HSA-9865449
+  title: Metallochaperone inserts Cu2+ into MT-CO1
+  findings: []
+- id: Reactome:R-HSA-9865579
+  title: MT-CO1 and MT-CO2 complexes associate, installing heme moieties
+  findings: []
+- id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+  title: Falcon deep research report for human TIMM21
+  findings: []
+core_functions:
+- description: TIMM21 is a non-enzymatic accessory subunit of the mitochondrial TIM23 presequence translocase that, together with ROMO1, defines the TIM23SORT state and supports lateral insertion/sorting of selected presequence-containing proteins into the inner mitochondrial membrane.
+  supported_by:
+  - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supporting_text: &#39;- **TIM23SORT (lateral insertion/sorting mode):** specialized for **lateral insertion** of single- or dual-pass IMM proteins. In this mode, association with **TIMM21** and **ROMO1** defines the “sort-specific” configuration and supports lateral release of substrates into the IMM.&#39;
+  - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supporting_text: 2) **facilitates lateral insertion** of specific IMM proteins (rather than acting as an enzyme or transporter with a small-molecule substrate).
+  - reference_id: file:human/TIMM21/TIMM21-deep-research-falcon.md
+    supporting_text: &#39;- **Cellular location:** mitochondria, associated with the **inner mitochondrial membrane** as part of TIM23-related assemblies. (crameri2024reducedproteinimport pages 1-3)&#39;
+  directly_involved_in:
+  - id: GO:0045039
+    label: protein insertion into mitochondrial inner membrane
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  - id: GO:0005758
+    label: mitochondrial intermembrane space
+  in_complex:
+    id: GO:0005744
+    label: TIM23 mitochondrial import inner membrane translocase complex
+proposed_new_terms: []
+suggested_questions:
+- question: Which human TIM23SORT client proteins require TIMM21 directly, and which phenotypes attributed to TIMM21 are downstream of altered client insertion?
+  experts: []
+- question: How much of the reported complex I and complex IV assembly phenotype reflects a direct MITRAC role versus impaired TIM23SORT delivery of OXPHOS assembly substrates?
+  experts: []
+suggested_experiments:
+- hypothesis: TIMM21 primarily supports TIM23SORT lateral insertion rather than TIM23MOTOR matrix import.
+  description: Use TIMM21 knockout/rescue cells with TIMM21 mutants defective for ROMO1/TIM23 association and compare import of matrix-targeted TIM23MOTOR substrates with radiolabeled TIM23SORT inner-membrane substrates by protease protection and BN-PAGE.
+- hypothesis: TIMM21-linked respiratory-chain assembly phenotypes are mediated by defective insertion of a restricted set of OXPHOS assembly clients.
+  description: Perform quantitative mitochondrial proteomics and pulse import assays after acute TIMM21 depletion, then test whether restoring selected TIM23SORT substrates rescues complex I/IV assembly readouts.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
