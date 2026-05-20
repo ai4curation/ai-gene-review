@@ -1,78 +1,22 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: true
-start_time: '2026-05-12T03:39:40.155901'
-end_time: '2026-05-12T03:39:40.157972'
-duration_seconds: 0.0
-template_file: templates/gene_research_go_focused.md
-template_variables:
-  organism: human
-  gene_id: CUL3
-  gene_symbol: CUL3
-  uniprot_accession: Q13618
-  protein_description: 'RecName: Full=Cullin-3 {ECO:0000305}; Short=CUL-3;'
-  gene_info: Name=CUL3 {ECO:0000312|HGNC:HGNC:2553}; Synonyms=KIAA0617;
-  organism_full: Homo sapiens (Human).
-  protein_family: Belongs to the cullin family. {ECO:0000255|PROSITE-
-  protein_domains: Cullin. (IPR045093); Cullin-like_AB. (IPR059120); Cullin_CS. (IPR016157);
-    Cullin_homology. (IPR016158); Cullin_homology_sf. (IPR036317)
+cached: false
+start_time: '2026-05-12T22:12:09.078505'
+end_time: '2026-05-12T22:23:38.188346'
+duration_seconds: 689.11
 provider_config:
   timeout: 600
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 35
+citation_count: 34
 ---
 
 ## Question
 
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** Q13618
-- **Protein Description:** RecName: Full=Cullin-3 {ECO:0000305}; Short=CUL-3;
-- **Gene Information:** Name=CUL3 {ECO:0000312|HGNC:HGNC:2553}; Synonyms=KIAA0617;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the cullin family. {ECO:0000255|PROSITE-
-- **Key Domains:** Cullin. (IPR045093); Cullin-like_AB. (IPR059120); Cullin_CS. (IPR016157); Cullin_homology. (IPR016158); Cullin_homology_sf. (IPR036317)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "CUL3" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'CUL3' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **CUL3** (gene ID: CUL3, UniProt: Q13618) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+Concise GO annotation research for human CUL3 / UniProt Q13618 (cullin-3). Focus only on GO-relevant evidence: core molecular function as a cullin-RING E3 ubiquitin ligase scaffold / ubiquitin ligase complex scaffold activity; assembly of CRL3 complexes with RBX1 and BTB-domain substrate adaptors; roles in protein ubiquitination, protein polyubiquitination, proteasome-mediated ubiquitin-dependent protein catabolic process; neddylation/deneddylation regulation of CUL3 activity; cellular components including Cul3-RING ubiquitin ligase complex, cytoplasm/cytosol, nucleus, and any membrane/centrosome/cytoskeleton claims that need caution; substrate/adaptor examples such as KEAP1-NFE2L2/NRF2, KLHL3-WNK kinases, SPOP, KCTD proteins, cell-cycle or developmental substrates, and whether these should be core or non-core; distinguish direct CUL3 scaffold function from downstream phenotypes including cell cycle, development, oxidative stress response, neuronal phenotypes, blood pressure/electrolyte homeostasis, viral processes, and disease. Include caveats for generic protein binding or ubiquitin protein ligase binding annotations and for over-annotation from pathway membership or substrate phenotypes. Include PMID/DOI citations and keep under 1500 words.
 
 ## Output
 
@@ -88,259 +32,181 @@ Provide detailed information focusing on:
 Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
 Always prioritize recent, authoritative sources and provide specific citations for all major claims.
 
-# Gene Research for Functional Annotation
+Concise GO annotation research for human CUL3 / UniProt Q13618 (cullin-3). Focus only on GO-relevant evidence: core molecular function as a cullin-RING E3 ubiquitin ligase scaffold / ubiquitin ligase complex scaffold activity; assembly of CRL3 complexes with RBX1 and BTB-domain substrate adaptors; roles in protein ubiquitination, protein polyubiquitination, proteasome-mediated ubiquitin-dependent protein catabolic process; neddylation/deneddylation regulation of CUL3 activity; cellular components including Cul3-RING ubiquitin ligase complex, cytoplasm/cytosol, nucleus, and any membrane/centrosome/cytoskeleton claims that need caution; substrate/adaptor examples such as KEAP1-NFE2L2/NRF2, KLHL3-WNK kinases, SPOP, KCTD proteins, cell-cycle or developmental substrates, and whether these should be core or non-core; distinguish direct CUL3 scaffold function from downstream phenotypes including cell cycle, development, oxidative stress response, neuronal phenotypes, blood pressure/electrolyte homeostasis, viral processes, and disease. Include caveats for generic protein binding or ubiquitin protein ligase binding annotations and for over-annotation from pathway membership or substrate phenotypes. Include PMID/DOI citations and keep under 1500 words.
 
-## ⚠️ CRITICAL: Gene/Protein Identification Context
+## Concise GO annotation research report: Human **CUL3** (Cullin-3; UniProt **Q13618**) — GO-relevant evidence only
 
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
+### Scope and annotation philosophy
+This report summarizes evidence supporting **core Gene Ontology (GO)** annotations for human CUL3 as a **cullin–RING E3 ubiquitin ligase scaffold** (CRL3). Emphasis is on **direct molecular function (MF), complex assembly/cellular component (CC), and proximal biological processes (BP)** (ubiquitination and ubiquitin-dependent proteolysis), while **downstream phenotypes/pathway roles** (oxidative stress response, blood pressure, neurodevelopment, cancer, viral infection) are treated as *non-core* unless the evidence directly establishes CUL3’s mechanistic role.
 
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** Q13618
-- **Protein Description:** RecName: Full=Cullin-3 {ECO:0000305}; Short=CUL-3;
-- **Gene Information:** Name=CUL3 {ECO:0000312|HGNC:HGNC:2553}; Synonyms=KIAA0617;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the cullin family. {ECO:0000255|PROSITE-
-- **Key Domains:** Cullin. (IPR045093); Cullin-like_AB. (IPR059120); Cullin_CS. (IPR016157); Cullin_homology. (IPR016158); Cullin_homology_sf. (IPR036317)
+### 1) Key concepts and definitions (current understanding)
 
-### MANDATORY VERIFICATION STEPS:
+#### CUL3 as a cullin–RING E3 ligase scaffold (GO: MF/CC core)
+CUL3 is the **central scaffold** of CRL3 ubiquitin ligases, bridging (i) a **RING protein (RBX1)** that recruits E2~ubiquitin and (ii) **BTB-domain substrate adaptor/receptor proteins** that recruit specific substrates. This architecture is described in recent mechanistic reviews and supported by primary structural work, including explicit **CUL3–RBX1** and adaptor-bound complexes (jeong2023targetinge3ubiquitin pages 2-3, sharma2023insightsintothe pages 1-3, hu2024dynamicmoleculararchitecture pages 1-21).
 
-1. **Check if the gene symbol "CUL3" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
+**Direct structural/biochemical evidence** includes:
+- Cryo-EM showing CRL3 assemblies containing **CUL3 + RBX1 + BTB adaptor** (e.g., KLHL22-based CRL3) and supporting the concept that **dimerization** of BTB adaptors yields a **2:2 stoichiometry** (BTB dimer recruiting two CUL3–RBX1 arms) that supports ligase activity (wang2024aconservednterminal pages 1-2, wang2024aconservednterminal pages 7-8).
+- KEAP1–CUL3 crystal structure evidence of a **heterotetrameric 2:2 complex (KEAP1:CUL3)** with quantitative binding (KD ~0.2 μM), reinforcing the scaffold/adaptor binding model (preprint) (adamson2023structuralandbiochemical pages 1-7).
 
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
+**GO MF term guidance:** evidence best supports a CUL3 annotation consistent with **“ubiquitin ligase complex scaffold activity”** / **E3 ligase scaffold** rather than “ubiquitin-protein transferase activity” (which is catalytic and typically attributed to the E2/E3 catalytic machinery rather than the scaffold) (jeong2023targetinge3ubiquitin pages 2-3, wang2024aconservednterminal pages 1-2).
 
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'CUL3' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
+#### Assembly of CRL3 complexes with RBX1 and BTB adaptors (GO: CC and complex assembly)
+Recent structural work shows that CRL3s are **multi-subunit complexes** with physically resolved interfaces that underlie assembly.
+- A May 2024 cryo-EM/biochemistry study on CRL3^KLHL22 identifies a **conserved N-terminal motif in CUL3** that contributes to **dimeric CRL3 assembly and E3 activity**; deletion reduces adaptor binding and changes complex stoichiometry (wang2024aconservednterminal pages 7-8, wang2024aconservednterminal pages 1-2).
+- Feb 2024 cryo-EM structural states of CRL3^KBTBD2 include substrate-engaged forms and regulatory complexes with the COP9 signalosome and CAND1, supporting CUL3’s role as a structural platform that coordinates catalytic and regulatory modules (hu2024dynamicmoleculararchitecture pages 1-21).
 
-### Research Target:
+### 2) Recent developments and latest research (prioritize 2023–2024)
 
-Please provide a comprehensive research report on the gene **CUL3** (gene ID: CUL3, UniProt: Q13618) in human.
+#### 2024 cryo-EM reveals CRL3 architecture, substrate recruitment, and regulation
+A 2024 Nature Structural & Molecular Biology study provides multiple cryo-EM reconstructions of **CRL3^KBTBD2** including:
+- A **neddylated** CRL3 form (CUL3~NEDD8),
+- complexes with the **COP9 signalosome (CSN)** (including mutant CSN states), and
+- a **CUL3–RBX1–CAND1** complex.
+These structures directly support GO-relevant assertions that CRL3 activity is coupled to **neddylation/deneddylation** and regulated by exchange factors such as **CAND1** (hu2024dynamicmoleculararchitecture pages 1-21).
 
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
+#### 2023–2024 tools to measure activated (neddylated) CRLs in cells
+A 2023 Nature Chemical Biology study developed a **conformation-specific probe** recognizing **NEDD8-linked active cullins** and profiled activated CRL networks including **CUL3-containing complexes** (henneberg2023activitybasedprofilingof pages 1-2). The work includes experimental perturbations with **MLN4924** (NAE inhibitor; blocks neddylation) and **CSN5i-3** (blocks deneddylation), and explicitly detects **NEDD8–CUL3** species by IP–MS (henneberg2023activitybasedprofilingof pages 6-6). This supports GO-relevant statements that (i) **neddylation activates** CRLs and (ii) active-state abundance is dynamically regulated.
 
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
+#### 2024 synthesis of structural knowledge on neddylation regulators (CSN, CAND1)
+A 2024 review in *Signal Transduction and Targeted Therapy* compiles recent structures that include **CUL3–KLHL22–RBX1**, **CAND1–CUL3–RBX1**, and **KBTBD2–NEDD8–CUL3–RBX1–CSN** assemblies (listed PDBs/EM structures), and emphasizes that **CSN removes NEDD8** whereas **CAND1 preferentially binds unneddylated cullins** as a negative regulator/exchange factor (zhang2024proteinneddylationand pages 8-10). (Review-level evidence; use primarily to support general regulatory concepts rather than highly specific GO regulator terms.)
 
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
+### 3) Current applications and real-world implementations (GO-relevant)
+While not GO terms per se, applications inform which mechanistic aspects are robustly established.
 
-We are interested in where in or outside the cell the gene product carries out its function.
+- **Pharmacologic modulation of CRL3 activity via neddylation**: MLN4924 is widely used to inhibit NEDD8-activating enzyme (NAE), thereby inhibiting CRL activity; CUL3-linked CRL activity is described as requiring neddylation in multiple contexts (henneberg2023activitybasedprofilingof pages 6-6, gu2024cullin3ring pages 1-2).
+- **Targeted protein degradation and E3 ligase engagement**: CRL3 adaptors such as **KEAP1** appear in degrader/TPD discussions as E3 components that can be recruited in chemical biology approaches; this supports the practical importance of accurate annotation of CRL3 scaffold/adaptor assembly, though it does not add new GO terms (jeong2023targetinge3ubiquitin pages 2-3).
 
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+### 4) Expert opinions and analysis: GO annotation recommendations and caveats
 
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+#### Core GO: Molecular function
+**Strongly supported (core):**
+- **Ubiquitin ligase complex scaffold activity / E3 ubiquitin ligase scaffold** — CUL3 is repeatedly defined and structurally demonstrated as a CRL scaffold bridging RBX1 and BTB adaptors, including detailed stoichiometry and interface determinants (wang2024aconservednterminal pages 1-2, adamson2023structuralandbiochemical pages 1-7, hu2024dynamicmoleculararchitecture pages 1-21).
 
-## Research Report: Human **CUL3** (Cullin-3; UniProt **Q13618**) — Functional Annotation (2026-05-11)
+**Caution:**
+- Avoid annotating CUL3 with generic “protein binding” or “ubiquitin protein ligase binding” unless the evidence is specifically required for MF, because these terms are often **low-information** and may reflect experimental detection rather than biological specificity.
 
-### 1) Target verification (gene/protein identity)
-The UniProt accession **Q13618** corresponds to **Cullin-3 (CUL3)** in **Homo sapiens**, a member of the cullin family that functions as the **scaffold** subunit of **Cullin-RING ligase 3 (CRL3)** E3 ubiquitin ligase complexes rather than as a catalytic enzyme. In CRL3, CUL3’s **N-terminus** binds BTB-domain substrate adaptor/receptor proteins, while its **C-terminus** associates with the RING protein **RBX1/ROC1** and contains a **NEDD8-acceptor region** that regulates ligase activation. (kouranti2022cullin3exon pages 1-2, adinolfi2023thekeap1nrf2pathway pages 2-3, adinolfi2023thekeap1nrf2pathway pages 3-5)
+#### Core GO: Biological process
+**Strongly supported (core/proximal):**
+- **Protein ubiquitination / protein polyubiquitination**: Multiple CRL3 systems demonstrate ubiquitination output; for example, CRL3^KLHL22 assays support ubiquitination activity dependence on CUL3 structural motifs (wang2024aconservednterminal pages 1-2), and CRL3^KCTD7 demonstrates CUL3-dependent ubiquitination of calpains (sengupta2023theubiquitinlikeproteins pages 4-5).
 
-### 2) Key concepts and definitions (current understanding)
+**Proteasome-mediated ubiquitin-dependent protein catabolic process (supported, but adaptor/substrate-dependent):**
+- Proteasomal targeting is a canonical outcome for many CRLs, and reviews explicitly describe substrate ubiquitination “for proteasomal degradation” as a CRL3 output (sharma2023insightsintothe pages 1-3). However, **not all CUL3-dependent ubiquitination is degradative** (see KCTD7/calpain below), so proteasome-related BP annotations should be supported by **substrate degradation evidence** rather than ubiquitination alone.
 
-#### 2.1 CUL3 as a CRL3 scaffold (what CUL3 “does”)
-**Primary molecular function:** CUL3 serves as a modular platform that assembles a multi-subunit **E3 ubiquitin ligase**. In canonical CRL3 architecture, a BTB-domain adaptor binds the CUL3 N-terminus and recruits specific substrates, while the CUL3 C-terminus binds RBX1 to recruit/activate ubiquitin-charged E2 enzymes to catalyze substrate ubiquitination. (kouranti2022cullin3exon pages 1-2, wu2020cullin3renaland pages 1-3)
+**Critical caveat (avoid over-annotation):**
+- **Non-degradative ubiquitination**: the KCTD7–CUL3–RBX1 complex ubiquitinates calpains with atypical chain linkages (K6/K27/K29/K63) and regulates activity rather than proteasomal turnover; this supports “protein ubiquitination” but argues against automatically applying proteasome-mediated catabolism for all CUL3-dependent ubiquitination (sengupta2023theubiquitinlikeproteins pages 4-5).
+- **Pathway membership / phenotype-only evidence**: oxidative stress response, blood pressure/electrolyte phenotypes, neurodevelopmental phenotypes, or cancer-associated phenotypes can be downstream of CUL3-dependent substrate regulation. These should not be treated as core CUL3 BP terms without direct mechanistic evidence that CUL3’s scaffold activity is required in the specific pathway node being annotated.
 
-**Substrate specificity:** CUL3 itself does not recognize substrates directly; specificity is conferred by **BTB-domain adaptors** (including BTB-BACK-Kelch adaptors such as KEAP1/KLHL proteins and BTB-only families such as KCTDs). (wu2020cullin3renaland pages 1-3, balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 9-12)
+#### Core GO: Cellular component
+**Supported (core):**
+- **Cul3-RING ubiquitin ligase complex / cullin-RING ubiquitin ligase complex**: direct structural evidence places CUL3 in CRL3 assemblies containing RBX1 and BTB adaptors (hu2024dynamicmoleculararchitecture pages 1-21, wang2024aconservednterminal pages 1-2).
 
-#### 2.2 Dynamic regulation by NEDD8, COP9 signalosome (CSN), and CAND1
-CRL3 activity is regulated by reversible **NEDD8 conjugation (neddylation)** of a conserved cullin lysine (activation) and by **deneddylation** primarily mediated by the **COP9 signalosome (CSN)** (reset/exchange). In mechanistic models, neddylation promotes an active conformation and displaces the exchange factor/inhibitor **CAND1**, while CSN-mediated deneddylation helps restore an exchange-competent state, enabling adaptor swapping and cycling of CRL assemblies. (wu2020cullin3renaland pages 3-4, kouranti2022cullin3exon pages 1-2, zhang2024proteinneddylationand pages 5-7)
+**Cytosol/cytoplasm and nucleus (plausible but evidence here is limited):**
+- A 2024 preprint reports differential tumor-context localization of CUL3 (cytoplasmic in one subtype; nuclear/perinuclear in another) and suggests nuclear engagement via interactions with RNA polymerase complexes in DNA damage contexts (pantazi2024ubiquitylationmediatedrnapiigenomic pages 100-104). Because this is **preprint-level** and partially inference-based, it supports a *cautious* note that CUL3 can be found in cytoplasmic and nuclear contexts but may not be sufficient alone for strong CC annotations.
 
-Pharmacologic inhibition of neddylation (e.g., the NAE inhibitor **MLN4924/pevonedistat**) inactivates CRLs globally, causing accumulation of CRL substrates and downstream cell-cycle and stress phenotypes; this is widely exploited in experimental systems and has been advanced into clinical development in oncology. (zhaochun2023targetingneddylationas pages 2-3, he2023targetingcullinneddylation pages 1-2)
+**Membrane/centrosome/cytoskeleton claims require caution:**
+- A 2024 structure paper on CRL3^KCTD5 describes compatibility with **membrane-bound Gβγ** in the reaction complex; this is **substrate-contextual** and does not justify annotating CUL3 broadly as a membrane component (jeong2023targetinge3ubiquitin pages 2-3).
+- No strong direct evidence in the retrieved set supports **centrosome** or **cytoskeleton** localization as a general CC term for CUL3; references to kinetochores/mitosis are often substrate-contextual and may reflect downstream phenotype or adaptor targeting rather than stable CUL3 localization.
 
-### 3) Core pathways and validated adaptor–substrate axes (mechanistic functional annotation)
+### 5) Relevant statistics and data (recent studies)
+- **Stoichiometry data:** structural/biochemical studies support **2:2 assemblies** (BTB dimer with two CUL3 arms) in CRL3 complexes and provide measurable changes in complex stoichiometry when CUL3 motifs are deleted (wang2024aconservednterminal pages 1-2, wang2024aconservednterminal pages 7-8). KEAP1–CUL3 binding is reported with **KD ~0.2 μM** and a **2:2 heterotetramer** in structural/biochemical assays (preprint) (adamson2023structuralandbiochemical pages 1-7).
+- **Network scale estimate:** a 2023 review states mammals may form up to **188 distinct CUL3–BTB E3 complexes**, underscoring annotation relevance for “CUL3-RING ubiquitin ligase complex” rather than overly specific pathway terms (jeong2023targetinge3ubiquitin pages 2-3).
+- **Quantitative profiling of NEDD8–CUL3:** IP–MS profiling explicitly detects “NEDD8–CUL3” and uses inhibitors (MLN4924; CSN5i-3) to modulate neddylation/deneddylation states, providing empirical support that CUL3 participates in dynamic neddylation-regulated CRL activation (henneberg2023activitybasedprofilingof pages 6-6).
 
-#### 3.1 KEAP1–CUL3–RBX1 control of NRF2 (redox and electrophile stress response)
-The best-characterized human CRL3 pathway couples CUL3 to oxidative-stress signaling via **KEAP1**, a BTB-Kelch adaptor that serves as the substrate-recognition component targeting **NRF2** for ubiquitination and proteasomal degradation under basal conditions. (adinolfi2023thekeap1nrf2pathway pages 1-2, suzuki2023molecularbasisof pages 2-4, suzuki2023molecularbasisof pages 1-2)
+### GO-relevant adaptor/substrate examples (evidence-weighted)
+The table below summarizes adaptor modules and indicates which are core vs cautionary for CUL3 GO inference.
 
-Mechanistically, a **KEAP1 homodimer** binds one NRF2 molecule through a high-affinity **ETGE** motif and a lower-affinity **DLG/DLGex** motif in the NRF2 Neh2 degron (2:1 complex), enabling efficient ubiquitination of NRF2 lysines located between these motifs. Oxidative/electrophilic stresses (via KEAP1 cysteine modification, “cysteine code”) suppress KEAP1 E3 activity without necessarily dissociating the KEAP1–CUL3 complex, allowing newly synthesized NRF2 to accumulate, translocate to the nucleus, and activate cytoprotective gene expression. (adinolfi2023thekeap1nrf2pathway pages 2-3, suzuki2023molecularbasisof pages 2-4)
-
-A 2023 graphical synthesis frames this as a **“floodgate model”**: KEAP1–CUL3–RBX1 continuously drains NRF2 in the basal state; electrophilic/oxidative inducers close the floodgate by suppressing KEAP1-dependent ubiquitination, allowing NRF2 accumulation. (suzuki2023molecularbasisof media 74a75cb7)
-
-**Cancer relevance:** Multiple 2023–2024 reviews emphasize that disruption of KEAP1/CUL3-dependent NRF2 turnover (e.g., KEAP1 loss-of-function mutations, NRF2 degron mutations, or defects in neddylation/CRL activity) can drive constitutive NRF2 activity, supporting tumor survival programs and therapy resistance. (adinolfi2023thekeap1nrf2pathway pages 1-2, adinolfi2023thekeap1nrf2pathway pages 3-5, chen2024keap1nrf2pathwaya pages 2-4, suzuki2023molecularbasisof pages 1-2)
-
-**Key recent sources (with publication dates/URLs):**
-- Adinolfi et al., *Redox Biology* (2023-07) https://doi.org/10.1016/j.redox.2023.102726 (adinolfi2023thekeap1nrf2pathway pages 1-2, adinolfi2023thekeap1nrf2pathway pages 2-3)
-- Suzuki et al., *Molecules and Cells* (2023-03) https://doi.org/10.14348/molcells.2023.0028 (suzuki2023molecularbasisof pages 2-4, suzuki2023molecularbasisof pages 1-2)
-- Chen et al., *Frontiers in Oncology* (2024-04) https://doi.org/10.3389/fonc.2024.1381467 (chen2024keap1nrf2pathwaya pages 2-4)
-
-#### 3.2 CUL3–KLHL3 control of WNK kinases (renal salt handling and blood pressure)
-A central physiological role for CUL3 is in blood pressure regulation via a CRL3 complex containing **KLHL3**, which targets **WNK1/WNK4** kinases for degradation and thereby restrains the **SPAK/OSR1–NCC** signaling axis in the distal nephron. (wu2020cullin3renaland pages 3-4, wu2020cullin3renaland pages 13-16, kouranti2022cullin3exon pages 1-2)
-
-#### 3.3 CUL3–BACURD targeting of RhoA (cytoskeleton and vascular tone)
-CUL3 also regulates cytoskeletal pathways through BTB adaptors such as **BACURD**, which recruit **RhoA** for ubiquitination; dysregulation of this axis can increase RhoA/ROCK signaling and contribute to vascular phenotypes. (kouranti2022cullin3exon pages 23-24, wu2020cullin3renaland pages 13-16)
-
-#### 3.4 Non-proteolytic ubiquitin signaling (beyond degradation)
-Beyond substrate turnover, CUL3-containing ligases can write **non-proteolytic ubiquitin codes**. For example, **CUL3–KLHL20** mediates non-proteolytic ubiquitination of **Coronin7** at the trans-Golgi network to promote post-Golgi carrier biogenesis and actin assembly, and KEAP1–CUL3 has been implicated in ubiquitin regulation of genome integrity factors such as **PALB2** and **MCM3**. (jerabkova2019cullin3a pages 8-9)
-
-### 4) Subcellular localization (where CUL3 acts)
-CUL3-dependent functions occur in both **cytoplasmic and nuclear** contexts, consistent with its adaptor-driven roles in signaling, trafficking, cytoskeletal control, and DNA damage/repair biology. (jerabkova2019cullin3a pages 8-9, pantazi2024prognosticpotentialof pages 7-7)
-
-Recent human tumor tissue/cell line analyses (breast cancer) reported **subtype-associated localization patterns**: luminal tumors showed stronger **cytoplasmic** CUL3 staining, whereas basal/TNBC tumors showed stronger **perinuclear and intranuclear** granular CUL3 staining (with cytoplasmic staining also present), and MCF-7 cells exhibited both nuclear and cytoplasmic localization. (pantazi2024prognosticpotentialof pages 7-10, pantazi2024prognosticpotentialof pages 7-7)
-
-### 5) Recent developments (prioritizing 2023–2024)
-
-#### 5.1 Structural recognition of BTB adaptors: KCTD–CUL3 interface (2024)
-A 2024 structural/computational analysis synthesized determinants of **KCTD family** recognition by CUL3 and generated family-wide models, emphasizing that many KCTDs use an N-terminal **BTB domain** to bind CUL3 and act as CRL3 adaptors. Conserved CUL3 interface residues implicated across modeled complexes include **Phe54, Tyr58, Arg59, Asp121, Arg128**, with KCTD-side binding mediated largely by the **α2β3 loop** and **α4α5 hairpin**. The study also reports that local structural properties (e.g., extended α2β3 loops) can block binding even when global sequence identity is not strongly discriminative. (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 9-12, balasco2024acomprehensiveanalysis pages 12-14)
-
-**Key recent source (publication date/URL):** Balasco et al., *International Journal of Molecular Sciences* (2024-02) https://doi.org/10.3390/ijms25031881 (balasco2024acomprehensiveanalysis pages 1-2)
-
-#### 5.2 Translational biomarker evidence: CUL3 in breast cancer (2024)
-A 2024 study proposed that CUL3 has **differential prognostic associations** and **distinct subcellular localization** in breast cancer subtypes. In its analyses, overall high CUL3 expression associated with poor prognosis in BRCA cohorts, while stratified luminal A survival analysis showed a significant difference between low vs high CUL3 expression (**p = 0.043**). The same study reported that TNBC/basal tumors displayed more nuclear/perinuclear CUL3 localization and pathway enrichment consistent with cell-cycle programs (e.g., E2F targets), supporting context-dependent oncogenic vs tumor-suppressive interpretations. (pantazi2024prognosticpotentialof pages 7-10, pantazi2024prognosticpotentialof pages 10-12, pantazi2024prognosticpotentialof pages 3-4)
-
-**Key recent source (publication date/URL):** Pantazi et al., *Scientific Reports* (2024-06) https://doi.org/10.1038/s41598-024-65692-z (pantazi2024prognosticpotentialof pages 7-10)
-
-#### 5.3 Neddylation-targeting landscape (2023–2024)
-Reviews in 2023–2024 emphasize that (i) CRLs regulate a large fraction of proteasome-controlled proteins, (ii) cullin neddylation activates CRLs partly by antagonizing CAND1 binding, and (iii) neddylation inhibition (notably by MLN4924/pevonedistat) provides a practical strategy to dampen CRL activity in cancer contexts. (zhaochun2023targetingneddylationas pages 2-3, he2023targetingcullinneddylation pages 1-2, zhang2024proteinneddylationand pages 5-7)
-
-**Key recent sources (publication dates/URLs):**
-- He et al., *Theranostics* (2023-01) https://doi.org/10.7150/thno.78876 (he2023targetingcullinneddylation pages 1-2)
-- Zhang et al., *Signal Transduction and Targeted Therapy* (2024-04) https://doi.org/10.1038/s41392-024-01800-9 (zhang2024proteinneddylationand pages 2-3, zhang2024proteinneddylationand pages 5-7)
-
-### 6) Disease genetics and quantitative data (recently contextualized)
-
-#### 6.1 Familial hyperkalemic hypertension (FHHt/PHAII) and the CUL3Δ9 mechanism
-A well-established monogenic disease mechanism is **exon 9 skipping** in CUL3, producing **CUL3-Δ9** (in-frame deletion of amino acids 403–459). Mechanistically, CUL3-Δ9 is described as **hyperneddylated yet inactive**, and quantitative proteomics demonstrated major disruption of CRL3 regulatory cycling:
-- **CAND1** bound **~10–49-fold more** to WT CUL3 than to CUL3-Δ9. (kouranti2022cullin3exon pages 7-9)
-- In immunoprecipitation proteomics, **66 BTB adaptors** were identified and **28** were **2–11-fold enriched** in CUL3-Δ9 precipitates (none enriched with WT), supporting an “adaptor trap” model. (kouranti2022cullin3exon pages 7-9)
-These data support the interpretation that impaired interactions with **CAND1** and **CSN** reduce CRL3 complex cycling, leading to substrate accumulation and severe FHHt phenotypes. (kouranti2022cullin3exon pages 1-2, kouranti2022cullin3exon pages 7-9)
-
-**Key source (publication date/URL):** Kouranti et al., *International Journal of Molecular Sciences* (2022-05) https://doi.org/10.3390/ijms23095151 (kouranti2022cullin3exon pages 1-2, kouranti2022cullin3exon pages 7-9)
-
-### 7) Current applications and real-world implementations
-
-1. **Clinical genetics / diagnostics:** CUL3 variants (especially exon 9–skipping alleles) are used in molecular diagnosis of severe hereditary hypertension/hyperkalemia syndromes, with mechanistic links to WNK kinase accumulation in renal salt handling. (wu2020cullin3renaland pages 3-4, kouranti2022cullin3exon pages 1-2)
-2. **Oncology biomarker research:** CUL3 expression and localization are being evaluated as subtype-specific prognostic correlates in breast cancer, with evidence for different cellular compartmentalization in luminal vs basal/TNBC tumors and significant survival stratification in luminal A. (pantazi2024prognosticpotentialof pages 7-10, pantazi2024prognosticpotentialof pages 3-4)
-3. **Drug development targeting the CRL system:** Therapeutic strategies often target the CRL activation system rather than CUL3 directly. The neddylation inhibitor class (e.g., MLN4924/pevonedistat) is widely used experimentally and has progressed through oncology clinical development as summarized in 2023–2024 reviews; additional strategies include inhibitors of E2/E3 interface modules that can selectively affect cullin neddylation and thus CRL activity. (zhaochun2023targetingneddylationas pages 2-3, he2023targetingcullinneddylation pages 1-2, zhang2024proteinneddylationand pages 5-7)
-
-### 8) Expert synthesis / interpretation
-Across authoritative reviews and mechanistic studies, the most defensible functional annotation of human CUL3 is:
-- **Core role:** a **scaffold** enabling modular assembly of CRL3 E3 ubiquitin ligases with **BTB-domain adaptors** that determine substrate specificity. (kouranti2022cullin3exon pages 1-2, wu2020cullin3renaland pages 1-3)
-- **Regulatory logic:** dynamic CRL3 activity requires coordinated **neddylation/deneddylation** and exchange-factor control (CSN/CAND1), and disease-causing mutations can disable the cycle even when neddylation is elevated (CUL3-Δ9). (kouranti2022cullin3exon pages 1-2, kouranti2022cullin3exon pages 7-9)
-- **Best-supported pathway:** the **KEAP1–CUL3–RBX1** ligase that ubiquitinates **NRF2** and gates transcriptional antioxidant programs is a paradigmatic CUL3 pathway with major relevance to cancer biology and therapeutic strategies. (adinolfi2023thekeap1nrf2pathway pages 1-2, suzuki2023molecularbasisof pages 2-4, suzuki2023molecularbasisof media 74a75cb7)
-
----
-
-### Summary table of key functional annotation
-| Aspect (definition/domain/complex) | Key details | Evidence/examples | Key citations (with pqac ids) |
-|---|---|---|---|
-| Verified target identity | Human **CUL3** encodes **Cullin-3** (UniProt **Q13618**), a member of the cullin family and the scaffold subunit of **CRL3** (Cullin-RING ligase 3) E3 ubiquitin ligases. Its N-terminus binds BTB-domain adaptors; its C-terminus binds **RBX1/ROC1** and contains the C-terminal NEDD8-acceptor region. | Domain/mechanistic descriptions from CRL3 and KEAP1-NRF2 reviews consistently place CUL3 as the structural scaffold rather than a catalytic enzyme. | (kouranti2022cullin3exon pages 1-2, adinolfi2023thekeap1nrf2pathway pages 2-3, adinolfi2023thekeap1nrf2pathway pages 3-5, wu2020cullin3renaland pages 1-3) |
-| Core CRL3 architecture | Canonical CRL3 complexes comprise **CUL3 + RBX1 + BTB adaptor/substrate receptor**; many BTB proteins dimerize/oligomerize, allowing dimeric or multimeric CRL3 assemblies. | Adaptors include **KEAP1**, **KLHL** family proteins, **KCTD** proteins, and **LZTR1**-class BTB adaptors. Structural analyses show BTB and 3-box/BACK elements contact the CUL3 N-terminus. | (wu2020cullin3renaland pages 1-3, chen2024keap1nrf2pathwaya pages 2-4, balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 9-12) |
-| Regulation by neddylation, CSN, CAND1 | **NEDD8 conjugation** activates CUL3/CRL3 by promoting productive RBX1/E2 geometry and displacing **CAND1**; **COP9 signalosome (CSN)** deneddylates cullins, enabling exchange/reset of CRL complexes. | Reviews and mechanistic studies describe reversible CUL3 neddylation as essential for CRL cycling; MLN4924/pevonedistat blocks cullin neddylation and CRL function. | (wu2020cullin3renaland pages 3-4, kouranti2022cullin3exon pages 1-2, zhaochun2023targetingneddylationas pages 2-3, he2023targetingcullinneddylation pages 1-2, zhang2024proteinneddylationand pages 5-7) |
-| KEAP1–NRF2 axis | In the best-characterized CRL3 pathway, **KEAP1** is the BTB-Kelch adaptor that recruits **NRF2** to the **CUL3-RBX1** ligase. Basally, NRF2 is polyubiquitylated and degraded; oxidative/electrophilic stress suppresses KEAP1-mediated NRF2 ubiquitination, allowing NRF2 accumulation and nuclear transcriptional activity. | KEAP1 homodimer engages one NRF2 via high-affinity **ETGE** and lower-affinity **DLG/DLGex** motifs; cysteine sensing in KEAP1 alters CRL3 activity rather than simply dissociating the complex. | (adinolfi2023thekeap1nrf2pathway pages 1-2, adinolfi2023thekeap1nrf2pathway pages 2-3, suzuki2023molecularbasisof pages 2-4, suzuki2023molecularbasisof pages 1-2, suzuki2023molecularbasisof media 74a75cb7) |
-| KLHL3–WNK1/4 axis | In kidney distal nephron signaling, **KLHL3-CUL3-RBX1** targets **WNK1/WNK4** kinases for ubiquitination and degradation, restraining the SPAK/OSR1–NCC sodium-transport pathway. | This adaptor-substrate pathway is central to blood-pressure regulation and is the key mechanistic link between CUL3 dysfunction and familial hyperkalemic hypertension. | (wu2020cullin3renaland pages 3-4, wu2020cullin3renaland pages 13-16, kouranti2022cullin3exon pages 1-2) |
-| BACURD–RhoA axis | **BACURD** BTB adaptors recruit **RhoA** to CRL3 for ubiquitination, linking CUL3 to actin cytoskeleton remodeling, cell shape, and migration. | Frequently cited as a validated vascular/cytoskeletal CUL3 substrate pathway; loss of proper CUL3 function can increase RhoA/ROCK signaling. | (kouranti2022cullin3exon pages 23-24, wu2020cullin3renaland pages 13-16) |
-| KLHL21–Aurora B axis | **KLHL21-CUL3** targets **Aurora B** in mitosis/cytokinesis-related contexts. | This supports a direct role for CUL3 in cell division machinery and spindle/midzone regulation. | (kouranti2022cullin3exon pages 23-24) |
-| KLHL20–Coronin7 axis | **KLHL20-CUL3** mediates non-proteolytic ubiquitination of **Coronin7** at the trans-Golgi network, promoting post-Golgi carrier formation and actin-dependent trafficking. | Example of CUL3 writing non-proteolytic ubiquitin signals, extending function beyond simple proteasomal degradation. | (jerabkova2019cullin3a pages 8-9) |
-| KEAP1–PALB2 / KEAP1–MCM3 | Beyond NRF2, **KEAP1-CUL3** also regulates genome integrity substrates including **PALB2** and **MCM3**, affecting homologous recombination and replication-associated functions. | Reported ubiquitylation of PALB2 and MCM3 supports CUL3 participation in DNA repair/replication control. | (jerabkova2019cullin3a pages 8-9) |
-| BTB adaptor recognition breadth | CUL3 engages a large and structurally diverse BTB-adaptor repertoire; recent structural work particularly clarifies recognition of **KCTD** family adaptors. | Conserved Cul3 contact residues include **Phe54, Tyr58, Arg59, Asp121, Arg128**; AF/cryo-EM analyses distinguish Cul3-binding from non-binding KCTDs and suggest therapeutic tractability of the interface. | (balasco2024acomprehensiveanalysis pages 1-2, balasco2024acomprehensiveanalysis pages 9-12, balasco2024acomprehensiveanalysis pages 12-14, balasco2024acomprehensiveanalysis pages 4-5, balasco2024acomprehensiveanalysis pages 5-8) |
-| Subcellular localization | CUL3 functions in both **cytoplasm and nucleus**, consistent with roles in cytoskeletal regulation, vesicle trafficking, antioxidant signaling, DNA damage response, and cell-cycle control. | In breast cancer tissues/cell lines, CUL3 showed cytoplasmic predominance in luminal tumors and stronger perinuclear/intranuclear staining in TNBC/basal-like tumors; MCF-7 cells showed both nuclear and cytoplasmic localization. | (pantazi2024prognosticpotentialof pages 7-10, pantazi2024prognosticpotentialof pages 10-12, pantazi2024prognosticpotentialof pages 7-7) |
-| Disease link: FHHt / CUL3Δ9 | The major established monogenic disease mechanism is **familial hyperkalemic hypertension (FHHt/PHAII)** caused by exon 9 skipping (**CUL3Δ9**, aa 403–459 deletion). | CUL3Δ9 is hyperneddylated yet functionally defective, shows impaired **CAND1** and **CSN** binding, traps BTB adaptors, and disrupts dynamic CRL3 cycling; one study found **CAND1 bound 10–49-fold more to WT than CUL3Δ9**, and **28 of 66** BTB adaptors were enriched **2–11-fold** with CUL3Δ9 IPs. | (wu2020cullin3renaland pages 3-4, kouranti2022cullin3exon pages 1-2, kouranti2022cullin3exon pages 7-9) |
-| Disease link: cancer via NRF2 activation | In many cancers, loss of KEAP1/CUL3-axis control stabilizes **NRF2**, promoting antioxidant, metabolic, and therapy-resistance programs. | Cancer-associated KEAP1 or NRF2 mutations, or defects in cullin neddylation/CUL3 function, can all increase NRF2 signaling. | (adinolfi2023thekeap1nrf2pathway pages 1-2, adinolfi2023thekeap1nrf2pathway pages 3-5, chen2024keap1nrf2pathwaya pages 2-4, suzuki2023molecularbasisof pages 1-2) |
-| Disease link: breast cancer context | Recent human data indicate subtype-specific roles for CUL3 in breast cancer. | In **Luminal A**, lower vs higher CUL3 expression separated outcome (**p = 0.043**), with more cytoplasmic localization and features consistent with tumor-suppressive behavior; in **basal/TNBC**, stronger nuclear/perinuclear staining and pathway enrichment suggested a more oncogenic, cell-cycle-associated role. | (pantazi2024prognosticpotentialof pages 7-10, pantazi2024prognosticpotentialof pages 10-12, pantazi2024prognosticpotentialof pages 3-4, pantazi2024prognosticpotentialof pages 4-7) |
+| Adaptor / CRL3 example | Example substrate or process context | What is directly evidenced about **CUL3** | GO annotation relevance for human CUL3 | Caveats / evidence limits | Recent source (date; DOI/URL) |
+|---|---|---|---|---|---|
+| **KEAP1–CUL3–RBX1** | NRF2 degradation under basal/non-oxidative conditions; KEAP1 recognizes NRF2 degrons | CUL3 N-terminus binds BTB/3-box adaptor KEAP1; CUL3 C-terminus assembles with RBX1; KEAP1:CUL3 forms a heterotetrameric **2:2** assembly; neddylation of CUL3 CTD promotes active ubiquitin-transfer geometry (adamson2023structuralandbiochemical pages 1-7, jeong2023targetinge3ubiquitin pages 2-3) | **Core** for MF/CC: ubiquitin ligase complex scaffold activity; Cul3-RING ubiquitin ligase complex. **Process**: protein ubiquitination / polyubiquitination; proteasome-mediated ubiquitin-dependent catabolic process can be supported when tied to NRF2 degradation, but keep focus on scaffold role (adamson2023structuralandbiochemical pages 1-7, sharma2023insightsintothe pages 1-3) | Preprint for detailed KEAP1-CUL3 structure; KEAP1/NRF2 oxidative-stress phenotypes are downstream and should not be over-transferred to CUL3 as core BP beyond ubiquitination/catabolism (adamson2023structuralandbiochemical pages 1-7, sharma2023insightsintothe pages 1-3) | Feb 2023, doi:10.1101/2023.02.15.528651, https://doi.org/10.1101/2023.02.15.528651; Oct 2023, doi:10.1186/s12964-023-01269-z, https://doi.org/10.1186/s12964-023-01269-z |
+| **KLHL22–CUL3–RBX1** | Polyubiquitination of reported substrates such as PLK1/PD1/DEPDC5; model for CRL3 dimeric activity | Cryo-EM/biochemistry show CUL3 is the scaffold of CRL3; BTB dimer recruits two CUL3-RBX1 arms (**2:2**); conserved CUL3 N-terminal motif contributes to dimeric assembly and E3 activity; deletion impairs binding and ubiquitination activity (wang2024aconservednterminal pages 1-2, wang2024aconservednterminal pages 7-8) | **Core** for MF/CC: scaffold activity; Cul3-RING ubiquitin ligase complex assembly. **Core/moderate** for BP: protein polyubiquitination (directly assayed in CRL3 context) (wang2024aconservednterminal pages 1-2) | Substrate-specific phenotypes (mitosis, autophagy, signaling) should be treated as **non-core for CUL3** unless directly evidenced in human CUL3 context; avoid over-annotation from adaptor pathway membership (wang2024aconservednterminal pages 1-2) | May 2024, doi:10.1038/s41467-024-48045-2, https://doi.org/10.1038/s41467-024-48045-2 |
+| **KLHL12–CUL3** | SEC31 monoubiquitylation; large COPII structure formation / procollagen export | Review/primary evidence states CUL3 is CRL3 scaffold; CRL3^KLHL12 ubiquitylates SEC31; CUL3 neddylation activates CRL3 via conformational change near RBX1/E2-Ub positioning (moretti2023klhl12canform pages 1-2) | **Core** for MF: scaffold in ubiquitin ligase complex. **Caution** for BP: “protein ubiquitination” supported; **do not default to proteasome-mediated catabolism** here because SEC31 example is monoubiquitylation and collagen effects may involve lysosomal handling (moretti2023klhl12canform pages 1-2) | Not a strong basis for proteasome-related GO on CUL3 from this module alone; COPII/ER-exit-site or membrane-trafficking claims are adaptor/substrate-contextual, not core CUL3 location/function (moretti2023klhl12canform pages 1-2) | Mar 2023, doi:10.1091/mbc.e22-08-0383, https://doi.org/10.1091/mbc.e22-08-0383 |
+| **KBTBD2–CUL3–RBX1** | p85α / PI3K regulatory subunit recruitment; substrate-engaged CRL3 architecture | High-resolution cryo-EM captures CRL3^KBTBD2, substrate-bound complexes, **neddylated CUL3**, CUL3–RBX1–CAND1, and CUL3 complexes with **COP9 signalosome (CSN)**, providing direct evidence for scaffold assembly plus neddylation/deneddylation and exchange regulation (hu2024dynamicmoleculararchitecture pages 1-21) | **Core** for MF/CC/BP**:** ubiquitin ligase complex scaffold activity; Cul3-RING ubiquitin ligase complex; regulation of CRL3 activity by neddylation/deneddylation can support regulation-related annotation if term selection is careful (hu2024dynamicmoleculararchitecture pages 1-21) | Best recent structural support for regulation, but substrate-specific signaling outputs should remain non-core; no direct subcellular localization claim should be expanded beyond complex membership from this study alone (hu2024dynamicmoleculararchitecture pages 1-21) | Feb 2024, doi:10.1038/s41594-023-01182-6, https://doi.org/10.1038/s41594-023-01182-6 |
+| **KCTD5–CUL3–RBX1** | Gβγ ubiquitylation; membrane-proximal signaling context | Pentameric KCTD5/CUL3/Gβγ complex architecture shows CUL3 in BTB/cullin core CRL3; CUL3-based complex positions substrate for ubiquitin transfer; reaction complex is described as compatible with **membrane-bound Gβγ** (jeong2023targetinge3ubiquitin pages 2-3) | **Core** for scaffold/ubiquitination. **Caution** for localization: membrane compatibility of a specific CRL3^KCTD5 reaction complex does **not** justify generic membrane annotation for CUL3 (jeong2023targetinge3ubiquitin pages 2-3) | Membrane association is context-specific and substrate-dependent; avoid annotating CUL3 broadly to membrane based on one adaptor/substrate system (jeong2023targetinge3ubiquitin pages 2-3) | Apr 2024, doi:10.1073/pnas.2315018121, https://doi.org/10.1073/pnas.2315018121 |
+| **KCTD7–CUL3–RBX1** | Calpain regulation by non-degradative ubiquitination | Primary study shows KCTD7 works in complex with CUL3 and RBX1 to ubiquitinate calpains with non-K48 linkage patterns and regulate activity rather than degradation (sengupta2023theubiquitinlikeproteins pages 4-5) | **Core** for “protein ubiquitination.” **Caution/non-core** for proteasome-mediated catabolic process, because this is explicitly **non-degradative ubiquitination** (sengupta2023theubiquitinlikeproteins pages 4-5) | Do not infer protein catabolism/proteasome process from all CUL3 substrates; also avoid inferring neuronal disease phenotypes as direct CUL3 GO BP terms (sengupta2023theubiquitinlikeproteins pages 4-5) | Mar 2023, doi:10.1038/s41421-023-00533-3, https://doi.org/10.1038/s41421-023-00533-3 |
+| **SPOP–CUL3–RBX1** | Broad substrate adaptor example; cancer- and virus-related substrate studies discussed in reviews | Reviews describe SPOP as a BTB adaptor of the CUL3/RBX1 complex; BACK/BTB adaptors and SPOP higher-order assemblies can enhance CRL3 activity (jeong2023targetinge3ubiquitin pages 2-3) | **Useful as supporting example**, but usually **non-core for CUL3 annotation** unless citing direct human CUL3 biochemical evidence in the same experiment. Safe use: adaptor repertoire supporting CRL3 assembly concept (jeong2023targetinge3ubiquitin pages 2-3) | Many SPOP papers focus on adaptor phenotypes or disease substrates, not direct CUL3 scaffold biochemistry; avoid over-annotation from cancer/viral phenotypes to CUL3 BP terms (jeong2023targetinge3ubiquitin pages 2-3) | Oct 2023, doi:10.1038/s12276-023-01087-w, https://doi.org/10.1038/s12276-023-01087-w |
+| **CUL3 regulation by NEDD8 / CSN / CAND1** | Activation/inactivation cycle of CRL3 complexes | NEDD8 conjugation activates cullin-RING ligases; recent work measures NEDD8-CUL3 and perturbation by MLN4924 or deneddylation inhibitor CSN5i-3; reviews state CSN removes NEDD8; structural studies capture CUL3–RBX1–CAND1 and CUL3~NEDD8–CSN complexes (henneberg2023activitybasedprofilingof pages 1-2, henneberg2023activitybasedprofilingof pages 6-6, sharma2023insightsintothe pages 1-3, zhang2024proteinneddylationand pages 8-10, hu2024dynamicmoleculararchitecture pages 1-21) | **Core regulatory context** for CRL3 activity. Good support for annotations tied to cullin deneddylation/neddylation regulation or regulation of ubiquitin ligase activity, if the GO term matches the evidence scope (zhang2024proteinneddylationand pages 8-10, hu2024dynamicmoleculararchitecture pages 1-21, henneberg2023activitybasedprofilingof pages 1-2, sharma2023insightsintothe pages 1-3) | Some evidence is general-to-cullin or review-based; use care in assigning highly specific regulator terms unless direct human CUL3 experimental support is cited. No direct support here for broad cellular-component claims beyond CRL3 complex itself (zhang2024proteinneddylationand pages 8-10, henneberg2023activitybasedprofilingof pages 1-2, sharma2023insightsintothe pages 1-3) | Aug 2023, doi:10.1038/s41589-023-01392-5, https://doi.org/10.1038/s41589-023-01392-5; Apr 2024, doi:10.1038/s41392-024-01800-9, https://doi.org/10.1038/s41392-024-01800-9; Feb 2024, doi:10.1038/s41594-023-01182-6, https://doi.org/10.1038/s41594-023-01182-6 |
 
 
-*Table: This table summarizes the verified identity, molecular function, complex architecture, regulatory mechanisms, validated adaptor-substrate pathways, localization, and disease relevance of human CUL3 (UniProt Q13618). It highlights the best-supported mechanistic annotations and recent evidence useful for functional interpretation.*
+*Table: This table summarizes direct GO-relevant evidence for human CUL3 across key CRL3 adaptor systems, highlighting what supports core scaffold and ubiquitination annotations versus what should be treated cautiously as adaptor-specific, non-degradative, or phenotype-driven.*
 
-### Figure evidence (mechanistic schematic)
-A schematic depiction of KEAP1–CUL3–RBX1 control of NRF2 under basal vs oxidative/electrophilic stress (the “floodgate model”) is available from Suzuki et al. 2023. (suzuki2023molecularbasisof media 74a75cb7)
+### Summary: Recommended core GO assertions for CUL3 (evidence-backed)
+1. **MF:** ubiquitin ligase complex scaffold activity (CRL3 scaffold) supported by multiple 2023–2024 structural/biochemical studies (wang2024aconservednterminal pages 1-2, hu2024dynamicmoleculararchitecture pages 1-21, adamson2023structuralandbiochemical pages 1-7).
+2. **CC:** member of Cul3-RING ubiquitin ligase complex / CRL3 complexes with RBX1 and BTB adaptors (hu2024dynamicmoleculararchitecture pages 1-21, wang2024aconservednterminal pages 1-2).
+3. **BP:** protein ubiquitination and, in contexts with demonstrated degradative ubiquitination, protein polyubiquitination and proteasome-mediated ubiquitin-dependent protein catabolic process—while explicitly recognizing that some CRL3 outputs are **non-degradative** (wang2024aconservednterminal pages 1-2, sengupta2023theubiquitinlikeproteins pages 4-5, sharma2023insightsintothe pages 1-3).
+4. **Regulation of activity:** reversible **neddylation** activates CRLs; **deneddylation (CSN)** and exchange regulation via **CAND1** are structurally supported for CUL3 complexes and experimentally manipulable in cells (hu2024dynamicmoleculararchitecture pages 1-21, henneberg2023activitybasedprofilingof pages 6-6, sharma2023insightsintothe pages 1-3, zhang2024proteinneddylationand pages 8-10).
+
+### Key references (URLs, dates)
+- Hu Y et al. *Nat Struct Mol Biol* (Feb 2024). “Dynamic molecular architecture…” DOI:10.1038/s41594-023-01182-6 https://doi.org/10.1038/s41594-023-01182-6 (hu2024dynamicmoleculararchitecture pages 1-21)
+- Wang W et al. *Nat Commun* (May 2024). DOI:10.1038/s41467-024-48045-2 https://doi.org/10.1038/s41467-024-48045-2 (wang2024aconservednterminal pages 1-2, wang2024aconservednterminal pages 7-8)
+- Henneberg LT et al. *Nat Chem Biol* (Aug 2023). DOI:10.1038/s41589-023-01392-5 https://doi.org/10.1038/s41589-023-01392-5 (henneberg2023activitybasedprofilingof pages 1-2, henneberg2023activitybasedprofilingof pages 6-6)
+- Zhang S et al. *Signal Transduct Target Ther* (Apr 2024). DOI:10.1038/s41392-024-01800-9 https://doi.org/10.1038/s41392-024-01800-9 (zhang2024proteinneddylationand pages 8-10)
+- Moretti T et al. *Mol Biol Cell* (Mar 2023; online Jan 2023). DOI:10.1091/mbc.e22-08-0383 https://doi.org/10.1091/mbc.e22-08-0383 (moretti2023klhl12canform pages 1-2)
+- Sharma P, Chatrathi HE. *Cell Commun Signal* (Oct 2023). DOI:10.1186/s12964-023-01269-z https://doi.org/10.1186/s12964-023-01269-z (sharma2023insightsintothe pages 1-3)
+- Adamson RJ et al. bioRxiv (posted Feb 16, 2023). DOI:10.1101/2023.02.15.528651 https://doi.org/10.1101/2023.02.15.528651 (adamson2023structuralandbiochemical pages 1-7)
+
 
 
 References
 
-1. (kouranti2022cullin3exon pages 1-2): Ilektra Kouranti, Waed Abdel Khalek, Stephani Mazurkiewicz, Irmine Loisel-Ferreira, Alexis M. Gautreau, Lionel Pintard, Xavier Jeunemaitre, and Eric Clauser. Cullin 3 exon 9 deletion in familial hyperkalemic hypertension impairs cullin3-ring-e3 ligase (crl3) dynamic regulation and cycling. International Journal of Molecular Sciences, 23:5151, May 2022. URL: https://doi.org/10.3390/ijms23095151, doi:10.3390/ijms23095151. This article has 19 citations.
+1. (jeong2023targetinge3ubiquitin pages 2-3): Yelin Jeong, Ah-Reum Oh, Young Hoon Jung, HyunJoon Gi, Young Un Kim, and KyeongJin Kim. Targeting e3 ubiquitin ligases and their adaptors as a therapeutic strategy for metabolic diseases. Experimental &amp; Molecular Medicine, 55:2097-2104, Oct 2023. URL: https://doi.org/10.1038/s12276-023-01087-w, doi:10.1038/s12276-023-01087-w. This article has 56 citations and is from a peer-reviewed journal.
 
-2. (adinolfi2023thekeap1nrf2pathway pages 2-3): Simone Adinolfi, Tommi Patinen, Ashik Jawahar Deen, Sini Pitkänen, Jouni Härkönen, Emilia Kansanen, Jenni Küblbeck, and Anna-Liisa Levonen. The keap1-nrf2 pathway: targets for therapy and role in cancer. Redox Biology, 63:102726, Jul 2023. URL: https://doi.org/10.1016/j.redox.2023.102726, doi:10.1016/j.redox.2023.102726. This article has 261 citations and is from a domain leading peer-reviewed journal.
+2. (sharma2023insightsintothe pages 1-3): Prashant Sharma and Harish E. Chatrathi. Insights into the diverse mechanisms and effects of variant cul3-induced familial hyperkalemic hypertension. Cell Communication and Signaling : CCS, Oct 2023. URL: https://doi.org/10.1186/s12964-023-01269-z, doi:10.1186/s12964-023-01269-z. This article has 6 citations.
 
-3. (adinolfi2023thekeap1nrf2pathway pages 3-5): Simone Adinolfi, Tommi Patinen, Ashik Jawahar Deen, Sini Pitkänen, Jouni Härkönen, Emilia Kansanen, Jenni Küblbeck, and Anna-Liisa Levonen. The keap1-nrf2 pathway: targets for therapy and role in cancer. Redox Biology, 63:102726, Jul 2023. URL: https://doi.org/10.1016/j.redox.2023.102726, doi:10.1016/j.redox.2023.102726. This article has 261 citations and is from a domain leading peer-reviewed journal.
+3. (hu2024dynamicmoleculararchitecture pages 1-21): Yuxia Hu, Zhao Zhang, Qiyu Mao, Xiang Zhang, Aihua Hao, Yu Xun, Yeda Wang, Lin Han, Wuqiang Zhan, Qianying Liu, Yue Yin, Chao Peng, Eva Marie Y. Moresco, Zhenguo Chen, Bruce Beutler, and Lei Sun. Dynamic molecular architecture and substrate recruitment of cullin3-ring e3 ligase crl3kbtbd2. Nature structural & molecular biology, 31:336-350, Feb 2024. URL: https://doi.org/10.1038/s41594-023-01182-6, doi:10.1038/s41594-023-01182-6. This article has 21 citations and is from a highest quality peer-reviewed journal.
 
-4. (wu2020cullin3renaland pages 1-3): Jing Wu, James A. McCormick, and Curt D. Sigmund. Cullin-3: renal and vascular mechanisms regulating blood pressure. Current Hypertension Reports, Aug 2020. URL: https://doi.org/10.1007/s11906-020-01076-8, doi:10.1007/s11906-020-01076-8. This article has 13 citations and is from a peer-reviewed journal.
+4. (wang2024aconservednterminal pages 1-2): Weize Wang, Ling Liang, Zonglin Dai, Peng Zuo, Shang Yu, Yishuo Lu, Dian Ding, Hongyi Chen, Hui Shan, Yan Jin, Youdong Mao, and Yuxin Yin. A conserved n-terminal motif of cul3 contributes to assembly and e3 ligase activity of crl3klhl22. Nature Communications, May 2024. URL: https://doi.org/10.1038/s41467-024-48045-2, doi:10.1038/s41467-024-48045-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
 
-5. (balasco2024acomprehensiveanalysis pages 1-2): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 15 citations.
+5. (wang2024aconservednterminal pages 7-8): Weize Wang, Ling Liang, Zonglin Dai, Peng Zuo, Shang Yu, Yishuo Lu, Dian Ding, Hongyi Chen, Hui Shan, Yan Jin, Youdong Mao, and Yuxin Yin. A conserved n-terminal motif of cul3 contributes to assembly and e3 ligase activity of crl3klhl22. Nature Communications, May 2024. URL: https://doi.org/10.1038/s41467-024-48045-2, doi:10.1038/s41467-024-48045-2. This article has 16 citations and is from a highest quality peer-reviewed journal.
 
-6. (balasco2024acomprehensiveanalysis pages 9-12): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 15 citations.
+6. (adamson2023structuralandbiochemical pages 1-7): Roslin J Adamson, N Connor Payne, Sergio G. Bartual, Ralph Mazitschek, and Alex N Bullock. Structural and biochemical characterization establishes a detailed understanding of keap1-cul3 complex assembly. bioRxiv, Feb 2023. URL: https://doi.org/10.1101/2023.02.15.528651, doi:10.1101/2023.02.15.528651. This article has 34 citations.
 
-7. (wu2020cullin3renaland pages 3-4): Jing Wu, James A. McCormick, and Curt D. Sigmund. Cullin-3: renal and vascular mechanisms regulating blood pressure. Current Hypertension Reports, Aug 2020. URL: https://doi.org/10.1007/s11906-020-01076-8, doi:10.1007/s11906-020-01076-8. This article has 13 citations and is from a peer-reviewed journal.
+7. (henneberg2023activitybasedprofilingof pages 1-2): Lukas T. Henneberg, Jaspal Singh, David M. Duda, Kheewoong Baek, David Yanishevski, Peter J. Murray, Matthias Mann, Sachdev S. Sidhu, and Brenda A. Schulman. Activity-based profiling of cullin–ring e3 networks by conformation-specific probes. Nature Chemical Biology, 19:1513-1523, Aug 2023. URL: https://doi.org/10.1038/s41589-023-01392-5, doi:10.1038/s41589-023-01392-5. This article has 32 citations and is from a highest quality peer-reviewed journal.
 
-8. (zhang2024proteinneddylationand pages 5-7): Shizhen Zhang, Qing Yu, Zhijian Li, Yongchao Zhao, and Yi Sun. Protein neddylation and its role in health and diseases. Signal Transduction and Targeted Therapy, Apr 2024. URL: https://doi.org/10.1038/s41392-024-01800-9, doi:10.1038/s41392-024-01800-9. This article has 146 citations and is from a peer-reviewed journal.
+8. (henneberg2023activitybasedprofilingof pages 6-6): Lukas T. Henneberg, Jaspal Singh, David M. Duda, Kheewoong Baek, David Yanishevski, Peter J. Murray, Matthias Mann, Sachdev S. Sidhu, and Brenda A. Schulman. Activity-based profiling of cullin–ring e3 networks by conformation-specific probes. Nature Chemical Biology, 19:1513-1523, Aug 2023. URL: https://doi.org/10.1038/s41589-023-01392-5, doi:10.1038/s41589-023-01392-5. This article has 32 citations and is from a highest quality peer-reviewed journal.
 
-9. (zhaochun2023targetingneddylationas pages 2-3): Zhaochun Zhaochun, Jiafei Li, Ruijie Ma, Ting Li, Zhigang Sun, and Shuhong Huang. Targeting neddylation as a novel approach to lung cancer treatment (review). International Journal of Oncology, Apr 2023. URL: https://doi.org/10.3892/ijo.2023.5513, doi:10.3892/ijo.2023.5513. This article has 9 citations and is from a peer-reviewed journal.
+9. (zhang2024proteinneddylationand pages 8-10): Shizhen Zhang, Qing Yu, Zhijian Li, Yongchao Zhao, and Yi Sun. Protein neddylation and its role in health and diseases. Signal Transduction and Targeted Therapy, Apr 2024. URL: https://doi.org/10.1038/s41392-024-01800-9, doi:10.1038/s41392-024-01800-9. This article has 148 citations and is from a peer-reviewed journal.
 
-10. (he2023targetingcullinneddylation pages 1-2): Zhang-Xu He, Wei-guang Yang, Dan Zengyangzong, Ge Gao, Qian Zhang, Hong-Min Liu, Wen Zhao, and Li-Ying Ma. Targeting cullin neddylation for cancer and fibrotic diseases. Theranostics, 13:5017-5056, Jan 2023. URL: https://doi.org/10.7150/thno.78876, doi:10.7150/thno.78876. This article has 43 citations and is from a domain leading peer-reviewed journal.
+10. (gu2024cullin3ring pages 1-2): Lijie Gu, Yanhong Du, Jianglei Chen, Mohammad Nazmul Hasan, Yung Dai Clayton, David J. Matye, Jacob E. Friedman, and Tiangang Li. Cullin 3 ring e3 ligase inactivation causes nrf2-dependent nadh reductive stress, hepatic lipodystrophy, and systemic insulin resistance. Proceedings of the National Academy of Sciences of the United States of America, Apr 2024. URL: https://doi.org/10.1073/pnas.2320934121, doi:10.1073/pnas.2320934121. This article has 21 citations and is from a highest quality peer-reviewed journal.
 
-11. (adinolfi2023thekeap1nrf2pathway pages 1-2): Simone Adinolfi, Tommi Patinen, Ashik Jawahar Deen, Sini Pitkänen, Jouni Härkönen, Emilia Kansanen, Jenni Küblbeck, and Anna-Liisa Levonen. The keap1-nrf2 pathway: targets for therapy and role in cancer. Redox Biology, 63:102726, Jul 2023. URL: https://doi.org/10.1016/j.redox.2023.102726, doi:10.1016/j.redox.2023.102726. This article has 261 citations and is from a domain leading peer-reviewed journal.
+11. (sengupta2023theubiquitinlikeproteins pages 4-5): Swarnab Sengupta and Elah Pick. The ubiquitin-like proteins of saccharomyces cerevisiae. Biomolecules, 13:734, Apr 2023. URL: https://doi.org/10.3390/biom13050734, doi:10.3390/biom13050734. This article has 4 citations.
 
-12. (suzuki2023molecularbasisof pages 2-4): Takafumi Suzuki, Jun Takahashi, and Masayuki Yamamoto. Molecular basis of the keap1-nrf2 signaling pathway. Molecules and Cells, 46:133-141, Mar 2023. URL: https://doi.org/10.14348/molcells.2023.0028, doi:10.14348/molcells.2023.0028. This article has 289 citations and is from a peer-reviewed journal.
+12. (pantazi2024ubiquitylationmediatedrnapiigenomic pages 100-104): Vasiliki Pantazi. Ubiquitylation-mediated rnapii genomic eviction in response to dna dsbs. ArXiv, 2024. URL: https://doi.org/10.14232/phd.12363, doi:10.14232/phd.12363. This article has 0 citations.
 
-13. (suzuki2023molecularbasisof pages 1-2): Takafumi Suzuki, Jun Takahashi, and Masayuki Yamamoto. Molecular basis of the keap1-nrf2 signaling pathway. Molecules and Cells, 46:133-141, Mar 2023. URL: https://doi.org/10.14348/molcells.2023.0028, doi:10.14348/molcells.2023.0028. This article has 289 citations and is from a peer-reviewed journal.
-
-14. (suzuki2023molecularbasisof media 74a75cb7): Takafumi Suzuki, Jun Takahashi, and Masayuki Yamamoto. Molecular basis of the keap1-nrf2 signaling pathway. Molecules and Cells, 46:133-141, Mar 2023. URL: https://doi.org/10.14348/molcells.2023.0028, doi:10.14348/molcells.2023.0028. This article has 289 citations and is from a peer-reviewed journal.
-
-15. (chen2024keap1nrf2pathwaya pages 2-4): Feilong Chen, Mei Xiao, Shaofan Hu, and Meng Wang. Keap1-nrf2 pathway: a key mechanism in the occurrence and development of cancer. Frontiers in Oncology, Apr 2024. URL: https://doi.org/10.3389/fonc.2024.1381467, doi:10.3389/fonc.2024.1381467. This article has 74 citations.
-
-16. (wu2020cullin3renaland pages 13-16): Jing Wu, James A. McCormick, and Curt D. Sigmund. Cullin-3: renal and vascular mechanisms regulating blood pressure. Current Hypertension Reports, Aug 2020. URL: https://doi.org/10.1007/s11906-020-01076-8, doi:10.1007/s11906-020-01076-8. This article has 13 citations and is from a peer-reviewed journal.
-
-17. (kouranti2022cullin3exon pages 23-24): Ilektra Kouranti, Waed Abdel Khalek, Stephani Mazurkiewicz, Irmine Loisel-Ferreira, Alexis M. Gautreau, Lionel Pintard, Xavier Jeunemaitre, and Eric Clauser. Cullin 3 exon 9 deletion in familial hyperkalemic hypertension impairs cullin3-ring-e3 ligase (crl3) dynamic regulation and cycling. International Journal of Molecular Sciences, 23:5151, May 2022. URL: https://doi.org/10.3390/ijms23095151, doi:10.3390/ijms23095151. This article has 19 citations.
-
-18. (jerabkova2019cullin3a pages 8-9): Katerina Jerabkova and Izabela Sumara. Cullin 3, a cellular scripter of the non-proteolytic ubiquitin code. Seminars in cell & developmental biology, 93:100-110, Sep 2019. URL: https://doi.org/10.1016/j.semcdb.2018.12.007, doi:10.1016/j.semcdb.2018.12.007. This article has 35 citations and is from a peer-reviewed journal.
-
-19. (pantazi2024prognosticpotentialof pages 7-7): Vasiliki Pantazi, Vanda Miklós, Paul Smith, Orsolya Oláh-Németh, Gabriella Pankotai-Bodó, Divya Teja Dondapati, Ferhan Ayaydin, Vincenzo D’Angiolella, and Tibor Pankotai. Prognostic potential of cul3 ligase with differential roles in luminal a and basal type breast cancer tumors. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-65692-z, doi:10.1038/s41598-024-65692-z. This article has 7 citations and is from a peer-reviewed journal.
-
-20. (pantazi2024prognosticpotentialof pages 7-10): Vasiliki Pantazi, Vanda Miklós, Paul Smith, Orsolya Oláh-Németh, Gabriella Pankotai-Bodó, Divya Teja Dondapati, Ferhan Ayaydin, Vincenzo D’Angiolella, and Tibor Pankotai. Prognostic potential of cul3 ligase with differential roles in luminal a and basal type breast cancer tumors. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-65692-z, doi:10.1038/s41598-024-65692-z. This article has 7 citations and is from a peer-reviewed journal.
-
-21. (balasco2024acomprehensiveanalysis pages 12-14): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 15 citations.
-
-22. (pantazi2024prognosticpotentialof pages 10-12): Vasiliki Pantazi, Vanda Miklós, Paul Smith, Orsolya Oláh-Németh, Gabriella Pankotai-Bodó, Divya Teja Dondapati, Ferhan Ayaydin, Vincenzo D’Angiolella, and Tibor Pankotai. Prognostic potential of cul3 ligase with differential roles in luminal a and basal type breast cancer tumors. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-65692-z, doi:10.1038/s41598-024-65692-z. This article has 7 citations and is from a peer-reviewed journal.
-
-23. (pantazi2024prognosticpotentialof pages 3-4): Vasiliki Pantazi, Vanda Miklós, Paul Smith, Orsolya Oláh-Németh, Gabriella Pankotai-Bodó, Divya Teja Dondapati, Ferhan Ayaydin, Vincenzo D’Angiolella, and Tibor Pankotai. Prognostic potential of cul3 ligase with differential roles in luminal a and basal type breast cancer tumors. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-65692-z, doi:10.1038/s41598-024-65692-z. This article has 7 citations and is from a peer-reviewed journal.
-
-24. (zhang2024proteinneddylationand pages 2-3): Shizhen Zhang, Qing Yu, Zhijian Li, Yongchao Zhao, and Yi Sun. Protein neddylation and its role in health and diseases. Signal Transduction and Targeted Therapy, Apr 2024. URL: https://doi.org/10.1038/s41392-024-01800-9, doi:10.1038/s41392-024-01800-9. This article has 146 citations and is from a peer-reviewed journal.
-
-25. (kouranti2022cullin3exon pages 7-9): Ilektra Kouranti, Waed Abdel Khalek, Stephani Mazurkiewicz, Irmine Loisel-Ferreira, Alexis M. Gautreau, Lionel Pintard, Xavier Jeunemaitre, and Eric Clauser. Cullin 3 exon 9 deletion in familial hyperkalemic hypertension impairs cullin3-ring-e3 ligase (crl3) dynamic regulation and cycling. International Journal of Molecular Sciences, 23:5151, May 2022. URL: https://doi.org/10.3390/ijms23095151, doi:10.3390/ijms23095151. This article has 19 citations.
-
-26. (balasco2024acomprehensiveanalysis pages 4-5): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 15 citations.
-
-27. (balasco2024acomprehensiveanalysis pages 5-8): Nicole Balasco, Luciana Esposito, Giovanni Smaldone, Marco Salvatore, and Luigi Vitagliano. A comprehensive analysis of the structural recognition between kctd proteins and cullin 3. International Journal of Molecular Sciences, 25:1881, Feb 2024. URL: https://doi.org/10.3390/ijms25031881, doi:10.3390/ijms25031881. This article has 15 citations.
-
-28. (pantazi2024prognosticpotentialof pages 4-7): Vasiliki Pantazi, Vanda Miklós, Paul Smith, Orsolya Oláh-Németh, Gabriella Pankotai-Bodó, Divya Teja Dondapati, Ferhan Ayaydin, Vincenzo D’Angiolella, and Tibor Pankotai. Prognostic potential of cul3 ligase with differential roles in luminal a and basal type breast cancer tumors. Scientific Reports, Jun 2024. URL: https://doi.org/10.1038/s41598-024-65692-z, doi:10.1038/s41598-024-65692-z. This article has 7 citations and is from a peer-reviewed journal.
+13. (moretti2023klhl12canform pages 1-2): Tamara Moretti, Kyungho Kim, Astha Tuladhar, and Jinoh Kim. Klhl12 can form large copii structures in the absence of cul3 neddylation. Molecular Biology of the Cell, Mar 2023. URL: https://doi.org/10.1091/mbc.e22-08-0383, doi:10.1091/mbc.e22-08-0383. This article has 11 citations and is from a domain leading peer-reviewed journal.
 
 ## Citations
 
-1. balasco2024acomprehensiveanalysis pages 1-2
-2. pantazi2024prognosticpotentialof pages 7-10
-3. he2023targetingcullinneddylation pages 1-2
-4. balasco2024acomprehensiveanalysis pages 9-12
-5. zhang2024proteinneddylationand pages 5-7
-6. zhaochun2023targetingneddylationas pages 2-3
-7. suzuki2023molecularbasisof pages 2-4
-8. suzuki2023molecularbasisof pages 1-2
-9. pantazi2024prognosticpotentialof pages 7-7
-10. balasco2024acomprehensiveanalysis pages 12-14
-11. pantazi2024prognosticpotentialof pages 10-12
-12. pantazi2024prognosticpotentialof pages 3-4
-13. zhang2024proteinneddylationand pages 2-3
-14. balasco2024acomprehensiveanalysis pages 4-5
-15. balasco2024acomprehensiveanalysis pages 5-8
-16. pantazi2024prognosticpotentialof pages 4-7
-17. https://doi.org/10.1016/j.redox.2023.102726
-18. https://doi.org/10.14348/molcells.2023.0028
-19. https://doi.org/10.3389/fonc.2024.1381467
-20. https://doi.org/10.3390/ijms25031881
-21. https://doi.org/10.1038/s41598-024-65692-z
-22. https://doi.org/10.7150/thno.78876
-23. https://doi.org/10.1038/s41392-024-01800-9
-24. https://doi.org/10.3390/ijms23095151
-25. https://doi.org/10.3390/ijms23095151,
-26. https://doi.org/10.1016/j.redox.2023.102726,
-27. https://doi.org/10.1007/s11906-020-01076-8,
-28. https://doi.org/10.3390/ijms25031881,
-29. https://doi.org/10.1038/s41392-024-01800-9,
-30. https://doi.org/10.3892/ijo.2023.5513,
-31. https://doi.org/10.7150/thno.78876,
-32. https://doi.org/10.14348/molcells.2023.0028,
-33. https://doi.org/10.3389/fonc.2024.1381467,
-34. https://doi.org/10.1016/j.semcdb.2018.12.007,
-35. https://doi.org/10.1038/s41598-024-65692-z,
+1. adamson2023structuralandbiochemical pages 1-7
+2. hu2024dynamicmoleculararchitecture pages 1-21
+3. henneberg2023activitybasedprofilingof pages 1-2
+4. henneberg2023activitybasedprofilingof pages 6-6
+5. zhang2024proteinneddylationand pages 8-10
+6. wang2024aconservednterminal pages 1-2
+7. sengupta2023theubiquitinlikeproteins pages 4-5
+8. sharma2023insightsintothe pages 1-3
+9. pantazi2024ubiquitylationmediatedrnapiigenomic pages 100-104
+10. wang2024aconservednterminal pages 7-8
+11. https://doi.org/10.1101/2023.02.15.528651;
+12. https://doi.org/10.1186/s12964-023-01269-z
+13. https://doi.org/10.1038/s41467-024-48045-2
+14. https://doi.org/10.1091/mbc.e22-08-0383
+15. https://doi.org/10.1038/s41594-023-01182-6
+16. https://doi.org/10.1073/pnas.2315018121
+17. https://doi.org/10.1038/s41421-023-00533-3
+18. https://doi.org/10.1038/s12276-023-01087-w
+19. https://doi.org/10.1038/s41589-023-01392-5;
+20. https://doi.org/10.1038/s41392-024-01800-9;
+21. https://doi.org/10.1038/s41589-023-01392-5
+22. https://doi.org/10.1038/s41392-024-01800-9
+23. https://doi.org/10.1101/2023.02.15.528651
+24. https://doi.org/10.1038/s12276-023-01087-w,
+25. https://doi.org/10.1186/s12964-023-01269-z,
+26. https://doi.org/10.1038/s41594-023-01182-6,
+27. https://doi.org/10.1038/s41467-024-48045-2,
+28. https://doi.org/10.1101/2023.02.15.528651,
+29. https://doi.org/10.1038/s41589-023-01392-5,
+30. https://doi.org/10.1038/s41392-024-01800-9,
+31. https://doi.org/10.1073/pnas.2320934121,
+32. https://doi.org/10.3390/biom13050734,
+33. https://doi.org/10.14232/phd.12363,
+34. https://doi.org/10.1091/mbc.e22-08-0383,
