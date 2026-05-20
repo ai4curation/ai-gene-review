@@ -1,0 +1,9 @@
+# MAML1 notes
+
+## Falcon integration, 2026-05-12
+
+- Falcon supports MAML1 as a nuclear transcriptional coactivator in the Notch intracellular domain-RBPJ/CSL activation complex, with direct HES1 transcriptional activation evidence [PMID:11101851 "MAML1 binds to the ankyrin repeat domain of all four mammalian NOTCH receptors, forms a DNA-binding complex with ICN and RBP-Jkappa, and amplifies NOTCH-induced transcription of HES1."].
+- The review should prefer Notch target-gene transcription terms over a broad pathway-only framing: [file:human/MAML1/MAML1-deep-research-falcon.md "**Prefer “Notch target gene transcription” over broad “Notch signaling pathway”** unless direct pathway-level phenotypes are tied specifically to human MAML1 (not dnMAML pan-inhibition, not paralog redundancy)."].
+- Generic protein binding rows are less informative than the specific coactivator, complex-membership, and CDK8-binding evidence. CDK8 binding is supported directly [PMID:15546612 "MAM interacts directly with CDK8 and can cause it to localize to subnuclear foci."].
+- The PMID:17317671 peptide antigen binding annotation appears erroneous: the paper supports p53 coactivator activity, not antigen binding [PMID:17317671 "MAML1-p53 interaction involves the N-terminal region of MAML1 and the DNA-binding domain of p53, and we use a chromatin immunoprecipitation assay to show that MAML1 is part of the activator complex that binds to native p53-response elements within the promoter of the p53 target genes."].
+- Nuclear/nucleoplasm localization is solid as context, but nuclear speck or nuclear-body assignments should be conservative because Falcon notes that the evidence is often overexpression-linked [file:human/MAML1/MAML1-deep-research-falcon.md "**Nuclear bodies/specks:** nuclear-body localization is supported but is **often overexpression-linked**; annotate cautiously at specific subnuclear compartments."].
