@@ -14,16 +14,23 @@ SPEC.loader.exec_module(validate_deep_research)
 
 
 def test_validate_deep_research_accepts_valid_provider_file(tmp_path):
-    path = tmp_path / "GENE-deep-research-openai.md"
-    path.write_text(
-        "---\n"
-        "provider: openai\n"
-        "start_time: '2026-03-21T00:00:00'\n"
-        "end_time: '2026-03-21T00:05:00'\n"
-        "---\n\n"
-        "# Report\n",
-        encoding="utf-8",
-    )
+    for provider in (
+        "openai",
+        "perplexity-lite",
+        "cyberian",
+        "openscientist",
+        "asta",
+    ):
+        path = tmp_path / f"GENE-deep-research-{provider}.md"
+        path.write_text(
+            "---\n"
+            f"provider: {provider}\n"
+            "start_time: '2026-03-21T00:00:00'\n"
+            "end_time: '2026-03-21T00:05:00'\n"
+            "---\n\n"
+            "# Report\n",
+            encoding="utf-8",
+        )
 
     assert validate_deep_research.validate_files([tmp_path]) == 0
 
@@ -50,7 +57,13 @@ def test_validate_deep_research_rejects_missing_required_field(tmp_path):
 
 
 def test_validate_deep_research_ignores_manual_files(tmp_path):
-    path = tmp_path / "GENE-deep-research-manual.md"
-    path.write_text("# Manual notes\n", encoding="utf-8")
+    for filename in (
+        "GENE-deep-research-manual.md",
+        "GENE-deep-research-bioreason-sft.md",
+        "GENE-deep-research-openai-citations.md",
+        "GENE-deep-research-openai.md.citations.md",
+    ):
+        path = tmp_path / filename
+        path.write_text("# Sidecar notes\n", encoding="utf-8")
 
     assert validate_deep_research.validate_files([tmp_path]) == 0

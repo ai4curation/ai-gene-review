@@ -210,7 +210,7 @@ def run_deep_research(
     Args:
         organism: Organism name
         gene_id: Gene identifier (UniProt ID, locus tag, or gene symbol)
-        provider: Provider name (openai, perplexity, perplexity-lite, falcon, cyberian)
+        provider: Provider name (openai, perplexity, perplexity-lite, falcon, cyberian, openscientist)
         gene_symbol: Gene symbol/name to use in template
         output_path: Where to write output
         uniprot_context: Dictionary with UniProt context fields
@@ -273,7 +273,10 @@ def main():
 
     parser.add_argument("organism", help="Organism name")
     parser.add_argument("gene_id", help="Gene identifier (UniProt ID, locus tag, or gene symbol)")
-    parser.add_argument("provider", help="Provider (openai, perplexity, perplexity-lite, falcon)")
+    parser.add_argument(
+        "provider",
+        help="Provider (for example: openai, perplexity, perplexity-lite, falcon, cyberian, openscientist)",
+    )
     parser.add_argument("--alias", help="Gene symbol alias (if not provided, will lookup from UniProt)")
     parser.add_argument(
         "--fallback",

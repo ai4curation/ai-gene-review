@@ -4,29 +4,35 @@ on:
   schedule:
     - cron: "0 */4 * * *"
   workflow_dispatch:
-    inputs:
-      model:
-        description: "Claude model to use"
-        default: claude-opus-4-7
-        type: choice
-        options:
-          - claude-sonnet-4-6
-          - claude-haiku-4-5-20251001
-          - claude-opus-4-7
-
-concurrency:
-  group: curation-scanner
-  cancel-in-progress: true
 
 jobs:
   curation-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - effort: low_effort
+            model: claude-haiku-4-5-20251001
+            selector: "label:curation label:low_effort"
+          - effort: medium_effort
+            model: claude-sonnet-4-6
+            selector: "label:curation label:medium_effort -label:low_effort"
+          - effort: high_effort
+            model: claude-opus-4-7
+            selector: "label:curation -label:low_effort -label:medium_effort"
+    concurrency:
+      group: curation-scanner-${{ matrix.effort }}
+      cancel-in-progress: true
     permissions:
       contents: write
       pull-requests: write
       issues: write
       id-token: write
+    env:
+      EFFORT_TIER: ${{ matrix.effort }}
+      EFFORT_SELECTOR: ${{ matrix.selector }}
 
     steps:
       - name: Checkout repository
@@ -55,17 +61,41 @@ jobs:
           claude_args: |
             --dangerously-skip-permissions
             --mcp-config '{"mcpServers": {"ols": {"command": "uvx", "args": ["ols-mcp"]}}}'
-            --model ${{ inputs.model || 'claude-opus-4-7' }}
+            --model ${{ matrix.model }}
             --max-turns 40
           prompt: |
             REPO: ${{ github.repository }}
             TRIGGER: ${{ github.event_name }}
+            EFFORT TIER: ${{ matrix.effort }}
+            EFFORT SELECTOR: ${{ matrix.selector }}
 
             You are running an automated curation scanner for the AI Gene Review repository.
 
-            Scan for open issues and pull requests labeled `curation` that are unassigned.
-            Start by gathering candidate items with `gh issue list` and `gh pr list`, including
-            metadata such as labels, assignees, updated time, review state, and reaction counts.
+            Scan only for open issues and pull requests that are unassigned and match
+            EFFORT SELECTOR. Start by gathering candidate items with `gh issue list`
+            and `gh pr list`, including metadata such as labels, assignees, updated
+            time, review state, and reaction counts.
+
+            Use searches equivalent to:
+            - `is:open is:issue no:assignee label:curation ...effort selector...`
+            - `is:open is:pr no:assignee label:curation ...effort selector...`
+
+            Effort tier routing:
+            - `low_effort`: suitable for validation cleanup, evidence/reference/PMID cleanup,
+              and small edits to existing gene reviews. Do not create new gene reviews from
+              this tier. If a task requires a new review, sparse-literature synthesis,
+              bioinformatics analysis, schema/tooling changes, or broad edits, leave a brief
+              comment and ensure the work is routed to `high_effort`.
+            - `medium_effort`: suitable for bounded single-gene review improvements where the
+              source files and deep research already exist. Do not create new gene reviews or
+              make schema/tooling changes from this tier. If the source material is missing or
+              the work expands beyond one gene, leave a brief comment and route it to
+              `high_effort`.
+            - `high_effort`: default for curation work without lower-effort labels, including
+              new gene reviews, sparse literature, bioinformatics analyses, schema/tooling
+              changes, and broad changes.
+
+            If an item has more than one effort label, skip it rather than guessing.
 
             You may scan multiple candidates, but you must choose exactly one issue or pull request
             to actively work on in this run. Leave all other items untouched.
