@@ -186,6 +186,14 @@ deep-research-falcon organism gene_id *args="":
 deep-research-cyberian organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
 
+# Deep research using OpenScientist
+# Gene symbol automatically looked up from UniProt file if --alias not provided
+# Examples:
+#   just deep-research-openscientist human TP53
+#   just deep-research-openscientist METEA C5B1I4 --alias mllA
+deep-research-openscientist organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openscientist {{args}}
+
 # Deep research using Codex via agentapi (yolo mode)
 # Uses cyberian provider with agent_type=codex for autonomous research
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -194,6 +202,33 @@ deep-research-cyberian organism gene_id *args="":
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
     uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+
+# Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
+# Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
+fetch-research-artifacts trajectory_id research_file *args="":
+    uv run python scripts/fetch_edison_artifacts.py {{trajectory_id}} {{research_file}} {{args}}
+
+# Index Edison/Falcon artifacts recorded in deep research report frontmatter
+# Examples:
+#   just index-research-artifacts
+#   just index-research-artifacts --check
+index-research-artifacts *args="":
+    uv run python scripts/index_research_artifacts.py {{args}}
+
+# List focused hypothesis research candidates for one gene
+# Examples:
+#   just gene-hypothesis-list human TP53
+#   just gene-hypothesis-list human TP53 --missing-provider openscientist
+gene-hypothesis-list organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py list {{organism}} {{gene}} {{args}}
+
+# Run focused deep research for one gene-level curation hypothesis
+# Dry-run is recommended while selecting a source record.
+# Examples:
+#   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
+#   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
+gene-hypothesis-research provider organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} {{provider}} {{args}}
 
 # Term deep research (open-ended biological concepts)
 # Examples:
@@ -1444,79 +1479,33 @@ quality-report organism="" *args="":
     fi
     eval "$cmd"
 
-# Show deep research coverage status per organism
-# Displays: total genes, genes with research, missing, and per-provider counts
+# Show deep research coverage status per gene
+# Displays provider, citation, latest report, and missing-provider metadata as TSV
 # Examples:
-#   just deep-research-status            # all organisms
-#   just deep-research-status human      # single organism
-deep-research-status organism="":
-    #!/usr/bin/env python3
-    import os
-    import sys
-    from collections import defaultdict
-    from pathlib import Path
-    import re
+#   just deep-research-status                      # all organisms
+#   just deep-research-status human                # single organism
+#   just deep-research-status human --provider openscientist
+#   just deep-research-status "" --missing-provider openscientist --no-summary
+deep-research-status organism="" *args="":
+    #!/usr/bin/env bash
+    cmd="uv run python scripts/deep_research_coverage.py status {{args}}"
+    if [ -n "{{organism}}" ]; then
+        cmd="$cmd --organism {{organism}}"
+    fi
+    eval "$cmd"
 
-    organism_filter = "{{organism}}"
-    genes_root = Path("genes")
+# Show genes missing a deep research provider
+# Example: just deep-research-missing openscientist --organism human --no-summary
+deep-research-missing provider *args="":
+    uv run python scripts/deep_research_coverage.py status --missing-provider {{provider}} {{args}}
 
-    if organism_filter:
-        org_dirs = [genes_root / organism_filter]
-    else:
-        org_dirs = sorted(p for p in genes_root.iterdir() if p.is_dir())
-
-    grand_total = 0
-    grand_with = 0
-    grand_missing = 0
-    header_printed = False
-    all_missing = []
-
-    for org_dir in org_dirs:
-        if not org_dir.is_dir():
-            continue
-        org = org_dir.name
-        total = 0
-        with_research = 0
-        missing = 0
-        providers = defaultdict(int)
-
-        for gene_dir in sorted(org_dir.iterdir()):
-            if not gene_dir.is_dir():
-                continue
-            total += 1
-            research_files = list(gene_dir.glob("*-deep-research-*.md"))
-            if research_files:
-                with_research += 1
-                for f in research_files:
-                    m = re.search(r'-deep-research-(.+)\.md$', f.name)
-                    if m:
-                        providers[m.group(1)] += 1
-            else:
-                missing += 1
-                all_missing.append(f"{org}/{gene_dir.name}")
-
-        if total == 0:
-            continue
-
-        if not header_printed:
-            print(f"{'ORGANISM':<12s} {'TOTAL':>6s} {'WITH':>6s} {'MISSING':>7s}  PROVIDERS")
-            print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}  ---------")
-            header_printed = True
-
-        prov_str = ", ".join(f"{p}:{providers[p]}" for p in sorted(providers))
-        print(f"{org:<12s} {total:>6d} {with_research:>6d} {missing:>7d}  {prov_str}")
-        grand_total += total
-        grand_with += with_research
-        grand_missing += missing
-
-    if grand_total > 0:
-        print(f"{'--------':<12s} {'-----':>6s} {'----':>6s} {'-------':>7s}")
-        print(f"{'TOTAL':<12s} {grand_total:>6d} {grand_with:>6d} {grand_missing:>7d}")
-
-    if all_missing:
-        print(f"\nGenes missing deep research ({len(all_missing)}):")
-        for g in all_missing:
-            print(f"  {g}")
+# Plan or execute provider backfill for genes missing deep research
+# Dry-run is the default. Add --execute to run the generated just commands.
+# Examples:
+#   just deep-research-backfill openscientist --max-genes 10
+#   just deep-research-backfill openscientist --organism human --execute -- --fallback perplexity-lite
+deep-research-backfill provider *args="":
+    uv run python scripts/deep_research_coverage.py backfill {{provider}} {{args}}
 
 # ============== Publications Cache Management ==============
 

@@ -12,7 +12,16 @@ from pathlib import Path
 import yaml
 
 
-PROVIDER_FILE_RE = re.compile(r".+-deep-research-(openai|falcon|perplexity)\.md$")
+PROVIDER_FILE_RE = re.compile(r".+-deep-research-(?P<provider>.+)\.md$")
+FRONTMATTER_PROVIDERS = {
+    "asta",
+    "cyberian",
+    "falcon",
+    "openai",
+    "openscientist",
+    "perplexity",
+    "perplexity-lite",
+}
 REQUIRED_FIELDS = ("provider", "start_time", "end_time")
 SKIP_DIRS = {
     ".git",
@@ -29,18 +38,27 @@ def iter_candidate_files(paths: list[Path]) -> list[Path]:
     """Return provider-named deep research files beneath the given paths."""
     candidates: list[Path] = []
 
+    def is_candidate(path: Path) -> bool:
+        if path.name.endswith(".citations.md"):
+            return False
+        match = PROVIDER_FILE_RE.fullmatch(path.name)
+        if not match:
+            return False
+        provider = match.group("provider")
+        return provider in FRONTMATTER_PROVIDERS
+
     for path in paths:
         if not path.exists():
             continue
         if path.is_file():
-            if PROVIDER_FILE_RE.fullmatch(path.name):
+            if is_candidate(path):
                 candidates.append(path)
             continue
 
         for root, dirnames, filenames in os.walk(path):
             dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
             for filename in sorted(filenames):
-                if PROVIDER_FILE_RE.fullmatch(filename):
+                if is_candidate(Path(filename)):
                     candidates.append(Path(root) / filename)
 
     return sorted(set(candidates))
