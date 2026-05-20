@@ -498,8 +498,8 @@ def collect_deep_research_sections(
         provider_label = humanize_provider(str(provider)) if provider else None
         content_title = extract_display_title(body, md_path.stem)
         title = provider_label or content_title
-        subtitle = content_title
-        if subtitle.casefold() in {
+        subtitle: Optional[str] = content_title
+        if subtitle and subtitle.casefold() in {
             "",
             title.casefold(),
             "gene research for functional annotation",

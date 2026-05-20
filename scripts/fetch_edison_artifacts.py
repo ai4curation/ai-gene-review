@@ -216,8 +216,8 @@ def fetch_artifacts(
     overwrite: bool = False,
 ) -> int:
     """Fetch artifacts for trajectory_id and update report_file."""
-    from deep_research_client.models import ProviderConfig
-    from deep_research_client.providers.falcon import FalconProvider
+    from deep_research_client.models import ProviderConfig  # type: ignore[import-untyped]
+    from deep_research_client.providers.falcon import FalconProvider  # type: ignore[import-untyped]
     from edison_client import EdisonClient
     from edison_client.models.app import TaskResponseVerbose
 

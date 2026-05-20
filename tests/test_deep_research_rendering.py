@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from src.ai_gene_review import render
+from ai_gene_review import render
 
 
 def test_extract_deep_research_body_strips_frontmatter_and_output_wrapper() -> None:

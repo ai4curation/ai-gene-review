@@ -116,6 +116,11 @@ def load_yaml(path: Path) -> Mapping[str, Any]:
     return data
 
 
+def as_mapping(value: Any) -> Mapping[str, Any]:
+    """Return value as a mapping when possible, otherwise an empty mapping."""
+    return value if isinstance(value, Mapping) else {}
+
+
 def literalize_multiline(value: Any) -> Any:
     if isinstance(value, str) and "\n" in value:
         return LiteralString(value)
@@ -156,7 +161,7 @@ def predictions_file_for(gene_dir: Path, gene: str) -> Path:
 
 
 def gene_metadata(data: Mapping[str, Any], fallback_gene: str) -> tuple[str, str, str]:
-    taxon = data.get("taxon") if isinstance(data.get("taxon"), Mapping) else {}
+    taxon = as_mapping(data.get("taxon"))
     return (
         str(data.get("gene_symbol") or fallback_gene),
         str(taxon.get("id") or ""),
@@ -211,8 +216,8 @@ def format_reference_context(reference_ids: Sequence[str]) -> str:
 
 
 def format_annotation_context(annotation: Mapping[str, Any]) -> str:
-    review = annotation.get("review") if isinstance(annotation.get("review"), Mapping) else {}
-    term = annotation.get("term") if isinstance(annotation.get("term"), Mapping) else {}
+    review = as_mapping(annotation.get("review"))
+    term = as_mapping(annotation.get("term"))
     lines = [
         f"- Term: {term_label(term) or 'not specified'}",
         f"- Evidence type: {annotation.get('evidence_type') or 'not specified'}",
@@ -227,9 +232,9 @@ def format_annotation_context(annotation: Mapping[str, Any]) -> str:
 
 
 def format_prediction_context(prediction: Mapping[str, Any]) -> str:
-    review = prediction.get("review") if isinstance(prediction.get("review"), Mapping) else {}
+    review = as_mapping(prediction.get("review"))
     term = prediction.get("predicted_term")
-    term_map = term if isinstance(term, Mapping) else {}
+    term_map = as_mapping(term)
     lines = [
         f"- Predicted term: {term_label(term_map) or 'not specified'}",
         f"- Predicted term type: {prediction.get('predicted_term_type') or 'not specified'}",
@@ -247,7 +252,7 @@ def format_prediction_context(prediction: Mapping[str, Any]) -> str:
 
 def format_core_function_context(core_function: Mapping[str, Any]) -> str:
     mf = core_function.get("molecular_function")
-    mf_map = mf if isinstance(mf, Mapping) else {}
+    mf_map = as_mapping(mf)
     lines = [f"- Molecular function: {term_label(mf_map) or 'not specified'}"]
     if core_function.get("description"):
         lines.append(f"- Description: {core_function['description']}")
@@ -267,8 +272,8 @@ def format_core_function_context(core_function: Mapping[str, Any]) -> str:
 def annotation_hypothesis(
     gene_symbol: str, annotation: Mapping[str, Any], focus_type: str
 ) -> str:
-    review = annotation.get("review") if isinstance(annotation.get("review"), Mapping) else {}
-    term = annotation.get("term") if isinstance(annotation.get("term"), Mapping) else {}
+    review = as_mapping(annotation.get("review"))
+    term = as_mapping(annotation.get("term"))
     action = str(review.get("action") or "UNDECIDED")
     reason = str(review.get("reason") or review.get("summary") or "").strip()
     if focus_type == "proposed_go_term":
@@ -284,9 +289,9 @@ def annotation_hypothesis(
 
 
 def prediction_hypothesis(gene_symbol: str, prediction: Mapping[str, Any]) -> str:
-    review = prediction.get("review") if isinstance(prediction.get("review"), Mapping) else {}
+    review = as_mapping(prediction.get("review"))
     term = prediction.get("predicted_term")
-    term_map = term if isinstance(term, Mapping) else {}
+    term_map = as_mapping(term)
     assessment = str(review.get("assessment") or "UNC")
     summary = str(review.get("summary") or "").strip()
     lead = (
@@ -300,7 +305,7 @@ def prediction_hypothesis(gene_symbol: str, prediction: Mapping[str, Any]) -> st
 
 def core_function_hypothesis(gene_symbol: str, core_function: Mapping[str, Any]) -> str:
     mf = core_function.get("molecular_function")
-    mf_map = mf if isinstance(mf, Mapping) else {}
+    mf_map = as_mapping(mf)
     description = str(core_function.get("description") or "").strip()
     lead = f"{term_label(mf_map) or 'The described activity'} is a core function of {gene_symbol}."
     if description:
@@ -398,9 +403,9 @@ def records_from_review(
     for index, annotation in enumerate(data.get("existing_annotations") or [], start=1):
         if not isinstance(annotation, Mapping):
             continue
-        review = annotation.get("review") if isinstance(annotation.get("review"), Mapping) else {}
+        review = as_mapping(annotation.get("review"))
         action = str(review.get("action") or "").upper()
-        term = annotation.get("term") if isinstance(annotation.get("term"), Mapping) else {}
+        term = as_mapping(annotation.get("term"))
         focus_type = (
             "proposed_go_term" if action == "NEW" else "existing_go_annotation_decision"
         )
@@ -461,7 +466,7 @@ def records_from_review(
     for index, proposed in enumerate(data.get("proposed_new_terms") or [], start=1):
         if not isinstance(proposed, Mapping):
             continue
-        term = proposed.get("term") if isinstance(proposed.get("term"), Mapping) else proposed
+        term = as_mapping(proposed.get("term")) or as_mapping(proposed)
         records.append(
             make_record(
                 organism=organism,
@@ -483,7 +488,7 @@ def records_from_review(
         if not isinstance(core_function, Mapping):
             continue
         mf = core_function.get("molecular_function")
-        mf_map = mf if isinstance(mf, Mapping) else {}
+        mf_map = as_mapping(mf)
         records.append(
             make_record(
                 organism=organism,
@@ -531,7 +536,7 @@ def records_from_predictions(
         if not isinstance(prediction, Mapping):
             continue
         term = prediction.get("predicted_term")
-        term_map = term if isinstance(term, Mapping) else {}
+        term_map = as_mapping(term)
         source = slugify(str(prediction.get("source_method") or "prediction"))
         records.append(
             make_record(
