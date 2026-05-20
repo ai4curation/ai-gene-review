@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-05-11T06:30:51.930176'
-end_time: '2026-05-11T06:55:33.705799'
-duration_seconds: 1481.78
+cached: true
+start_time: '2026-05-12T04:18:36.934182'
+end_time: '2026-05-12T04:18:36.936655'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: SCHPO
