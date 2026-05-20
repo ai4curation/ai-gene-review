@@ -65,9 +65,9 @@ Checked `genes/**/*-ai-review.yaml` for GO:0008177 / GO:0000104:
 |---|---|---|---|---|
 | **SDHC** (human, P56378) | `genes/human/SDHC/SDHC-ai-review.yaml` | GO:0008177 IEA | Structured **`qualifier: contributes_to`** present; `action: ACCEPT` | ✅ Already aligned with #6414 — exemplar pattern |
 | **SDHA** (human, P31040) | `genes/human/SDHA/SDHA-ai-review.yaml` | GO:0008177 IBA | `action: MODIFY` → proposes GO:0000104; one `qualifier: contributes_to` present; prose discusses enables-vs-contributes | Re-check the SDHA/GO:0000104 nuance above; confirm GO:0008177 retains `contributes_to` |
-| **SDHB** (human, P21912) | `genes/human/SDHB/SDHB-ai-review.yaml` | GO:0008177 IEA | Prose says qualifier "should ideally be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** | Add structured `qualifier: contributes_to` to the GO:0008177 entry |
-| **SDHD** (human, P56378→Q9Y2T2) | `genes/human/SDHD/SDHD-ai-review.yaml` | GO:0008177 IEA (GOA qualifier `enables`) | Prose says qualifier "should be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** | Add structured `qualifier: contributes_to` to the GO:0008177 entry |
-| **NCGR_LOCUS67308** (9POAL plant SDH2 iron-sulfur ortholog) | `genes/9POAL/NCGR_LOCUS67308/NCGR_LOCUS67308-ai-review.yaml` | GO:0008177 IEA | `action: MODIFY`; uses core-function `contributes_to_molecular_function`; prose says "contributes to" | Confirm the *existing-annotation* review entry carries `qualifier: contributes_to`, not just the core-function block |
+| **SDHB** (human, P21912) | `genes/human/SDHB/SDHB-ai-review.yaml` | GO:0008177 IEA + 2 IMP | Prose says qualifier "should ideally be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** on any of the three GO:0008177 rows | Add structured `qualifier: contributes_to` to all three GO:0008177 entries |
+| **SDHD** (human, O14521) | `genes/human/SDHD/SDHD-ai-review.yaml` | GO:0008177 IEA (GOA qualifier `enables`) | Prose says qualifier "should be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** | Add structured `qualifier: contributes_to` to the GO:0008177 entry |
+| **NCGR_LOCUS67308** (9POAL plant SDH2 iron-sulfur ortholog) | `genes/9POAL/NCGR_LOCUS67308/NCGR_LOCUS67308-ai-review.yaml` | GO:0008177 IEA | `action: MODIFY` → GO:0009055; uses core-function `contributes_to_molecular_function`; prose says "contributes to" | Decide explicitly whether to retain MODIFY → GO:0009055 or instead keep GO:0008177 with `qualifier: contributes_to` |
 
 > `genes/human/NDUFV1` also matched the GO:0008177 grep but only in
 > *comparative prose* (NDUFV1 is a Complex I subunit) — **not** an
@@ -100,9 +100,9 @@ have propagated to GOA: `just fetch-gene human SDHB` etc.
 ### Tier 1 — concrete consistency fixes (clear, low-judgement)
 
 1. **SDHB** (human, P21912) — add structured `qualifier:
-   contributes_to` to the GO:0008177 existing-annotation entry; the
-   prose already justifies it.
-2. **SDHD** (human, Q9Y2T2) — same fix; GOA currently has `enables`,
+   contributes_to` to all three GO:0008177 existing-annotation entries
+   (one IEA plus two IMP rows); the prose already justifies it.
+2. **SDHD** (human, O14521) — same fix; GOA currently has `enables`,
    prose already argues for `contributes_to`.
 
 ### Tier 2 — verify / nuance
@@ -112,9 +112,12 @@ have propagated to GOA: `just fetch-gene human SDHB` etc.
    `contributes_to`; decide explicitly whether GO:0000104 (FAD
    half-reaction) is `enables` for the Fp subunit and document the
    reasoning.
-4. **NCGR_LOCUS67308** (9POAL SDH2) — confirm the *existing
-   annotation* review carries `qualifier: contributes_to`, not only
-   the `contributes_to_molecular_function` core-function block.
+4. **NCGR_LOCUS67308** (9POAL SDH2) — decide between two curation
+   strategies: keep the current MODIFY → GO:0009055 electron transfer
+   activity replacement, or revise the existing-annotation review to
+   retain GO:0008177 with structured `qualifier: contributes_to`. Do
+   not simply add a qualifier if the MODIFY-to-GO:0009055 strategy
+   remains the intended review outcome.
 
 ### Reference exemplar (no action)
 
