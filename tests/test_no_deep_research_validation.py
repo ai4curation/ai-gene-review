@@ -168,6 +168,69 @@ def test_no_research_files_no_warning():
         assert not warning_found, "Should NOT warn when no research files exist"
 
 
+def test_deep_research_referenced_in_core_functions_no_warning():
+    """Deep research referenced in core_functions[].supported_by should suppress warning.
+
+    Reviewers commonly ground existing_annotations in primary literature PMIDs
+    (the canonically preferred evidence source) while citing deep research synthesis
+    documents at the core_functions level. The validator should recognise that
+    usage and not flag it as "deep research unused".
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+
+        research_file = tmpdir_path / "TEST-deep-research-falcon.md"
+        research_file.write_text("# Falcon deep research for TEST")
+
+        yaml_data = {
+            "id": "Q12345",
+            "gene_symbol": "TEST",
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            "description": "Test gene",
+            "references": [
+                {"id": "PMID:12345", "title": "Test paper"},
+                {"id": "file:TEST-deep-research-falcon.md", "title": "Falcon deep research"},
+            ],
+            "existing_annotations": [
+                {
+                    "term": {"id": "GO:0005515", "label": "protein binding"},
+                    "evidence_type": "IDA",
+                    "original_reference_id": "PMID:12345",
+                    "review": {
+                        "action": "ACCEPT",
+                        "supported_by": [
+                            {"reference_id": "PMID:12345", "supporting_text": "..."}
+                        ],
+                    },
+                }
+            ],
+            "core_functions": [
+                {
+                    "description": "Test core function",
+                    "supported_by": [
+                        {
+                            "reference_id": "file:TEST-deep-research-falcon.md",
+                            "supporting_text": "Synthesized from deep research",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        yaml_file = tmpdir_path / "TEST-ai-review.yaml"
+        with open(yaml_file, "w") as f:
+            yaml.dump(yaml_data, f)
+
+        report = validate_gene_review(yaml_file, check_best_practices=True)
+
+        warning_found = any(
+            issue.check_type == "no_deep_research_results" for issue in report.issues
+        )
+        assert not warning_found, (
+            "Should NOT warn when deep research is referenced in core_functions"
+        )
+
+
 @pytest.mark.parametrize("research_filename", [
     "TEST-openai-research.md",
     "TEST-falcon-research.md",
