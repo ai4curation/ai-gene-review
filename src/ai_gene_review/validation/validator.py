@@ -372,6 +372,28 @@ def check_best_practices_rules(
                             if len(non_new_actions) <= 1:
                                 continue
 
+                    # Special case: IPI rows with distinct PMIDs are evaluated
+                    # per-reference (each IntAct row is anchored to a specific
+                    # interaction paper). Divergent actions across rows then
+                    # reflect "different papers support different conclusions"
+                    # rather than curator inconsistency. The canonical example
+                    # is GO:0042802 identical protein binding on BRAF/RB1 where
+                    # some IPI rows demonstrate self-association and others
+                    # cite papers about heterotypic interactions.
+                    all_ipi = all(ec == "IPI" for _, _, ec in actions_list)
+                    if all_ipi:
+                        references = []
+                        for idx, _, _ in actions_list:
+                            annotation = data["existing_annotations"][idx]
+                            ref_id = annotation.get("original_reference_id")
+                            if ref_id:
+                                references.append(ref_id)
+                        if (
+                            len(references) == len(actions_list)
+                            and len(set(references)) == len(references)
+                        ):
+                            continue
+
                     # Get the term label for better error messages
                     term_label = None
                     for annotation in data["existing_annotations"]:
