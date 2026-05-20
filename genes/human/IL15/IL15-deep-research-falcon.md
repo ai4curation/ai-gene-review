@@ -2,77 +2,21 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-10T21:21:28.402070'
-end_time: '2026-05-10T21:32:39.755082'
-duration_seconds: 671.35
-template_file: templates/gene_research_go_focused.md
-template_variables:
-  organism: human
-  gene_id: IL15
-  gene_symbol: IL15
-  uniprot_accession: P40933
-  protein_description: 'RecName: Full=Interleukin-15; Short=IL-15; Flags: Precursor;'
-  gene_info: Name=IL15;
-  organism_full: Homo sapiens (Human).
-  protein_family: Belongs to the IL-15/IL-21 family. .
-  protein_domains: 4_helix_cytokine-like_core. (IPR009079); IL-15. (IPR020439); IL-15/IL-21_fam.
-    (IPR003443); IL-15_mml. (IPR020466); IL15 (PF02372)
+start_time: '2026-05-12T14:44:04.742386'
+end_time: '2026-05-12T14:59:10.727578'
+duration_seconds: 905.99
 provider_config:
   timeout: 600
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 26
+citation_count: 45
 ---
 
 ## Question
 
-# Gene Research for Functional Annotation
-
-## ⚠️ CRITICAL: Gene/Protein Identification Context
-
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
-
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** P40933
-- **Protein Description:** RecName: Full=Interleukin-15; Short=IL-15; Flags: Precursor;
-- **Gene Information:** Name=IL15;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the IL-15/IL-21 family. .
-- **Key Domains:** 4_helix_cytokine-like_core. (IPR009079); IL-15. (IPR020439); IL-15/IL-21_fam. (IPR003443); IL-15_mml. (IPR020466); IL15 (PF02372)
-
-### MANDATORY VERIFICATION STEPS:
-
-1. **Check if the gene symbol "IL15" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
-
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
-
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'IL15' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
-
-### Research Target:
-
-Please provide a comprehensive research report on the gene **IL15** (gene ID: IL15, UniProt: P40933) in human.
-
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
-
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
-
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
-
-We are interested in where in or outside the cell the gene product carries out its function.
-
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
-
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+Concise GO annotation research for human IL15 / UniProt P40933. Focus only on GO-relevant evidence: IL15 cytokine activity; high-affinity binding to IL15RA and signaling through IL2RB/IL2RG; IL15 trans-presentation by IL15RA versus soluble/secreted cytokine activity; NK cell, CD8 T cell, T cell, B cell and neutrophil proliferation/activation/survival; positive regulation of cytokine production and immune response; JAK1/JAK3, STAT3/STAT5 signaling; isoform-specific localization of secreted IL15-S48AA versus intracellular IL15-S21AA cytoplasm/nucleus; caveats for generic protein binding, broad cell population proliferation, and over-broad immune/developmental process annotations. Include PMID/DOI citations and keep under 1500 words.
 
 ## Output
 
@@ -88,244 +32,211 @@ Provide detailed information focusing on:
 Format as a comprehensive research report with proper citations. Include URLs and publication dates where available.
 Always prioritize recent, authoritative sources and provide specific citations for all major claims.
 
-# Gene Research for Functional Annotation
+Concise GO annotation research for human IL15 / UniProt P40933. Focus only on GO-relevant evidence: IL15 cytokine activity; high-affinity binding to IL15RA and signaling through IL2RB/IL2RG; IL15 trans-presentation by IL15RA versus soluble/secreted cytokine activity; NK cell, CD8 T cell, T cell, B cell and neutrophil proliferation/activation/survival; positive regulation of cytokine production and immune response; JAK1/JAK3, STAT3/STAT5 signaling; isoform-specific localization of secreted IL15-S48AA versus intracellular IL15-S21AA cytoplasm/nucleus; caveats for generic protein binding, broad cell population proliferation, and over-broad immune/developmental process annotations. Include PMID/DOI citations and keep under 1500 words.
 
-## ⚠️ CRITICAL: Gene/Protein Identification Context
+## Concise GO annotation research report: Human IL15 (UniProt P40933)
 
-**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
+### Scope and approach
+This report summarizes **GO-relevant** mechanistic evidence for human IL-15 (IL15; UniProt **P40933**) focusing on (i) cytokine activity, (ii) **high-affinity IL15RA binding** and signaling via **IL2RB/IL2RG**, (iii) **IL-15 trans-presentation** versus soluble IL-15/IL-15Rα activity, (iv) downstream **JAK1/JAK3 → STAT3/STAT5** signaling, (v) leukocyte functional outcomes (NK, CD8 T, T, B, neutrophils), and (vi) **isoform-specific localization** determined by alternative signal peptides (48-aa vs 21-aa). Evidence is prioritized for 2023–2024 where possible; however, key GO assertions rely on foundational mechanistic studies.
 
-### Target Gene/Protein Identity (from UniProt):
-- **UniProt Accession:** P40933
-- **Protein Description:** RecName: Full=Interleukin-15; Short=IL-15; Flags: Precursor;
-- **Gene Information:** Name=IL15;
-- **Organism (full):** Homo sapiens (Human).
-- **Protein Family:** Belongs to the IL-15/IL-21 family. .
-- **Key Domains:** 4_helix_cytokine-like_core. (IPR009079); IL-15. (IPR020439); IL-15/IL-21_fam. (IPR003443); IL-15_mml. (IPR020466); IL15 (PF02372)
+### 1) Key concepts and definitions (current understanding)
 
-### MANDATORY VERIFICATION STEPS:
+#### IL-15 as a cytokine and receptor system
+IL-15 is a common γ-chain (γc) cytokine that signals through a **heterotrimeric receptor system**: a private **IL-15Rα (IL15RA/CD215)** chain and shared signaling chains **IL-2Rβ (IL2RB/CD122)** and **γc (IL2RG/CD132)**. (skariah2024signallingmechanismsdriving pages 2-3)
 
-1. **Check if the gene symbol "IL15" matches the protein description above**
-2. **Verify the organism is correct:** Homo sapiens (Human).
-3. **Check if protein family/domains align with what you find in literature**
-4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
+A central concept for GO curation is that IL-15 is not best modeled as a freely diffusing cytokine under physiologic conditions. Instead, IL-15 is commonly delivered by **trans-presentation**: an “IL-15-presenting” cell displays a **membrane IL-15/IL-15Rα complex** that stimulates neighboring lymphocytes through **IL2RB/IL2RG**. (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 3-3)
 
-### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
+#### Trans-presentation vs soluble cytokine activity
+Recent synthesis emphasizes that **soluble IL-15 is rarely detected as ‘free’ IL-15** in serum; rather, it is found **complexed with soluble IL-15Rα** (heterodimeric IL-15/IL-15Rα), which can also stimulate IL2RB/IL2RG on lymphocytes. (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 10-11)
 
-**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
-- State clearly: "The gene symbol 'IL15' is ambiguous or literature is limited for this specific protein"
-- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
-- Describe the protein based ONLY on the UniProt information provided above
-- Suggest that the protein function can be inferred from domain/family information
+### 2) Recent developments and latest research (prioritize 2023–2024)
 
-### Research Target:
+A 2024 mechanistic review integrates current understanding that IL-15 is controlled at multiple levels (mRNA translation, trafficking, receptor chaperoning), and that **IL-15Rα serves as both a high-affinity binding partner and a chaperone** that stabilizes IL-15 and supports surface display and trans-presentation. (Skariah et al., 2024-01, *Discovery Immunology*, DOI: **10.1093/discim/kyae002**, URL: https://doi.org/10.1093/discim/kyae002) (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 2-3)
 
-Please provide a comprehensive research report on the gene **IL15** (gene ID: IL15, UniProt: P40933) in human.
+This review also highlights downstream signaling branches relevant to GO BP terms (JAK/STAT; PI3K/AKT/mTOR; MAPK) and connects IL-15 to tissue lymphocyte homeostasis and inflammation. (skariah2024signallingmechanismsdriving pages 7-8, skariah2024signallingmechanismsdriving pages 8-8)
 
-The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
+### 3) Molecular function evidence (GO: Molecular Function)
 
-You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
-this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
+#### High-affinity binding to IL15RA and recruitment of IL2RB/IL2RG
+A definitive biochemical mapping study identified IL-15 residues required for **IL-15Rα binding** and implicated additional residues in **IL-2Rβ recruitment** (thus supporting specific receptor-binding MF annotations rather than generic “protein binding”). (Bernard et al., 2004-06, *J Biol Chem*, DOI: **10.1074/jbc.M312458200**, URL: https://doi.org/10.1074/jbc.M312458200) (bernard2004identificationofan pages 1-2, bernard2004identificationofan pages 8-9)
 
-We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
+Quantitatively, this study reports tight IL-15:IL-15Rα binding (Kd ≈ **0.05 nM**) and provides mutational effects on affinity and bioactivity (e.g., V49D ~13-fold affinity drop with near WT bioactivity; certain mutations preserve IL-15Rα binding but abrogate activity, consistent with disrupted signaling-chain recruitment). (bernard2004identificationofan pages 1-2, bernard2004identificationofan pages 8-9)
 
-We are interested in where in or outside the cell the gene product carries out its function.
+Independent receptor framework evidence (including transfection responsiveness requiring IL-2Rβ and γc) is summarized in a highly cited receptor review. (Waldmann et al., 1998-01, *Int Rev Immunol*, DOI: **10.3109/08830189809042995**, URL: https://doi.org/10.3109/08830189809042995) (waldmann1998interleukin2interleukin15and pages 8-11)
 
-We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+### 4) Signaling evidence (GO: Biological Process—cytokine-mediated signaling; JAK-STAT)
 
-Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+#### JAK1/JAK3 and STAT3/STAT5 activation
+Quantitative phosphoproteomics in T-cell lines showed **IL-15 induces tyrosine-phosphorylation/activation of JAK1 and JAK3** and downstream **STAT5** phosphorylation. JAK1 and JAK3 were highly enriched in phosphotyrosine immunocomplexes (reported ratios ~**13** and **20**, respectively), and JAK3 phosphopeptides including **Y980/Y981** were strongly enriched (up to ratio **75**). STAT5 phosphorylation (e.g., STAT5 Y694/Y699 depending on isoform/assay) was validated. (Osinalde et al., 2015-01, *PROTEOMICS*, DOI: **10.1002/pmic.201400194**, URL: https://doi.org/10.1002/pmic.201400194) (osinalde2015simultaneousdissectionand pages 6-7, osinalde2015simultaneousdissectionand pages 7-8)
 
-## Research report: Human **IL15 / Interleukin-15 (IL-15)** (UniProt P40933)
+In immune contexts, IL-15-driven expansion and effector programs are frequently described as JAK/STAT-dependent, and JAK1→STAT3 and JAK3/STAT5 dependencies are emphasized in disease-relevant models (e.g., IL-15-induced STAT3 phosphorylation increased with activating JAK1 mutations and abolished by JAK1 inhibition; JAK3/STAT5 inhibition abolishes NK proliferation). (skariah2024signallingmechanismsdriving pages 7-8)
 
-### 0. Target verification (mandatory identity check)
-The retrieved literature consistently describes **interleukin-15 (IL-15)** as a **common γ-chain family cytokine** that binds **IL-15Rα (CD215)** and signals via **IL-2/IL-15Rβ (CD122)** together with **γc (CD132)**—matching the intended target **human IL15 / UniProt P40933** and aligning with its classification as a 4-helix bundle cytokine family member. No evidence in the retrieved set indicates a different human protein using the symbol **IL15**. (skariah2024signallingmechanismsdriving pages 2-3, lee2024il15intcell pages 1-2)
+### 5) Presentation mode and IL-15Rα chaperoning (GO-relevant for trans-presentation and soluble complex activity)
 
-### 1. Key concepts, definitions, and current understanding (functional annotation–ready)
+#### IL-15Rα as chaperone and soluble heterodimer
+In vivo evidence demonstrates that IL-15Rα can **chaperone IL-15** to yield secreted bioactive **IL-15/IL-15Rα heterodimers**, particularly enabling secretion/activity of the SSP isoform when co-expressed with IL-15Rα. (Bergamaschi et al., 2009-09, *J Immunol*, DOI: **10.4049/jimmunol.0900693**, URL: https://doi.org/10.4049/jimmunol.0900693) (bergamaschi2009secretionandbiological pages 1-2, bergamaschi2009secretionandbiological pages 8-9)
 
-#### 1.1 What IL-15 is (molecular function)
-IL-15 is an **immunoregulatory cytokine** whose primary molecular function is to **engage IL-15 receptor subunits** to control lymphocyte survival and effector programs, particularly in **NK cells and CD8+ T cells**. IL-15 binds its **private high-affinity IL-15Rα chain (CD215)** and signals through the shared **IL-2Rβ/γc** signal-transducing heterodimer. (skariah2024signallingmechanismsdriving pages 2-3, lee2024il15intcell pages 1-2)
+A conceptual and mechanistic review additionally supports that soluble IL-15Rα can extend IL-15 half-life and modulate activity, and provides approximate sizes for soluble receptor species (human ~42 kDa). (Bulfone-Paus et al., 2006-04, *BioEssays*, DOI: **10.1002/bies.20380**, URL: https://doi.org/10.1002/bies.20380) (bulfone‐paus2006theinterleukin‐15interleukin‐15receptor pages 6-8)
 
-#### 1.2 Dominant mechanism: IL-15Rα-dependent “trans-presentation”
-A defining concept for IL-15 biology (and a key difference from many soluble cytokines) is that IL-15 is commonly delivered as a **cell-associated IL-15:IL-15Rα complex** on a “presenting” cell, which is then recognized by **IL-2Rβ/γc** on a neighboring responding lymphocyte—i.e., **trans-presentation**. This is presented as the **predominant and most potent physiologic mode** of IL-15 signaling. (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2)
+### 6) Isoform-specific localization (GO: Cellular Component)
 
-#### 1.3 Cis-presentation and soluble complexes
-In addition to trans-presentation, IL-15 can signal through **cis-presentation** (within the same cell context) and through **soluble IL-15:IL-15Rα complexes**, as IL-15 is often detected in serum in an **IL-15Rα-complexed form** after shedding/release. (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2)
+Two human IL-15 precursor isoforms are generated by alternate signal peptides, with identical mature cytokine sequences.
 
-### 2. Cellular sources, regulation, and localization (where IL-15 acts)
+* **48-aa long signal peptide (LSP) isoform**: ER localization and secretion competence. In COS cells, LSP-GFP showed ER staining in the majority of fluorescent cells (~**85%**) and LSP-IL-15 was described as largely secreted (though translation/trafficking can be limiting). (Tagaya et al., 1997-12, *PNAS*, DOI: **10.1073/pnas.94.26.14444**, URL: https://doi.org/10.1073/pnas.94.26.14444) (tagaya1997generationofsecretable pages 4-5)
 
-#### 2.1 Expression: broad mRNA, more restricted protein
-A recurring theme is **post-transcriptional control**: IL15 mRNA is widely detected across tissues, but IL-15 protein production is emphasized as more concentrated in particular cell types including **macrophages, dendritic cells, epithelial cells, monocytes, and activated fibroblasts**. (skariah2024signallingmechanismsdriving pages 3-4, lee2024il15intcell pages 1-2)
+* **21-aa short signal peptide (SSP) isoform**: not secreted in COS-cell experiments and instead localizes to **cytoplasm and nucleus**, supporting isoform-specific intracellular/nuclear CC annotations. (Tagaya et al., 1997) (tagaya1997generationofsecretable pages 1-2)
 
-#### 2.2 Inducers of IL-15/IL-15Rα in inflammation
-Inflammatory and innate immune signals upregulate IL-15 and/or IL-15Rα, including **TLR ligands**, **type I interferons (IFNα/β)**, **IFNγ**, **LPS**, and **poly(I:C)**; an interferon-linked transcriptional regulator (**IRF1**) is implicated in IFN-driven IL-15 induction. (skariah2024signallingmechanismsdriving pages 3-4, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2)
+Follow-up trafficking work showed LSP-IL-15 has multiple fates (ER entry with glycosylation and secretion vs cytosolic unglycosylated proteasome-targeted species), while SSP-IL-15 does not enter ER and can enter the nucleus. (Kurys et al., 2000-09, *J Biol Chem*, DOI: **10.1074/jbc.M002373200**, URL: https://doi.org/10.1074/jbc.M002373200) (kurys2000thelongsignal pages 4-5, kurys2000thelongsignal pages 1-1)
 
-#### 2.3 Translational and isoform-level regulation
-IL-15 expression is described as tightly controlled at multiple layers. Mechanistically, translation can be limited by **multiple AUGs in the 5′ UTR** and a **negative cis-regulatory element in the C-terminus**. Alternative splicing yields isoforms that differ by signal peptide length (**short vs long signal peptide isoforms**), which can differ in stability/trafficking and thus functional bioavailability. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 3-4, skariah2024signallingmechanismsdriving pages 3-3)
+### 7) Functional outcomes relevant to GO Biological Process annotations
 
-#### 2.4 Subcellular localization and trafficking
-Mechanistic reviews emphasize that IL-15 is not simply secreted as a free soluble factor. Instead, IL-15 **binds IL-15Rα intracellularly (ER/Golgi)**, forming a stable complex that traffics through the Golgi and is displayed on the **cell surface** as a membrane-associated IL-15:IL-15Rα complex for trans-presentation. Soluble IL-15:IL-15Rα complexes can also be generated extracellularly via shedding/release. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2)
+#### NK cells and CD8 T cells (proliferation/activation/survival)
+IL-15 supports homeostatic and inflammatory programs in tissue lymphocytes, promoting proliferation and effector differentiation (e.g., NK metabolic activation via mTORC1 to support cytotoxic effector functions). (skariah2024signallingmechanismsdriving pages 8-8, skariah2024signallingmechanismsdriving pages 7-8)
 
-### 3. Receptor signaling and pathways (mechanistic pathway placement)
+The 2024 synthesis emphasizes IL-15-dependent maintenance of specific lymphocyte populations and effector molecules, supporting BP annotations such as **positive regulation of NK cell proliferation/activation** and **positive regulation of CD8 T cell homeostasis/trafficking**. (skariah2024signallingmechanismsdriving pages 8-8, skariah2024signallingmechanismsdriving pages 10-11)
 
-#### 3.1 Core receptor architecture and initiating kinases
-Upon engagement of IL-2Rβ/γc by IL-15 delivered via IL-15Rα (especially in trans), canonical γc-family signaling is activated. Specifically, IL-15 receptor engagement activates **JAK1 and JAK3** and establishes phosphotyrosine docking sites that propagate signaling. (skariah2024signallingmechanismsdriving pages 3-4, skariah2024signallingmechanismsdriving pages 4-5)
+#### B cells (proliferation, differentiation, immunoglobulin production)
+Primary data show IL-15 **costimulates activated human B cell proliferation** (but not resting B cells) and, in combination with **CD40L**, induces **polyclonal Ig secretion** (IgM, IgG1, IgA). Blocking studies demonstrate IL-15 signaling in B cells requires **IL-2Rβ (IL2RB)** but not IL-2Rα, supporting a receptor-signaling GO link that is specific and experimentally tested. (Armitage et al., 1995-01, *J Immunol*, DOI: **10.4049/jimmunol.154.2.483**, URL: https://doi.org/10.4049/jimmunol.154.2.483) (armitage1995il15hasstimulatory pages 1-2, armitage1995il15hasstimulatory pages 4-5)
 
-#### 3.2 Three principal downstream cascades
-A 2024 mechanistic review explicitly describes three principal IL-15-triggered cascades:
+FDC-derived IL-15 presented in **membrane-bound form** enhances **germinal center B cell proliferation**, consistent with a trans-presentation-like delivery mode in B cell zones. (Park et al., 2004-12, *J Immunol*, DOI: **10.4049/jimmunol.173.11.6676**, URL: https://doi.org/10.4049/jimmunol.173.11.6676) (park2004folliculardendriticcells pages 1-2)
 
-1) **JAK/STAT**: phosphorylation of **STAT3/STAT5**, dimerization, nuclear translocation, and target gene transcription supporting survival and proliferation programs. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9)
+#### Neutrophils (activation, phagocytosis, adhesion, chemotaxis, survival)
+A focused neutrophil review summarizes direct IL-15 effects including cytoskeletal rearrangements, enhanced phagocytosis, IL-8 production (via NF-κB/AP-1 activation), and delayed apoptosis, supporting specific neutrophil-focused BP terms. (Cassatella & McDonald, 2000-05, *Curr Opin Hematol*, DOI: **10.1097/00062752-200005000-00008**, URL: https://doi.org/10.1097/00062752-200005000-00008) (cassatella2000interleukin15andits pages 1-2, cassatella2000interleukin15andits pages 3-4)
 
-2) **PI3K→AKT→mTOR**: PI3K-driven generation of PIP3, activation of PDK1 and AKT, and activation of mTOR-related metabolic programs. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9)
+IL-15 increases neutrophil adhesion onto respiratory epithelial cells and attracts neutrophils in vivo, and is associated with increased CXCL2/MIP-2 and IL-6 production, supporting neutrophil chemotaxis/recruitment and adhesion processes. (Pelletier & Girard, 2005-08, *Clin Exp Immunol*, DOI: **10.1111/j.1365-2249.2005.02861.x**, URL: https://doi.org/10.1111/j.1365-2249.2005.02861.x) (pelletier2005interleukin‐15increasesneutrophil pages 9-11)
 
-3) **MAPK**: engagement of adaptor routes (e.g., SHC1/GRB2/SOS and related pathways) culminating in MAPK outputs (including ERK-related signaling). (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9)
+### 8) Curation caveats (avoid over-broad GO annotations)
 
-#### 3.3 Signal kinetics differ by presentation mode
-The mode of IL-15 delivery affects signaling kinetics: **cis-presentation** can drive **faster and more transient** signaling, whereas **trans-presentation** can yield **slower and more persistent** signaling, with functional consequences for homeostatic versus inflammatory outputs. (skariah2024signallingmechanismsdriving pages 8-9)
+* Avoid generic **“protein binding”** when IL15RA binding is experimentally supported with affinity/mutational mapping (use specific receptor-binding terms). (bernard2004identificationofan pages 1-2)
+* Avoid over-broad **“cell population proliferation”** unless the cell type is explicitly assayed; IL-15 effects are lineage- and context-dependent (e.g., strong evidence in NK/CD8 T, activated B cells, neutrophils), and often depend on **trans-presentation**. (skariah2024signallingmechanismsdriving pages 2-3, armitage1995il15hasstimulatory pages 1-2)
+* Avoid overly broad immune/developmental process terms not directly supported in the experimental system (e.g., do not infer organism-wide developmental roles from in vitro proliferation or from tumor cell contexts). (bulfone‐paus2006theinterleukin‐15interleukin‐15receptor pages 6-8)
+* For cellular component, consider **isoform-specific** annotations: SSP (21 aa) cytoplasm/nucleus vs LSP (48 aa) ER/Golgi/secreted—do not collapse into a single “secreted cytokine” localization if annotating isoforms. (tagaya1997generationofsecretable pages 1-2, kurys2000thelongsignal pages 4-5)
 
-#### 3.4 Negative regulators and feedback control
-Negative regulators that tune IL-15 signaling include **SOCS family members**, **CIS**, **SHP1**, and lipid phosphatases (**SHIP1/2**), as well as PI3K/AKT-pathway constraints by **TIPE2** and **Otub1**, reflecting the need to restrict chronic IL-15-driven inflammation. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9)
-
-### 4. Biological roles and processes (primary functions and consequences)
-
-#### 4.1 Immune homeostasis versus inflammation
-IL-15 is described as having a homeostatic role at low levels (maintenance of select lymphocyte populations) but can drive inflammation when chronically upregulated. This dichotomy underpins both its physiologic importance and its role in inflammatory/autoimmune immunopathology. (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 8-9)
-
-#### 4.2 Primary target cell programs
-IL-15 is central to **NK cell** and **memory CD8+ T-cell** homeostasis and supports effector functions of tissue lymphocytes. It promotes outputs including **pro-inflammatory cytokine production**, **granzyme expression**, and **degranulation/cytotoxicity**, and influences migratory behaviors such as **chemokinesis**. (skariah2024signallingmechanismsdriving pages 8-9, lee2024il15intcell pages 1-2)
-
-#### 4.3 Tissue residency and trafficking programs
-IL-15 contributes to tissue residency and retention programs by inducing genes and surface programs linked to trafficking/retention, including induction of **CD69** (to antagonize S1PR1-mediated egress) and promoting tissue infiltration/residency phenotypes in IL-15-dependent lymphocytes. (skariah2024signallingmechanismsdriving pages 8-8)
-
-#### 4.4 Metabolic programming (functional specialization)
-IL-15-driven signaling is linked to metabolic rewiring that supports lymphocyte effector fitness, including **mTOR-associated pathways**, mitochondrial and oxidative programs, and metabolic capacity associated with cytotoxic function and degranulation. (skariah2024signallingmechanismsdriving pages 8-8)
-
-### 5. Recent developments and latest research (prioritizing 2023–2024)
-
-#### 5.1 2024 mechanistic synthesis: regulation, trafficking, and signaling detail
-A 2024 Discovery Immunology review provides a consolidated mechanistic view spanning **multi-layer regulation** (transcriptional, translational, isoform-level), **ER/Golgi complexing with IL-15Rα**, and downstream signaling through **JAK/STAT, PI3K/AKT/mTOR, and MAPK**, including negative feedback regulators that shape homeostatic versus inflammatory outcomes. Publication: **Jan 2024**; URL: https://doi.org/10.1093/discim/kyae002. (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 3-4)
-
-#### 5.2 2024 T-cell focused perspective: IL-15 as a driver of TCR-independent activation and immunopathogenesis
-A 2024 Immune Network review emphasizes IL-15 as a homeostatic cytokine for NK and memory CD8+ T cells and highlights its role as a major trigger of **TCR-independent activation** of T cells in diverse disease contexts, while reiterating the dominance of **trans-presentation** and ER/Golgi preassembly. Publication: **Feb 2024**; URL: https://doi.org/10.4110/in.2024.24.e11. (lee2024il15intcell pages 1-2)
-
-### 6. Current applications and real-world implementations
-
-#### 6.1 FDA-approved IL-15-based immunotherapy (major real-world implementation)
-**Nogapendekin alfa inbakicept-pmln (N-803; Anktiva)** is an **IL-15 receptor agonist** that is a soluble complex of **IL-15N72D** variant bound to a **dimeric IL-15Rα sushi-domain fused to human IgG1 Fc** (one inbakicept plus two nogapendekin alfa units per complex). (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5)
-
-**Regulatory status and indication (USA):** The U.S. FDA granted **regular approval on 2024-04-22** for **Anktiva with BCG** for adults with **BCG-unresponsive NMIBC with carcinoma in situ (with or without papillary tumors)**. Publication describing the approval: **Aug 2025**; URL: https://doi.org/10.1158/1078-0432.ccr-25-1231. (heiss2025fdaapprovalsummary pages 1-3)
-
-**Efficacy statistics (QUILT-3.032 Cohort A):** In the FDA efficacy population (n=77), **complete response (CR) rate was 62% (48/77; 95% CI 51–73%)**. Among responders, **58%** maintained response for **≥12 months** and **40%** maintained response for **≥24 months**. (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5)
-
-**Safety signals (intravesical):** Common adverse reactions included urinary symptoms/infection and increased creatinine; serious adverse events occurred in a minority, with intravesical systemic exposure reported as below quantitation in the FDA summary. (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5, heiss2025fdaapprovalsummary pages 5-6)
-
-#### 6.2 Comparative real-world context: FDA-approved NMIBC biologics through July 2024
-A 2024 Pharmaceutics review tabulates FDA-approved therapies for high-risk BCG-unresponsive NMIBC. In that summary table, Anktiva (approved 2024) is shown with **CR any time 62% (48/77)** and **DOR ≥12 months 58% (28/48)**; pembrolizumab (Keytruda) and nadofaragene firadenovec (Adstiladrin) are included as comparators. Publication: **Aug 2024**; URL: https://doi.org/10.3390/pharmaceutics16091154. (qu2024recentadvancesin pages 10-12)
-
-A cropped image of the table supporting these values is provided here. (qu2024recentadvancesin media 11aabbc8)
-
-#### 6.3 Other clinical development examples (ClinicalTrials.gov)
-**ALT-803/N-803 in advanced solid tumors:** ClinicalTrials.gov record NCT01946789 describes a Phase 1 dose-escalation study in advanced incurable solid tumors (e.g., melanoma, RCC, NSCLC, HNSCC), with **enrollment 26**, evaluating safety, immunogenicity, immunomodulatory effects, and clinical benefit with weekly dosing (multiple routes/cohorts). Record year shown: 2014; URL: https://clinicaltrials.gov/study/NCT01946789. (NCT01946789 chunk 1, NCT01946789 chunk 2)
-
-**rhIL-15 in combination immunotherapy for T-cell malignancies:** ClinicalTrials.gov record NCT04185220 describes a Phase 1 study of **recombinant human IL-15 (rhIL-15)** with **mogamulizumab** in relapsed/refractory mycosis fungoides/Sezary syndrome or adult T-cell leukemia/lymphoma, using dose escalation to determine MTD; **enrollment 6 (actual)**. Record year shown: 2020; URL: https://clinicaltrials.gov/study/NCT04185220. (NCT04185220 chunk 1, NCT04185220 chunk 2)
-
-### 7. Expert synthesis/analysis (authoritative interpretation grounded in the cited sources)
-
-1) **Cell-associated delivery is central to IL-15 function.** The repeated emphasis on ER/Golgi preassembly with IL-15Rα, stabilization/trafficking, and membrane-bound trans-presentation suggests that IL-15’s “site of action” is best conceptualized as an **intercellular signaling synapse** (presenting cell surface → responding lymphocyte receptor), rather than a purely diffusible extracellular cytokine. (skariah2024signallingmechanismsdriving pages 4-5, lee2024il15intcell pages 1-2)
-
-2) **Presentation mode tunes biology (homeostasis vs pathology).** The observation that cis-presentation can yield faster/transient signaling while trans-presentation can yield slower/persistent signaling provides a mechanistic basis for the field’s broad framing of IL-15 as beneficial at low levels but pathogenic when prolonged/upregulated. (skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 2-3)
-
-3) **Therapeutic engineering mirrors physiologic IL-15 biology.** The approved IL-15 agonist N-803 is explicitly designed as an IL-15 variant complexed to an IL-15Rα sushi-domain Fc fusion, consistent with leveraging IL-15Rα association to enhance stability and functional activity—translating the natural trans-presentation paradigm into drug design. (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5)
-
-### 8. Key quantitative data points (recent)
-- FDA approval date for N-803/Anktiva + BCG (BCG-unresponsive NMIBC CIS): **2024-04-22**. (heiss2025fdaapprovalsummary pages 1-3)
-- QUILT-3.032 Cohort A FDA-evaluable efficacy population: **CR 62% (48/77; 95% CI 51–73)**; durability among responders **≥12 months 58%** and **≥24 months 40%**. (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5)
-- 2024 comparative NMIBC table (through July 2024): Anktiva **CR any time 62% (48/77)**; **DOR ≥12 months 58% (28/48)**. (qu2024recentadvancesin pages 10-12, qu2024recentadvancesin media 11aabbc8)
-
-### 9. Evidence table (functional annotation summary)
-The following table compiles functional-annotation–ready facts with supporting citations.
-
-| Category | Key points | Best supporting citations |
-|---|---|---|
-| Identity/structure | Human **IL15** encodes **interleukin-15 (IL-15)**, a common γ-chain cytokine that binds high-affinity **IL-15Rα (CD215)** and signals through **IL-2/IL-15Rβ (CD122)** plus **γc (CD132)** on responding lymphocytes; retrieved evidence matches UniProt P40933 biology. | (skariah2024signallingmechanismsdriving pages 2-3, lee2024il15intcell pages 1-2) |
-| Expression sources | **IL15 mRNA** is broadly detected across tissues, but **protein production is more restricted**, especially to **macrophages, dendritic cells, epithelial cells, monocytes, and activated fibroblasts**; inflammatory stimuli including **TLR ligands, type I IFNs, IFNγ, LPS, and poly(I:C)** upregulate IL-15/IL-15Rα. | (skariah2024signallingmechanismsdriving pages 3-4, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2) |
-| Localization/trafficking | IL-15 is **preassembled intracellularly with IL-15Rα in the ER/Golgi**, which stabilizes the cytokine, prevents degradation, and supports trafficking to the **cell surface** as a membrane-associated **IL-15:IL-15Rα complex**; soluble IL-15 or soluble IL-15:IL-15Rα can also exist extracellularly after shedding/release. | (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2) |
-| Receptor engagement modes | The dominant signaling mode is **trans-presentation**: membrane-bound **IL-15:IL-15Rα** on a presenting cell stimulates neighboring cells expressing **IL-2Rβ/γc**. **Cis-presentation** and signaling by **soluble IL-15:IL-15Rα complexes** also occur; trans-presentation is generally considered the most potent/physiologic mode. | (skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 3-3, lee2024il15intcell pages 1-2) |
-| Regulation of biosynthesis | IL-15 is tightly regulated at **transcriptional, translational, trafficking, and presentation** levels. Translation is limited by **multiple upstream AUGs in the 5′ UTR** and a **C-terminal inhibitory cis element**; alternative splicing produces **long- and short-signal-peptide isoforms** with different stability/trafficking properties. | (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 3-4, skariah2024signallingmechanismsdriving pages 3-3) |
-| Core signaling pathways | Engagement of IL-2Rβ/γc by IL-15 activates **JAK1/JAK3** and downstream **STAT3/STAT5**, plus **PI3K→AKT→mTOR** and **MAPK/ERK** pathways. These cascades support transcriptional programs for survival, proliferation, metabolism, differentiation, and cytotoxicity. | (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 3-4) |
-| Functional outcomes | IL-15 is essential for **NK-cell** and **memory CD8+ T-cell** homeostasis and promotes effector functions of tissue lymphocytes, including **granzyme expression, degranulation, cytokine production, chemokinesis, tissue infiltration/residency, metabolic rewiring, mitochondrial fitness, and fatty-acid oxidation programs**. | (skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 8-8, lee2024il15intcell pages 1-2) |
-| Negative regulation | IL-15 signaling is dampened by **SOCS family proteins**, **CIS**, **SHP1**, **SHIP1/2**, **TIPE2**, and **Otub1**, which restrain JAK/STAT or PI3K/AKT/mTOR signal intensity and duration. | (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9) |
-| Application: N-803/Anktiva | **Nogapendekin alfa inbakicept-pmln (N-803, Anktiva)** is an **IL-15 receptor agonist** comprising **IL-15N72D** complexed with a **dimeric IL-15Rα sushi-domain–IgG1 Fc fusion**. The **U.S. FDA approved it on 2024-04-22** with BCG for **BCG-unresponsive NMIBC with CIS ± papillary tumors**. In the pivotal efficacy population, **CR rate was 62% (48/77; 95% CI 51–73)**; among responders, **58%** maintained response for **≥12 months** and **40%** for **≥24 months**. | (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5, qu2024recentadvancesin pages 10-12, qu2024recentadvancesin media 11aabbc8) |
+### Evidence-to-GO mapping table
+| GO aspect | Suggested GO term name | Evidence summary (1 sentence) | Key experimental system | Key citation details |
+|---|---|---|---|---|
+| MF | cytokine activity | IL-15 is a γc-family cytokine that exerts pleiotropic immune-enhancing activity on lymphocytes and other leukocytes, supporting a specific cytokine-function annotation rather than generic binding alone. | Human cells; review integrating primary studies | Skariah et al. 2024, *Discovery Immunology*, doi:10.1093/discim/kyae002; Fehniger & Caligiuri 2001, *Blood*, doi:10.1182/blood.v97.1.14 (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 4-5) |
+| MF | interleukin-15 receptor alpha chain binding | Human IL-15 binds IL15RA with very high affinity and mutational mapping identified key IL-15 residues in helices B/C required for IL15RA engagement. | In vitro biochem; peptide scanning; mutagenesis | Bernard et al. 2004, *J Biol Chem*, doi:10.1074/jbc.M312458200; IL-15:IL15RA Kd ≈ 0.05 nM; alternative affinity notation Ka ~10^11 M^-1 in reviews (bernard2004identificationofan pages 1-2, djaafar2008effectsofil15 pages 21-25) |
+| MF | cytokine receptor binding involved in IL2RB/IL2RG signaling | After IL15RA engagement, IL-15 recruits the signaling receptor chains IL2RB/IL2RG, with peptide-2 residues contributing to IL-2Rβ/γ recruitment and signaling-competent complex assembly. | In vitro biochem; receptor mapping; transfection | Bernard et al. 2004, *J Biol Chem*, doi:10.1074/jbc.M312458200; Waldmann et al. 1998, *Int Rev Immunol*, doi:10.3109/08830189809042995 (bernard2004identificationofan pages 1-2, waldmann1998interleukin2interleukin15and pages 8-11) |
+| BP | cytokine-mediated signaling pathway via trans-presentation | Physiologic IL-15 delivery is dominated by IL15RA-dependent trans-presentation, where membrane IL-15/IL15RA on one cell stimulates IL2RB/IL2RG on adjacent lymphocytes. | Human/mouse immune cells; review with primary support | Skariah et al. 2024, *Discovery Immunology*, doi:10.1093/discim/kyae002; Cloutier et al. 2024, *Front Immunol*, doi:10.3389/fimmu.2024.1404891 (skariah2024signallingmechanismsdriving pages 2-3, skariah2024signallingmechanismsdriving pages 3-3) |
+| MF/BP | soluble IL-15/IL-15Rα complex activity | Circulating soluble IL-15 is typically found as IL-15/IL15RA heterodimer, and soluble IL15RA can chaperone/stabilize IL-15 and enhance or modulate activity through IL2RB/IL2RG-bearing cells. | Human/mouse serum; in vivo plasmid expression; review | Bergamaschi et al. 2009, *J Immunol*, doi:10.4049/jimmunol.0900693; Bulfone-Paus et al. 2006, *BioEssays*, doi:10.1002/bies.20380; soluble IL15RA species ~30 kDa mouse/~42 kDa human (bergamaschi2009secretionandbiological pages 1-2, bulfone‐paus2006theinterleukin‐15interleukin‐15receptor pages 6-8) |
+| BP | JAK-STAT cascade downstream of IL-15 receptor | IL-15 receptor signaling activates JAK1/JAK3 and predominantly STAT5, with STAT3 also activated in some T-cell/IEL contexts downstream of IL2RB/IL2RG. | Human T cells; T-cell lines; phosphoproteomics; NK review | Osinalde et al. 2015, *PROTEOMICS*, doi:10.1002/pmic.201400194; JAK1/JAK3 phospho-enrichment ratios ~13/~20 and JAK3 Y980/Y981 ratios up to 75; Marzec et al. 2008, *Cancer Res*, doi:10.1158/0008-5472.CAN-07-2403; Nielsen et al. 1998, *Cytokine*, doi:10.1006/cyto.1998.0356 (osinalde2015simultaneousdissectionand pages 6-7, marzec2008differentialeffectsof pages 4-5) |
+| BP | positive regulation of natural killer cell proliferation / activation / cytotoxicity | IL-15 is essential for NK-cell development and potently promotes NK proliferation, activation, granzyme/perforin expression, degranulation, and inflammatory cytotoxicity. | Mouse genetics; human/mouse NK cells; recent review | Skariah et al. 2024, *Discovery Immunology*, doi:10.1093/discim/kyae002; Wang & Zhao 2021, *Front Immunol*, doi:10.3389/fimmu.2021.610789; JAK3/STAT5 inhibition abolishes NK proliferation (skariah2024signallingmechanismsdriving pages 7-8, wang2021transcriptionfactorsassociated pages 7-8) |
+| BP | positive regulation of CD8-positive alpha-beta T cell homeostasis / survival / trafficking | IL-15 supports memory and tissue CD8 T-cell homeostasis, survival, and tissue trafficking/residency, including induction of CD69 and maintenance of intestinal/tissue-resident CD8 populations. | Mouse genetics; tissue lymphocyte studies; review | Skariah et al. 2024, *Discovery Immunology*, doi:10.1093/discim/kyae002; Berard et al. 2003, *J Immunol*, doi:10.4049/jimmunol.170.10.5018 (skariah2024signallingmechanismsdriving pages 8-8, skariah2024signallingmechanismsdriving pages 10-11) |
+| BP | positive regulation of T cell proliferation / activation | IL-15 drives proliferation and activation-marker expression in T cells and can sustain TH1/CD8 programs without the IL-2-associated death phenotype. | Human T cells; cell lines; primary studies/reviews | Djaafar 2008 review summarizing primary data; Campbell et al. 2001, *J Immunol*, doi:10.4049/jimmunol.167.1.553; Lowe et al. 2014, *Genes Immun*, doi:10.1038/gene.2014.3 (djaafar2008effectsofil15 pages 25-29, skariah2024signallingmechanismsdriving pages 4-5) |
+| BP | positive regulation of B cell proliferation / differentiation / immunoglobulin production | IL-15 costimulates activated human B-cell proliferation and, with CD40L, induces IgM, IgG1, and IgA secretion via IL2RB-dependent signaling. | Purified human B cells; in vitro culture | Armitage et al. 1995, *J Immunol*, doi:10.4049/jimmunol.154.2.483; anti-IL-2Rβ blocks IL-15-driven B-cell proliferation; Park et al. 2004, *J Immunol*, doi:10.4049/jimmunol.173.11.6676 (armitage1995il15hasstimulatory pages 4-5, park2004folliculardendriticcells pages 1-2) |
+| BP | positive regulation of neutrophil survival / phagocytosis / adhesion / chemotaxis | IL-15 directly delays neutrophil apoptosis and enhances phagocytosis, adhesion, IL-8 production, and in vivo recruitment, supporting specific neutrophil-focused process annotations rather than broad leukocyte proliferation terms. | Human neutrophils; in vivo recruitment models | Bouchard et al. 2004, *J Leukoc Biol*, doi:10.1189/jlb.1103585; Ratthé & Girard 2004, *J Leukoc Biol*, doi:10.1189/jlb.0605298; Pelletier & Girard 2005, *Clin Exp Immunol*, doi:10.1111/j.1365-2249.2005.02861.x (cassatella2000interleukin15andits pages 3-4, pelletier2005interleukin‐15increasesneutrophil pages 9-11) |
+| CC | extracellular region / secretory pathway localization (48-aa isoform) | The 48-aa long signal peptide isoform enters ER/Golgi trafficking and is the major secretable form, although some molecules are inefficiently translocated and degraded. | COS cells; GFP chimeras; biochemical trafficking assays | Tagaya et al. 1997, *PNAS*, doi:10.1073/pnas.94.26.14444; ~85% of LSP-GFP fluorescent cells showed ER staining; Kurys et al. 2000, *J Biol Chem*, doi:10.1074/jbc.M002373200 (tagaya1997generationofsecretable pages 4-5, kurys2000thelongsignal pages 4-5) |
+| CC | cytoplasm / nucleus localization (21-aa isoform) | The 21-aa short signal peptide isoform is largely nonsecreted and localizes to cytoplasmic and nuclear compartments, supporting isoform-specific intracellular annotations. | COS cells; confocal microscopy; fusion constructs | Tagaya et al. 1997, *PNAS*, doi:10.1073/pnas.94.26.14444; Kurys et al. 2000, *J Biol Chem*, doi:10.1074/jbc.M002373200; Bergamaschi et al. 2009, *J Immunol*, doi:10.4049/jimmunol.0900693 (tagaya1997generationofsecretable pages 1-2, kurys2000thelongsignal pages 1-1) |
+| Curation note | caveats for GO curation | Prefer specific terms supported by direct assays (cytokine activity, IL15RA binding, trans-presentation, NK/CD8/B/neutrophil processes, JAK/STAT signaling, isoform-localization) and avoid generic “protein binding,” broad “cell population proliferation,” or over-broad immune/developmental annotations unless directly tested in the relevant lineage/context. | GO curation synthesis from evidence above | Specific receptor/functional evidence comes from Bernard 2004, Tagaya 1997, Kurys 2000, Armitage 1995, Skariah 2024, and neutrophil/NK studies above; broad claims should not be inferred beyond assayed cell types or delivery modes (bernard2004identificationofan pages 1-2, tagaya1997generationofsecretable pages 4-5) |
 
 
-*Table: This table summarizes the core mechanistic facts needed for functional annotation of human IL-15, emphasizing receptor biology, trafficking, signaling, and immune function. It also adds a concise translational row on the IL-15-based therapeutic N-803/Anktiva with approval and efficacy statistics.*
+*Table: This table summarizes GO-relevant evidence for human IL15 (UniProt P40933), linking molecular function, biological process, and cellular component annotations to primary mechanistic studies and a recent 2024 review. It is designed to support concise, evidence-based curation and highlight important annotation caveats.*
 
-### References (URLs and publication dates for key sources)
-- Skariah N, James OJ, Swamy M. *Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes.* **Discovery Immunology**. **Jan 2024**. https://doi.org/10.1093/discim/kyae002 (skariah2024signallingmechanismsdriving pages 4-5, skariah2024signallingmechanismsdriving pages 8-9, skariah2024signallingmechanismsdriving pages 3-4)
-- Lee H, Park S-H, Shin E-C. *IL-15 in T-Cell Responses and Immunopathogenesis.* **Immune Network**. **Feb 2024**. https://doi.org/10.4110/in.2024.24.e11 (lee2024il15intcell pages 1-2)
-- Qu F, Darji S, Thompson DH. *Recent advances in drug delivery strategies for high-risk BCG-unresponsive non-muscle invasive bladder cancer: a brief review from 2018 to 2024.* **Pharmaceutics**. **Aug 2024**. https://doi.org/10.3390/pharmaceutics16091154 (qu2024recentadvancesin pages 10-12, qu2024recentadvancesin media 11aabbc8)
-- Heiss BL, et al. *FDA Approval Summary: Nogapendekin Alfa Inbakicept-pmln with BCG for BCG-unresponsive carcinoma in situ.* **Clinical Cancer Research**. **Aug 2025**. https://doi.org/10.1158/1078-0432.ccr-25-1231 (heiss2025fdaapprovalsummary pages 1-3, heiss2025fdaapprovalsummary pages 3-5, heiss2025fdaapprovalsummary pages 5-6)
-- ClinicalTrials.gov. *NCT01946789: A Phase 1 Study of the Clinical and Immunologic Effects of ALT-803 in Patients With Advanced Solid Tumors.* **Record posted 2014**. https://clinicaltrials.gov/study/NCT01946789 (NCT01946789 chunk 1, NCT01946789 chunk 2)
-- ClinicalTrials.gov. *NCT04185220: Phase I Study of Recombinant Human IL-15 (rhIL-15) and Mogamulizumab…* **Record posted 2020**. https://clinicaltrials.gov/study/NCT04185220 (NCT04185220 chunk 1, NCT04185220 chunk 2)
 
 
 References
 
 1. (skariah2024signallingmechanismsdriving pages 2-3): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-2. (lee2024il15intcell pages 1-2): Hoyoung Lee, Su-Hyung Park, and Eui-Cheol Shin. Il-15 in t-cell responses and immunopathogenesis. Immune Network, Feb 2024. URL: https://doi.org/10.4110/in.2024.24.e11, doi:10.4110/in.2024.24.e11. This article has 64 citations.
+2. (skariah2024signallingmechanismsdriving pages 3-3): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-3. (skariah2024signallingmechanismsdriving pages 3-3): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
+3. (skariah2024signallingmechanismsdriving pages 10-11): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-4. (skariah2024signallingmechanismsdriving pages 3-4): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
+4. (skariah2024signallingmechanismsdriving pages 4-5): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-5. (skariah2024signallingmechanismsdriving pages 4-5): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
+5. (skariah2024signallingmechanismsdriving pages 7-8): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-6. (skariah2024signallingmechanismsdriving pages 8-9): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
+6. (skariah2024signallingmechanismsdriving pages 8-8): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
 
-7. (skariah2024signallingmechanismsdriving pages 8-8): Neema Skariah, Olivia J James, and Mahima Swamy. Signalling mechanisms driving homeostatic and inflammatory effects of interleukin-15 on tissue lymphocytes. Discovery Immunology, Jan 2024. URL: https://doi.org/10.1093/discim/kyae002, doi:10.1093/discim/kyae002. This article has 29 citations.
+7. (bernard2004identificationofan pages 1-2): Jérôme Bernard, Catherine Harb, Erwan Mortier, Agnès Quéméner, Rob H. Meloen, Claudine Vermot-Desroches, John Wijdeness, Peter van Dijken, Joachim Grötzinger, Jerry W. Slootstra, Ariane Plet, and Yannick Jacques. Identification of an interleukin-15α receptor-binding site on human interleukin-15*. Journal of Biological Chemistry, 279:24313-24322, Jun 2004. URL: https://doi.org/10.1074/jbc.m312458200, doi:10.1074/jbc.m312458200. This article has 104 citations and is from a domain leading peer-reviewed journal.
 
-8. (heiss2025fdaapprovalsummary pages 1-3): Brian L Heiss, Elaine Chang, Hee-Koung Joeng, Mallorie H Fiero, Lingshan Wang, Salaheldin S Hamed, Haw-Jyh Chiu, Tiffany K Ricks, Eun Hee Koh, Teegan A Dellibovi-Ragheb, Min Wang, Christal Lee, William F Pierce, John K Leighton, N. Rahman, Shenghui Tang, Richard Pazdur, Laleh Amiri-Kordestani, Paul G Kluetz, and Daniel L Suzman. Fda approval summary: nogapendekin alfa inbakicept-pmln with bcg for bcg-unresponsive carcinoma in situ. Clinical cancer research : an official journal of the American Association for Cancer Research, Aug 2025. URL: https://doi.org/10.1158/1078-0432.ccr-25-1231, doi:10.1158/1078-0432.ccr-25-1231. This article has 7 citations.
+8. (bernard2004identificationofan pages 8-9): Jérôme Bernard, Catherine Harb, Erwan Mortier, Agnès Quéméner, Rob H. Meloen, Claudine Vermot-Desroches, John Wijdeness, Peter van Dijken, Joachim Grötzinger, Jerry W. Slootstra, Ariane Plet, and Yannick Jacques. Identification of an interleukin-15α receptor-binding site on human interleukin-15*. Journal of Biological Chemistry, 279:24313-24322, Jun 2004. URL: https://doi.org/10.1074/jbc.m312458200, doi:10.1074/jbc.m312458200. This article has 104 citations and is from a domain leading peer-reviewed journal.
 
-9. (heiss2025fdaapprovalsummary pages 3-5): Brian L Heiss, Elaine Chang, Hee-Koung Joeng, Mallorie H Fiero, Lingshan Wang, Salaheldin S Hamed, Haw-Jyh Chiu, Tiffany K Ricks, Eun Hee Koh, Teegan A Dellibovi-Ragheb, Min Wang, Christal Lee, William F Pierce, John K Leighton, N. Rahman, Shenghui Tang, Richard Pazdur, Laleh Amiri-Kordestani, Paul G Kluetz, and Daniel L Suzman. Fda approval summary: nogapendekin alfa inbakicept-pmln with bcg for bcg-unresponsive carcinoma in situ. Clinical cancer research : an official journal of the American Association for Cancer Research, Aug 2025. URL: https://doi.org/10.1158/1078-0432.ccr-25-1231, doi:10.1158/1078-0432.ccr-25-1231. This article has 7 citations.
+9. (waldmann1998interleukin2interleukin15and pages 8-11): Thomas Waldmann, Yutaka Tagaya, and Richard Bamford. Interleukin-2, interleukin-15, and their receptors. International reviews of immunology, 16 3-4:205-26, Jan 1998. URL: https://doi.org/10.3109/08830189809042995, doi:10.3109/08830189809042995. This article has 254 citations and is from a peer-reviewed journal.
 
-10. (heiss2025fdaapprovalsummary pages 5-6): Brian L Heiss, Elaine Chang, Hee-Koung Joeng, Mallorie H Fiero, Lingshan Wang, Salaheldin S Hamed, Haw-Jyh Chiu, Tiffany K Ricks, Eun Hee Koh, Teegan A Dellibovi-Ragheb, Min Wang, Christal Lee, William F Pierce, John K Leighton, N. Rahman, Shenghui Tang, Richard Pazdur, Laleh Amiri-Kordestani, Paul G Kluetz, and Daniel L Suzman. Fda approval summary: nogapendekin alfa inbakicept-pmln with bcg for bcg-unresponsive carcinoma in situ. Clinical cancer research : an official journal of the American Association for Cancer Research, Aug 2025. URL: https://doi.org/10.1158/1078-0432.ccr-25-1231, doi:10.1158/1078-0432.ccr-25-1231. This article has 7 citations.
+10. (osinalde2015simultaneousdissectionand pages 6-7): Nerea Osinalde, Virginia Sanchez‐Quiles, Vyacheslav Akimov, Barbara Guerra, Blagoy Blagoev, and Irina Kratchmarova. Simultaneous dissection and comparison of il‐2 and il‐15 signaling pathways by global quantitative phosphoproteomics. PROTEOMICS, 15:520-531, Jan 2015. URL: https://doi.org/10.1002/pmic.201400194, doi:10.1002/pmic.201400194. This article has 34 citations and is from a peer-reviewed journal.
 
-11. (qu2024recentadvancesin pages 10-12): Feng Qu, Saloni Darji, and David H. Thompson. Recent advances in drug delivery strategies for high-risk bcg-unresponsive non-muscle invasive bladder cancer: a brief review from 2018 to 2024. Pharmaceutics, 16:1154, Aug 2024. URL: https://doi.org/10.3390/pharmaceutics16091154, doi:10.3390/pharmaceutics16091154. This article has 13 citations.
+11. (osinalde2015simultaneousdissectionand pages 7-8): Nerea Osinalde, Virginia Sanchez‐Quiles, Vyacheslav Akimov, Barbara Guerra, Blagoy Blagoev, and Irina Kratchmarova. Simultaneous dissection and comparison of il‐2 and il‐15 signaling pathways by global quantitative phosphoproteomics. PROTEOMICS, 15:520-531, Jan 2015. URL: https://doi.org/10.1002/pmic.201400194, doi:10.1002/pmic.201400194. This article has 34 citations and is from a peer-reviewed journal.
 
-12. (qu2024recentadvancesin media 11aabbc8): Feng Qu, Saloni Darji, and David H. Thompson. Recent advances in drug delivery strategies for high-risk bcg-unresponsive non-muscle invasive bladder cancer: a brief review from 2018 to 2024. Pharmaceutics, 16:1154, Aug 2024. URL: https://doi.org/10.3390/pharmaceutics16091154, doi:10.3390/pharmaceutics16091154. This article has 13 citations.
+12. (bergamaschi2009secretionandbiological pages 1-2): Cristina Bergamaschi, Rashmi Jalah, Viraj Kulkarni, Margherita Rosati, Gen-Mu Zhang, Candido Alicea, Andrei S. Zolotukhin, Barbara K. Felber, and George N. Pavlakis. Secretion and biological activity of short signal peptide il-15 is chaperoned by il-15 receptor alpha in vivo1. The Journal of Immunology, 183:3064-3072, Sep 2009. URL: https://doi.org/10.4049/jimmunol.0900693, doi:10.4049/jimmunol.0900693. This article has 81 citations.
 
-13. (NCT01946789 chunk 1):  A Phase 1 Study of the Clinical and Immunologic Effects of ALT-803 in Patients With Advanced Solid Tumors. Altor BioScience. 2014. ClinicalTrials.gov Identifier: NCT01946789
+13. (bergamaschi2009secretionandbiological pages 8-9): Cristina Bergamaschi, Rashmi Jalah, Viraj Kulkarni, Margherita Rosati, Gen-Mu Zhang, Candido Alicea, Andrei S. Zolotukhin, Barbara K. Felber, and George N. Pavlakis. Secretion and biological activity of short signal peptide il-15 is chaperoned by il-15 receptor alpha in vivo1. The Journal of Immunology, 183:3064-3072, Sep 2009. URL: https://doi.org/10.4049/jimmunol.0900693, doi:10.4049/jimmunol.0900693. This article has 81 citations.
 
-14. (NCT01946789 chunk 2):  A Phase 1 Study of the Clinical and Immunologic Effects of ALT-803 in Patients With Advanced Solid Tumors. Altor BioScience. 2014. ClinicalTrials.gov Identifier: NCT01946789
+14. (bulfone‐paus2006theinterleukin‐15interleukin‐15receptor pages 6-8): Silvia Bulfone‐Paus, Elena Bulanova, Vadim Budagian, and Ralf Paus. The interleukin‐15/interleukin‐15 receptor system as a model for juxtacrine and reverse signaling. BioEssays, 28:362-377, Apr 2006. URL: https://doi.org/10.1002/bies.20380, doi:10.1002/bies.20380. This article has 91 citations and is from a peer-reviewed journal.
 
-15. (NCT04185220 chunk 1): Kevin Conlon, MD. Phase I Study of Recombinant Human IL-15 (rhIL-15) and Mogamulizumab for People With Refractory or Relapsed Adult T-Cell Leukemia and Mycosis Fungoides/Sezary Syndrome. National Cancer Institute (NCI). 2020. ClinicalTrials.gov Identifier: NCT04185220
+15. (tagaya1997generationofsecretable pages 4-5): Yutaka Tagaya, Gloria Kurys, Tiffany A. Thies, Jacqueline M. Losi, Nazli Azimi, John A. Hanover, Richard N. Bamford, and Thomas A. Waldmann. Generation of secretable and nonsecretable interleukin 15 isoforms through alternate usage of signal peptides. Proceedings of the National Academy of Sciences of the United States of America, 94 26:14444-9, Dec 1997. URL: https://doi.org/10.1073/pnas.94.26.14444, doi:10.1073/pnas.94.26.14444. This article has 277 citations and is from a highest quality peer-reviewed journal.
 
-16. (NCT04185220 chunk 2): Kevin Conlon, MD. Phase I Study of Recombinant Human IL-15 (rhIL-15) and Mogamulizumab for People With Refractory or Relapsed Adult T-Cell Leukemia and Mycosis Fungoides/Sezary Syndrome. National Cancer Institute (NCI). 2020. ClinicalTrials.gov Identifier: NCT04185220
+16. (tagaya1997generationofsecretable pages 1-2): Yutaka Tagaya, Gloria Kurys, Tiffany A. Thies, Jacqueline M. Losi, Nazli Azimi, John A. Hanover, Richard N. Bamford, and Thomas A. Waldmann. Generation of secretable and nonsecretable interleukin 15 isoforms through alternate usage of signal peptides. Proceedings of the National Academy of Sciences of the United States of America, 94 26:14444-9, Dec 1997. URL: https://doi.org/10.1073/pnas.94.26.14444, doi:10.1073/pnas.94.26.14444. This article has 277 citations and is from a highest quality peer-reviewed journal.
+
+17. (kurys2000thelongsignal pages 4-5): Gloria Kurys, Yutaka Tagaya, Richard Bamford, John A. Hanover, and Thomas A. Waldmann. The long signal peptide isoform and its alternative processing direct the intracellular trafficking of interleukin-15*. The Journal of Biological Chemistry, 275:30653-30659, Sep 2000. URL: https://doi.org/10.1074/jbc.m002373200, doi:10.1074/jbc.m002373200. This article has 143 citations.
+
+18. (kurys2000thelongsignal pages 1-1): Gloria Kurys, Yutaka Tagaya, Richard Bamford, John A. Hanover, and Thomas A. Waldmann. The long signal peptide isoform and its alternative processing direct the intracellular trafficking of interleukin-15*. The Journal of Biological Chemistry, 275:30653-30659, Sep 2000. URL: https://doi.org/10.1074/jbc.m002373200, doi:10.1074/jbc.m002373200. This article has 143 citations.
+
+19. (armitage1995il15hasstimulatory pages 1-2): R J Armitage, B M Macduff, J Eisenman, R Paxton, and K H Grabstein. Il-15 has stimulatory activity for the induction of b cell proliferation and differentiation. Journal of immunology, 154 2:483-90, Jan 1995. URL: https://doi.org/10.4049/jimmunol.154.2.483, doi:10.4049/jimmunol.154.2.483. This article has 598 citations and is from a domain leading peer-reviewed journal.
+
+20. (armitage1995il15hasstimulatory pages 4-5): R J Armitage, B M Macduff, J Eisenman, R Paxton, and K H Grabstein. Il-15 has stimulatory activity for the induction of b cell proliferation and differentiation. Journal of immunology, 154 2:483-90, Jan 1995. URL: https://doi.org/10.4049/jimmunol.154.2.483, doi:10.4049/jimmunol.154.2.483. This article has 598 citations and is from a domain leading peer-reviewed journal.
+
+21. (park2004folliculardendriticcells pages 1-2): Chan-Sik Park, Sun-Ok Yoon, Richard J. Armitage, and Yong Sung Choi. Follicular dendritic cells produce il-15 that enhances germinal center b cell proliferation in membrane-bound form1. The Journal of Immunology, 173:6676-6683, Dec 2004. URL: https://doi.org/10.4049/jimmunol.173.11.6676, doi:10.4049/jimmunol.173.11.6676. This article has 162 citations.
+
+22. (cassatella2000interleukin15andits pages 1-2): Marco A. Cassatella and Patrick P. McDonald. Interleukin-15 and its impact on neutrophil function. Current Opinion in Hematology, 7:174-177, May 2000. URL: https://doi.org/10.1097/00062752-200005000-00008, doi:10.1097/00062752-200005000-00008. This article has 72 citations and is from a peer-reviewed journal.
+
+23. (cassatella2000interleukin15andits pages 3-4): Marco A. Cassatella and Patrick P. McDonald. Interleukin-15 and its impact on neutrophil function. Current Opinion in Hematology, 7:174-177, May 2000. URL: https://doi.org/10.1097/00062752-200005000-00008, doi:10.1097/00062752-200005000-00008. This article has 72 citations and is from a peer-reviewed journal.
+
+24. (pelletier2005interleukin‐15increasesneutrophil pages 9-11): Martin Pelletier and Denis Girard. Interleukin‐15 increases neutrophil adhesion onto human respiratory epithelial a549 cells and attracts neutrophils in vivo. Clinical & Experimental Immunology, Aug 2005. URL: https://doi.org/10.1111/j.1365-2249.2005.02861.x, doi:10.1111/j.1365-2249.2005.02861.x. This article has 42 citations and is from a peer-reviewed journal.
+
+25. (djaafar2008effectsofil15 pages 21-25): S Djaafar. Effects of il-15 and its specific inhibitor, the mutant il-15/fcγ2a protein, on bone turnover: new players in osteoimmunology. Unknown journal, 2008.
+
+26. (marzec2008differentialeffectsof pages 4-5): Michal Marzec, Krzysztof Halasa, Monika Kasprzycka, Maria Wysocka, Xiaobin Liu, John W. Tobias, Donald Baldwin, Qian Zhang, Niels Odum, Alain H. Rook, and Mariusz A. Wasik. Differential effects of interleukin-2 and interleukin-15 versus interleukin-21 on cd4+ cutaneous t-cell lymphoma cells. Cancer research, 68 4:1083-91, Feb 2008. URL: https://doi.org/10.1158/0008-5472.can-07-2403, doi:10.1158/0008-5472.can-07-2403. This article has 104 citations and is from a highest quality peer-reviewed journal.
+
+27. (wang2021transcriptionfactorsassociated pages 7-8): Xiang Wang and Xiang-Yu Zhao. Transcription factors associated with il-15 cytokine signaling during nk cell development. Frontiers in Immunology, Mar 2021. URL: https://doi.org/10.3389/fimmu.2021.610789, doi:10.3389/fimmu.2021.610789. This article has 144 citations and is from a peer-reviewed journal.
+
+28. (djaafar2008effectsofil15 pages 25-29): S Djaafar. Effects of il-15 and its specific inhibitor, the mutant il-15/fcγ2a protein, on bone turnover: new players in osteoimmunology. Unknown journal, 2008.
 
 ## Citations
 
-1. skariah2024signallingmechanismsdriving pages 8-9
-2. skariah2024signallingmechanismsdriving pages 8-8
-3. heiss2025fdaapprovalsummary pages 1-3
-4. qu2024recentadvancesin pages 10-12
-5. skariah2024signallingmechanismsdriving pages 2-3
-6. skariah2024signallingmechanismsdriving pages 3-3
-7. skariah2024signallingmechanismsdriving pages 3-4
-8. skariah2024signallingmechanismsdriving pages 4-5
-9. heiss2025fdaapprovalsummary pages 3-5
-10. heiss2025fdaapprovalsummary pages 5-6
-11. https://doi.org/10.1093/discim/kyae002.
-12. https://doi.org/10.4110/in.2024.24.e11.
-13. https://doi.org/10.1158/1078-0432.ccr-25-1231.
-14. https://doi.org/10.3390/pharmaceutics16091154.
-15. https://clinicaltrials.gov/study/NCT01946789.
-16. https://clinicaltrials.gov/study/NCT04185220.
-17. https://doi.org/10.1093/discim/kyae002
-18. https://doi.org/10.4110/in.2024.24.e11
-19. https://doi.org/10.3390/pharmaceutics16091154
-20. https://doi.org/10.1158/1078-0432.ccr-25-1231
-21. https://clinicaltrials.gov/study/NCT01946789
-22. https://clinicaltrials.gov/study/NCT04185220
-23. https://doi.org/10.1093/discim/kyae002,
-24. https://doi.org/10.4110/in.2024.24.e11,
-25. https://doi.org/10.1158/1078-0432.ccr-25-1231,
-26. https://doi.org/10.3390/pharmaceutics16091154,
+1. skariah2024signallingmechanismsdriving pages 2-3
+2. skariah2024signallingmechanismsdriving pages 7-8
+3. tagaya1997generationofsecretable pages 4-5
+4. tagaya1997generationofsecretable pages 1-2
+5. park2004folliculardendriticcells pages 1-2
+6. bernard2004identificationofan pages 1-2
+7. skariah2024signallingmechanismsdriving pages 3-3
+8. skariah2024signallingmechanismsdriving pages 10-11
+9. skariah2024signallingmechanismsdriving pages 4-5
+10. skariah2024signallingmechanismsdriving pages 8-8
+11. bernard2004identificationofan pages 8-9
+12. osinalde2015simultaneousdissectionand pages 6-7
+13. osinalde2015simultaneousdissectionand pages 7-8
+14. bergamaschi2009secretionandbiological pages 1-2
+15. bergamaschi2009secretionandbiological pages 8-9
+16. kurys2000thelongsignal pages 4-5
+17. kurys2000thelongsignal pages 1-1
+18. marzec2008differentialeffectsof pages 4-5
+19. wang2021transcriptionfactorsassociated pages 7-8
+20. https://doi.org/10.1093/discim/kyae002
+21. https://doi.org/10.1074/jbc.M312458200
+22. https://doi.org/10.3109/08830189809042995
+23. https://doi.org/10.1002/pmic.201400194
+24. https://doi.org/10.4049/jimmunol.0900693
+25. https://doi.org/10.1002/bies.20380
+26. https://doi.org/10.1073/pnas.94.26.14444
+27. https://doi.org/10.1074/jbc.M002373200
+28. https://doi.org/10.4049/jimmunol.154.2.483
+29. https://doi.org/10.4049/jimmunol.173.11.6676
+30. https://doi.org/10.1097/00062752-200005000-00008
+31. https://doi.org/10.1111/j.1365-2249.2005.02861.x
+32. https://doi.org/10.1093/discim/kyae002,
+33. https://doi.org/10.1074/jbc.m312458200,
+34. https://doi.org/10.3109/08830189809042995,
+35. https://doi.org/10.1002/pmic.201400194,
+36. https://doi.org/10.4049/jimmunol.0900693,
+37. https://doi.org/10.1002/bies.20380,
+38. https://doi.org/10.1073/pnas.94.26.14444,
+39. https://doi.org/10.1074/jbc.m002373200,
+40. https://doi.org/10.4049/jimmunol.154.2.483,
+41. https://doi.org/10.4049/jimmunol.173.11.6676,
+42. https://doi.org/10.1097/00062752-200005000-00008,
+43. https://doi.org/10.1111/j.1365-2249.2005.02861.x,
+44. https://doi.org/10.1158/0008-5472.can-07-2403,
+45. https://doi.org/10.3389/fimmu.2021.610789,
