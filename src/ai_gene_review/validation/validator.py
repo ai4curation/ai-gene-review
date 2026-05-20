@@ -399,25 +399,37 @@ def check_best_practices_rules(
 
     # Check for usage of deep research results (including falcon, gemini, etc.)
     if "existing_annotations" in data and data["existing_annotations"]:
+        def _is_research_ref(sb: object) -> bool:
+            if not isinstance(sb, dict) or "reference_id" not in sb:
+                return False
+            ref_id = sb["reference_id"]
+            return (
+                isinstance(ref_id, str)
+                and ref_id.startswith("file:")
+                and "research" in ref_id
+                and ref_id.endswith(".md")
+            )
+
         has_research_support = False
 
         for annotation in data["existing_annotations"]:
             if isinstance(annotation, dict):
                 review = annotation.get("review", {})
                 if isinstance(review, dict):
-                    supported_by_list = review.get("supported_by", [])
-                    for sb in supported_by_list:
-                        if isinstance(sb, dict) and "reference_id" in sb:
-                            ref_id = sb["reference_id"]
-                            if (
-                                ref_id.startswith("file:")
-                                and "research" in ref_id
-                                and ref_id.endswith(".md")
-                            ):
-                                has_research_support = True
-                                break
-                    if has_research_support:
+                    if any(_is_research_ref(sb) for sb in review.get("supported_by", [])):
+                        has_research_support = True
                         break
+
+        # Also accept deep research cited at the core_functions level — reviewers
+        # often ground existing_annotations in primary literature PMIDs while
+        # using deep research synthesis to support the distilled core functions.
+        if not has_research_support and isinstance(data.get("core_functions"), list):
+            for cf in data["core_functions"]:
+                if isinstance(cf, dict) and any(
+                    _is_research_ref(sb) for sb in cf.get("supported_by", [])
+                ):
+                    has_research_support = True
+                    break
 
         if not has_research_support:
             if yaml_file is not None:
