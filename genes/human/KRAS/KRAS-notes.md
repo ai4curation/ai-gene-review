@@ -63,3 +63,18 @@ failed. I updated their reference titles from accessible web/PubMed or structura
 database metadata and marked findings as full-text unavailable where needed. These
 failed cached publications should be refreshed later with `just fetch-gene-pmids human KRAS`
 or targeted `just fetch-pmid` retries.
+
+## Falcon deep research backfill
+
+Backfilled `KRAS-deep-research-falcon.md` on 2026-05-13. The Falcon synthesis
+corroborates the already-complete review: KRAS core function is the wild-type GDP/GTP
+molecular switch with GTP hydrolysis, GEF/GAP-regulated cycling, and GTP-bound effector
+engagement [file:human/KRAS/KRAS-deep-research-falcon.md, "This report summarizes
+**GO-relevant evidence** for the *wild-type* (WT) KRAS molecular switch function
+(GDP/GTP cycling, effector engagement) and **isoform-specific membrane targeting** of
+KRAS4A versus KRAS4B."]. It also reinforces the existing conservative handling of
+generic protein binding and broad mutant/cancer outcomes: broad downstream phenotypes
+should not be propagated without direct wild-type evidence [file:human/KRAS/KRAS-deep-research-falcon.md,
+"It explicitly avoids over-annotation from (i) pathway membership, (ii) overexpression
+systems, and (iii) oncogenic-mutant phenotypes unless the claim is a direct biochemical
+consequence of the mutation that is relevant to the core switch mechanism."].
