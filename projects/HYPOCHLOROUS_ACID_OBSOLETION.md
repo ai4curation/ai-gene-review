@@ -55,10 +55,17 @@ The pending obsoletion is therefore a clean Type B refresh:
 - Migrate the IMP annotation away from the soon-to-be-obsolete BP term to
   whichever target the upstream ticket settles on.
 - Most likely target classes the curators are choosing between are:
-  - `GO:0042554 superoxide anion generation` / sibling ROS-biosynthesis terms,
   - `GO:0042744 hydrogen peroxide catabolic process` (since Mpo consumes H2O2),
+  - a broader ROS-biosynthesis term such as
+    `GO:1903409 reactive oxygen species biosynthetic process`,
   - or a new term *hypochlorous acid biosynthesis from hydrogen peroxide*
     if upstream chooses to keep the chemistry and only fix the parentage.
+
+  Note: `GO:0042554 superoxide anion generation` is **not** a defensible
+  target for Mpo — that term is the NADPH-oxidase (NOX2/CYBB) step
+  upstream of Mpo in the respiratory burst (NADPH oxidase → O2•- → SOD
+  → H2O2 → Mpo → HOCl); Mpo consumes H2O2 rather than generating
+  superoxide.
 
 The upstream `go-annotation#6404` body does not list a chosen replacement,
 so this remains passive tracking until the upstream decision lands.
