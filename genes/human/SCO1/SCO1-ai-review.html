@@ -1,0 +1,3743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCO1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SCO1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75880" target="_blank" class="term-link">
+                        O75880
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SCO1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75880" data-a="DESCRIPTION: SCO1 is an inner mitochondrial membrane copper met..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SCO1 is an inner mitochondrial membrane copper metallochaperone required for maturation of the CuA site of cytochrome c oxidase subunit II (MT-CO2/COX2). Together with SCO2 and other COX2-module factors, SCO1 participates in the mitochondrial copper relay that enables Complex IV assembly. SCO2 appears to act upstream as a thiol-disulfide oxidoreductase affecting the redox state of SCO1&#39;s copper-coordinating cysteines, whereas SCO1 is best treated as the copper-handling/metallochaperone step for COX2 CuA-site maturation. SCO1 is an assembly factor rather than a structural subunit of mature Complex IV. It also has a secondary role in cellular copper homeostasis, including regulation of CTR1 abundance/localization. Pathogenic variants cause mitochondrial Complex IV deficiency, nuclear type 4.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005507" target="_blank" class="term-link">
+                                    GO:0005507
+                                </a>
+                            </span>
+                            <span class="term-label">copper ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005507" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 binds copper through conserved SCO-family metal-binding residues as part of the mitochondrial copper relay for COX2 CuA-site maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core biochemical property supporting copper chaperone activity. The existing annotation is IEA, but patient-cell and pathway-ordering evidence support the functional importance of the CxxxC copper-coordinating motif in SCO1-dependent COX2 maturation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19336478" target="_blank" class="term-link">
+                                        PMID:19336478
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The subsequent maturation of CO II is contingent upon the formation of a complex that includes both SCO proteins, each with a functional CxxxC copper-coordinating motif.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005743" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed for COX2 maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006878" target="_blank" class="term-link">
+                                    GO:0006878
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular copper ion homeostasis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0006878" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 participates in copper handling and has reported effects on cellular copper homeostasis, but its primary evolved role is copper delivery during Complex IV assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Keep as a valid secondary function, not the core annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008535" target="_blank" class="term-link">
+                                    GO:0008535
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex IV assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0008535" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is required for respiratory chain Complex IV assembly through COX2 copper-site maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct biological-process annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016531" target="_blank" class="term-link">
+                                    GO:0016531
+                                </a>
+                            </span>
+                            <span class="term-label">copper chaperone activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0016531" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 functions as a copper chaperone/metallochaperone in the COX2 CuA-site maturation pathway.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core molecular function. OpenScientist review of the focused core-function hypothesis judged this term supported, while highlighting that the current GOA term is IEA-only and should be upgraded or complemented with experimental support from patient-cell studies and pathway-ordering work.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15229189" target="_blank" class="term-link">
+                                        PMID:15229189
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Our results demonstrate that the human SCO proteins have non-overlapping, cooperative functions in mitochondrial copper delivery.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19336478" target="_blank" class="term-link">
+                                        PMID:19336478
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Based on these data we present a model in which each SCO protein fulfills distinct, stage-specific functions during CO II synthesis and CuA site maturation.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OpenScientist judged copper chaperone activity (GO:0016531) to be supported as a core molecular function of SCO1 and recommended upgrading the IEA-only molecular-function support.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000117
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0033617" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 participates specifically in mitochondrial respiratory chain Complex IV assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific biological-process annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18458339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18458339
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondrial copper(I) transfer from Cox17 to Sco1 is coupl...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:18458339" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29568061
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An AP-MS- and BioID-compatible MAC-tag enables comprehensive...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:29568061" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005739" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a mitochondrial Complex IV assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct broad localization; mitochondrial inner membrane is more specific.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a mitochondrial Complex IV assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct broad localization; mitochondrial inner membrane is more specific.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SCO1/SCO1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9865449
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005743" data-r="Reactome:R-HSA-9865449" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed for COX2 maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9865579
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005743" data-r="Reactome:R-HSA-9865579" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed for COX2 maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-9865630
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005743" data-r="Reactome:R-HSA-9865630" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed for COX2 maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9878253" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9878253
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification and characterization of human cDNAs specific ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005739" data-r="PMID:9878253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a mitochondrial Complex IV assembly factor.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct broad localization; mitochondrial inner membrane is more specific.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/SCO1/SCO1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29381136" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29381136
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    COX16 promotes COX2 metallation and assembly during respirat...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:29381136" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                    GO:0033617
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial respiratory chain complex IV assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15229189" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15229189
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human SCO1 and SCO2 have independent, cooperative functions ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0033617" data-r="PMID:15229189" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 participates specifically in mitochondrial respiratory chain Complex IV assembly.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific biological-process annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15229189" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15229189
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human SCO1 and SCO2 have independent, cooperative functions ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005743" data-r="PMID:15229189" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed for COX2 maturation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct core localization.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24403053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24403053
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human COX20 cooperates with SCO1 and SCO2 to mature COX2 and...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:24403053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28330871" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28330871
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human mitochondrial cytochrome c oxidase assembly factor COX...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:28330871" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29154948" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29154948
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The mitochondrial TMEM177 associates with COX20 during COX2 ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:29154948" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26160915" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26160915
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    COA6 is a mitochondrial complex IV assembly factor critical ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0005515" data-r="PMID:26160915" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The protein-binding annotations report physical interactions among COX2-module assembly factors or broad interactome hits. These do not define SCO1&#39;s function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is less informative than copper chaperone activity and Complex IV assembly; mark as over-annotated rather than core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030016" target="_blank" class="term-link">
+                                    GO:0030016
+                                </a>
+                            </span>
+                            <span class="term-label">myofibril</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20864674" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20864674
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Unexpected vascular enrichment of SCO1 over SCO2 in mammalia...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75880" data-a="GO:0030016" data-r="PMID:20864674" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The myofibril annotation reflects reported localization/enrichment in a tissue context but does not describe SCO1&#39;s primary mitochondrial assembly-factor role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Keep as non-core pending stronger mechanistic interpretation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SCO1 is a mitochondrial copper chaperone/assembly factor that helps deliver copper to the CuA site of MT-CO2 during Complex IV biogenesis. Its core function is not mature Complex IV catalysis, but copper handling within the COX2 maturation pathway. Evidence from SCO1 and SCO2 patient-cell studies supports distinct, stage-specific roles: SCO2 acts upstream in CO II synthesis/redox control, while SCO1 is required for the copper-dependent maturation step.</h3>
+                <span class="vote-buttons" data-g="O75880" data-a="FUNCTION: SCO1 is a mitochondrial copper chaperone/assembly ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016531" target="_blank" class="term-link">
+                            copper chaperone activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033617" target="_blank" class="term-link">
+                                mitochondrial respiratory chain complex IV assembly
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008535" target="_blank" class="term-link">
+                                respiratory chain complex IV assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15229189" target="_blank" class="term-link">
+                                PMID:15229189
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Our results demonstrate that the human SCO proteins have non-overlapping, cooperative functions in mitochondrial copper delivery.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19336478" target="_blank" class="term-link">
+                                PMID:19336478
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Based on these data we present a model in which each SCO protein fulfills distinct, stage-specific functions during CO II synthesis and CuA site maturation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">The focused OpenScientist hypothesis review found the SCO1 copper chaperone core-function hypothesis supported and identified IEA-only GO:0016531 support as the main curation gap.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/SCO1/SCO1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Copper metallochaperone essential for the maturation of cytochrome c oxidase subunit II (MT-CO2/COX2). Together with SCO2, involved in delivering copper to the Cu(A) site on MT-CO2/COX2.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15229189" target="_blank" class="term-link">
+                            PMID:15229189
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human SCO1 and SCO2 have independent, cooperative functions in copper delivery to cytochrome c oxidase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19336478" target="_blank" class="term-link">
+                            PMID:19336478
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human SCO2 is required for the synthesis of CO II and as a thiol-disulphide oxidoreductase for SCO1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO2 acts upstream of SCO1 and is required for CO II synthesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO1 and SCO2 fulfill distinct, stage-specific functions during CO II synthesis and CuA site maturation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The redox state of SCO1 copper-coordinating cysteines is perturbed in SCO1 and SCO2 patient-cell backgrounds.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenScientist focused review of SCO1 copper chaperone activity as a core function</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The SCO1 copper chaperone activity core-function hypothesis was judged supported.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The current GO:0016531 annotation is biologically correct but IEA-only in GOA.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PMID:15229189 and PMID:19336478 were prioritized as evidence for experimental support of SCO1 copper handling in COX2 maturation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SCO2 should be considered for a separate follow-up audit because its direct role may be better described as upstream thiol-disulfide oxidoreductase activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18458339" target="_blank" class="term-link">
+                            PMID:18458339
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mitochondrial copper(I) transfer from Cox17 to Sco1 is coupled to electron transfer.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20864674" target="_blank" class="term-link">
+                            PMID:20864674
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Unexpected vascular enrichment of SCO1 over SCO2 in mammalian tissues: implications for human mitochondrial disease.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24403053" target="_blank" class="term-link">
+                            PMID:24403053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human COX20 cooperates with SCO1 and SCO2 to mature COX2 and promote the assembly of cytochrome c oxidase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26160915" target="_blank" class="term-link">
+                            PMID:26160915
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COA6 is a mitochondrial complex IV assembly factor critical for biogenesis of mtDNA-encoded COX2.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28330871" target="_blank" class="term-link">
+                            PMID:28330871
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Human mitochondrial cytochrome c oxidase assembly factor COX18 acts transiently as a membrane insertase within the subunit 2 maturation module.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29154948" target="_blank" class="term-link">
+                            PMID:29154948
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The mitochondrial TMEM177 associates with COX20 during COX2 biogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29381136" target="_blank" class="term-link">
+                            PMID:29381136
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">COX16 promotes COX2 metallation and assembly during respiratory complex IV biogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29568061" target="_blank" class="term-link">
+                            PMID:29568061
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein interactions and subcellular localizations.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9878253" target="_blank" class="term-link">
+                            PMID:9878253
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification and characterization of human cDNAs specific to BCS1, PET112, SCO1, COX15, and COX11, five genes involved in the formation and function of the mitochondrial respiratory chain.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9865449
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Metallochaperone inserts Cu2+ into MT-CO1</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9865579
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">MT-CO1 and MT-CO2 complexes associate, installing heme moieties</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-9865630
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Metallochaperone inserts 2Cu2+ into MT-CO2</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO add or request an experimental human SCO1 annotation to GO:0016531 based on PMID:15229189 and PMID:19336478, rather than leaving the molecular-function support as IEA-only?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75880" data-a="Q: Should GO add or request an experimental human SCO..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the evidence for SCO2 support retaining copper chaperone activity, or should SCO2 be reviewed separately as an upstream thiol-disulfide oxidoreductase acting on SCO1?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75880" data-a="Q: Does the evidence for SCO2 support retaining coppe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there direct human biochemical evidence for copper transfer from purified SCO1 to a COX2 CuA-site substrate, or should SCO1 copper chaperone activity remain supported primarily by IMP/pathway-ordering evidence?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75880" data-a="Q: Is there direct human biochemical evidence for cop..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute copper transfer from purified human SCO1 to a COX2 CuA-site substrate or COX2 maturation module, with CxxxC/His-site mutants as negative controls.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SCO1 directly transfers copper to the COX2 CuA-site maturation intermediate.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro copper-transfer assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75880" data-a="EXPERIMENT: Reconstitute copper transfer from purified human S..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform rescue experiments in SCO1-deficient human cells with wild-type SCO1 and copper-coordinating motif mutants, measuring COX2 metallation, Complex IV assembly, and COX activity separately.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SCO1&#39;s copper-coordinating motif is required for COX2 metallation rather than only for SCO1 stability or protein-protein interaction.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: CRISPR rescue and mitochondrial biogenesis assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="O75880" data-a="EXPERIMENT: Perform rescue experiments in SCO1-deficient human..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75880
+gene_symbol: SCO1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SCO1 is an inner mitochondrial membrane copper metallochaperone required for maturation of the CuA
+  site of cytochrome c oxidase subunit II (MT-CO2/COX2). Together with SCO2 and other COX2-module
+  factors, SCO1 participates in the mitochondrial copper relay that enables Complex IV assembly. SCO2
+  appears to act upstream as a thiol-disulfide oxidoreductase affecting the redox state of SCO1&#39;s
+  copper-coordinating cysteines, whereas SCO1 is best treated as the copper-handling/metallochaperone
+  step for COX2 CuA-site maturation. SCO1 is an assembly factor rather than a structural subunit of
+  mature Complex IV. It also has a secondary role in cellular copper homeostasis, including regulation
+  of CTR1 abundance/localization. Pathogenic variants cause mitochondrial Complex IV deficiency,
+  nuclear type 4.
+existing_annotations:
+  - term:
+      id: GO:0005507
+      label: copper ion binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        SCO1 binds copper through conserved SCO-family metal-binding residues as part of the mitochondrial
+        copper relay for COX2 CuA-site maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Core biochemical property supporting copper chaperone activity. The existing annotation is IEA,
+        but patient-cell and pathway-ordering evidence support the functional importance of the CxxxC
+        copper-coordinating motif in SCO1-dependent COX2 maturation.
+      additional_reference_ids:
+        - PMID:19336478
+      supported_by:
+        - reference_id: PMID:19336478
+          supporting_text: &gt;-
+            The subsequent maturation of CO II is contingent upon the formation of a complex that includes
+            both SCO proteins, each with a functional CxxxC copper-coordinating motif.
+          full_text_unavailable: true
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    review:
+      summary: &gt;-
+        SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed
+        for COX2 maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization.
+  - term:
+      id: GO:0006878
+      label: intracellular copper ion homeostasis
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        SCO1 participates in copper handling and has reported effects on cellular copper homeostasis,
+        but its primary evolved role is copper delivery during Complex IV assembly.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Keep as a valid secondary function, not the core annotation.
+  - term:
+      id: GO:0008535
+      label: respiratory chain complex IV assembly
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        SCO1 is required for respiratory chain Complex IV assembly through COX2 copper-site maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct biological-process annotation.
+  - term:
+      id: GO:0016531
+      label: copper chaperone activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        SCO1 functions as a copper chaperone/metallochaperone in the COX2 CuA-site maturation pathway.
+      action: ACCEPT
+      reason: &gt;-
+        Core molecular function. OpenScientist review of the focused core-function hypothesis judged
+        this term supported, while highlighting that the current GOA term is IEA-only and should be
+        upgraded or complemented with experimental support from patient-cell studies and pathway-ordering
+        work.
+      additional_reference_ids:
+        - PMID:15229189
+        - PMID:19336478
+        - file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+      supported_by:
+        - reference_id: PMID:15229189
+          supporting_text: &gt;-
+            Our results demonstrate that the human SCO proteins have non-overlapping, cooperative
+            functions in mitochondrial copper delivery.
+          full_text_unavailable: true
+        - reference_id: PMID:19336478
+          supporting_text: &gt;-
+            Based on these data we present a model in which each SCO protein fulfills distinct,
+            stage-specific functions during CO II synthesis and CuA site maturation.
+          full_text_unavailable: true
+        - reference_id: file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+          supporting_text: &gt;-
+            OpenScientist judged copper chaperone activity (GO:0016531) to be supported as a core
+            molecular function of SCO1 and recommended upgrading the IEA-only molecular-function support.
+  - term:
+      id: GO:0033617
+      label: mitochondrial respiratory chain complex IV assembly
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    review:
+      summary: &gt;-
+        SCO1 participates specifically in mitochondrial respiratory chain Complex IV assembly.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and appropriately specific biological-process annotation.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:18458339
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:29568061
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:32296183
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:32814053
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000107
+    review:
+      summary: &gt;-
+        SCO1 is a mitochondrial Complex IV assembly factor.
+      action: ACCEPT
+      reason: &gt;-
+        Correct broad localization; mitochondrial inner membrane is more specific.
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: HTP
+    original_reference_id: PMID:34800366
+    review:
+      summary: &gt;-
+        SCO1 is a mitochondrial Complex IV assembly factor.
+      action: ACCEPT
+      reason: &gt;-
+        Correct broad localization; mitochondrial inner membrane is more specific.
+      supported_by:
+        - reference_id: file:human/SCO1/SCO1-uniprot.txt
+          supporting_text: &gt;-
+            SUBCELLULAR LOCATION: Mitochondrion
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: TAS
+    original_reference_id: Reactome:R-HSA-9865449
+    review:
+      summary: &gt;-
+        SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed
+        for COX2 maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization.
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: TAS
+    original_reference_id: Reactome:R-HSA-9865579
+    review:
+      summary: &gt;-
+        SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed
+        for COX2 maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization.
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: TAS
+    original_reference_id: Reactome:R-HSA-9865630
+    review:
+      summary: &gt;-
+        SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed
+        for COX2 maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization.
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: IDA
+    original_reference_id: PMID:9878253
+    review:
+      summary: &gt;-
+        SCO1 is a mitochondrial Complex IV assembly factor.
+      action: ACCEPT
+      reason: &gt;-
+        Correct broad localization; mitochondrial inner membrane is more specific.
+      supported_by:
+        - reference_id: file:human/SCO1/SCO1-uniprot.txt
+          supporting_text: &gt;-
+            SUBCELLULAR LOCATION: Mitochondrion inner membrane
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:29381136
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0033617
+      label: mitochondrial respiratory chain complex IV assembly
+    evidence_type: IMP
+    original_reference_id: PMID:15229189
+    review:
+      summary: &gt;-
+        SCO1 participates specifically in mitochondrial respiratory chain Complex IV assembly.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and appropriately specific biological-process annotation.
+  - term:
+      id: GO:0005743
+      label: mitochondrial inner membrane
+    evidence_type: IDA
+    original_reference_id: PMID:15229189
+    review:
+      summary: &gt;-
+        SCO1 is a single-pass mitochondrial inner membrane protein with its functional domain exposed
+        for COX2 maturation.
+      action: ACCEPT
+      reason: &gt;-
+        Correct core localization.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:24403053
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:28330871
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:29154948
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0005515
+      label: protein binding
+    evidence_type: IPI
+    original_reference_id: PMID:26160915
+    review:
+      summary: &gt;-
+        The protein-binding annotations report physical interactions among COX2-module assembly factors
+        or broad interactome hits. These do not define SCO1&#39;s function.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Generic protein binding is less informative than copper chaperone activity and Complex IV
+        assembly; mark as over-annotated rather than core.
+  - term:
+      id: GO:0030016
+      label: myofibril
+    evidence_type: IDA
+    original_reference_id: PMID:20864674
+    review:
+      summary: &gt;-
+        The myofibril annotation reflects reported localization/enrichment in a tissue context but
+        does not describe SCO1&#39;s primary mitochondrial assembly-factor role.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Keep as non-core pending stronger mechanistic interpretation.
+core_functions:
+  - description: &gt;-
+      SCO1 is a mitochondrial copper chaperone/assembly factor that helps deliver copper to the CuA
+      site of MT-CO2 during Complex IV biogenesis. Its core function is not mature Complex IV catalysis,
+      but copper handling within the COX2 maturation pathway. Evidence from SCO1 and SCO2 patient-cell
+      studies supports distinct, stage-specific roles: SCO2 acts upstream in CO II synthesis/redox
+      control, while SCO1 is required for the copper-dependent maturation step.
+    molecular_function:
+      id: GO:0016531
+      label: copper chaperone activity
+    directly_involved_in:
+      - id: GO:0033617
+        label: mitochondrial respiratory chain complex IV assembly
+      - id: GO:0008535
+        label: respiratory chain complex IV assembly
+    locations:
+      - id: GO:0005743
+        label: mitochondrial inner membrane
+    supported_by:
+      - reference_id: PMID:15229189
+        supporting_text: &gt;-
+          Our results demonstrate that the human SCO proteins have non-overlapping, cooperative functions
+          in mitochondrial copper delivery.
+        full_text_unavailable: true
+      - reference_id: PMID:19336478
+        supporting_text: &gt;-
+          Based on these data we present a model in which each SCO protein fulfills distinct,
+          stage-specific functions during CO II synthesis and CuA site maturation.
+        full_text_unavailable: true
+      - reference_id: file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+        supporting_text: &gt;-
+          The focused OpenScientist hypothesis review found the SCO1 copper chaperone core-function
+          hypothesis supported and identified IEA-only GO:0016531 support as the main curation gap.
+      - reference_id: file:human/SCO1/SCO1-uniprot.txt
+        supporting_text: &gt;-
+          Copper metallochaperone essential for the maturation of cytochrome c oxidase subunit II
+          (MT-CO2/COX2). Together with SCO2, involved in delivering copper to the Cu(A) site on MT-CO2/COX2.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000107
+    title: Automatic transfer of experimentally verified manual GO annotation data to orthologs 
+      using Ensembl Compara
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:15229189
+    title: Human SCO1 and SCO2 have independent, cooperative functions in copper delivery to 
+      cytochrome c oxidase.
+    findings: []
+  - id: PMID:19336478
+    title: Human SCO2 is required for the synthesis of CO II and as a thiol-disulphide 
+      oxidoreductase for SCO1.
+    findings:
+      - statement: SCO2 acts upstream of SCO1 and is required for CO II synthesis.
+      - statement: SCO1 and SCO2 fulfill distinct, stage-specific functions during CO II synthesis
+          and CuA site maturation.
+      - statement: The redox state of SCO1 copper-coordinating cysteines is perturbed in SCO1
+          and SCO2 patient-cell backgrounds.
+  - id: file:human/SCO1/SCO1-hypotheses/core-function-1-go-0016531/openscientist.md
+    title: OpenScientist focused review of SCO1 copper chaperone activity as a core function
+    findings:
+      - statement: The SCO1 copper chaperone activity core-function hypothesis was judged supported.
+      - statement: The current GO:0016531 annotation is biologically correct but IEA-only in GOA.
+      - statement: PMID:15229189 and PMID:19336478 were prioritized as evidence for experimental
+          support of SCO1 copper handling in COX2 maturation.
+      - statement: SCO2 should be considered for a separate follow-up audit because its direct role
+          may be better described as upstream thiol-disulfide oxidoreductase activity.
+  - id: PMID:18458339
+    title: Mitochondrial copper(I) transfer from Cox17 to Sco1 is coupled to electron transfer.
+    findings: []
+  - id: PMID:20864674
+    title: &#39;Unexpected vascular enrichment of SCO1 over SCO2 in mammalian tissues: implications for
+      human mitochondrial disease.&#39;
+    findings: []
+  - id: PMID:24403053
+    title: Human COX20 cooperates with SCO1 and SCO2 to mature COX2 and promote the assembly of 
+      cytochrome c oxidase.
+    findings: []
+  - id: PMID:26160915
+    title: COA6 is a mitochondrial complex IV assembly factor critical for biogenesis of 
+      mtDNA-encoded COX2.
+    findings: []
+  - id: PMID:28330871
+    title: Human mitochondrial cytochrome c oxidase assembly factor COX18 acts transiently as a 
+      membrane insertase within the subunit 2 maturation module.
+    findings: []
+  - id: PMID:29154948
+    title: The mitochondrial TMEM177 associates with COX20 during COX2 biogenesis.
+    findings: []
+  - id: PMID:29381136
+    title: COX16 promotes COX2 metallation and assembly during respiratory complex IV 
+      biogenesis.
+    findings: []
+  - id: PMID:29568061
+    title: An AP-MS- and BioID-compatible MAC-tag enables comprehensive mapping of protein 
+      interactions and subcellular localizations.
+    findings: []
+  - id: PMID:32296183
+    title: A reference map of the human binary protein interactome.
+    findings: []
+  - id: PMID:32814053
+    title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and 
+      Uncovers Widespread Protein Aggregation in Affected Brains.
+    findings: []
+  - id: PMID:34800366
+    title: Quantitative high-confidence human mitochondrial proteome and its dynamics in 
+      cellular context.
+    findings: []
+  - id: PMID:9878253
+    title: Identification and characterization of human cDNAs specific to BCS1, PET112, SCO1, 
+      COX15, and COX11, five genes involved in the formation and function of the mitochondrial 
+      respiratory chain.
+    findings: []
+  - id: Reactome:R-HSA-9865449
+    title: Metallochaperone inserts Cu2+ into MT-CO1
+    findings: []
+  - id: Reactome:R-HSA-9865579
+    title: MT-CO1 and MT-CO2 complexes associate, installing heme moieties
+    findings: []
+  - id: Reactome:R-HSA-9865630
+    title: Metallochaperone inserts 2Cu2+ into MT-CO2
+    findings: []
+proposed_new_terms: []
+suggested_questions:
+  - question: Should GO add or request an experimental human SCO1 annotation to GO:0016531
+      based on PMID:15229189 and PMID:19336478, rather than leaving the molecular-function
+      support as IEA-only?
+  - question: Does the evidence for SCO2 support retaining copper chaperone activity, or should
+      SCO2 be reviewed separately as an upstream thiol-disulfide oxidoreductase acting on SCO1?
+  - question: Is there direct human biochemical evidence for copper transfer from purified SCO1
+      to a COX2 CuA-site substrate, or should SCO1 copper chaperone activity remain supported
+      primarily by IMP/pathway-ordering evidence?
+suggested_experiments:
+  - description: Reconstitute copper transfer from purified human SCO1 to a COX2 CuA-site substrate
+      or COX2 maturation module, with CxxxC/His-site mutants as negative controls.
+    experiment_type: in vitro copper-transfer assay
+    hypothesis: SCO1 directly transfers copper to the COX2 CuA-site maturation intermediate.
+  - description: Perform rescue experiments in SCO1-deficient human cells with wild-type SCO1 and
+      copper-coordinating motif mutants, measuring COX2 metallation, Complex IV assembly, and COX
+      activity separately.
+    experiment_type: CRISPR rescue and mitochondrial biogenesis assay
+    hypothesis: SCO1&#39;s copper-coordinating motif is required for COX2 metallation rather than only
+      for SCO1 stability or protein-protein interaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
