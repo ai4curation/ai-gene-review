@@ -234,11 +234,109 @@ def replace_gene_symbols(
     # This pattern handles:
     # - Start of line or after whitespace/punctuation
     # - End of line or before whitespace/punctuation
-    pattern = rf'(?<![a-zA-Z0-9_])(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?(bold)\*\*)(?![a-zA-Z0-9_-])'
+    pattern = rf'(?<![a-zA-Z0-9_/])(?P<bold>\*\*)?(?P<symbol>{symbols_pattern})(?(bold)\*\*)(?![a-zA-Z0-9_-])'
 
-    result = re.sub(pattern, replace_match, content)
+    symbol_regex = re.compile(pattern)
+    preserve_regex = re.compile(
+        r'(?P<fenced>```.*?```)'
+        r'|(?P<code>`[^`]*`)'
+        r'|(?P<link>\[[^\]]*\]\([^)]*\))',
+        flags=re.DOTALL,
+    )
+
+    # Do not auto-link inside code spans/blocks or existing markdown links.
+    # Project pages often use code spans for literal identifiers, and linking
+    # inside them creates malformed markdown such as `[gene](...)/P12345`.
+    parts: List[str] = []
+    last_end = 0
+    for match in preserve_regex.finditer(content):
+        if match.start() > last_end:
+            parts.append(symbol_regex.sub(replace_match, content[last_end:match.start()]))
+        parts.append(match.group(0))
+        last_end = match.end()
+
+    if last_end < len(content):
+        parts.append(symbol_regex.sub(replace_match, content[last_end:]))
+
+    result = ''.join(parts)
 
     return result, warnings
+
+
+def replace_gene_tags(
+    content: str,
+    genes_dir: Path,
+    base_path: str = "../../genes",
+) -> Tuple[str, List[str]]:
+    """Replace explicit ``<gene>`` tags with links to gene review pages.
+
+    This is for project-page examples whose visible text is not just the gene
+    symbol, such as ``E/P00720`` or ``M2/F8IZX5``. The tag must specify the
+    report target explicitly:
+
+    ``<gene species="BPT4" symbol="E">E/P00720</gene>``
+    """
+    warnings: List[str] = []
+    tag_regex = re.compile(
+        r"<gene\b(?P<attrs>[^>]*)>(?P<label>.*?)</gene>",
+        flags=re.DOTALL,
+    )
+    attr_regex = re.compile(
+        r"""([A-Za-z_][\w:-]*)\s*=\s*(?:"([^"]*)"|'([^']*)')"""
+    )
+
+    def replace_tag(match: re.Match) -> str:
+        attrs = {
+            attr_match.group(1): attr_match.group(2) or attr_match.group(3) or ""
+            for attr_match in attr_regex.finditer(match.group("attrs"))
+        }
+        label = match.group("label").strip()
+        species = attrs.get("species")
+        symbol = attrs.get("symbol")
+
+        if not species or not symbol:
+            warnings.append(
+                f"Gene tag is missing required species/symbol attributes: {match.group(0)}"
+            )
+            return label or match.group(0)
+
+        if not label:
+            label = symbol
+
+        target_dir = genes_dir / species / symbol
+        if not target_dir.exists():
+            warnings.append(
+                f"Gene tag target not found for species='{species}' symbol='{symbol}'"
+            )
+            return label
+
+        url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
+        return f"[{label}]({url})"
+
+    return tag_regex.sub(replace_tag, content), warnings
+
+
+def link_uniprot_code_spans(
+    content: str,
+    base_url: str = "https://www.uniprot.org/uniprotkb/",
+) -> str:
+    """Replace backticked ``symbol/accession`` samples with UniProt links.
+
+    Project review pages use these code spans for row-level SPKW spot checks
+    where there is no local AIGR gene-review page. Linking them makes the
+    sampled evidence inspectable without confusing them with local reviews.
+    """
+    pattern = re.compile(
+        r"`(?:(?P<label>[^`/\s]+/(?P<accession>[A-Za-z0-9]{6,10}))"
+        r"|(?P<bare_accession>[A-Z0-9]{6,10}))`"
+    )
+
+    def replace_match(match: re.Match) -> str:
+        label = match.group("label") or match.group("bare_accession")
+        accession = match.group("accession") or match.group("bare_accession")
+        return f"[{label}]({base_url}{accession}/entry)"
+
+    return pattern.sub(replace_match, content)
 
 
 def link_go_ids(
@@ -398,13 +496,26 @@ def render_project(
     if isinstance(species_hints, str):
         species_hints = [species_hints]
 
+    # Replace explicit gene tags first. The generated markdown links are then
+    # preserved by the ordinary auto-linker.
+    content, tag_warnings = replace_gene_tags(
+        content,
+        genes_dir=genes_dir,
+        base_path="../../genes",
+    )
+
     # Replace gene symbols with links
-    linked_content, warnings = replace_gene_symbols(
+    linked_content, symbol_warnings = replace_gene_symbols(
         content,
         symbol_index,
         species_hints=species_hints,
         base_path="../../genes",
     )
+    warnings = tag_warnings + symbol_warnings
+
+    # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
+    # links are already explicit via <gene> tags or ordinary symbol autolinks.
+    linked_content = link_uniprot_code_spans(linked_content)
 
     # Auto-link bare GO IDs
     linked_content = link_go_ids(linked_content)

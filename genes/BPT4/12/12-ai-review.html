@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P10930 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P10930</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P10930" target="_blank" class="term-link">
+                        P10930
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P10930";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P10930" data-a="DESCRIPTION: TODO: Add description for P10930..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P10930</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019062" target="_blank" class="term-link">
+                                    GO:0019062
+                                </a>
+                            </span>
+                            <span class="term-label">virion attachment to host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0019062" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046718" target="_blank" class="term-link">
+                                    GO:0046718
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0046718" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098015" target="_blank" class="term-link">
+                                    GO:0098015
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0098015" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098024" target="_blank" class="term-link">
+                                    GO:0098024
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, fiber</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0098024" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098670" target="_blank" class="term-link">
+                                    GO:0098670
+                                </a>
+                            </span>
+                            <span class="term-label">entry receptor-mediated virion attachment to host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0098670" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098025" target="_blank" class="term-link">
+                                    GO:0098025
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, baseplate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27193680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the T4 baseplate and its function in triggering...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P10930" data-a="GO:0098025" data-r="PMID:27193680" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link">
+                            PMID:27193680
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the T4 baseplate and its function in triggering sheath contraction.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(12-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P10930" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T15:53:20.279887</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="12-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-enterobacteria-phage-t4-gene-12-gp12-short-tail-fiber-protein-uniprot-p10930">Research Report: Enterobacteria phage T4 gene 12 (gp12 short tail fiber protein; UniProt P10930)</h2>
+<h3 id="0-identity-verification-and-scope-control-critical">0) Identity verification and scope control (critical)</h3>
+<p>The target described in UniProt (P10930) is <strong>gene product 12 (gp12)</strong> from <strong>Enterobacteria phage T4</strong>, annotated as the <strong>short tail fiber protein</strong>. Across structural and mechanistic literature, “gene 12 / gp12” in T4 consistently refers to the <strong>baseplate-anchored short tail fiber (STF)</strong> that participates in adsorption to Gram-negative hosts by binding <strong>lipopolysaccharide (LPS) core structures</strong> and is <strong>trimeric</strong>. This matches the UniProt-provided family/domain context (tevenvirinae STF; “Short_tail_fibre_C” etc.). (thomassen2003thestructureof pages 1-2, raaij2001crystalstructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</p>
+<p>Limitation: within the retrieved full text, <strong>the UniProt accession P10930 is not explicitly mentioned</strong>, so the UniProt↔literature mapping is supported by concordant name/organism/function/domain evidence rather than an explicit accession cross-reference. (thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-short-tail-fibers-stfs-vs-long-tail-fibers-ltfs">1.1 Short tail fibers (STFs) vs long tail fibers (LTFs)</h4>
+<p>In T4-like myophages, adsorption is commonly conceptualized as a <strong>two-stage process</strong>: initial, <strong>reversible</strong> surface engagement (often dominated by long tail fibers) followed by an <strong>irreversible (or pseudo-irreversible)</strong> commitment step mediated by <strong>short tail fibers</strong>. In contemporary terminology, gp12 forms the <strong>STF</strong> and is the component responsible for pseudo-irreversible binding to a <strong>secondary receptor</strong> such as <strong>LPS</strong>. (kleinsousa2024towardsacomplete pages 1-4, mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<h4 id="12-receptor-binding-proteins-rbps">1.2 Receptor-binding proteins (RBPs)</h4>
+<p>RBPs are the virion components that contact host receptors (outer membrane proteins, glycans/exopolysaccharides, flagella). Tail fibers/spikes are prominent RBPs. Modern work emphasizes <strong>modularity</strong> of RBPs (N-terminal attachment modules + C-terminal receptor-recognition modules), which underpins host-range evolution and engineering. (kleinsousa2024towardsacomplete pages 1-4)</p>
+<h4 id="13-pseudo-irreversible-binding">1.3 “Pseudo-irreversible” binding</h4>
+<p>The term reflects that adsorption can be extremely stable due to <strong>multivalency</strong> (multiple binding sites per fiber and multiple fibers per virion), even if individual interactions may be reversible. A structure-based model for gp12 proposes <strong>multiple LPS-binding grooves</strong> per trimer, and <strong>six STF trimers per phage</strong> increases avidity, shifting the overall interaction to quasi-irreversible. (thomassen2003thestructureof pages 5-7, leiman2010morphogenesisofthe pages 2-5)</p>
+<h3 id="2-primary-function-and-biological-role-of-gp12">2) Primary function and biological role of gp12</h3>
+<h4 id="21-role-in-infection-irreversible-anchoring-to-lps-core">2.1 Role in infection: irreversible anchoring to LPS core</h4>
+<p><strong>gp12 forms the short tail fibers of bacteriophage T4 and mediates irreversible binding to the host</strong> by binding the <strong>core region of Escherichia coli LPS</strong>. This is explicitly stated in primary structural papers on gp12 receptor-binding domains. (thomassen2003thestructureof pages 1-2, raaij2001crystalstructureof pages 1-2)</p>
+<p>A mechanistic model for T4 infection initiation describes how, after long-tail-fiber-mediated receptor searching and transmission of a mechanical signal to the baseplate, <strong>short tail fibers are unpinned, rotate downward, and irreversibly bind</strong> the <strong>lipid A–inner core</strong> region of LPS; this anchoring is coupled to baseplate rearrangements that enable tail sheath contraction and genome delivery. (mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<h4 id="22-receptor-specificity-lps-core-inner-corelipid-a-proximal">2.2 Receptor specificity: LPS core (inner-core/lipid A proximal)</h4>
+<p>Across sources, receptor binding is consistently localized to <strong>LPS core structures</strong>, with some sources phrasing the bound epitope as “core region of LPS” and others specifying “lipid A–inner core region.” (thomassen2003thestructureof pages 1-2, raaij2001crystalstructureof pages 1-2, mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<p>A 2024 preprint summarizing tail-fiber diversity explicitly identifies T4 gp12 STF as responsible for pseudo-irreversible binding to <strong>LPS</strong> as a secondary receptor. (kleinsousa2024towardsacomplete pages 1-4)</p>
+<h3 id="3-localization-and-assembly-context-where-gp12-acts">3) Localization and assembly context (where gp12 acts)</h3>
+<h4 id="31-virion-localization">3.1 Virion localization</h4>
+<p>gp12 is part of the <strong>T4 tail baseplate apparatus</strong>, localized at the <strong>baseplate outer rim</strong>, with <strong>18 copies per tail</strong> (6 STF trimers). (leiman2010morphogenesisofthe pages 2-5)</p>
+<h4 id="32-attachment-interfaces-and-assembly-partners">3.2 Attachment interfaces and assembly partners</h4>
+<p>Short tail fibers are <strong>parallel homotrimers</strong>. Structural reviews describe that gp12 N-termini attach to <strong>gp10 trimers</strong> in the baseplate, while <strong>gp11 trimers</strong> hold the short tail fibers at a hinge roughly halfway along the fiber—placing gp12 within a defined baseplate attachment/hinge architecture. (hyman2018bacteriophaget4long pages 6-7)</p>
+<h3 id="4-molecular-features-structure-domains-and-determinants-of-function">4) Molecular features: structure, domains, and determinants of function</h3>
+<h4 id="41-oligomeric-state-and-size">4.1 Oligomeric state and size</h4>
+<p>Multiple sources describe gp12 as a <strong>parallel, in-register homotrimer</strong> with <strong>527 residues per subunit</strong>. (hyman2018bacteriophaget4long pages 6-7, thomassen2003thestructureof pages 1-2, raaij2001crystalstructureof pages 1-2)</p>
+<p>Leiman et al. summarize gp12 as ~<strong>55.3 kDa per monomer</strong>, trimeric, with <strong>18 copies per tail</strong>. (leiman2010morphogenesisofthe pages 2-5)</p>
+<h4 id="42-structural-architecture-relevant-to-receptor-binding">4.2 Structural architecture relevant to receptor binding</h4>
+<p>Primary X-ray crystallography of gp12 fragments established that the short tail fiber contains a <strong>right-handed triple-stranded β-helix</strong> and a C-terminal <strong>globular receptor-binding region</strong>. (raaij2001crystalstructureof pages 1-2, thomassen2003thestructureof pages 5-7)</p>
+<p>A high-resolution receptor-binding domain structure (reported at <strong>1.5 Å</strong>) reveals a <strong>knitted trimeric fold</strong> with a <strong>head/bonnet</strong> subdivision and proposes that the <strong>positively charged apex</strong> and grooves lined with aromatic/basic residues form the LPS-binding surface(s). (thomassen2003thestructureof pages 1-2, thomassen2003thestructureof pages 5-7)</p>
+<p>Earlier crystallography of a protease-stable domain (reported at <strong>1.9 Å</strong>) likewise supports a β-helix + β-sandwich/globular organization consistent with a robust, inextensible fiber tip used for stable anchoring. (raaij2001crystalstructureof pages 1-2)</p>
+<h4 id="43-zinc-binding-site-trimer-stabilization-andor-functional-surface">4.3 Zinc-binding site (trimer stabilization and/or functional surface)</h4>
+<p>The receptor-binding domain structure contains a <strong>Zn2+ ion coordinated octahedrally by six histidines</strong>—specifically <strong>His445 and His447 from each monomer</strong>—forming an unusual metal-binding site at the interface of receptor-binding subdomains. (thomassen2003thestructureof pages 5-7, leiman2010morphogenesisofthe pages 7-8)</p>
+<h4 id="44-structural-resources-pdb">4.4 Structural resources (PDB)</h4>
+<p>A tail morphogenesis review lists gp12 structures corresponding to <strong>PDB 1H6W and 1OCY</strong>, and the 2003 receptor-binding domain work explicitly associates <strong>1H6W</strong> with a gp12 fragment. (thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</p>
+<h3 id="5-folding-maturation-and-pathway-context-biogenesis">5) Folding, maturation, and pathway context (biogenesis)</h3>
+<h4 id="51-chaperone-assisted-folding-gp57a">5.1 Chaperone-assisted folding (gp57A)</h4>
+<p>gp12 folding/trimerization is chaperone-dependent: sources describe that gp12 trimers require the chaperone <strong>gp57 (gp57A)</strong> for folding and proper trimer formation and that full-length gp12 aggregates readily without appropriate assisted folding. (leiman2010morphogenesisofthe pages 7-8, miernikiewicz2016t4phagetail pages 6-7)</p>
+<p>This chaperone dependence has practical implications: recombinant production of functional gp12 generally includes co-expression with gp57. (miernikiewicz2016t4phagetail pages 6-7, miernikiewicz2016t4phagetail pages 3-6)</p>
+<h4 id="52-infection-stage-pathway-placement">5.2 Infection-stage pathway placement</h4>
+<p>gp12 is not an enzyme catalyzing a chemical transformation; rather, it is a <strong>structural adhesin/RBP</strong> acting in the <strong>adsorption and entry</strong> pathway. The mechanistic pathway is: reversible sampling → baseplate triggering → STF deployment/rotation → stable LPS-core anchoring → tail contraction/genome injection. (mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<h3 id="6-recent-developments-prioritized-20232024">6) Recent developments (prioritized 2023–2024)</h3>
+<h4 id="61-tail-fiber-structure-prediction-and-structure-atlas-approaches-2024">6.1 Tail-fiber structure prediction and “structure atlas” approaches (2024)</h4>
+<p>A 2024 bioRxiv preprint introduces <strong>RBPseg</strong>, a segmentation/assembly strategy leveraging modern deep-learning structure prediction (ESMFold + AlphaFold2-multimer), and uses T4 as a canonical example with <strong>two tail-fiber sets</strong>, explicitly noting <strong>gp12 STFs</strong> as responsible for <strong>pseudo-irreversible LPS binding</strong>. This exemplifies current trends: integrating predictive models with targeted cryo-EM to build comprehensive tail-fiber structural atlases and to support RBP engineering. (kleinsousa2024towardsacomplete pages 1-4)</p>
+<h4 id="62-continued-application-of-the-t4-stfltf-paradigm-in-contemporary-phage-host-studies-2023">6.2 Continued application of the T4 STF/LTF paradigm in contemporary phage-host studies (2023)</h4>
+<p>A 2023 study of a T-even-like myovirus (CkP1) reiterates the adsorption framework in which <strong>irreversible binding is mediated by short tail fibers</strong>, while reversible binding by long tail fibers plays a major role in defining host range. This is representative of how T4’s adsorption logic continues to guide interpretation and engineering of related phages. (oliveira2023ckp1bacteriophagea pages 1-2)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-recombinant-gp12-as-an-lps-binding-biologic-anti-inflammatory-modulation">7.1 Recombinant gp12 as an LPS-binding biologic (anti-inflammatory modulation)</h4>
+<p>A peer-reviewed 2016 study produced recombinant gp12 (with chaperone gp57), demonstrated it forms trimers and binds LPS in vitro, and tested it in mice as a modulator of LPS-induced inflammation. This is a direct real-world translational direction: using a phage adhesin as a <strong>selective LPS-binding/sequestering agent</strong> rather than as a whole phage therapeutic. (miernikiewicz2016t4phagetail pages 6-7, miernikiewicz2016t4phagetail pages 3-6)</p>
+<h4 id="72-phage-engineering-and-host-range-reprogramming-conceptual-connection">7.2 Phage engineering and host-range reprogramming (conceptual connection)</h4>
+<p>Modern RBP-focused engineering emphasizes modularity and the ability to build <strong>chimeric RBPs</strong> by swapping domains at defined “hotspots.” T4 gp12 is frequently used as a canonical STF reference in discussions of tail-fiber architecture and receptor selection, supporting its relevance as a scaffold or comparative template for host-range engineering (even if gp12 itself is often the secondary-receptor adhesin rather than the primary host-range determinant). (kleinsousa2024towardsacomplete pages 1-4, mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<h4 id="73-diagnostics-and-detection-using-tail-fibers-context">7.3 Diagnostics and detection using tail fibers (context)</h4>
+<p>Contemporary work on tail fibers as receptor binders demonstrates that isolated tail fibers can bind LPS with high affinity and can be proposed as detection reagents. While this is shown in 2023 for another myovirus tail fiber, it reinforces why gp12-like fibers are actively considered for diagnostic capture/decoration strategies: strong, selective binding to conserved bacterial surface glycans. (oliveira2023ckp1bacteriophagea pages 1-2)</p>
+<h3 id="8-expert-opinions-and-analysis-authoritative-sources">8) Expert opinions and analysis (authoritative sources)</h3>
+<h4 id="81-structural-biology-perspective-avidity-and-multivalency">8.1 Structural biology perspective: avidity and multivalency</h4>
+<p>The 2003 JMB receptor-binding domain structure proposes that grooves at the positively charged trimer apex form binding sites for LPS molecules and that multivalent binding (three sites per trimer, many trimers per virion) can explain quasi-irreversible adsorption—an interpretation that remains consistent with contemporary “pseudo-irreversible” language. (thomassen2003thestructureof pages 5-7, kleinsousa2024towardsacomplete pages 1-4)</p>
+<h4 id="82-mechanistic-infection-model-perspective">8.2 Mechanistic infection model perspective</h4>
+<p>The 2022 IJMS review provides a detailed conformational/mechanical model: after LTF-mediated probing, baseplate switching triggers STF deployment and LPS-core binding, which then aligns the baseplate and triggers downstream contraction and genome ejection. This represents a current synthesis of structural and single-particle observations into an actionable model for engineering receptor usage. (mourosi2022understandingbacteriophagetail pages 9-11)</p>
+<h3 id="9-statistics-and-quantitative-data-from-recentprimary-studies">9) Statistics and quantitative data (from recent/primary studies)</h3>
+<h4 id="91-structural-resolution-and-stoichiometry">9.1 Structural resolution and stoichiometry</h4>
+<ul>
+<li>X-ray crystallography resolutions: <strong>1.9 Å</strong> (heat/protease-stable gp12 fragment) and <strong>1.5 Å</strong> (receptor-binding domain fragment). (raaij2001crystalstructureof pages 1-2, thomassen2003thestructureof pages 1-2)</li>
+<li>Stoichiometry: gp12 is <strong>trimeric</strong>, and there are <strong>18 gp12 subunits</strong> in the tail (6 trimers). (leiman2010morphogenesisofthe pages 2-5)</li>
+</ul>
+<h4 id="92-biophysical-binding-assay-metrics-dls-for-gp12lps-complex-formation">9.2 Biophysical binding assay metrics (DLS) for gp12–LPS complex formation</h4>
+<p>Dynamic light scattering showed gp12 alone ~<strong>51 nm</strong>, LPS alone ~<strong>95.45 nm</strong>, and the gp12+LPS mixture forming large complexes averaging ~<strong>1980 nm</strong> within minutes and stabilizing near <strong>~2000 nm</strong> after ~45 min. (miernikiewicz2016t4phagetail pages 3-6)</p>
+<h4 id="93-in-vivo-cytokine-modulation-mouse-lps-challenge">9.3 In vivo cytokine modulation (mouse LPS challenge)</h4>
+<p>With LPS challenge (1 mg/kg) and immediate gp12 treatment (100 µg/mouse), serum cytokines were reduced: <strong>IL-1α decreased by 72% at 7 h (p=0.002)</strong> and <strong>IL-6 decreased by 48% at 3 h (p=0.001)</strong>, with cytokines normalizing by 24 h; histology supported reduced inflammatory infiltrates in multiple organs. (miernikiewicz2016t4phagetail pages 6-7)</p>
+<h3 id="10-summary-table-evidence-map">10) Summary table (evidence map)</h3>
+<p>The following table provides a compact, citation-linked map of gp12 functional annotation, evidence type, quantitative data, and recent (2023–2024) developments.</p>
+<table>
+<thead>
+<tr>
+<th>Functional aspect</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Primary supporting citations with year/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adsorption role</td>
+<td>• gp12 is the T4 short tail fiber (STF) that mediates the irreversible or pseudo-irreversible adsorption step after long-tail-fiber sampling • STF engagement anchors the baseplate for downstream sheath contraction and DNA delivery (mourosi2022understandingbacteriophagetail pages 9-11, kleinsousa2024towardsacomplete pages 1-4)</td>
+<td>Review/mechanistic model; comparative structural review</td>
+<td>Mourosi et al., 2022, https://doi.org/10.3390/ijms232012146; Klein-Sousa et al., 2024, https://doi.org/10.1101/2024.10.28.620165</td>
+</tr>
+<tr>
+<td>Receptor specificity</td>
+<td>• gp12 binds the core region of E. coli LPS • authoritative reviews/primary studies variously localize this to the lipid A–inner core region, the inner core/heptose region, or broadly the LPS core/outer-core interface, indicating consensus on core-LPS targeting but some wording differences across sources (thomassen2003thestructureof pages 1-2, raaij2001crystalstructureof pages 1-2, mourosi2022understandingbacteriophagetail pages 9-11)</td>
+<td>X-ray structure paper context; genome/review synthesis; mechanistic review</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; van Raaij et al., 2001, https://doi.org/10.1006/jmbi.2000.5204; Mourosi et al., 2022, https://doi.org/10.3390/ijms232012146</td>
+</tr>
+<tr>
+<td>Structural organization</td>
+<td>• gp12 is a parallel, in-register homotrimer • each monomer is 527 aa (~55.3 kDa) • there are 18 gp12 subunits per virion tail (6 STF trimers) (hyman2018bacteriophaget4long pages 6-7, thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>X-ray structure; tail morphogenesis review</td>
+<td>Hyman &amp; van Raaij, 2018, https://doi.org/10.1007/s12551-017-0348-5; Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; Leiman et al., 2010, https://doi.org/10.1186/1743-422X-7-355</td>
+</tr>
+<tr>
+<td>Domain architecture and receptor-binding fold</td>
+<td>• C-terminal receptor-binding domain includes head and bonnet subdomains • central right-handed triple-stranded β-helix plus a knitted globular C-terminal domain • trimer buries ~7400 Å² total (~60% of monomer surface) (thomassen2003thestructureof pages 1-2, thomassen2003thestructureof pages 5-7, leiman2010morphogenesisofthe pages 7-8)</td>
+<td>X-ray crystallography</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; van Raaij et al., 2001, https://doi.org/10.1006/jmbi.2000.5204</td>
+</tr>
+<tr>
+<td>Metal binding</td>
+<td>• gp12 contains a Zn-binding site in the C-terminal domain • Zn2+ is coordinated octahedrally by His445 and His447 from each of the three protomers • this unusual metallocenter likely stabilizes the trimeric receptor-binding tip (thomassen2003thestructureof pages 1-2, thomassen2003thestructureof pages 5-7, leiman2010morphogenesisofthe pages 7-8)</td>
+<td>X-ray crystallography; structural interpretation</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; Leiman et al., 2010, https://doi.org/10.1186/1743-422X-7-355</td>
+</tr>
+<tr>
+<td>Structural resources</td>
+<td>• experimentally determined gp12 fragments are represented by PDB entries 1H6W and 1OCY • the 2003 structure paper explicitly links 1H6W to a 33-kDa C-terminal fragment (thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>X-ray structure; database-linked structural review</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; Leiman et al., 2010, https://doi.org/10.1186/1743-422X-7-355</td>
+</tr>
+<tr>
+<td>Assembly/localization in the virion</td>
+<td>• gp12 N-termini attach to gp10 trimers in the T4 baseplate • gp11 trimers hold gp12 at a hinge about halfway along the fiber • gp12 localizes to the outer rim of the baseplate and is added late in tail assembly (hyman2018bacteriophaget4long pages 6-7, thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>Structural review; morphogenesis review; primary crystallography context</td>
+<td>Hyman &amp; van Raaij, 2018, https://doi.org/10.1007/s12551-017-0348-5; Leiman et al., 2010, https://doi.org/10.1186/1743-422X-7-355; Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1</td>
+</tr>
+<tr>
+<td>Chaperone requirement</td>
+<td>• proper folding/trimerization of gp12 requires the phage chaperone gp57/gp57A • full-length gp12 aggregates readily without correct assisted folding • recombinant expression with gp57 yields native-like trimers (thomassen2003thestructureof pages 1-2, leiman2010morphogenesisofthe pages 7-8, miernikiewicz2016t4phagetail pages 6-7, miernikiewicz2016t4phagetail pages 3-6)</td>
+<td>X-ray structure context; biochemical expression study</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1; Leiman et al., 2010, https://doi.org/10.1186/1743-422X-7-355; Miernikiewicz et al., 2016, https://doi.org/10.3389/fmicb.2016.01112</td>
+</tr>
+<tr>
+<td>Triggering mechanism during infection</td>
+<td>• after reversible long-tail-fiber contact, a mechanical signal converts the baseplate conformation • STFs are unpinned, rotate downward, and bind LPS • this reorients the baseplate parallel to the cell surface and promotes sheath contraction/genome injection (mourosi2022understandingbacteriophagetail pages 9-11)</td>
+<td>Mechanistic review/model</td>
+<td>Mourosi et al., 2022, https://doi.org/10.3390/ijms232012146</td>
+</tr>
+<tr>
+<td>LPS-binding structural model</td>
+<td>• the trimer apex is positively charged with grooves lined by aromatic/basic residues • each groove was proposed to bind one LPS molecule, with phosphates engaging basic residues and sugars contacting aromatic residues • multivalency explains quasi-irreversible adsorption (thomassen2003thestructureof pages 5-7)</td>
+<td>X-ray structure-based binding model</td>
+<td>Thomassen et al., 2003, https://doi.org/10.1016/S0022-2836(03)00755-1</td>
+</tr>
+<tr>
+<td>Quantitative experimental data: oligomerization and LPS complex formation</td>
+<td>• recombinant gp12 runs as ~172.5 kDa trimer and ~57.5 kDa monomer by SDS-PAGE • DLS showed gp12 alone ~51 nm and LPS alone ~95.45 nm • mixed gp12+LPS formed complexes averaging ~1980 nm within minutes and stabilizing near ~2000 nm after ~45 min (miernikiewicz2016t4phagetail pages 6-7, miernikiewicz2016t4phagetail pages 3-6, miernikiewicz2016t4phagetail pages 2-3)</td>
+<td>Biochemical assay (SDS-PAGE, DLS)</td>
+<td>Miernikiewicz et al., 2016, https://doi.org/10.3389/fmicb.2016.01112</td>
+</tr>
+<tr>
+<td>Quantitative in vivo data relevant to function/application</td>
+<td>• in LPS-challenged mice, gp12 reduced serum IL-1α by 72% at 7 h (p=0.002) • IL-6 was reduced by 48% at 3 h (p=0.001) • histopathology showed reduced inflammatory infiltrates in liver and spleen, with broader attenuation in spleen/liver/kidney/lung (miernikiewicz2016t4phagetail pages 6-7)</td>
+<td>In vivo murine study</td>
+<td>Miernikiewicz et al., 2016, https://doi.org/10.3389/fmicb.2016.01112</td>
+</tr>
+<tr>
+<td>Biological pathway context</td>
+<td>• gp12 functions in the adsorption/penetration phase of the T4 infection cycle rather than as an enzyme • it acts as the secondary receptor-binding element connecting host recognition to conformational activation of the contractile tail machine (mourosi2022understandingbacteriophagetail pages 9-11)</td>
+<td>Mechanistic review</td>
+<td>Mourosi et al., 2022, https://doi.org/10.3390/ijms232012146</td>
+</tr>
+<tr>
+<td>Applications and engineering relevance</td>
+<td>• recombinant gp12 can bind purified LPS and modulate LPS-induced inflammation, suggesting use as an LPS-sequestering biologic • tail fibers are major host-range determinants and attractive engineering targets for diagnostics, biocontrol, and phage therapy • gp12-like STF modules inform RBP swapping/chimera design (miernikiewicz2016t4phagetail pages 6-7, kleinsousa2024towardsacomplete pages 1-4, oliveira2023ckp1bacteriophagea pages 1-2)</td>
+<td>Biochemical/in vivo; computational/engineering; translational review</td>
+<td>Miernikiewicz et al., 2016, https://doi.org/10.3389/fmicb.2016.01112; Klein-Sousa et al., 2024, https://doi.org/10.1101/2024.10.28.620165; Oliveira et al., 2023, https://doi.org/10.1007/s00253-023-12547-8</td>
+</tr>
+<tr>
+<td>Recent 2023-2024 developments</td>
+<td>• 2024 RBPseg/structure-atlas work explicitly cites T4 gp12 as the STF responsible for pseudo-irreversible LPS binding • recent RBP studies emphasize modularity, domain exchange, and structure-guided engineering of tail fibers • 2023 T-even-like phage studies continue to use the T4 STF/LTF paradigm for interpreting host-range mechanisms (kleinsousa2024towardsacomplete pages 1-4, oliveira2023ckp1bacteriophagea pages 1-2)</td>
+<td>Computational/engineering; contemporary comparative phage biology</td>
+<td>Klein-Sousa et al., 2024, https://doi.org/10.1101/2024.10.28.620165; Oliveira et al., 2023, https://doi.org/10.1007/s00253-023-12547-8</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported function, structure, assembly, and application relevance of Enterobacteria phage T4 gene product 12 (gp12), with emphasis on adsorption to LPS and recent 2023-2024 context. It is useful as a compact evidence map for functional annotation and literature-supported reporting.</em></p>
+<h3 id="11-functional-annotation-statement-for-databases-reports">11) Functional annotation statement (for databases / reports)</h3>
+<p><strong>Gene 12 (gp12; short tail fiber protein) encodes a trimeric baseplate-anchored adhesin that mediates the irreversible/pseudo-irreversible adsorption step of bacteriophage T4 by binding conserved core regions of host LPS (often described as lipid A–inner core).</strong> gp12 fibers are attached to the baseplate via gp10 and stabilized/positioned by gp11. The receptor-binding tip contains a high-resolution characterized, Zn-stabilized knitted trimeric fold (His445/His447 coordination) with a proposed multivalent LPS-binding surface. Folding requires the chaperone gp57A. gp12 acts extracellularly at the phage–bacterium interface during adsorption/entry, and recombinant gp12 retains LPS-binding activity and has been explored as an LPS-sequestering anti-inflammatory modulator in vivo. (mourosi2022understandingbacteriophagetail pages 9-11, hyman2018bacteriophaget4long pages 6-7, thomassen2003thestructureof pages 5-7, miernikiewicz2016t4phagetail pages 6-7)</p>
+<h3 id="12-key-urls-and-publication-dates-selected">12) Key URLs and publication dates (selected)</h3>
+<ul>
+<li>van Raaij et al. “Crystal structure of a heat and protease-stable part of the bacteriophage T4 short tail fibre.” <strong>Dec 2001</strong>. https://doi.org/10.1006/jmbi.2000.5204 (raaij2001crystalstructureof pages 1-2)</li>
+<li>Thomassen et al. “Structure of the receptor-binding domain of the bacteriophage T4 short tail fibre…” <strong>Aug 2003</strong>. https://doi.org/10.1016/S0022-2836(03)00755-1 (thomassen2003thestructureof pages 1-2, thomassen2003thestructureof pages 5-7)</li>
+<li>Leiman et al. “Morphogenesis of the T4 tail and tail fibers.” <strong>Dec 2010</strong>. https://doi.org/10.1186/1743-422X-7-355 (leiman2010morphogenesisofthe pages 2-5)</li>
+<li>Hyman &amp; van Raaij. “Bacteriophage T4 long tail fiber domains.” <strong>Dec 2018</strong>. https://doi.org/10.1007/s12551-017-0348-5 (hyman2018bacteriophaget4long pages 6-7)</li>
+<li>Mourosi et al. “Understanding bacteriophage tail fiber interaction with host surface receptor…” <strong>Oct 2022</strong>. https://doi.org/10.3390/ijms232012146 (mourosi2022understandingbacteriophagetail pages 9-11)</li>
+<li>Oliveira et al. “CkP1 bacteriophage…” <strong>May 2023</strong>. https://doi.org/10.1007/s00253-023-12547-8 (oliveira2023ckp1bacteriophagea pages 1-2)</li>
+<li>Klein-Sousa et al. “Towards a complete phage tail fiber structure atlas.” <strong>Oct 2024</strong> (preprint). https://doi.org/10.1101/2024.10.28.620165 (kleinsousa2024towardsacomplete pages 1-4)</li>
+<li>Miernikiewicz et al. “T4 Phage Tail Adhesin Gp12 Counteracts LPS-Induced Inflammation In Vivo.” <strong>Jul 2016</strong>. https://doi.org/10.3389/fmicb.2016.01112 (miernikiewicz2016t4phagetail pages 6-7, miernikiewicz2016t4phagetail pages 3-6)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(thomassen2003thestructureof pages 1-2): Ellen Thomassen, Gerrit Gielen, Michael Schütz, Guy Schoehn, Jan Pieter Abrahams, Stefan Miller, and Mark J. van Raaij. The structure of the receptor-binding domain of the bacteriophage t4 short tail fibre reveals a knitted trimeric metal-binding fold. Journal of molecular biology, 331 2:361-73, Aug 2003. URL: https://doi.org/10.1016/s0022-2836(03)00755-1, doi:10.1016/s0022-2836(03)00755-1. This article has 135 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raaij2001crystalstructureof pages 1-2): Mark J van Raaij, Guy Schoehn, Martin R Burda, and Stefan Miller. Crystal structure of a heat and protease-stable part of the bacteriophage t4 short tail fibre. Journal of molecular biology, 314 5:1137-46, Dec 2001. URL: https://doi.org/10.1006/jmbi.2000.5204, doi:10.1006/jmbi.2000.5204. This article has 125 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe pages 2-5): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kleinsousa2024towardsacomplete pages 1-4): Victor Klein-Sousa, Aritz Roa-Eguiara, Claudia S. Kielkopf, Nicholas Sofos, and Nicholas M. I. Taylor. Towards a complete phage tail fiber structure atlas. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.28.620165, doi:10.1101/2024.10.28.620165. This article has 2 citations.</p>
+</li>
+<li>
+<p>(mourosi2022understandingbacteriophagetail pages 9-11): Jarin Taslem Mourosi, Ayobami I. Awe, Wenzheng Guo, Himanshu Batra, Harrish Ganesh, Xiaorong Wu, and Jingen Zhu. Understanding bacteriophage tail fiber interaction with host surface receptor: the key “blueprint” for reprogramming phage host range. International Journal of Molecular Sciences, 23:12146, Oct 2022. URL: https://doi.org/10.3390/ijms232012146, doi:10.3390/ijms232012146. This article has 193 citations.</p>
+</li>
+<li>
+<p>(thomassen2003thestructureof pages 5-7): Ellen Thomassen, Gerrit Gielen, Michael Schütz, Guy Schoehn, Jan Pieter Abrahams, Stefan Miller, and Mark J. van Raaij. The structure of the receptor-binding domain of the bacteriophage t4 short tail fibre reveals a knitted trimeric metal-binding fold. Journal of molecular biology, 331 2:361-73, Aug 2003. URL: https://doi.org/10.1016/s0022-2836(03)00755-1, doi:10.1016/s0022-2836(03)00755-1. This article has 135 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hyman2018bacteriophaget4long pages 6-7): Paul Hyman and Mark van Raaij. Bacteriophage t4 long tail fiber domains. Biophysical Reviews, 10:463-471, Dec 2018. URL: https://doi.org/10.1007/s12551-017-0348-5, doi:10.1007/s12551-017-0348-5. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe pages 7-8): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miernikiewicz2016t4phagetail pages 6-7): Paulina Miernikiewicz, Anna Kłopot, Ryszard Soluch, Piotr Szkuta, Weronika Kęska, Katarzyna Hodyra-Stefaniak, Agnieszka Konopka, Marcin Nowak, Dorota Lecion, Zuzanna Kaźmierczak, Joanna Majewska, Marek Harhala, Andrzej Górski, and Krystyna Dąbrowska. T4 phage tail adhesin gp12 counteracts lps-induced inflammation in vivo. Frontiers in Microbiology, Jul 2016. URL: https://doi.org/10.3389/fmicb.2016.01112, doi:10.3389/fmicb.2016.01112. This article has 118 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miernikiewicz2016t4phagetail pages 3-6): Paulina Miernikiewicz, Anna Kłopot, Ryszard Soluch, Piotr Szkuta, Weronika Kęska, Katarzyna Hodyra-Stefaniak, Agnieszka Konopka, Marcin Nowak, Dorota Lecion, Zuzanna Kaźmierczak, Joanna Majewska, Marek Harhala, Andrzej Górski, and Krystyna Dąbrowska. T4 phage tail adhesin gp12 counteracts lps-induced inflammation in vivo. Frontiers in Microbiology, Jul 2016. URL: https://doi.org/10.3389/fmicb.2016.01112, doi:10.3389/fmicb.2016.01112. This article has 118 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(oliveira2023ckp1bacteriophagea pages 1-2): Hugo Oliveira, Sílvio Santos, Diana P. Pires, Dimitri Boeckaerts, Graça Pinto, Rita Domingues, Jennifer Otero, Yves Briers, Rob Lavigne, Mathias Schmelcher, Andreas Dötsch, and Joana Azeredo. Ckp1 bacteriophage, a s16-like myovirus that recognizes citrobacter koseri lipopolysaccharide through its long tail fibers. Applied Microbiology and Biotechnology, 107:3621-3636, May 2023. URL: https://doi.org/10.1007/s00253-023-12547-8, doi:10.1007/s00253-023-12547-8. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(miernikiewicz2016t4phagetail pages 2-3): Paulina Miernikiewicz, Anna Kłopot, Ryszard Soluch, Piotr Szkuta, Weronika Kęska, Katarzyna Hodyra-Stefaniak, Agnieszka Konopka, Marcin Nowak, Dorota Lecion, Zuzanna Kaźmierczak, Joanna Majewska, Marek Harhala, Andrzej Górski, and Krystyna Dąbrowska. T4 phage tail adhesin gp12 counteracts lps-induced inflammation in vivo. Frontiers in Microbiology, Jul 2016. URL: https://doi.org/10.3389/fmicb.2016.01112, doi:10.3389/fmicb.2016.01112. This article has 118 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="12-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kleinsousa2024towardsacomplete pages 1-4</li>
+<li>mourosi2022understandingbacteriophagetail pages 9-11</li>
+<li>leiman2010morphogenesisofthe pages 2-5</li>
+<li>raaij2001crystalstructureof pages 1-2</li>
+<li>thomassen2003thestructureof pages 5-7</li>
+<li>thomassen2003thestructureof pages 1-2</li>
+<li>leiman2010morphogenesisofthe pages 7-8</li>
+<li>https://doi.org/10.3390/ijms232012146;</li>
+<li>https://doi.org/10.1101/2024.10.28.620165</li>
+<li>https://doi.org/10.1016/S0022-2836(03</li>
+<li>https://doi.org/10.1006/jmbi.2000.5204;</li>
+<li>https://doi.org/10.3390/ijms232012146</li>
+<li>https://doi.org/10.1007/s12551-017-0348-5;</li>
+<li>https://doi.org/10.1186/1743-422X-7-355</li>
+<li>https://doi.org/10.1006/jmbi.2000.5204</li>
+<li>https://doi.org/10.1186/1743-422X-7-355;</li>
+<li>https://doi.org/10.3389/fmicb.2016.01112</li>
+<li>https://doi.org/10.3389/fmicb.2016.01112;</li>
+<li>https://doi.org/10.1101/2024.10.28.620165;</li>
+<li>https://doi.org/10.1007/s00253-023-12547-8</li>
+<li>https://doi.org/10.1007/s12551-017-0348-5</li>
+<li>https://doi.org/10.1016/s0022-2836(03</li>
+<li>https://doi.org/10.1006/jmbi.2000.5204,</li>
+<li>https://doi.org/10.1186/1743-422x-7-355,</li>
+<li>https://doi.org/10.1101/2024.10.28.620165,</li>
+<li>https://doi.org/10.3390/ijms232012146,</li>
+<li>https://doi.org/10.1007/s12551-017-0348-5,</li>
+<li>https://doi.org/10.3389/fmicb.2016.01112,</li>
+<li>https://doi.org/10.1007/s00253-023-12547-8,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P10930
+gene_symbol: P10930
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P10930&#39;
+existing_annotations:
+- term:
+    id: GO:0019062
+    label: virion attachment to host cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046718
+    label: symbiont entry into host cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098015
+    label: virus tail
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098024
+    label: virus tail, fiber
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098670
+    label: entry receptor-mediated virion attachment to host cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098025
+    label: virus tail, baseplate
+  evidence_type: IDA
+  original_reference_id: PMID:27193680
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27193680
+  title: Structure of the T4 baseplate and its function in triggering sheath contraction.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

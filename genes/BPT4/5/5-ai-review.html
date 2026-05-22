@@ -1,0 +1,3065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P16009 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P16009</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P16009" target="_blank" class="term-link">
+                        P16009
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P16009";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P16009" data-a="DESCRIPTION: TODO: Add description for P16009..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P16009</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0003796" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0003824" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0009253" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016798" target="_blank" class="term-link">
+                                    GO:0016798
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on glycosyl bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0016798" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016998" target="_blank" class="term-link">
+                                    GO:0016998
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall macromolecule catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0016998" data-r="GO_REF:0000002" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031640" target="_blank" class="term-link">
+                                    GO:0031640
+                                </a>
+                            </span>
+                            <span class="term-label">killing of cells of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0031640" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042742" target="_blank" class="term-link">
+                                    GO:0042742
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to bacterium</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0042742" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046718" target="_blank" class="term-link">
+                                    GO:0046718
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0046718" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098003" target="_blank" class="term-link">
+                                    GO:0098003
+                                </a>
+                            </span>
+                            <span class="term-label">viral tail assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098003" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098015" target="_blank" class="term-link">
+                                    GO:0098015
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098015" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098025" target="_blank" class="term-link">
+                                    GO:0098025
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, baseplate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098025" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098932" target="_blank" class="term-link">
+                                    GO:0098932
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell via disruption of host cell wall peptidoglycan</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098932" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098994" target="_blank" class="term-link">
+                                    GO:0098994
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell via disruption of host cell envelope</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098994" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11823865" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11823865
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the cell-puncturing device of bacteriophage T4.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0005515" data-r="PMID:11823865" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15701513
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of bacteriophage T4 tail lysozyme activity during th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0005515" data-r="PMID:15701513" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10217762" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10217762
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The C-terminal fragment of the precursor tail lysozyme of ba...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0003796" data-r="PMID:10217762" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046718" target="_blank" class="term-link">
+                                    GO:0046718
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15701513
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of bacteriophage T4 tail lysozyme activity during th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0046718" data-r="PMID:15701513" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15701513
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of bacteriophage T4 tail lysozyme activity during th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0042802" data-r="PMID:15701513" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15701513
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of bacteriophage T4 tail lysozyme activity during th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0003796" data-r="PMID:15701513" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098015" target="_blank" class="term-link">
+                                    GO:0098015
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15701513
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Control of bacteriophage T4 tail lysozyme activity during th...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098015" data-r="PMID:15701513" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3157805" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3157805
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of the bacteriophage T4 tail-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0003796" data-r="PMID:3157805" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098025" target="_blank" class="term-link">
+                                    GO:0098025
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, baseplate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27193680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the T4 baseplate and its function in triggering...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0098025" data-r="PMID:27193680" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044409" target="_blank" class="term-link">
+                                    GO:0044409
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3157805" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3157805
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation and characterization of the bacteriophage T4 tail-...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P16009" data-a="GO:0044409" data-r="PMID:3157805" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10217762" target="_blank" class="term-link">
+                            PMID:10217762
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The C-terminal fragment of the precursor tail lysozyme of bacteriophage T4 stays as a structural component of the baseplate after cleavage.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11823865" target="_blank" class="term-link">
+                            PMID:11823865
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the cell-puncturing device of bacteriophage T4.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15701513" target="_blank" class="term-link">
+                            PMID:15701513
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Control of bacteriophage T4 tail lysozyme activity during the infection process.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link">
+                            PMID:27193680
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the T4 baseplate and its function in triggering sheath contraction.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3157805" target="_blank" class="term-link">
+                            PMID:3157805
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Isolation and characterization of the bacteriophage T4 tail-associated lysozyme.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P16009" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">21 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T21:03:21.188778</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="5-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="5-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000006 The document provides information on T4 gp5 processing and its baseplate-associated muralytic activity. According to the text, T4 g</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-enterobacteria-phage-t4-gene-5-gp5-uniprot-p16009">Research report: Enterobacteria phage T4 gene 5 (gp5; UniProt P16009)</h2>
+<h3 id="1-target-verification-identity-organism-and-synonym-control">1) Target verification (identity, organism, and synonym control)</h3>
+<p>The queried gene symbol <strong>“5”</strong> is ambiguous across biology, but in the context provided (UniProt <strong>P16009</strong>), it corresponds specifically to <strong>Enterobacteria phage T4 gene 5</strong> encoding the <strong>pre-baseplate central spike protein gp5</strong>, a virion/baseplate-associated protein with a lysozyme-like (muramidase) domain and a structural needle domain used during host penetration. This identity is consistent with primary experimental literature describing <strong>T4 gp5</strong> as a <strong>baseplate hub/central spike protein</strong> that is <strong>proteolytically processed during baseplate assembly</strong> and exhibits <strong>peptidoglycan-hydrolytic activity</strong>. (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 1-1)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-virion-associated-peptidoglycan-hydrolases-vapghs-ectolysins">2.1 Virion-associated peptidoglycan hydrolases (VAPGHs) / ectolysins</h4>
+<p>A core concept for gp5 annotation is that many tailed phages carry <strong>virion-associated enzymes</strong> that locally weaken the bacterial cell wall to permit <strong>tail tube penetration and genome injection</strong>. In T4, gp5 is a canonical example of a <strong>tail/baseplate-associated muralytic enzyme</strong> proposed to perform <em>localized</em> digestion rather than global lysis during entry. (moak2004peptidoglycanhydrolyticactivities pages 1-2, leprince2023phageadsorptionto pages 9-10)</p>
+<h4 id="22-the-t4-cell-puncturing-device">2.2 The T4 “cell-puncturing device”</h4>
+<p>T4 uses a contractile tail: adsorption triggers <strong>baseplate rearrangement</strong> and <strong>tail-sheath contraction</strong>, which drives a <strong>central puncturing apparatus</strong> at the baseplate center into the host envelope. In T4, the central puncturing device is formed by a <strong>(gp27–gp5*–gp5C)3</strong> complex, which aligns with and extends the tail tube to form a penetration and DNA-translocation path. (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 1-3)</p>
+<h3 id="3-molecular-function-reaction-substrate-specificity-regulation">3) Molecular function (reaction, substrate specificity, regulation)</h3>
+<h4 id="31-enzymatic-activity-and-reaction">3.1 Enzymatic activity and reaction</h4>
+<p>T4 gp5 contains a <strong>lysozyme-like muramidase domain</strong> (EC <strong>3.2.1.17</strong>, N-acetylmuramidase). Experimental literature summarized by Moak &amp; Molineux reports that gp5 “has been shown to have the same substrate specificity as the gpE lysozyme,” and the lysozyme reaction is cleavage of the <strong>β-1,4 glycosidic bond between NAM and NAG</strong> in peptidoglycan. (moak2004peptidoglycanhydrolyticactivities pages 1-2, moak2004peptidoglycanhydrolyticactivities pages 2-4)</p>
+<p>Kanamaru et al. provide structural evidence that gp5’s lysozyme domain shares conserved catalytic residues with T4 lysozyme and is positioned to digest peptidoglycan during puncturing. (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 3-5)</p>
+<h4 id="32-substrate-specificity-and-functional-context">3.2 Substrate specificity and functional context</h4>
+<p>The substrate is <strong>bacterial peptidoglycan (murein)</strong>, specifically the glycan backbone (NAM–NAG polymer). The conceptual role is <strong>localized cleavage</strong> at the site of tail penetration rather than extensive degradation that would rupture the cell during entry. (moak2004peptidoglycanhydrolyticactivities pages 1-2, kanamaru2002structureofthe pages 5-5)</p>
+<h4 id="33-regulation-by-proteolysis-and-oligomerization">3.3 Regulation by proteolysis and oligomerization</h4>
+<p>A key functional nuance is that gp5’s activity is regulated by maturation/assembly state:<br />
+* <strong>gp5 is synthesized as a ~63 kDa precursor</strong> and processed during baseplate assembly to <strong>gp5</strong><em> (reported as ~43 kDa). (moak2004peptidoglycanhydrolyticactivities pages 2-4)<br />
+* </em><em>Maturational cleavage occurs between Ser351 and Ala352</em><em> when gp5 is incorporated into the baseplate (or at high concentration). (kanamaru2002structureofthe pages 1-1)<br />
+* Removal of a C-terminal fragment increases enzymatic activity by </em><em>~10-fold</em><em>, indicating that the C-terminal region modulates/occludes catalytic function until the appropriate stage. (moak2004peptidoglycanhydrolyticactivities pages 2-4)<br />
+* In the assembled trimeric complex, structural contacts occlude binding features and help explain why trimeric gp5</em> is less active than monomeric gp5*. (kanamaru2002structureofthe pages 3-5)</p>
+<h3 id="4-domain-architecture-and-structural-role-in-the-virion">4) Domain architecture and structural role in the virion</h3>
+<p>Kanamaru et al. solved the crystal structure of the <strong>heterononameric (gp27–gp5*–gp5C)3</strong> complex and provide the most authoritative domain-level functional annotation.</p>
+<h4 id="41-gp5-domain-organization-structure-defined">4.1 gp5 domain organization (structure-defined)</h4>
+<p><strong>gp5 is a modular, multi-domain protein</strong>:<br />
+1. <strong>N-terminal OB-fold (β-barrel)</strong>: inserted into a cylinder formed by gp27 and proposed to contribute to the DNA-ejection/puncturing channel; also discussed as an oligosaccharide-binding fold whose binding surfaces may be partly occluded in the assembled trimer. (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 3-5)<br />
+2. <strong>Central lysozyme domain</strong>: positioned peripherally to digest peptidoglycan; ~43% sequence identity to cytoplasmic T4 lysozyme is reported. (kanamaru2002structureofthe pages 1-1)<br />
+3. <strong>C-terminal β-helix “needle/prism” (gp5C)</strong>: a three-start β-helix that oligomerizes into a pointed triangular prism (needle-like puncturing element). (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 3-5)</p>
+<h4 id="42-processed-products-gp5-gp5c-and-assembly-into-the-puncturing-complex">4.2 Processed products: gp5*, gp5C, and assembly into the puncturing complex</h4>
+<p>Kanamaru et al. report that gp5 is <strong>cleaved</strong> during maturation into <strong>gp5</strong><em> (N-terminal portion containing the lysozyme domain) and </em><em>gp5C</em>* (C-terminal β-helix trimer), and that both are present in the assembled puncturing complex. (kanamaru2002structureofthe pages 1-3)</p>
+<p>The β-helix prism is described as ~<strong>110 Å long</strong> and ~<strong>28 Å diameter</strong>, and the overall complex is described as a ~<strong>190 Å torch</strong> with a gp27 cylindrical head. (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 3-5)</p>
+<h4 id="43-role-of-gp27gp5-in-baseplate-assembly-and-infectivity">4.3 Role of gp27–gp5 in baseplate assembly and infectivity</h4>
+<p>Kanamaru et al. state that <strong>mutants lacking gp5 or gp27</strong> produce <strong>hubless, non-infectious particles</strong>, supporting an essential structural role in assembly and infection. (kanamaru2002structureofthe pages 1-1)</p>
+<h3 id="5-biological-process-adsorption-triggered-penetration-and-dna-injection">5) Biological process: adsorption-triggered penetration and DNA injection</h3>
+<h4 id="51-proposed-mechanism-during-infection">5.1 Proposed mechanism during infection</h4>
+<p>A mechanistic model supported by structural data is:<br />
+1. <strong>Host attachment</strong> triggers baseplate conformational change and <strong>tail-sheath contraction</strong>.<br />
+2. Contraction transmits force through the gp27 cylinder and gp5 N-terminal region.<br />
+3. The gp5 <strong>β-helix needle</strong> is driven through the <strong>outer membrane (~40 Å thickness)</strong>.<br />
+4. The <strong>lysozyme domains</strong> then digest peptidoglycan to permit the tail tube to traverse the cell wall and reach the inner membrane for DNA injection. (kanamaru2002structureofthe pages 5-5, kanamaru2002structureofthe pages 1-1)</p>
+<h4 id="52-caution-on-necessity-vs-associated-activity">5.2 Caution on “necessity” vs “associated activity”</h4>
+<p>Moak &amp; Molineux emphasize an important interpretive caution: simply detecting muralytic activity in virions does not alone prove that peptidoglycan digestion is strictly required for infection in all conditions, and virion preparations can contain fragments/enzymes that complicate inference. Nonetheless, multiple genetic and biochemical lines of evidence support gp5 as a virion/baseplate-associated muramidase with a role in localized wall weakening. (moak2004peptidoglycanhydrolyticactivities pages 9-10, moak2004peptidoglycanhydrolyticactivities pages 1-2)</p>
+<h3 id="6-localization-where-gp5-acts">6) Localization (where gp5 acts)</h3>
+<p>The gp5 gene product is a <strong>structural virion protein localized to the baseplate center (central spike/puncturing apparatus)</strong> at the distal end of the tail, where it acts externally on the host envelope during adsorption and contraction-driven penetration. (leprince2023phageadsorptionto pages 9-10, kanamaru2002structureofthe pages 1-1)</p>
+<p><strong>Direct biochemical support for virion association</strong> comes from virion analyses showing a peptidoglycan-hydrolytic activity band near <strong>~40 kDa</strong> corresponding to <strong>gp5</strong>* (and a second band corresponding to gpE). (moak2004peptidoglycanhydrolyticactivities media b0febb0f, moak2004peptidoglycanhydrolyticactivities media cc275793)</p>
+<h3 id="7-recent-developments-prioritizing-20232024-sources-and-connection-to-gp5">7) Recent developments (prioritizing 2023–2024 sources) and connection to gp5</h3>
+<h4 id="71-2023-synthesis-adsorption-penetration-and-enzyme-assisted-entry">7.1 2023 synthesis: adsorption, penetration, and enzyme-assisted entry</h4>
+<p>A 2023 Viruses review uses <strong>T4</strong> as a key model for adsorption/penetration architecture and explicitly frames the <strong>gp27–gp5–gp5.4</strong> apparatus as responsible for <strong>membrane penetration and peptidoglycan degradation</strong> during adsorption. It also highlights that such spike proteins can combine a <strong>muramidase domain</strong> with a <strong>β-rich puncturing region</strong>, consistent with the gp5 domain logic established by structural biology. (leprince2023phageadsorptionto pages 9-10)</p>
+<p>The same 2023 review emphasizes broader modern themes that extend from the T4 gp5 paradigm: virion-associated peptidoglycan hydrolases and other virion enzymes (including those in tape-measure proteins or baseplate spikes) are increasingly recognized as key determinants of efficient penetration and are being leveraged for host-range engineering and antivirulence strategies. (leprince2023phageadsorptionto pages 7-9, leprince2023phageadsorptionto pages 23-24)</p>
+<h4 id="72-2024-context-adjacent-systems-and-generalization">7.2 2024 context (adjacent systems and generalization)</h4>
+<p>Direct 2024 T4 gp5-focused primary results were not retrieved in the current library; however, 2024 structural work on <strong>contractile tail-like systems</strong> continues to reference <strong>T4 gp27–gp5</strong> as a structural archetype for puncturing spikes in related nanomachines, reinforcing the continuing relevance of the gp5 mechanism as a comparative model. (leprince2023phageadsorptionto pages 9-10)</p>
+<h3 id="8-current-applications-and-real-world-implementations-tail-spikes-vapghs-gp5-as-a-model">8) Current applications and real-world implementations (tail spikes / VAPGHs; gp5 as a model)</h3>
+<p>Although T4 gp5 itself is primarily a mechanistic model protein, the broader class of <strong>tail spikes</strong> and <strong>virion-associated hydrolases</strong> has multiple applied uses.</p>
+<h4 id="81-diagnostics-and-detection-quantitative-examples">8.1 Diagnostics and detection (quantitative examples)</h4>
+<p>Phage tail fibers/spikes can act as highly specific capture reagents. Examples compiled in a 2021 review include:<br />
+* An enzyme-linked long tail fiber assay (EELTA) reported sensitivity as low as <strong>10^2 CFU/mL</strong> for <em>Salmonella typhimurium</em>. (aslam2021bacteriophageproteomeinsights pages 5-7)<br />
+* Tail-fiber immobilization on paramagnetic beads reported a <strong>98% detection rate</strong> for <em>S. typhimurium</em>. (aslam2021bacteriophageproteomeinsights pages 5-7)</p>
+<p>These implementations are enabled by the same molecular principles that make gp5 and related tail proteins effective: high-specificity surface recognition and robust structural scaffolds. (aslam2021bacteriophageproteomeinsights pages 5-7, leprince2023phageadsorptionto pages 9-10)</p>
+<h4 id="82-antibacterialantivirulence-and-anti-biofilm-strategies">8.2 Antibacterial/antivirulence and anti-biofilm strategies</h4>
+<p>Tailspike depolymerases can degrade bacterial capsules/LPS and disrupt biofilms; examples include LKA1gp49 degrading O5 serotype LPS and disrupting biofilm matrices, and Dpo7 as an anti-biofilm agent in staphylococci. (aslam2021bacteriophageproteomeinsights pages 5-7, aslam2021bacteriophageproteomeinsights pages 17-19)</p>
+<h4 id="83-biocontrol-and-in-vivo-associated-use">8.3 Biocontrol and in vivo-associated use</h4>
+<p>A reported applied example is that <strong>orally administered P22 phage tailspike protein</strong> reduced <em>Salmonella</em> colonization in chickens (reviewed as an application case). (aslam2021bacteriophageproteomeinsights pages 17-19)</p>
+<h4 id="84-enzybiotics-and-engineered-lytic-enzymes">8.4 Enzybiotics and engineered lytic enzymes</h4>
+<p>Virion-associated enzymes and endolysins are discussed as “enzybiotics,” and engineered formats (e.g., Artilysins) aim to overcome delivery barriers such as the Gram-negative outer membrane. (aslam2021bacteriophageproteomeinsights pages 5-7, leprince2023phageadsorptionto pages 23-24)</p>
+<h3 id="9-expert-interpretation-and-authoritative-analysis-what-the-evidence-supports">9) Expert interpretation and authoritative analysis (what the evidence supports)</h3>
+<ul>
+<li>
+<p><strong>Most strongly supported primary function</strong>: gp5 is a <strong>structural component of the baseplate hub/central spike</strong> that is essential for infectivity and forms, with gp27, a <strong>cell-puncturing device</strong>; its muramidase domain likely contributes to <strong>localized peptidoglycan weakening</strong> during penetration. The strongest direct evidence for this integrated structural–enzymatic role is the <strong>crystal structure and mechanistic model</strong> in Kanamaru et al. (Nature, 2002). (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 5-5)</p>
+</li>
+<li>
+<p><strong>Enzymatic specificity</strong>: gp5 is a <strong>muramidase</strong> cleaving the NAM–NAG β(1→4) linkage, with specificity like T4 gpE lysozyme; it is biochemically detected in virions and genetically linked to lysis phenotypes (“lysis from without” and complementation observations). (moak2004peptidoglycanhydrolyticactivities pages 1-2, moak2004peptidoglycanhydrolyticactivities pages 2-4)</p>
+</li>
+<li>
+<p><strong>Regulatory/processing logic</strong>: proteolytic processing and oligomeric assembly appear to tune enzymatic activity (e.g., activity increases upon removal of a C-terminal fragment; trimeric assembly occludes binding clefts), consistent with the requirement that entry-associated muralysis be spatially and temporally constrained. (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 3-5)</p>
+</li>
+<li>
+<p><strong>Uncertainties</strong>: Moak &amp; Molineux caution that virion-associated muralytic activity does not automatically imply strict requirement for infection across conditions, and biochemical detection methods can be confounded; thus, gp5’s enzymatic contribution should be described as strongly supported but potentially condition-dependent or partially redundant with other factors. (moak2004peptidoglycanhydrolyticactivities pages 9-10)</p>
+</li>
+</ul>
+<h3 id="10-key-statistics-and-data-points-from-retrieved-sources">10) Key statistics and data points (from retrieved sources)</h3>
+<p><strong>For T4 gp5 specifically</strong>:<br />
+* Precursor molecular mass: <strong>~63 kDa</strong>; processed product gp5<em>: </em><em>~43 kDa</em><em>. (moak2004peptidoglycanhydrolyticactivities pages 2-4)<br />
+* Cleavage site: </em><em>Ser351–Ala352</em><em>. (kanamaru2002structureofthe pages 1-1)<br />
+* Activity change upon C-terminal fragment removal: </em><em>~10-fold increase</em><em>. (moak2004peptidoglycanhydrolyticactivities pages 2-4)<br />
+* Structural dimensions: overall device described as </em><em>~190 Å</em><em> long; gp5C needle </em><em>~110 Å</em><em> long and </em><em>~28 Å</em><em> diameter; outer membrane thickness referenced as </em><em>~40 Å</em><em>. (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 5-5)<br />
+* Virion zymogram: muralytic activity band near </em><em>~40 kDa</em><em> (gp5</em>) and <strong>~18 kDa</strong> (gpE). (moak2004peptidoglycanhydrolyticactivities media b0febb0f, moak2004peptidoglycanhydrolyticactivities media cc275793)</p>
+<p><strong>For applications (tail proteins more broadly)</strong>:<br />
+* Diagnostic sensitivity example: <strong>10^2 CFU/mL</strong> (EELTA) for <em>S. typhimurium</em>. (aslam2021bacteriophageproteomeinsights pages 5-7)<br />
+* Diagnostic detection rate example: <strong>98%</strong> for <em>S. typhimurium</em> using tail-fiber-functionalized paramagnetic beads. (aslam2021bacteriophageproteomeinsights pages 5-7)</p>
+<h3 id="11-summary-functional-annotation-recommended">11) Summary functional annotation (recommended)</h3>
+<p><strong>Gene/product:</strong> T4 gene 5 → gp5 (UniProt P16009)</p>
+<p><strong>Primary function:</strong> Structural and enzymatic component of the T4 baseplate central spike (“cell-puncturing device”). During adsorption-triggered tail contraction, the gp5 C-terminal β-helix needle is driven into the host envelope, while gp5’s lysozyme-like domain (muramidase; EC 3.2.1.17) locally cleaves peptidoglycan (NAM–NAG β(1→4) linkage) to facilitate tail tube penetration and DNA injection. (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 5-5)</p>
+<p><strong>Maturation:</strong> Synthesized as ~63 kDa precursor; cleaved between Ser351–Ala352 into gp5* and gp5C during baseplate assembly; processing/assembly modulates enzyme activity (~10-fold effect upon fragment removal and occlusion effects in trimer). (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 1-1)</p>
+<p><strong>Localization:</strong> Virion-associated; located at baseplate center/distal tail tip as part of (gp27–gp5<em>–gp5C)3 hub/spike; gp5</em>-associated muralytic activity detectable in virions. (kanamaru2002structureofthe pages 1-3, moak2004peptidoglycanhydrolyticactivities media b0febb0f)</p>
+<hr />
+<h3 id="embedded-evidence-summary-table">Embedded evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Protein/form</th>
+<th>Approx. MW / cleavage</th>
+<th>Domain architecture</th>
+<th>Enzymatic activity</th>
+<th>Structural role / localization</th>
+<th>Key evidence</th>
+<th>Year</th>
+<th>DOI / URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Precursor gp5 (gene 5 product; UniProt P16009)</td>
+<td>Synthesized as ~63 kDa precursor; maturational cleavage occurs between Ser351 and Ala352 during baseplate assembly or at high concentration (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 1-1)</td>
+<td>N-terminal OB-fold/antiparallel β-barrel, central lysozyme-like muramidase domain, and C-terminal β-helix-forming region that yields the needle/prism after cleavage (kanamaru2002structureofthe pages 1-1, kanamaru2002structureofthe pages 3-5)</td>
+<td>EC 3.2.1.17 N-acetylmuramidase; cleaves the β-1,4 glycosidic bond between NAM and NAG in peptidoglycan; substrate specificity similar to T4 gpE lysozyme (moak2004peptidoglycanhydrolyticactivities pages 1-2, moak2004peptidoglycanhydrolyticactivities pages 2-4)</td>
+<td>Virion/baseplate-associated precursor of the central cell-puncturing device; required for proper hub/baseplate assembly and infectivity (kanamaru2002structureofthe pages 1-1, leprince2023phageadsorptionto pages 9-10)</td>
+<td>Produced as precursor then processed during assembly; gene 5 mutants lack proper hub and are noninfectious; Leprince 2023 places gp5 in the T4 central puncturing apparatus with gp27 and gp5.4 (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 1-1, leprince2023phageadsorptionto pages 9-10)</td>
+<td>2002; 2004; 2023</td>
+<td>Nature 10.1038/415553a https://doi.org/10.1038/415553a; Mol Microbiol 10.1046/j.1365-2958.2003.03894.x https://doi.org/10.1046/j.1365-2958.2003.03894.x; Viruses 10.3390/v15010196 https://doi.org/10.3390/v15010196</td>
+</tr>
+<tr>
+<td>Processed gp5* (mature N-terminal portion retained in complex)</td>
+<td>Mature form ~43 kDa; also observed near ~40 kDa on zymogram/SDS-PAGE; generated from precursor during assembly; cleavage at Ser351-Ala352 (moak2004peptidoglycanhydrolyticactivities pages 2-4, moak2004peptidoglycanhydrolyticactivities media b0febb0f, kanamaru2002structureofthe pages 1-1)</td>
+<td>Contains N-terminal OB-fold plus peripheral lysozyme domain; associates with gp27 and gp5C in assembled heterononamer (gp27-gp5*-gp5C)3 (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 3-5)</td>
+<td>N-acetylmuramidase with reduced activity in trimeric assembled state; removal of the C-terminal fragment increases activity about 10-fold (moak2004peptidoglycanhydrolyticactivities pages 2-4, kanamaru2002structureofthe pages 3-5)</td>
+<td>Part of the gp27-gp5 central spike or hub beneath the baseplate; lysozyme domains surround the β-helix and act during localized peptidoglycan digestion for tail-tube penetration (kanamaru2002structureofthe pages 5-5, kanamaru2002structureofthe pages 1-3)</td>
+<td>Virion-associated muralytic band at ~40 kDa; mature baseplate protein proposed to digest cell wall during infection and implicated in lysis from without or within phenotypes (moak2004peptidoglycanhydrolyticactivities pages 1-2, moak2004peptidoglycanhydrolyticactivities media b0febb0f, kanamaru2002structureofthe pages 5-5)</td>
+<td>2002; 2004</td>
+<td>Nature 10.1038/415553a https://doi.org/10.1038/415553a; Mol Microbiol 10.1046/j.1365-2958.2003.03894.x https://doi.org/10.1046/j.1365-2958.2003.03894.x</td>
+</tr>
+<tr>
+<td>gp5C (C-terminal cleavage product)</td>
+<td>C-terminal product from cleavage of gp5 precursor; forms SDS-resistant trimer; exact mass not separately emphasized in the cited summaries (kanamaru2002structureofthe pages 1-3)</td>
+<td>Triple-stranded or three-start β-helix forming a pointed triangular prism or needle, about 110 Å long and 28 Å in diameter; includes repeated VXGXXXXX motifs (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 3-5)</td>
+<td>No catalytic muramidase activity assigned; primarily structural, but modulates gp5* activity by stabilizing the trimeric state (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 3-5)</td>
+<td>Membrane-puncturing needle of the central cell-puncturing device; with gp27 forms a torch-like hub at the baseplate center that is driven toward the host envelope during sheath contraction (kanamaru2002structureofthe pages 5-5, kanamaru2002structureofthe pages 1-3)</td>
+<td>Crystal structure shows gp5C is required for trimerization of the gp27-gp5 complex and for formation of the rigid puncturing prism or needle (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 3-5)</td>
+<td>2002</td>
+<td>Nature 10.1038/415553a https://doi.org/10.1038/415553a</td>
+</tr>
+<tr>
+<td>gp27-gp5 central device (assembled functional complex)</td>
+<td>Heterononameric (gp27-gp5*-gp5C)3 complex; overall torch-like assembly about 190 Å long; gp27 cylinder about 60 Å long; β-helix spans the needle region (kanamaru2002structureofthe pages 1-3, kanamaru2002structureofthe pages 5-5)</td>
+<td>gp27 trimer forms hollow cylinder or head; gp5 contributes OB-fold, lysozyme domains, and C-terminal β-helix needle; Leprince 2023 summarizes a lysozyme domain plus β-rich puncturing region (kanamaru2002structureofthe pages 1-3, leprince2023phageadsorptionto pages 9-10)</td>
+<td>Couples mechanical puncture with localized peptidoglycan hydrolysis to enable DNA injection through the cell envelope (kanamaru2002structureofthe pages 5-5, leprince2023phageadsorptionto pages 9-10)</td>
+<td>Central hub of the T4 baseplate and cell-puncturing apparatus; located at the distal tail tip and aligned with the tail tube for host membrane and peptidoglycan penetration during adsorption and sheath contraction (kanamaru2002structureofthe pages 1-1, leprince2023phageadsorptionto pages 9-10)</td>
+<td>Structural model from Kanamaru 2002 plus biochemical support from Moak and Molineux 2004; Leprince 2023 places this device in the current adsorption and penetration framework (kanamaru2002structureofthe pages 1-1, moak2004peptidoglycanhydrolyticactivities pages 2-4, leprince2023phageadsorptionto pages 9-10)</td>
+<td>2002; 2004; 2023</td>
+<td>Nature 10.1038/415553a https://doi.org/10.1038/415553a; Mol Microbiol 10.1046/j.1365-2958.2003.03894.x https://doi.org/10.1046/j.1365-2958.2003.03894.x; Viruses 10.3390/v15010196 https://doi.org/10.3390/v15010196</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the validated identity, processing, domain structure, enzymatic activity, and structural role of Enterobacteria phage T4 gene 5 product gp5 (UniProt P16009). It highlights the core evidence from Kanamaru 2002, Moak and Molineux 2004, and Leprince 2023 most useful for functional annotation.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(moak2004peptidoglycanhydrolyticactivities pages 2-4): Michael Moak and Ian J. Molineux. Peptidoglycan hydrolytic activities associated with bacteriophage virions. Molecular Microbiology, 51:1169-1183, Feb 2004. URL: https://doi.org/10.1046/j.1365-2958.2003.03894.x, doi:10.1046/j.1365-2958.2003.03894.x. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanamaru2002structureofthe pages 1-1): Shuji Kanamaru, Petr G. Leiman, Victor A. Kostyuchenko, Paul R. Chipman, Vadim V. Mesyanzhinov, Fumio Arisaka, and Michael G. Rossmann. Structure of the cell-puncturing device of bacteriophage t4. Nature, 415:553-557, Jan 2002. URL: https://doi.org/10.1038/415553a, doi:10.1038/415553a. This article has 474 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moak2004peptidoglycanhydrolyticactivities pages 1-2): Michael Moak and Ian J. Molineux. Peptidoglycan hydrolytic activities associated with bacteriophage virions. Molecular Microbiology, 51:1169-1183, Feb 2004. URL: https://doi.org/10.1046/j.1365-2958.2003.03894.x, doi:10.1046/j.1365-2958.2003.03894.x. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leprince2023phageadsorptionto pages 9-10): Audrey Leprince and Jacques Mahillon. Phage adsorption to gram-positive bacteria. Viruses, 15:196, Jan 2023. URL: https://doi.org/10.3390/v15010196, doi:10.3390/v15010196. This article has 104 citations.</p>
+</li>
+<li>
+<p>(kanamaru2002structureofthe pages 1-3): Shuji Kanamaru, Petr G. Leiman, Victor A. Kostyuchenko, Paul R. Chipman, Vadim V. Mesyanzhinov, Fumio Arisaka, and Michael G. Rossmann. Structure of the cell-puncturing device of bacteriophage t4. Nature, 415:553-557, Jan 2002. URL: https://doi.org/10.1038/415553a, doi:10.1038/415553a. This article has 474 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanamaru2002structureofthe pages 3-5): Shuji Kanamaru, Petr G. Leiman, Victor A. Kostyuchenko, Paul R. Chipman, Vadim V. Mesyanzhinov, Fumio Arisaka, and Michael G. Rossmann. Structure of the cell-puncturing device of bacteriophage t4. Nature, 415:553-557, Jan 2002. URL: https://doi.org/10.1038/415553a, doi:10.1038/415553a. This article has 474 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanamaru2002structureofthe pages 5-5): Shuji Kanamaru, Petr G. Leiman, Victor A. Kostyuchenko, Paul R. Chipman, Vadim V. Mesyanzhinov, Fumio Arisaka, and Michael G. Rossmann. Structure of the cell-puncturing device of bacteriophage t4. Nature, 415:553-557, Jan 2002. URL: https://doi.org/10.1038/415553a, doi:10.1038/415553a. This article has 474 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moak2004peptidoglycanhydrolyticactivities pages 9-10): Michael Moak and Ian J. Molineux. Peptidoglycan hydrolytic activities associated with bacteriophage virions. Molecular Microbiology, 51:1169-1183, Feb 2004. URL: https://doi.org/10.1046/j.1365-2958.2003.03894.x, doi:10.1046/j.1365-2958.2003.03894.x. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moak2004peptidoglycanhydrolyticactivities media b0febb0f): Michael Moak and Ian J. Molineux. Peptidoglycan hydrolytic activities associated with bacteriophage virions. Molecular Microbiology, 51:1169-1183, Feb 2004. URL: https://doi.org/10.1046/j.1365-2958.2003.03894.x, doi:10.1046/j.1365-2958.2003.03894.x. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moak2004peptidoglycanhydrolyticactivities media cc275793): Michael Moak and Ian J. Molineux. Peptidoglycan hydrolytic activities associated with bacteriophage virions. Molecular Microbiology, 51:1169-1183, Feb 2004. URL: https://doi.org/10.1046/j.1365-2958.2003.03894.x, doi:10.1046/j.1365-2958.2003.03894.x. This article has 282 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leprince2023phageadsorptionto pages 7-9): Audrey Leprince and Jacques Mahillon. Phage adsorption to gram-positive bacteria. Viruses, 15:196, Jan 2023. URL: https://doi.org/10.3390/v15010196, doi:10.3390/v15010196. This article has 104 citations.</p>
+</li>
+<li>
+<p>(leprince2023phageadsorptionto pages 23-24): Audrey Leprince and Jacques Mahillon. Phage adsorption to gram-positive bacteria. Viruses, 15:196, Jan 2023. URL: https://doi.org/10.3390/v15010196, doi:10.3390/v15010196. This article has 104 citations.</p>
+</li>
+<li>
+<p>(aslam2021bacteriophageproteomeinsights pages 5-7): Bilal Aslam, Muhammad Imran Arshad, Muhammad Aamir Aslam, Saima Muzammil, Abu Baker Siddique, Nafeesa Yasmeen, Mohsin Khurshid, Maria Rasool, Moeed Ahmad, Muhammad Hidayat Rasool, Mohammad Fahim, Riaz Hussain, Xueshan Xia, and Zulqarnain Baloch. Bacteriophage proteome: insights and potentials of an alternate to antibiotics. Infectious Diseases and Therapy, 10:1171-1193, Jun 2021. URL: https://doi.org/10.1007/s40121-021-00446-2, doi:10.1007/s40121-021-00446-2. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aslam2021bacteriophageproteomeinsights pages 17-19): Bilal Aslam, Muhammad Imran Arshad, Muhammad Aamir Aslam, Saima Muzammil, Abu Baker Siddique, Nafeesa Yasmeen, Mohsin Khurshid, Maria Rasool, Moeed Ahmad, Muhammad Hidayat Rasool, Mohammad Fahim, Riaz Hussain, Xueshan Xia, and Zulqarnain Baloch. Bacteriophage proteome: insights and potentials of an alternate to antibiotics. Infectious Diseases and Therapy, 10:1171-1193, Jun 2021. URL: https://doi.org/10.1007/s40121-021-00446-2, doi:10.1007/s40121-021-00446-2. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="5-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000006 The document provides information on T4 gp5 processing and its baseplate-associated muralytic activity. According to the text, T4 g" src="5-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>moak2004peptidoglycanhydrolyticactivities pages 2-4</li>
+<li>kanamaru2002structureofthe pages 1-1</li>
+<li>kanamaru2002structureofthe pages 3-5</li>
+<li>kanamaru2002structureofthe pages 1-3</li>
+<li>leprince2023phageadsorptionto pages 9-10</li>
+<li>aslam2021bacteriophageproteomeinsights pages 5-7</li>
+<li>aslam2021bacteriophageproteomeinsights pages 17-19</li>
+<li>moak2004peptidoglycanhydrolyticactivities pages 9-10</li>
+<li>moak2004peptidoglycanhydrolyticactivities pages 1-2</li>
+<li>kanamaru2002structureofthe pages 5-5</li>
+<li>leprince2023phageadsorptionto pages 7-9</li>
+<li>leprince2023phageadsorptionto pages 23-24</li>
+<li>https://doi.org/10.1038/415553a;</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03894.x;</li>
+<li>https://doi.org/10.3390/v15010196</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03894.x</li>
+<li>https://doi.org/10.1038/415553a</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03894.x,</li>
+<li>https://doi.org/10.1038/415553a,</li>
+<li>https://doi.org/10.3390/v15010196,</li>
+<li>https://doi.org/10.1007/s40121-021-00446-2,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P16009
+gene_symbol: P16009
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P16009&#39;
+existing_annotations:
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0009253
+    label: peptidoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016798
+    label: hydrolase activity, acting on glycosyl bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016998
+    label: cell wall macromolecule catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031640
+    label: killing of cells of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0042742
+    label: defense response to bacterium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046718
+    label: symbiont entry into host cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098003
+    label: viral tail assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098015
+    label: virus tail
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098025
+    label: virus tail, baseplate
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098932
+    label: symbiont entry into host cell via disruption of host cell wall peptidoglycan
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098994
+    label: symbiont entry into host cell via disruption of host cell envelope
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:11823865
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15701513
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: EXP
+  original_reference_id: PMID:10217762
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046718
+    label: symbiont entry into host cell
+  evidence_type: IMP
+  original_reference_id: PMID:15701513
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:15701513
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IMP
+  original_reference_id: PMID:15701513
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098015
+    label: virus tail
+  evidence_type: IMP
+  original_reference_id: PMID:15701513
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003796
+    label: lysozyme activity
+  evidence_type: IDA
+  original_reference_id: PMID:3157805
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098025
+    label: virus tail, baseplate
+  evidence_type: IDA
+  original_reference_id: PMID:27193680
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0044409
+    label: symbiont entry into host
+  evidence_type: IDA
+  original_reference_id: PMID:3157805
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10217762
+  title: The C-terminal fragment of the precursor tail lysozyme of bacteriophage T4
+    stays as a structural component of the baseplate after cleavage.
+  findings: []
+- id: PMID:11823865
+  title: Structure of the cell-puncturing device of bacteriophage T4.
+  findings: []
+- id: PMID:15701513
+  title: Control of bacteriophage T4 tail lysozyme activity during the infection process.
+  findings: []
+- id: PMID:27193680
+  title: Structure of the T4 baseplate and its function in triggering sheath contraction.
+  findings: []
+- id: PMID:3157805
+  title: Isolation and characterization of the bacteriophage T4 tail-associated lysozyme.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

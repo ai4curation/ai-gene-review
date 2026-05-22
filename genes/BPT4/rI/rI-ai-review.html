@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P13304 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P13304</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P13304" target="_blank" class="term-link">
+                        P13304
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P13304";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P13304" data-a="DESCRIPTION: TODO: Add description for P13304..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P13304</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031640" target="_blank" class="term-link">
+                                    GO:0031640
+                                </a>
+                            </span>
+                            <span class="term-label">killing of cells of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0031640" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044229" target="_blank" class="term-link">
+                                    GO:0044229
+                                </a>
+                            </span>
+                            <span class="term-label">host cell periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0044229" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140678" target="_blank" class="term-link">
+                                    GO:0140678
+                                </a>
+                            </span>
+                            <span class="term-label">molecular function inhibitor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0140678" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044229" target="_blank" class="term-link">
+                                    GO:0044229
+                                </a>
+                            </span>
+                            <span class="term-label">host cell periplasmic space</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34456892" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34456892
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Phage T4 Antiholin RI Has a Cleavable Signal Peptide, No...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0044229" data-r="PMID:34456892" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020002" target="_blank" class="term-link">
+                                    GO:0020002
+                                </a>
+                            </span>
+                            <span class="term-label">host cell plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17693511" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17693511
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The T4 RI antiholin has an N-terminal signal anchor release ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13304" data-a="GO:0020002" data-r="PMID:17693511" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17693511" target="_blank" class="term-link">
+                            PMID:17693511
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The T4 RI antiholin has an N-terminal signal anchor release domain that targets it for degradation by DegP.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34456892" target="_blank" class="term-link">
+                            PMID:34456892
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The Phage T4 Antiholin RI Has a Cleavable Signal Peptide, Not a SAR Domain.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rI-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P13304" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">50 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T02:02:43.320489</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rI-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="rI-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000046 The requested information can be found in Figures 5 and 6. Figure 5A shows the SDS-PAGE/Western blot analysis of wild-type RI and i</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-ri-ri-antiholin-uniprot-p13304-from-enterobacteria-phage-t4">Research report: Functional annotation of <strong>rI / RI antiholin</strong> (UniProt <strong>P13304</strong>) from <strong>Enterobacteria phage T4</strong></h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The literature retrieved here consistently uses <strong>T4 gene rI</strong> to refer to the gene encoding <strong>RI</strong>, a small <strong>antiholin</strong> protein that antagonizes the <strong>T holin (gene t/rV)</strong> and is required for <strong>lysis inhibition (LIN)</strong> in <em>Enterobacteria phage T4</em> infections (ramanculov2001anancientplayer pages 1-3, ramanculov2001anancientplayer pages 3-4, paddison1998therolesof pages 5-6). This matches the UniProt target context provided (P13304; “Antiholin / protein rI”). </p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-holinendolysin-lysis-and-antiholins">1.1 Holin–endolysin lysis and antiholins</h4>
+<p>In canonical double-stranded DNA phage lysis, a <strong>holin</strong> accumulates in the host inner membrane and, at a genetically programmed time, <strong>triggers</strong> to form lesions/pores that allow an <strong>endolysin</strong> to access and degrade peptidoglycan. In phage T4, holin triggering is controlled by <strong>antiholins</strong> including <strong>RI</strong> (periplasmic) which directly antagonize holin activity (moussa2014geneticdissectionof pages 1-2, chen2016thelastr pages 2-2).</p>
+<p><strong>Antiholin (definition in this T4 context):</strong> a phage-encoded regulator that binds holin (or its functional domains) and prevents pore formation/triggering until appropriate cues shift the system toward lysis (chen2016thelastr pages 2-2, moussa2014geneticdissectionof pages 1-2).</p>
+<h4 id="12-lysis-inhibition-lin">1.2 Lysis inhibition (LIN)</h4>
+<p><strong>LIN</strong> is a T-even-phage strategy in which host-cell lysis is <strong>delayed</strong> in response to <strong>secondary adsorption/superinfection</strong>, enabling prolonged intracellular phage production and altered plaque morphology/biology (paddison1998therolesof pages 5-6, moussa2014geneticdissectionof pages 1-2). In T4, LIN is mediated primarily by <strong>RI inhibiting T</strong> (ramanculov2001anancientplayer pages 3-4, tran2005periplasmicdomainsdefine pages 6-7).</p>
+<hr />
+<h3 id="2-geneprotein-product-overview-sequence-scale-functional-annotation">2) Gene/protein product overview (sequence-scale functional annotation)</h3>
+<h4 id="21-size-and-basic-features">2.1 Size and basic features</h4>
+<p>Genetic and biochemical analyses describe RI as a <strong>small protein</strong>; a frequently cited product is <strong>~97 aa, ~11.1 kDa (pI ~4.8)</strong> (paddison1998therolesof pages 5-6). The soluble periplasmic region studied biochemically is ~75 aa and is ~9 kDa (moussa2012proteindeterminantsof pages 4-5). </p>
+<h4 id="22-subcellular-localization">2.2 Subcellular localization</h4>
+<p>A central feature of RI is that its <strong>functional domain is periplasmic</strong>, consistent with its inhibition of the <strong>periplasmic domain of holin T</strong> (tran2005periplasmicdomainsdefine pages 6-7, moussa2014geneticdissectionof pages 1-2). In domain-swap and chimera experiments, the <strong>periplasmic C-terminal domain</strong> of RI was <strong>necessary and sufficient</strong> for LIN (tran2005periplasmicdomainsdefine pages 6-7).</p>
+<hr />
+<h3 id="3-molecular-function-and-mechanism-how-ri-controls-t4-lysis-timing">3) Molecular function and mechanism: how RI controls T4 lysis timing</h3>
+<h4 id="31-primary-molecular-function">3.1 Primary molecular function</h4>
+<p><strong>Primary function:</strong> RI is a <strong>T-holin inhibitor (antiholin)</strong> that binds the holin and prevents holin <strong>oligomerization/triggering</strong>, delaying membrane permeabilization and therefore delaying endolysin access to peptidoglycan (tran2005periplasmicdomainsdefine pages 6-7, moussa2014geneticdissectionof pages 1-2, schwarzkopf2024adimericholinantiholin pages 9-11).</p>
+<p>Functional evidence:<br />
+* <strong>rI alone can impose LIN</strong> on T-mediated lysis in heterologous/plasmid settings (ramanculov2001anancientplayer pages 1-3). <br />
+* During LIN, <strong>T continues to accumulate in the membrane</strong>, indicating RI blocks <strong>function</strong>, not holin synthesis/localization (ramanculov2001anancientplayer pages 3-4). <br />
+* <strong>Formaldehyde crosslinking</strong> supports <strong>direct T–RI complex formation</strong> (appearance of ~38 kDa complex consistent with T+RI) (ramanculov2001anancientplayer pages 3-4).</p>
+<h4 id="32-reversibility-and-triggering">3.2 Reversibility and triggering</h4>
+<p>LIN is physiologically reversible by conditions that <strong>collapse membrane energy</strong>:<br />
+* Inhibition can be relieved by <strong>cyanide (KCN)</strong> or forced lysis by <strong>chloroform</strong>, consistent with RI blocking holin function rather than permanently disabling the lytic machinery (ramanculov2001anancientplayer pages 3-4). <br />
+* Artificial depolarization by energy poisons can induce immediate premature lysis in T4 systems, overriding the inhibited state (moussa2014geneticdissectionof pages 1-2).</p>
+<h4 id="33-complex-stoichiometry-and-active-inhibitory-species-heterodimer-vs-tetramer-vs-dimeric-membrane-complex">3.3 Complex stoichiometry and “active inhibitory species”: heterodimer vs tetramer vs dimeric membrane complex</h4>
+<p>Multiple lines of work address RI–T oligomeric organization.</p>
+<p><strong>Biochemical solution studies (2012):</strong> mixing purified soluble domains shows an <strong>equimolar RI:T interaction</strong>; analytical ultracentrifugation supports a predominant <strong>1:1 heterodimer</strong> (predicted ~29.7–30 kDa), even though gel filtration can show a larger apparent mass (~45.6 kDa), likely reflecting shape/oligomer mixtures (moussa2012proteindeterminantsof pages 4-5).</p>
+<p><strong>Structural model (2020):</strong> crystallography and cryo-EM of soluble domains support an <strong>sRI2–sT2 heterotetramer</strong>, and free sRI can form a homotetramer at high concentration; oligomeric state is concentration dependent (monomer/dimer at ≤1.6 mg/mL; tetramer at crystallization concentrations) (krieger2020thestructuralbasis pages 6-8, krieger2020thestructuralbasis pages 3-5). This work proposed a <strong>domain-swapping / conformational-change</strong> model for irreversibility of triggering and suggested a role for DNA/nucleotide binding as a LIN signal (krieger2020thestructuralbasis pages 8-9, krieger2020thestructuralbasis pages 14-16).</p>
+<p><strong>Recent reinterpretation (2024):</strong> Schwarzkopf et al. reconstituted LIN with only <strong>RI, holin T, and endolysin</strong>, and used mutagenesis plus AlphaFold-guided interface analysis to argue that the physiologically relevant inhibited form is a <strong>membrane-compatible T/RI dimer</strong> using a single conserved interface (“interface 1”), rather than requiring the full crystallographic tetramer arrangement (schwarzkopf2024adimericholinantiholin pages 1-2, schwarzkopf2024adimericholinantiholin pages 9-11).</p>
+<p>Overall, current evidence supports that <strong>direct RI–T binding</strong> is the key molecular event; the <strong>dominant functional inhibitory unit</strong> is now argued to be <strong>dimeric in vivo</strong> (schwarzkopf2024adimericholinantiholin pages 9-11, schwarzkopf2024adimericholinantiholin pages 1-2), while larger oligomers/tetramers can occur for soluble domains under certain conditions (krieger2020thestructuralbasis pages 3-5).</p>
+<h4 id="34-key-residues-determinants">3.4 Key residues / determinants</h4>
+<p>In the 2024 reconstituted system, mutations at the inferred T/RI interaction interface (e.g., <strong>RI Y42A/Y42L/F56A</strong>) abolished LIN, supporting the functional importance of that specific binding surface (schwarzkopf2024adimericholinantiholin pages 3-5).</p>
+<h4 id="35-disulfide-stabilized-periplasmic-fold">3.5 Disulfide-stabilized periplasmic fold</h4>
+<p>RI and the periplasmic domain of holin T contain disulfides important for function (e.g., <strong>RI Cys69–Cys75</strong>; <strong>T Cys175–Cys207</strong>) (moussa2012proteindeterminantsof pages 5-7, krieger2020thestructuralbasis pages 3-5). This is consistent with a periplasmic environment and indicates folding/oxidative pathways (e.g., Dsb system) can be relevant for functional interaction studies (moussa2012proteindeterminantsof pages 5-7).</p>
+<hr />
+<h3 id="4-localization-and-trafficking-cleavable-signal-peptide-vs-sar-domain-controversy-and-current-view">4) Localization and trafficking: cleavable signal peptide vs SAR-domain controversy and current view</h3>
+<p>A significant and recent revision concerns the N-terminus of RI.</p>
+<h4 id="41-2021-evidence-for-a-cleavable-sec-signal-peptide">4.1 2021 evidence for a cleavable Sec signal peptide</h4>
+<p>Mehner-Breitfeld et al. (Aug 2021) combined signal-peptide prediction (SignalP), cleavage-site mutagenesis, fractionation, and reporter fusions to show RI has a <strong>cleavable Sec-type signal peptide</strong> with predicted cleavage after <strong>Ala24</strong>:<br />
+* Wild-type RI-HA was <strong>processed</strong> and found as mature protein in the <strong>periplasmic fraction</strong> (with fractionation controls showing minimal contamination). <br />
+* Mutation <strong>A24P</strong> at the cleavage region blocked processing (no mature RI detected). <br />
+* The RI signal peptide fused to <strong>PhoA</strong> was efficiently cleaved and exported, demonstrating a functional Sec signal peptide (mehnerbreitfeld2021thephaget4 pages 3-4, mehnerbreitfeld2021thephaget4 pages 1-2, mehnerbreitfeld2021thephaget4 pages 4-5).</p>
+<h4 id="42-2024-evidence-that-cleavage-is-not-required-for-lin">4.2 2024 evidence that cleavage is not required for LIN</h4>
+<p>Schwarzkopf et al. (Sep 2024) show that <strong>abolishing signal peptide cleavage</strong> (e.g., A24P) <strong>does not abolish LIN</strong>, and that <strong>membrane-anchored precursor RI</strong> can still function as an antiholin (schwarzkopf2024adimericholinantiholin pages 3-5, schwarzkopf2024adimericholinantiholin pages 1-2). Their data support a model where <strong>slow/inefficient cleavage</strong> is a regulatory feature and where holin binding can stabilize RI (schwarzkopf2024adimericholinantiholin pages 8-9).</p>
+<p>Visual evidence supporting these conclusions is available from the 2024 paper’s figures (schwarzkopf2024adimericholinantiholin media 19864828, schwarzkopf2024adimericholinantiholin media c8129fc5).</p>
+<hr />
+<h3 id="5-pathways-and-biological-role-in-the-phage-life-cycle">5) Pathways and biological role in the phage life cycle</h3>
+<h4 id="51-the-lin-pathway-as-a-lysis-timing-control-module">5.1 The LIN pathway as a lysis-timing control module</h4>
+<p>Mechanistically, T4 lysis timing can be viewed as an <strong>accumulation-and-trigger threshold</strong> process for holin T. RI modulates this by binding T and preventing triggering, effectively increasing the time required for functional holin assemblies to form (moussa2014geneticdissectionof pages 1-2, schwarzkopf2024adimericholinantiholin pages 9-11).</p>
+<p>Quantitative support from infection measurements:<br />
+* In one dataset, under LIN conditions <strong>~8000 T molecules</strong> accumulate by 60 min; by contrast, in a LIN-defective <strong>T4 rI</strong> infection, lysis occurred at ~30 min when <strong>~4000 T molecules</strong> were present—interpreted as a critical triggering concentration (moussa2012proteindeterminantsof pages 5-7).</p>
+<h4 id="52-proposed-superinfection-signal-dnanucleotide-binding-model-2020">5.2 Proposed superinfection signal: DNA/nucleotide binding model (2020)</h4>
+<p>Krieger et al. (2020) propose that the inhibited RI–T complex could be stabilized by <strong>non-sequence-specific binding to nucleic acids or nucleotide-like ligands</strong>, linking superinfection-derived DNA (or degradation products) to LIN. They report binding/shift assays where the <strong>sRI–sT complex</strong> (but not sRI alone) shifts DNAs (e.g., ss 70 bp; ds 30/58 bp) and binds nucleosides/nucleotides with micromolar affinities (e.g., <strong>guanosine Kd 43 µM; AMP 72.4 µM; ADP 213.6 µM; PRPP 225.9 µM</strong>) (krieger2020thestructuralbasis pages 6-8). </p>
+<p>The 2024 reinterpretation does not eliminate a stabilizing role for periplasmic DNA, but it emphasizes that inhibition must be compatible with a <strong>membrane-anchored dimeric complex</strong> (schwarzkopf2024adimericholinantiholin pages 9-11).</p>
+<hr />
+<h3 id="6-recent-developments-prioritizing-20232024">6) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="61-2024-reconstitution-and-updated-structural-logic">6.1 2024: Reconstitution and updated structural logic</h4>
+<p>Schwarzkopf et al. (Sep 2024) provided a key advance by <strong>reconstituting LIN in a phage-free system</strong> with only three components (RI, T, endolysin). This allowed targeted mutagenesis to test whether signal peptide cleavage and specific interaction surfaces are required, supporting a <strong>dimeric</strong> inhibitory model and clarifying that <strong>membrane anchoring</strong> can be compatible with inhibition (schwarzkopf2024adimericholinantiholin pages 1-2, schwarzkopf2024adimericholinantiholin pages 9-11).</p>
+<h4 id="62-2024-quantitative-ecological-theory-for-lins-advantage">6.2 2024: Quantitative ecological theory for LIN’s advantage</h4>
+<p>Hvid &amp; Mitarai (May 2024) used batch-culture ODE models and spatial plaque simulations to analyze why LIN is adaptive. Key quantitative predictions include:<br />
+* In spatial simulations, LIN phages yield a <strong>smaller visible plaque radius</strong> (~<strong>85–86%</strong> of rapid-lysis mutants) but a nearly comparable <strong>zone of infection radius</strong> (~<strong>96%</strong>), explaining why LIN can appear disadvantageous by plaque size yet spread similarly (hvid2024competitiveadvantagesof pages 12-15).<br />
+* In competition models, LIN can win even when burst size does not increase (fβ = 1) if LIN latency is sufficiently longer, because LIN-state cells can adsorb/inactivate competitor phages (hvid2024competitiveadvantagesof pages 9-12).</p>
+<p>This provides an expert, quantitatively grounded framework for interpreting the biological role of RI-mediated LIN beyond molecular mechanism (hvid2024competitiveadvantagesof pages 9-12, hvid2024competitiveadvantagesof pages 12-15).</p>
+<hr />
+<h3 id="7-current-applications-and-real-world-implementations-holinantiholin-concepts-informed-by-ri">7) Current applications and real-world implementations (holin/antiholin concepts informed by RI)</h3>
+<p>Although RI itself is a T4 protein, its mechanism informs broader engineered and applied contexts.</p>
+<h4 id="71-phage-like-lysis-cassettes-as-secretion-release-systems-type-10-secretion-system-concept">7.1 Phage-like lysis cassettes as secretion / release systems (Type 10 secretion system concept)</h4>
+<p>A 2023 experimental study in <em>Yersinia entomophaga</em> shows that a <strong>phage-like lysis cassette</strong> (holin/endolysin/spanin-like module) can be used by bacteria to mediate <strong>exoprotein release</strong> (including large complexes), supporting the concept of phage-derived lysis modules as secretion systems. Mutation of the cassette abolished exoprotein release and complementation restored it; engineered expression of an optimized cassette caused lysis; and holin translation occurred in a <strong>subpopulation</strong>, consistent with regulated timing/triggering concepts analogous to holin–antiholin control (schoof2023lysiscassettemediatedexoprotein pages 1-2).</p>
+<h4 id="72-fine-tuning-lysis-timing-in-phage-development-anti-holin-like-modulators">7.2 Fine-tuning lysis timing in phage development (anti-holin-like modulators)</h4>
+<p>A 2024 study (BSPM4 phage) identified <strong>orf52</strong> as a phage gene whose expression was lethal to <em>Salmonella</em> and that <strong>modulates holin function to fine-tune lysis timing</strong>, providing replication advantages under high phage density—conceptually similar to RI-mediated modulation of holin triggering (kim2024elucidationofmolecular pages 1-2).</p>
+<h4 id="73-synthetic-cell-and-cell-free-phage-production-phage-therapy-enabling-technology">7.3 Synthetic-cell and cell-free phage production (phage therapy enabling technology)</h4>
+<p>A 2025 perspective on synthetic cells for phage therapy reports that premature holin-mediated lysis in encapsulated TXTL systems likely caused a “dramatic loss of vesicles after <strong>12 hours</strong>,” preventing phage production in compartments even when bulk TXTL produced phages. The authors argue that <strong>programmable lysis mechanisms</strong>—potentially using holins—will be needed to synchronize assembly and release, highlighting holin regulation (and thus antiholin principles) as enabling technology (kulkarni2025syntheticcellsfor pages 2-3).</p>
+<hr />
+<h3 id="8-expert-interpretation-and-remaining-uncertainties">8) Expert interpretation and remaining uncertainties</h3>
+<ul>
+<li><strong>Direct RI–T binding</strong> as the core inhibitory mechanism is strongly supported across genetics, biochemistry, and reconstitution studies (ramanculov2001anancientplayer pages 3-4, moussa2012proteindeterminantsof pages 4-5, schwarzkopf2024adimericholinantiholin pages 1-2).</li>
+<li>The field has debated whether RI uses a <strong>SAR domain</strong>-like mechanism; the most recent experimental evidence supports a <strong>cleavable Sec signal peptide</strong> (processing after A24) while also showing that <strong>uncleaved membrane-anchored RI</strong> can still inhibit holin in reconstituted assays, suggesting trafficking/processing is regulatory rather than strictly required (mehnerbreitfeld2021thephaget4 pages 3-4, schwarzkopf2024adimericholinantiholin pages 3-5).</li>
+<li>Structural work supports higher-order complexes and a DNA-binding model (krieger2020thestructuralbasis pages 6-8), whereas 2024 functional work emphasizes a <strong>single-interface, dimeric inhibitory unit</strong> compatible with membrane anchoring (schwarzkopf2024adimericholinantiholin pages 9-11). These views can be partially reconciled if larger oligomers represent concentration/construct-dependent assemblies while the minimal inhibitory species in vivo is dimeric.</li>
+</ul>
+<hr />
+<h3 id="9-evidence-map-condensed">9) Evidence map (condensed)</h3>
+<p>The following table summarizes key supported claims, quantitative findings, and primary sources.</p>
+<table>
+<thead>
+<tr>
+<th>Claim / feature</th>
+<th>Evidence type</th>
+<th>Key quantitative data</th>
+<th>Primary source with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gene identity and primary function:</strong> T4 <strong>rI</strong> encodes <strong>RI</strong>, a <strong>t-specific antiholin</strong> that inhibits holin <strong>T</strong> and imposes lysis inhibition (LIN)</td>
+<td>Genetics, functional complementation, cross-linking</td>
+<td>Plasmid-borne <strong>rI</strong> alone can impose LIN on <strong>T</strong>-mediated lysis; LIN-defective <strong>rI57</strong> fails to block lysis; cross-linked <strong>T–RI</strong> species at ~<strong>38 kDa</strong></td>
+<td>Ramanculov &amp; Young 2001, <em>Molecular Microbiology</em>, https://doi.org/10.1046/j.1365-2958.2001.02491.x (ramanculov2001anancientplayer pages 1-3, ramanculov2001anancientplayer pages 3-4)</td>
+</tr>
+<tr>
+<td><strong>Protein size / gene product:</strong> RI is a small acidic protein with a short N-terminal export segment and periplasmic C-terminal domain</td>
+<td>Genetics, sequence analysis, biochemistry</td>
+<td>Reported as <strong>97 aa</strong>, ~<strong>11.1 kDa</strong>, pI <strong>4.8</strong>; soluble periplasmic domain <strong>sRI ~75 aa</strong>, ~<strong>8.8–9.7 kDa</strong></td>
+<td>Paddison et al. 1998, <em>Genetics</em>, https://doi.org/10.1093/genetics/148.4.1539; Moussa et al. 2012, <em>Protein Science</em>, https://doi.org/10.1002/pro.2042 (paddison1998therolesof pages 5-6, moussa2012proteindeterminantsof pages 1-3, moussa2012proteindeterminantsof pages 4-5)</td>
+</tr>
+<tr>
+<td><strong>Localization:</strong> RI acts through its <strong>periplasmic domain</strong>; the C-terminal periplasmic region is necessary and sufficient for LIN</td>
+<td>Genetics, domain swaps, fractionation</td>
+<td>ssPhoA-RICTD chimera is processed, periplasmic, and functionally supports LIN; periplasmic TCTD can block/subvert LIN</td>
+<td>Tran et al. 2005, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.187.19.6631-6640.2005 (tran2005periplasmicdomainsdefine pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>Signal peptide processing:</strong> RI has a <strong>cleavable Sec signal peptide</strong>, not a classical SAR domain, in the 2021 revision</td>
+<td>Bioinformatics, mutagenesis, fractionation, reporter fusion</td>
+<td>SignalP predicted cleavage after <strong>Ala24</strong> (~<strong>95%</strong> probability); <strong>A24P</strong> blocks processing; RI signal peptide exports <strong>PhoA</strong> efficiently</td>
+<td>Mehner-Breitfeld et al. 2021, <em>Frontiers in Microbiology</em>, https://doi.org/10.3389/fmicb.2021.712460 (mehnerbreitfeld2021thephaget4 pages 2-3, mehnerbreitfeld2021thephaget4 pages 1-2, mehnerbreitfeld2021thephaget4 pages 3-4)</td>
+</tr>
+<tr>
+<td><strong>Membrane-anchored RI can still inhibit holin:</strong> cleavage is not required for LIN in a reconstituted system</td>
+<td>Reconstitution, mutagenesis, fractionation</td>
+<td><strong>A24P</strong> abolished detectable processing yet preserved LIN; RI(A24P) remained membrane-localized</td>
+<td>Schwarzkopf et al. 2024, <em>Frontiers in Microbiology</em>, https://doi.org/10.3389/fmicb.2024.1419106 (schwarzkopf2024adimericholinantiholin pages 3-5, schwarzkopf2024adimericholinantiholin pages 1-2, schwarzkopf2024adimericholinantiholin pages 8-9)</td>
+</tr>
+<tr>
+<td><strong>Interaction partner:</strong> RI binds the <strong>periplasmic C-terminal domain of holin T</strong> rather than affecting T synthesis</td>
+<td>Genetics, biochemistry, cross-linking</td>
+<td>T continues to accumulate in inner membrane during LIN; excess periplasmic <strong>TCTD</strong> antagonizes LIN</td>
+<td>Ramanculov &amp; Young 2001, <em>Molecular Microbiology</em>, https://doi.org/10.1046/j.1365-2958.2001.02491.x; Tran et al. 2005, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.187.19.6631-6640.2005 (ramanculov2001anancientplayer pages 3-4, tran2005periplasmicdomainsdefine pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>Stoichiometry / oligomeric state (biochemical view):</strong> predominant soluble complex is a <strong>1:1 RI:T heterodimer</strong></td>
+<td>Biochemistry, SEC, analytical ultracentrifugation</td>
+<td>SEC apparent mass ~<strong>45.6 kDa</strong>, but sedimentation supports a <strong>heterodimer</strong> near predicted <strong>29.7–30 kDa</strong>; sRI monomer ~<strong>9.2 kDa</strong>, <strong>1.4S</strong>; complex <strong>4.1S</strong></td>
+<td>Moussa et al. 2012, <em>Protein Science</em>, https://doi.org/10.1002/pro.2042 (moussa2012proteindeterminantsof pages 1-3, moussa2012proteindeterminantsof pages 4-5)</td>
+</tr>
+<tr>
+<td><strong>Stoichiometry / oligomeric state (structural 2020 model):</strong> soluble domains can form <strong>sRI2–sT2 heterotetramers</strong> and RI homotetramers at high concentration</td>
+<td>X-ray crystallography, cryo-EM, solution biophysics</td>
+<td>RI tetramer at <strong>10 mg/mL</strong>; PDBePISA buried area ~<strong>8618.8 Å²</strong>, ΔGint ~<strong>−87 kcal/mol</strong>, ΔGdiss ~<strong>13.8 kcal/mol</strong>; cryo-EM map ~<strong>9.4 Å</strong></td>
+<td>Krieger et al. 2020, <em>Journal of Molecular Biology</em>, https://doi.org/10.1016/j.jmb.2020.06.013 (krieger2020thestructuralbasis pages 6-8, krieger2020thestructuralbasis pages 3-5, krieger2020thestructuralbasis pages 14-16)</td>
+</tr>
+<tr>
+<td><strong>Current mechanistic interpretation (2024):</strong> physiologically relevant inhibitory species is likely a <strong>dimeric T/RI complex</strong>, not the full tetramer seen in crystals</td>
+<td>Reconstitution, mutagenesis, AlphaFold-guided analysis</td>
+<td>Only one conserved interface is required; mutations <strong>Y42A</strong>, <strong>Y42L</strong>, <strong>F56A</strong> abolish LIN</td>
+<td>Schwarzkopf et al. 2024, <em>Frontiers in Microbiology</em>, https://doi.org/10.3389/fmicb.2024.1419106 (schwarzkopf2024adimericholinantiholin pages 3-5, schwarzkopf2024adimericholinantiholin pages 9-11, schwarzkopf2024adimericholinantiholin pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Mechanism of inhibition:</strong> RI prevents <strong>holin oligomerization / triggering</strong>, thereby delaying endolysin release and host lysis</td>
+<td>Genetics, biochemistry, structural inference</td>
+<td>Holin triggering in T4rI occurs around <strong>~4000 T molecules</strong>; under LIN ~<strong>8000 T molecules</strong> accumulate by <strong>60 min</strong></td>
+<td>Moussa et al. 2012, <em>Protein Science</em>, https://doi.org/10.1002/pro.2042; Moussa et al. 2014, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.01548-14 (moussa2012proteindeterminantsof pages 5-7, moussa2014geneticdissectionof pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Reversibility / triggering:</strong> LIN can be reversed by membrane depolarization or energy poisons, indicating RI blocks T function rather than endolysin availability</td>
+<td>Genetics, physiological assays</td>
+<td><strong>KCN</strong> relieves RI block; <strong>CHCl3</strong> causes immediate lysis; energy poisons override LIN</td>
+<td>Ramanculov &amp; Young 2001, <em>Molecular Microbiology</em>, https://doi.org/10.1046/j.1365-2958.2001.02491.x; Tran et al. 2005, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.187.19.6631-6640.2005; Moussa et al. 2014, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.01548-14 (ramanculov2001anancientplayer pages 3-4, tran2005periplasmicdomainsdefine pages 6-7, moussa2014geneticdissectionof pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Disulfide-stabilized periplasmic fold:</strong> RI and T require Cys pairs for proper folded interaction</td>
+<td>Biochemistry</td>
+<td>RI disulfide <strong>Cys69–Cys75</strong>; T disulfide <strong>Cys175–Cys207</strong>; no free thiols detected in purified proteins/complex</td>
+<td>Moussa et al. 2012, <em>Protein Science</em>, https://doi.org/10.1002/pro.2042; Krieger et al. 2020, <em>Journal of Molecular Biology</em>, https://doi.org/10.1016/j.jmb.2020.06.013 (moussa2012proteindeterminantsof pages 5-7, krieger2020thestructuralbasis pages 3-5)</td>
+</tr>
+<tr>
+<td><strong>Lysis timing / ecological effect:</strong> superinfection-triggered LIN can greatly increase progeny yield and be sustained by repeated superinfection</td>
+<td>Infection kinetics, modeling</td>
+<td>Repeated superinfection at <strong>&lt;10 min</strong> intervals can sustain inhibition; intracellular virions can increase by about <strong>10-fold</strong>; modeled visible plaque radius ~<strong>85–86%</strong> of rapid-lysis mutant, infection-zone radius ~<strong>96%</strong></td>
+<td>Moussa et al. 2012, <em>Protein Science</em>, https://doi.org/10.1002/pro.2042; Hvid &amp; Mitarai 2024, <em>PLOS Computational Biology</em>, https://doi.org/10.1101/2024.02.07.579269 (moussa2012proteindeterminantsof pages 1-3, hvid2024competitiveadvantagesof pages 9-12, hvid2024competitiveadvantagesof pages 12-15)</td>
+</tr>
+<tr>
+<td><strong>DNA-binding signal model (2020 structural proposal):</strong> sRI–sT complex may bind superinfection-derived nucleic acids non-specifically to stabilize LIN</td>
+<td>Structure, binding assays, modeling</td>
+<td>Reported ligand affinities: <strong>guanosine Kd 43 µM</strong>, <strong>AMP 72.4 µM</strong>, <strong>ADP 213.6 µM</strong>, <strong>PRPP 225.9 µM</strong>; DNA shifts with ss <strong>70 bp</strong>, ds <strong>30/58 bp</strong> tested</td>
+<td>Krieger et al. 2020, <em>Journal of Molecular Biology</em>, https://doi.org/10.1016/j.jmb.2020.06.013 (krieger2020thestructuralbasis pages 6-8, krieger2020thestructuralbasis pages 14-16)</td>
+</tr>
+<tr>
+<td><strong>Status of DNA-binding model after 2024 work:</strong> DNA may still stabilize complexes, but the key inhibitory unit is now argued to be membrane-compatible <strong>T/RI dimer</strong></td>
+<td>Structure-informed functional reinterpretation</td>
+<td>No new Kd reported in 2024; emphasis shifted from tetramer to membrane-anchored dimer/interface-1 model</td>
+<td>Schwarzkopf et al. 2024, <em>Frontiers in Microbiology</em>, https://doi.org/10.3389/fmicb.2024.1419106 (schwarzkopf2024adimericholinantiholin pages 9-11, schwarzkopf2024adimericholinantiholin pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main experimentally supported features of bacteriophage T4 rI/RI, including identity, localization, mechanism, stoichiometry, and lysis-control phenotypes. It is designed as a compact evidence map for the final research report, with quantitative findings and primary-source URLs.</em></p>
+<hr />
+<h3 id="10-key-20232024-references-urls-and-publication-dates">10) Key 2023–2024 references (URLs and publication dates)</h3>
+<ul>
+<li>Schwarzkopf JMF et al. <strong>“A dimeric holin/antiholin complex controls lysis by phage T4”</strong> (<em>Frontiers in Microbiology</em>, <strong>Sep 2024</strong>). https://doi.org/10.3389/fmicb.2024.1419106 (schwarzkopf2024adimericholinantiholin pages 1-2)</li>
+<li>Hvid U, Mitarai N. <strong>“Competitive advantages of T-even phage lysis inhibition in response to secondary infection”</strong> (<em>PLOS Computational Biology</em>, <strong>May 2024</strong>). https://doi.org/10.1101/2024.02.07.579269 (hvid2024competitiveadvantagesof pages 1-4)</li>
+<li>Kim J et al. <strong>“Elucidation of molecular function of phage protein responsible for optimization of host cell lysis”</strong> (<em>BMC Microbiology</em>, <strong>Dec 2024</strong>). https://doi.org/10.1186/s12866-024-03684-9 (kim2024elucidationofmolecular pages 1-2)</li>
+<li>Schoof M et al. <strong>“Lysis cassette-mediated exoprotein release…”</strong> (<em>Microbiology Spectrum</em>, <strong>Apr 2023</strong>). https://doi.org/10.1128/spectrum.00364-23 (schoof2023lysiscassettemediatedexoprotein pages 1-2)</li>
+</ul>
+<hr />
+<h3 id="image-evidence-from-2024-study">Image evidence (from 2024 study)</h3>
+<ul>
+<li>Western blot evidence for blocked cleavage (A24P) and models of the T/RI interface are available from the 2024 paper’s figures (schwarzkopf2024adimericholinantiholin media 19864828, schwarzkopf2024adimericholinantiholin media c8129fc5).</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(ramanculov2001anancientplayer pages 1-3): Erlan Ramanculov and Ry Young. An ancient player unmasked: t4 ri encodes a t‐specific antiholin. Molecular Microbiology, 41:575-583, Aug 2001. URL: https://doi.org/10.1046/j.1365-2958.2001.02491.x, doi:10.1046/j.1365-2958.2001.02491.x. This article has 76 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ramanculov2001anancientplayer pages 3-4): Erlan Ramanculov and Ry Young. An ancient player unmasked: t4 ri encodes a t‐specific antiholin. Molecular Microbiology, 41:575-583, Aug 2001. URL: https://doi.org/10.1046/j.1365-2958.2001.02491.x, doi:10.1046/j.1365-2958.2001.02491.x. This article has 76 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(paddison1998therolesof pages 5-6): Patrick Paddison, Stephen T Abedon, Holly Kloos Dressman, Katherine Gailbreath, Julia Tracy, Eric Mosser, James Neitzel, Burton Guttman, and Elizabeth Kutter. The roles of the bacteriophage t4 r genes in lysis inhibition and fine-structure genetics: a new perspective. Genetics, 148:1539-1550, Apr 1998. URL: https://doi.org/10.1093/genetics/148.4.1539, doi:10.1093/genetics/148.4.1539. This article has 125 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moussa2014geneticdissectionof pages 1-2): Samir H. Moussa, Jessica L. Lawler, and Ry Young. Genetic dissection of t4 lysis. Journal of Bacteriology, 196:2201-2209, Jun 2014. URL: https://doi.org/10.1128/jb.01548-14, doi:10.1128/jb.01548-14. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2016thelastr pages 2-2): Yi Chen and Ry Young. The last <i>r</i> locus unveiled: t4 riii is a cytoplasmic antiholin. Journal of Bacteriology, 198:2448-2457, Sep 2016. URL: https://doi.org/10.1128/jb.00294-16, doi:10.1128/jb.00294-16. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tran2005periplasmicdomainsdefine pages 6-7): Tram Anh T. Tran, Douglas K. Struck, and Ry Young. Periplasmic domains define holin-antiholin interactions in t4 lysis inhibition. Journal of Bacteriology, 187:6631-6640, Oct 2005. URL: https://doi.org/10.1128/jb.187.19.6631-6640.2005, doi:10.1128/jb.187.19.6631-6640.2005. This article has 98 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moussa2012proteindeterminantsof pages 4-5): Samir H. Moussa, Vladimir Kuznetsov, Tram Anh T. Tran, James C. Sacchettini, and Ry Young. Protein determinants of phage t4 lysis inhibition. Protein Science, 21:571-582, Apr 2012. URL: https://doi.org/10.1002/pro.2042, doi:10.1002/pro.2042. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin pages 9-11): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krieger2020thestructuralbasis pages 6-8): Inna V. Krieger, Vladimir Kuznetsov, Jeng-Yih Chang, Junjie Zhang, Samir H. Moussa, Ryland F. Young, and James C. Sacchettini. The structural basis of t4 phage lysis control: dna as the signal for lysis inhibition. Jul 2020. URL: https://doi.org/10.1016/j.jmb.2020.06.013, doi:10.1016/j.jmb.2020.06.013. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krieger2020thestructuralbasis pages 3-5): Inna V. Krieger, Vladimir Kuznetsov, Jeng-Yih Chang, Junjie Zhang, Samir H. Moussa, Ryland F. Young, and James C. Sacchettini. The structural basis of t4 phage lysis control: dna as the signal for lysis inhibition. Jul 2020. URL: https://doi.org/10.1016/j.jmb.2020.06.013, doi:10.1016/j.jmb.2020.06.013. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krieger2020thestructuralbasis pages 8-9): Inna V. Krieger, Vladimir Kuznetsov, Jeng-Yih Chang, Junjie Zhang, Samir H. Moussa, Ryland F. Young, and James C. Sacchettini. The structural basis of t4 phage lysis control: dna as the signal for lysis inhibition. Jul 2020. URL: https://doi.org/10.1016/j.jmb.2020.06.013, doi:10.1016/j.jmb.2020.06.013. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krieger2020thestructuralbasis pages 14-16): Inna V. Krieger, Vladimir Kuznetsov, Jeng-Yih Chang, Junjie Zhang, Samir H. Moussa, Ryland F. Young, and James C. Sacchettini. The structural basis of t4 phage lysis control: dna as the signal for lysis inhibition. Jul 2020. URL: https://doi.org/10.1016/j.jmb.2020.06.013, doi:10.1016/j.jmb.2020.06.013. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin pages 1-2): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin pages 3-5): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moussa2012proteindeterminantsof pages 5-7): Samir H. Moussa, Vladimir Kuznetsov, Tram Anh T. Tran, James C. Sacchettini, and Ry Young. Protein determinants of phage t4 lysis inhibition. Protein Science, 21:571-582, Apr 2012. URL: https://doi.org/10.1002/pro.2042, doi:10.1002/pro.2042. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mehnerbreitfeld2021thephaget4 pages 3-4): Denise Mehner-Breitfeld, Jan Michel Frederik Schwarzkopf, Ry Young, Kiran Kondabagil, and Thomas Brüser. The phage t4 antiholin ri has a cleavable signal peptide, not a sar domain. Frontiers in Microbiology, Aug 2021. URL: https://doi.org/10.3389/fmicb.2021.712460, doi:10.3389/fmicb.2021.712460. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mehnerbreitfeld2021thephaget4 pages 1-2): Denise Mehner-Breitfeld, Jan Michel Frederik Schwarzkopf, Ry Young, Kiran Kondabagil, and Thomas Brüser. The phage t4 antiholin ri has a cleavable signal peptide, not a sar domain. Frontiers in Microbiology, Aug 2021. URL: https://doi.org/10.3389/fmicb.2021.712460, doi:10.3389/fmicb.2021.712460. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mehnerbreitfeld2021thephaget4 pages 4-5): Denise Mehner-Breitfeld, Jan Michel Frederik Schwarzkopf, Ry Young, Kiran Kondabagil, and Thomas Brüser. The phage t4 antiholin ri has a cleavable signal peptide, not a sar domain. Frontiers in Microbiology, Aug 2021. URL: https://doi.org/10.3389/fmicb.2021.712460, doi:10.3389/fmicb.2021.712460. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin pages 8-9): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin media 19864828): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwarzkopf2024adimericholinantiholin media c8129fc5): Jan Michel Frederik Schwarzkopf, Denise Mehner-Breitfeld, and Thomas Brüser. A dimeric holin/antiholin complex controls lysis by phage t4. Frontiers in Microbiology, Sep 2024. URL: https://doi.org/10.3389/fmicb.2024.1419106, doi:10.3389/fmicb.2024.1419106. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hvid2024competitiveadvantagesof pages 12-15): Ulrik Hvid and Namiko Mitarai. Competitive advantages of t-even phage lysis inhibition in response to secondary infection. PLOS Computational Biology, May 2024. URL: https://doi.org/10.1101/2024.02.07.579269, doi:10.1101/2024.02.07.579269. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hvid2024competitiveadvantagesof pages 9-12): Ulrik Hvid and Namiko Mitarai. Competitive advantages of t-even phage lysis inhibition in response to secondary infection. PLOS Computational Biology, May 2024. URL: https://doi.org/10.1101/2024.02.07.579269, doi:10.1101/2024.02.07.579269. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schoof2023lysiscassettemediatedexoprotein pages 1-2): Marion Schoof, Maureen O’Callaghan, Charles Hefer, Travis R. Glare, Amber R. Paulson, and Mark R. H. Hurst. Lysis cassette-mediated exoprotein release in yersinia entomophaga is controlled by a phob-like regulator. Microbiology Spectrum, Apr 2023. URL: https://doi.org/10.1128/spectrum.00364-23, doi:10.1128/spectrum.00364-23. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kim2024elucidationofmolecular pages 1-2): Jinwoo Kim, Joonbeom Kim, and Sangryeol Ryu. Elucidation of molecular function of phage protein responsible for optimization of host cell lysis. BMC Microbiology, Dec 2024. URL: https://doi.org/10.1186/s12866-024-03684-9, doi:10.1186/s12866-024-03684-9. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kulkarni2025syntheticcellsfor pages 2-3): Vishwesh Kulkarni, Nadanai Laohakunakorn, and Sahan B. W. Liyanagedera. Synthetic cells for phage therapy: a perspective. Frontiers in Cellular and Infection Microbiology, Oct 2025. URL: https://doi.org/10.3389/fcimb.2025.1690404, doi:10.3389/fcimb.2025.1690404. This article has 0 citations.</p>
+</li>
+<li>
+<p>(moussa2012proteindeterminantsof pages 1-3): Samir H. Moussa, Vladimir Kuznetsov, Tram Anh T. Tran, James C. Sacchettini, and Ry Young. Protein determinants of phage t4 lysis inhibition. Protein Science, 21:571-582, Apr 2012. URL: https://doi.org/10.1002/pro.2042, doi:10.1002/pro.2042. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mehnerbreitfeld2021thephaget4 pages 2-3): Denise Mehner-Breitfeld, Jan Michel Frederik Schwarzkopf, Ry Young, Kiran Kondabagil, and Thomas Brüser. The phage t4 antiholin ri has a cleavable signal peptide, not a sar domain. Frontiers in Microbiology, Aug 2021. URL: https://doi.org/10.3389/fmicb.2021.712460, doi:10.3389/fmicb.2021.712460. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hvid2024competitiveadvantagesof pages 1-4): Ulrik Hvid and Namiko Mitarai. Competitive advantages of t-even phage lysis inhibition in response to secondary infection. PLOS Computational Biology, May 2024. URL: https://doi.org/10.1101/2024.02.07.579269, doi:10.1101/2024.02.07.579269. This article has 8 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rI-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000046 The requested information can be found in Figures 5 and 6. Figure 5A shows the SDS-PAGE/Western blot analysis of wild-type RI and i" src="rI-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>paddison1998therolesof pages 5-6</li>
+<li>moussa2012proteindeterminantsof pages 4-5</li>
+<li>tran2005periplasmicdomainsdefine pages 6-7</li>
+<li>ramanculov2001anancientplayer pages 1-3</li>
+<li>ramanculov2001anancientplayer pages 3-4</li>
+<li>moussa2014geneticdissectionof pages 1-2</li>
+<li>krieger2020thestructuralbasis pages 3-5</li>
+<li>schwarzkopf2024adimericholinantiholin pages 3-5</li>
+<li>moussa2012proteindeterminantsof pages 5-7</li>
+<li>schwarzkopf2024adimericholinantiholin pages 8-9</li>
+<li>krieger2020thestructuralbasis pages 6-8</li>
+<li>schwarzkopf2024adimericholinantiholin pages 9-11</li>
+<li>hvid2024competitiveadvantagesof pages 12-15</li>
+<li>hvid2024competitiveadvantagesof pages 9-12</li>
+<li>schoof2023lysiscassettemediatedexoprotein pages 1-2</li>
+<li>kim2024elucidationofmolecular pages 1-2</li>
+<li>kulkarni2025syntheticcellsfor pages 2-3</li>
+<li>schwarzkopf2024adimericholinantiholin pages 1-2</li>
+<li>hvid2024competitiveadvantagesof pages 1-4</li>
+<li>chen2016thelastr pages 2-2</li>
+<li>krieger2020thestructuralbasis pages 8-9</li>
+<li>krieger2020thestructuralbasis pages 14-16</li>
+<li>moussa2012proteindeterminantsof pages 1-3</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02491.x</li>
+<li>https://doi.org/10.1093/genetics/148.4.1539;</li>
+<li>https://doi.org/10.1002/pro.2042</li>
+<li>https://doi.org/10.1128/jb.187.19.6631-6640.2005</li>
+<li>https://doi.org/10.3389/fmicb.2021.712460</li>
+<li>https://doi.org/10.3389/fmicb.2024.1419106</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02491.x;</li>
+<li>https://doi.org/10.1016/j.jmb.2020.06.013</li>
+<li>https://doi.org/10.1002/pro.2042;</li>
+<li>https://doi.org/10.1128/jb.01548-14</li>
+<li>https://doi.org/10.1128/jb.187.19.6631-6640.2005;</li>
+<li>https://doi.org/10.1101/2024.02.07.579269</li>
+<li>https://doi.org/10.1186/s12866-024-03684-9</li>
+<li>https://doi.org/10.1128/spectrum.00364-23</li>
+<li>https://doi.org/10.1046/j.1365-2958.2001.02491.x,</li>
+<li>https://doi.org/10.1093/genetics/148.4.1539,</li>
+<li>https://doi.org/10.1128/jb.01548-14,</li>
+<li>https://doi.org/10.1128/jb.00294-16,</li>
+<li>https://doi.org/10.1128/jb.187.19.6631-6640.2005,</li>
+<li>https://doi.org/10.1002/pro.2042,</li>
+<li>https://doi.org/10.3389/fmicb.2024.1419106,</li>
+<li>https://doi.org/10.1016/j.jmb.2020.06.013,</li>
+<li>https://doi.org/10.3389/fmicb.2021.712460,</li>
+<li>https://doi.org/10.1101/2024.02.07.579269,</li>
+<li>https://doi.org/10.1128/spectrum.00364-23,</li>
+<li>https://doi.org/10.1186/s12866-024-03684-9,</li>
+<li>https://doi.org/10.3389/fcimb.2025.1690404,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P13304
+gene_symbol: P13304
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P13304&#39;
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031640
+    label: killing of cells of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0044229
+    label: host cell periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0140678
+    label: molecular function inhibitor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0044229
+    label: host cell periplasmic space
+  evidence_type: EXP
+  original_reference_id: PMID:34456892
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0020002
+    label: host cell plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:17693511
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17693511
+  title: The T4 RI antiholin has an N-terminal signal anchor release domain that targets
+    it for degradation by DegP.
+  findings: []
+- id: PMID:34456892
+  title: The Phage T4 Antiholin RI Has a Cleavable Signal Peptide, Not a SAR Domain.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

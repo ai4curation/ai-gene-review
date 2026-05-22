@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P04532 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P04532</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04532" target="_blank" class="term-link">
+                        P04532
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P04532";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04532" data-a="DESCRIPTION: TODO: Add description for P04532..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P04532</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098003" target="_blank" class="term-link">
+                                    GO:0098003
+                                </a>
+                            </span>
+                            <span class="term-label">viral tail assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04532" data-a="GO:0098003" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098004" target="_blank" class="term-link">
+                                    GO:0098004
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail fiber assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04532" data-a="GO:0098004" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098004" target="_blank" class="term-link">
+                                    GO:0098004
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail fiber assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8892827" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8892827
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of the helper proteins for the assembly of ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04532" data-a="GO:0098004" data-r="PMID:8892827" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8892827" target="_blank" class="term-link">
+                            PMID:8892827
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of the helper proteins for the assembly of tail fibers of coliphages T4 and lambda.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(57-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04532" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">34 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T22:01:47.164260</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="57-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="57-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 I have extracted Table 2 and Figure 15, which describe chaperones like gp57A and tail fiber assembly. Additionally, I have provided</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-bacteriophage-t4-gene-57-uniprot-p04532-gp57gp57a">Research report: functional annotation of bacteriophage T4 gene 57 (UniProt P04532; gp57/gp57A)</h2>
+<h3 id="executive-summary-current-consensus">Executive summary (current consensus)</h3>
+<p>Gene <strong>57</strong> of <em>Enterobacteria phage T4</em> encodes <strong>gp57A</strong> (historically also called gp57 or p57), a <strong>small, nonstructural assembly helper/molecular chaperone</strong> that is <strong>required for correct assembly/folding of tail fiber components</strong>—most consistently <strong>gp12 (short tail fiber)</strong> and <strong>gp34 and gp37 (long tail fiber components)</strong>—but is <strong>not incorporated into the mature virion</strong>. (matsui1997isolationandcharacterization pages 1-2, hashemolhosseini1996characterizationofthe pages 1-1, leiman2010morphogenesisofthe pages 2-5)</p>
+<p>A central functional interpretation supported by multiple lines of genetic and biochemical evidence is that gp57A acts as an <strong>intracellular folding/assembly catalyst</strong> during phage morphogenesis in the infected bacterial cytoplasm, enabling productive formation of fiber oligomers (trimers/dimers depending on substrate) and incorporation steps needed for infective particles. (herrmann2004assemblyofbacteriophage pages 1-2, matsui1997isolationandcharacterization pages 4-5, leiman2010morphogenesisofthe pages 2-5)</p>
+<h3 id="mandatory-identity-verification-and-disambiguation">Mandatory identity verification and disambiguation</h3>
+<p><strong>Target identity</strong>: The retrieved literature explicitly discusses <strong>T4 gene 57</strong> and its product <strong>gp57/gp57A</strong> as a tail-fiber assembly helper protein of <em>bacteriophage T4</em>. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2, herrmann2004assemblyofbacteriophage pages 1-2)</p>
+<p><strong>Mapping to UniProt P04532</strong>: None of the retrieved full texts explicitly lists the UniProt accession <strong>P04532</strong>. Therefore, the association is supported indirectly by the unique combination of: organism (<em>Enterobacteria phage T4</em>), gene number (57/57A), protein name (gp57/gp57A), and the unusually small size (~79 aa) reported repeatedly for the gene-57 helper protein. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2, matsui1997isolationandcharacterization pages 4-5)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-nonstructural-assembly-helper-molecular-chaperone-definition">1.1 Nonstructural assembly helper / molecular chaperone (definition)</h4>
+<p>In T4 morphogenesis, “nonstructural” helper proteins are factors that <strong>catalyze assembly reactions</strong> yet <strong>do not become part of the mature virion</strong>; gp57A is explicitly placed in this category of phage-encoded molecular chaperones that facilitate tail fiber formation. (matsui1997isolationandcharacterization pages 1-2)</p>
+<h4 id="12-tail-fibers-and-their-assembly-context">1.2 Tail fibers and their assembly context</h4>
+<p>T4 host recognition depends on tail fibers; long tail fibers are composed of multiple gene products (including gp34 and gp37), and proper fiber assembly requires dedicated helper proteins including gp57 (and for gp37, also gp38). (gamkrelidze2014t4bacteriophageas pages 1-2, bartual2010structureofthe pages 1-2)</p>
+<p>A synthesis table in a major morphogenesis review explicitly lists gp57A among “chaperones involved in the assembly of the tail, tail fibers and attachment of the fibers to the phage particle,” assigning gp57A the function <strong>“Folding of gp12, gp34, gp37”</strong>. (leiman2010morphogenesisofthe pages 2-5, leiman2010morphogenesisofthe media 88bf6b0f, leiman2010morphogenesisofthe media 7bf3e4e7, leiman2010morphogenesisofthe media 6892b351)</p>
+<h3 id="2-molecular-function-and-mechanism-of-gp57a-evidence-based">2) Molecular function and mechanism of gp57A (evidence-based)</h3>
+<h4 id="21-substratespartners-and-pathway-position">2.1 Substrates/partners and pathway position</h4>
+<p>Multiple sources converge on gp57A’s substrates:<br />
+- <strong>gp12 (short tail fiber)</strong>: gp57A promotes native oligomer formation and helps prevent/reverse aggregation. (matsui1997isolationandcharacterization pages 4-5, matsui1997isolationandcharacterization pages 5-6)<br />
+- <strong>gp34 (proximal long tail fiber protein)</strong>: genetic/assembly studies attribute gp57 to a step that mediates <strong>gp34 dimerization</strong> in assembling the proximal half-fiber precursor. (herrmann2004assemblyofbacteriophage pages 1-2)<br />
+- <strong>gp37 (distal long tail fiber protein)</strong>: gp57 acts <strong>prior to gp38</strong> in promoting <strong>gp37 dimerization</strong> for the distal half-fiber precursor; gp37 is also widely described as requiring both gp57 and gp38 for correct assembly/folding. (herrmann2004assemblyofbacteriophage pages 1-2, bartual2010structureofthe pages 1-2)</p>
+<p>A mechanistic proposal from biochemical work is that gp57A can <strong>interact with nascent gp12</strong> and thereby facilitate formation of the native gp12 trimer. (matsui1997isolationandcharacterization pages 4-5)</p>
+<h4 id="22-phenotypes-when-gp57a-is-absent">2.2 Phenotypes when gp57A is absent</h4>
+<p>When p57 is missing, key tail fiber components fail to assemble:<br />
+- Absence of p57 leaves <strong>p34, p37, and p12 “unassembled”</strong>, consistent with a central assembly-helper role. (hashemolhosseini1996characterizationofthe pages 1-1)<br />
+- In the absence of gp57A, gp12 becomes <strong>insoluble/associated with cell debris or membrane fractions</strong>, and coexpression of gene 57A alters gp12 behavior consistent with chaperone-mediated folding/assembly assistance. (matsui1997isolationandcharacterization pages 4-5)</p>
+<h4 id="23-host-dependence-and-bypass-phenomena">2.3 Host dependence and bypass phenomena</h4>
+<p>Classic genetics indicate the requirement for gp57 can be <strong>host-dependent</strong>, with some bacterial host mutants allowing bypass of gp57 function (i.e., partial suppression of the assembly defect), implying that host proteostasis or other factors can substitute under particular conditions. (herrmann2004assemblyofbacteriophage pages 1-2)</p>
+<h3 id="3-biochemical-properties-and-quantitative-data-recently-used-statistics">3) Biochemical properties and quantitative data (recently used statistics)</h3>
+<h4 id="31-size-composition-and-oligomerization">3.1 Size, composition, and oligomerization</h4>
+<p>Primary characterization and helper-protein work reports:<br />
+- <strong>Length</strong>: ~<strong>79 amino acids</strong>. (matsui1997isolationandcharacterization pages 1-2, hashemolhosseini1996characterizationofthe pages 1-1)<br />
+- <strong>Acidic composition</strong>: an excess of <strong>~9 negative charges</strong> and an unusual lack of several residues (Phe, Trp, Tyr, His, Pro, Cys). (hashemolhosseini1996characterizationofthe pages 1-1)<br />
+- <strong>Oligomeric state</strong>: sedimentation-equilibrium data support a <strong>tetrameric</strong> gp57A in solution, with native mass <strong>33,470 ± 4,780 Da</strong> given a monomer mass of <strong>8,481 Da</strong> from sequence; cross-linking yielded up to tetramers and not pentamers. (matsui1997isolationandcharacterization pages 4-5)<br />
+- <strong>Secondary structure</strong>: CD-based estimate of <strong>~94% α-helix</strong> (with sequence prediction suggesting high helical content as well). (matsui1997isolationandcharacterization pages 4-5)</p>
+<p>A later review table lists gp57A as <strong>5.7 kDa</strong> and describes a <strong>mixture</strong> of oligomeric states (“Trimer–Hexamer–Dodecamer”), highlighting either condition-dependent oligomerization or differences across measurement methods/conditions. (leiman2010morphogenesisofthe pages 2-5, leiman2010morphogenesisofthe media 88bf6b0f)</p>
+<h4 id="32-quantitative-functional-readouts">3.2 Quantitative functional readouts</h4>
+<p>A plasmid-based complementation/overexpression experiment reported a strong effect on productivity: induced expression of 57A increased burst size to <strong>167 PFU/cell</strong>, compared with <strong>3.3 PFU/cell</strong> (uninduced) and <strong>0.05 PFU/cell</strong> (plasmidless control) under the experimental conditions described. (matsui1997isolationandcharacterization pages 1-2)</p>
+<p>Temperature-dependent aggregation behavior for gp12 is reported, with gp12 being trimeric at <strong>37°C</strong> but forming higher-order aggregates at lower temperatures (example shown at <strong>20°C</strong>) that gp57A can help dissociate back into trimers. (matsui1997isolationandcharacterization pages 5-6)</p>
+<h3 id="4-localization-where-gp57a-acts">4) Localization: where gp57A acts</h3>
+<p>Direct imaging-based localization was not retrieved in the available corpus. However, multiple primary sources explicitly describe gp57A as <strong>nonstructural</strong> and as a <strong>molecular chaperone</strong> that catalyzes assembly/folding reactions rather than forming part of the virion; this strongly supports an <strong>intracellular role during virion morphogenesis inside infected <em>E. coli</em></strong> (cytoplasmic assembly environment), rather than extracellular or virion-surface localization. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2)</p>
+<h3 id="5-recent-developments-prioritizing-20232024-sources">5) Recent developments (prioritizing 2023–2024 sources)</h3>
+<h4 id="51-what-is-new-in-20232024-directly-about-t4-gp57a">5.1 What is new in 2023–2024 directly about T4 gp57A?</h4>
+<p>Within the retrieved and accessible set, <strong>direct 2023–2024 primary research specifically focused on T4 gp57A</strong> was limited. The most informative mechanistic sources remain foundational (1996–2010) and continue to be cited as the canonical basis for gp57A function. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 4-5, leiman2010morphogenesisofthe pages 2-5)</p>
+<h4 id="52-2023-trend-tail-fiber-chaperone-modules-as-determinants-of-phage-host-range-and-engineering-success">5.2 2023 trend: tail fiber + chaperone modules as determinants of phage host range and engineering success</h4>
+<p>A 2023 preprint on <em>Clostridioides difficile</em> myophages demonstrates that swapping a tail fiber gene alone was insufficient to change host specificity; host-range changes required co-exchange of the tail fiber gene together with a <strong>neighboring putative chaperone (hyp)</strong>, and CRISPR-mediated swapping produced a derivative with host range and infection efficiency exceeding both parents. While not a T4 study, this supports a modern generalization consistent with the T4 paradigm: <strong>tail fiber function and engineering often require associated chaperones/assembly helpers</strong>. (steczynska2023ataleof pages 1-4)</p>
+<p>Similarly, work on a T4-related myovirus (CkP1) explicitly discusses the gp57A/gp38 paradigm as a reference point for the presence/absence of accessory chaperones in long tail fiber systems, reflecting continued use of gp57A as a canonical model in current phage biology. (ivantsiv2019investigationofthe pages 81-84)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-recombinant-production-of-tail-fibers-for-receptor-binding-studies-and-detection">6.1 Recombinant production of tail fibers for receptor-binding studies and detection</h4>
+<p>A practical biotechnology application of gp57 biology is <strong>heterologous expression of tail fiber proteins</strong>. A 2010 study reported that soluble, correctly folded gp37 requires <strong>co-expression with two chaperones (gp57 and gp38)</strong>; the resulting gp37 could be purified at about <strong>4 mg/L</strong> culture and formed fibers of ~<strong>63 nm</strong> observable by EM. The authors explicitly state purified gp37 would be useful for receptor-binding studies, high-resolution structural work, and <strong>specific binding/detection of bacteria</strong>—all of which depend on chaperone-enabled correct folding. (bartual2010twochaperoneassistedsoluble pages 1-2)</p>
+<h4 id="62-host-range-engineering-for-therapeuticsdiagnostics">6.2 Host-range engineering for therapeutics/diagnostics</h4>
+<p>A 2009 study demonstrates targeted host-range expansion by recombination of long tail fiber determinants in a T4-like phage context (T2), producing chimeric phages that acquired broader host range while retaining lytic activity; importantly, the paper notes that in T4-like systems gp38 acts with gp57 during gp37 dimerization, tying chaperone biology to engineering outcomes. Quantitatively, IP008 infected <strong>33%</strong> of environmental <em>E. coli</em> isolates versus <strong>7%</strong> for T2, and a broad-host-range phage example (KEP10) showed <strong>67%</strong> bacteriolytic spectrum among UPEC, illustrating the operational value of tail fiber determinants in applied phage design. (mahichi2009sitespecificrecombinationof pages 1-2)</p>
+<p>The 2023 <em>C. difficile</em> engineering work further suggests that successful host-range modification may require manipulating <strong>both</strong> fiber and its associated chaperone, a principle aligned with the established T4 gp57A/gp38 requirement for correct fiber assembly. (steczynska2023ataleof pages 1-4)</p>
+<h4 id="63-t4-as-an-engineeringdisplay-platform-contextual-relevance">6.3 T4 as an engineering/display platform (contextual relevance)</h4>
+<p>T4 is widely used as a platform for phage display/vaccine design via capsid proteins Hoc and Soc, with reported copy numbers of <strong>~160 Hoc</strong> and <strong>~960 Soc</strong> per capsid and examples of displaying peptides (e.g., 36 aa PorA peptide fusions). Tail fiber assembly (and thus gp57A) is not the display scaffold, but gp57-dependent tail fibers determine adsorption/host interaction of the T4 particle—an enabling consideration when selecting hosts for production or when modifying tropism in engineered systems. (gamkrelidze2014t4bacteriophageas pages 1-2, gamkrelidze2014t4bacteriophageas pages 2-4)</p>
+<h3 id="7-expert-synthesis-and-analysis-authoritative-interpretations">7) Expert synthesis and analysis (authoritative interpretations)</h3>
+<p>A high-citation morphogenesis review synthesizes gp57A’s role explicitly as a chaperone for multiple tail fiber proteins and presents gp57A within the broader induced-fit/sequential interaction framework of T4 assembly, reinforcing the mainstream view that T4 morphogenesis is driven by ordered, protein–protein interaction networks that include nonstructural catalysts. (leiman2010morphogenesisofthe pages 2-5)</p>
+<p>Primary biochemical work emphasizes that gp57A is exceptionally small yet forms higher-order oligomers and is predominantly alpha-helical—features consistent with a specialized scaffolding/chaperone function rather than enzymatic catalysis in the classical sense. (matsui1997isolationandcharacterization pages 4-5)</p>
+<h3 id="consolidated-evidence-map-table">Consolidated evidence map (table)</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/annotation (function/process/localization)</th>
+<th>Key experimental evidence (brief)</th>
+<th>Quantitative/statistical data (if any)</th>
+<th>Primary source(s) with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity and core function:</strong> gp57/gp57A is a <strong>nonstructural tail-fiber assembly helper / molecular chaperone</strong> in <em>Enterobacteria phage T4</em> rather than a virion structural component.</td>
+<td>Primary biochemical/genetic studies identify gene 57 product as a helper absent from mature virions and required for tail fiber formation; reviews classify gp57A among T4 tail/fiber chaperones. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>Encoded product reported as <strong>79 aa</strong>; apparent SDS-PAGE size about <strong>5.7–6 kDa</strong>, despite higher calculated mass. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>Hashemolhosseini et al., 1996, J Bacteriol, https://doi.org/10.1128/jb.178.21.6258-6265.1996; Matsui et al., 1997, J Bacteriol, https://doi.org/10.1128/jb.179.6.1846-1851.1997; Leiman et al., 2010, Virol J, https://doi.org/10.1186/1743-422x-7-355</td>
+</tr>
+<tr>
+<td><strong>Substrates/targets:</strong> gp57A assists folding/assembly of <strong>gp12, gp34, and gp37</strong>.</td>
+<td>Table-based review annotation assigns gp57A to folding of gp12, gp34, gp37; structural/review papers state gp34 and gp37 require gp57 for proper trimeric assembly, and gp12 also depends on gp57. (leiman2010morphogenesisofthe pages 2-5, bartual2010structureofthe pages 1-2)</td>
+<td>Long tail fiber is ~<strong>70 nm</strong> long; gp37 is ~<strong>109 kDa</strong> in review annotation; gp37 distal subunit is <strong>1,026 aa</strong> in helper-protein study. (leiman2010morphogenesisofthe pages 2-5, hashemolhosseini1996characterizationofthe pages 1-1, gamkrelidze2014t4bacteriophageas pages 1-2)</td>
+<td>Bartual et al., 2010, PNAS, https://doi.org/10.1073/pnas.1011218107; Leiman et al., 2010, Virol J, https://doi.org/10.1186/1743-422x-7-355; Hashemolhosseini et al., 1996, J Bacteriol, https://doi.org/10.1128/jb.178.21.6258-6265.1996</td>
+</tr>
+<tr>
+<td><strong>Assembly pathway role:</strong> gp57 acts at multiple discrete steps in long- and short-tail fiber morphogenesis.</td>
+<td>Genetic analysis showed gp57 is required for <strong>gp34 dimerization</strong> (proximal half-fiber precursor), acts <strong>before gp38</strong> to promote <strong>gp37 dimerization</strong> (distal half-fiber precursor), and is needed for <strong>gp12 incorporation</strong> into the baseplate. (herrmann2004assemblyofbacteriophage pages 1-2)</td>
+<td>Three distinct assembly reactions assigned to gp57 in classic genetic study. (herrmann2004assemblyofbacteriophage pages 1-2)</td>
+<td>Herrmann &amp; Wood, 1981/2004 record, Mol Gen Genet, https://doi.org/10.1007/bf00271208</td>
+</tr>
+<tr>
+<td><strong>Biochemical state:</strong> gp57A is a small, highly <strong>alpha-helical oligomer</strong>, most directly supported as a <strong>tetramer</strong> in solution.</td>
+<td>Sedimentation equilibrium and glutaraldehyde cross-linking supported a tetrameric native assembly; CD spectroscopy indicated strong alpha-helical character. Some later review/tabulation reports alternative oligomeric mixtures, but direct biochemical evidence most strongly supports tetramer. (matsui1997isolationandcharacterization pages 4-5, matsui1997isolationandcharacterization pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>Monomer from sequence <strong>8,481 Da</strong>; native molecular weight <strong>33,470 ± 4,780 Da</strong>; CD estimate <strong>~94% α-helix</strong>. Review table also lists <strong>trimer/hexamer/dodecamer</strong> mixture. (matsui1997isolationandcharacterization pages 4-5, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>Matsui et al., 1997, J Bacteriol, https://doi.org/10.1128/jb.179.6.1846-1851.1997; Leiman et al., 2010, Virol J, https://doi.org/10.1186/1743-422x-7-355</td>
+</tr>
+<tr>
+<td><strong>Protein properties:</strong> gp57A is unusually acidic and compositionally atypical.</td>
+<td>Helper-protein characterization reported a highly acidic 79-residue protein lacking several common residues and forming intracellular quasi-crystalline fibers when overproduced. (hashemolhosseini1996characterizationofthe pages 1-1)</td>
+<td>Excess of <strong>9 negative charges</strong>; lacks <strong>Phe, Trp, Tyr, His, Pro, Cys</strong>. Partial complementation seen with only the <strong>N-terminal 25 aa</strong> fragment. (hashemolhosseini1996characterizationofthe pages 1-1)</td>
+<td>Hashemolhosseini et al., 1996, J Bacteriol, https://doi.org/10.1128/jb.178.21.6258-6265.1996</td>
+</tr>
+<tr>
+<td><strong>Effect of gp57A absence:</strong> loss of gp57 prevents normal assembly of target tail-fiber proteins.</td>
+<td>In the absence of p57, <strong>p34, p37, and p12 remain unassembled</strong>; for gp12 specifically, material partitions into cell debris/membrane rather than soluble/native trimeric form. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 4-5)</td>
+<td>Uninduced/plasmidless complementation controls gave low burst sizes versus induced gp57A expression: <strong>167 PFU/cell</strong> induced vs <strong>3.3</strong> and <strong>0.05 PFU/cell</strong> controls. (matsui1997isolationandcharacterization pages 1-2)</td>
+<td>Hashemolhosseini et al., 1996, J Bacteriol, https://doi.org/10.1128/jb.178.21.6258-6265.1996; Matsui et al., 1997, J Bacteriol, https://doi.org/10.1128/jb.179.6.1846-1851.1997</td>
+</tr>
+<tr>
+<td><strong>Specific mechanistic effect on gp12:</strong> gp57A promotes native short-tail-fiber trimer formation and can reverse aggregation.</td>
+<td>Authors proposed gp57A interacts with nascent gp12 to facilitate native trimer formation; at lower temperature gp12 forms higher-order aggregates, and gp57A promotes dissociation back to trimers. (matsui1997isolationandcharacterization pages 4-5, matsui1997isolationandcharacterization pages 5-6)</td>
+<td>gp12 is trimeric at <strong>37°C</strong> but forms larger aggregates at <strong>20°C</strong> in the reported assay context. (matsui1997isolationandcharacterization pages 5-6)</td>
+<td>Matsui et al., 1997, J Bacteriol, https://doi.org/10.1128/jb.179.6.1846-1851.1997</td>
+</tr>
+<tr>
+<td><strong>Cellular localization of function:</strong> gp57A functions <strong>inside the infected bacterial cytoplasm</strong> during phage morphogenesis, not on the mature virion surface.</td>
+<td>Its classification as a nonstructural helper/chaperone, absence from mature virions, and role in folding soluble tail-fiber precursors indicate intracellular action during assembly. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2, leiman2010morphogenesisofthe pages 2-5)</td>
+<td>No direct subcellular imaging/localization number reported in retrieved evidence.</td>
+<td>Hashemolhosseini et al., 1996, J Bacteriol, https://doi.org/10.1128/jb.178.21.6258-6265.1996; Matsui et al., 1997, J Bacteriol, https://doi.org/10.1128/jb.179.6.1846-1851.1997; Leiman et al., 2010, Virol J, https://doi.org/10.1186/1743-422x-7-355</td>
+</tr>
+<tr>
+<td><strong>Recombinant implementation:</strong> gp57 is practically required for soluble recombinant production of T4 gp37 together with gp38.</td>
+<td>A two-vector co-expression system showed single-chaperone expression was insufficient; co-expression of <strong>gp57 + gp38</strong> enabled purification of correctly folded trimeric gp37 for downstream receptor-binding and structural studies. (bartual2010twochaperoneassistedsoluble pages 1-2, bartual2010structureofthe pages 1-2)</td>
+<td>Yield about <strong>4 mg/L</strong> culture; purified gp37 fibers ~<strong>63 nm</strong> by EM; gp57 reported there as <strong>79 aa, 8,613 Da</strong>. (bartual2010twochaperoneassistedsoluble pages 1-2)</td>
+<td>Bartual et al., 2010, Protein Expr Purif, https://doi.org/10.1016/j.pep.2009.11.005; Bartual et al., 2010, PNAS, https://doi.org/10.1073/pnas.1011218107</td>
+</tr>
+<tr>
+<td><strong>Application to host-range engineering:</strong> tail-fiber/chaperone biology informs engineering of adsorption specificity and host range.</td>
+<td>T2/T4-like systems use distal tail-fiber genes plus associated helpers/chaperones; swapping tail-fiber determinants can broaden host range, and modern work in other phages shows tail-fiber swaps may require co-swapping an adjacent chaperone gene to alter specificity successfully. (mahichi2009sitespecificrecombinationof pages 1-2, steczynska2023ataleof pages 1-4, ivantsiv2019investigationofthe pages 16-19)</td>
+<td>Engineered/recombined phage examples: IP008 infected <strong>33%</strong> of environmental <em>E. coli</em> isolates vs <strong>7%</strong> for T2; one engineered derivative showed <strong>67%</strong> bacteriolytic spectrum among UPEC. (mahichi2009sitespecificrecombinationof pages 1-2)</td>
+<td>Mahichi et al., 2009, FEMS Microbiol Lett, https://doi.org/10.1111/j.1574-6968.2009.01588.x; Steczynska et al., 2023, bioRxiv, https://doi.org/10.1101/2023.10.16.562632</td>
+</tr>
+<tr>
+<td><strong>Application context in T4 platform engineering:</strong> while gp57 itself is not the display scaffold, understanding T4 tail-fiber assembly supports manipulation of host recognition alongside broader T4 engineering uses such as phage display.</td>
+<td>T4 platform reviews note tail fibers mediate host recognition and require gp57 for correct assembly, while separate capsid proteins Hoc/Soc are used for antigen display; thus gp57 is enabling infrastructure for tail-fiber biology rather than the display moiety itself. (gamkrelidze2014t4bacteriophageas pages 1-2, gamkrelidze2014t4bacteriophageas pages 2-4)</td>
+<td>T4 capsid carries about <strong>160 Hoc</strong> and <strong>960 Soc</strong> copies; example displayed inserts included <strong>36 aa</strong> and <strong>53 aa</strong> chimeric polypeptides. (gamkrelidze2014t4bacteriophageas pages 1-2, gamkrelidze2014t4bacteriophageas pages 2-4)</td>
+<td>Gamkrelidze &amp; Dąbrowska, 2014, Arch Microbiol, https://doi.org/10.1007/s00203-014-0989-8</td>
+</tr>
+<tr>
+<td><strong>Evidence figure/table support:</strong> review synthesis places gp57A among tail/fiber chaperones and explicitly maps its substrates.</td>
+<td>Retrieved Table 2 / Figure 15 summarize gp57A as a chaperone for gp12, gp34, gp37 and show long-tail-fiber assembly context. (leiman2010morphogenesisofthe media 88bf6b0f, leiman2010morphogenesisofthe media 7bf3e4e7, leiman2010morphogenesisofthe media 6892b351)</td>
+<td>Table entry lists gp57A at <strong>5.7 kDa</strong> with oligomeric mixture annotation. (leiman2010morphogenesisofthe media 88bf6b0f, leiman2010morphogenesisofthe media 7bf3e4e7, leiman2010morphogenesisofthe media 6892b351)</td>
+<td>Leiman et al., 2010, Virol J, https://doi.org/10.1186/1743-422x-7-355</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally grounded functional annotation for Enterobacteria phage T4 gene product 57 (gp57/gp57A), including its chaperone role, assembly targets, biochemical properties, and applied relevance. It is useful as a compact evidence map linking claims to quantitative details and primary sources.</em></p>
+<h3 id="key-visual-evidence-from-retrieved-figurestables">Key visual evidence (from retrieved figures/tables)</h3>
+<p>A cropped table entry and assembly schematic from Leiman et al. (2010) visually document that gp57A is annotated as a chaperone for folding <strong>gp12, gp34, and gp37</strong>, and places it within the long tail fiber assembly pathway. (leiman2010morphogenesisofthe media 88bf6b0f, leiman2010morphogenesisofthe media 7bf3e4e7, leiman2010morphogenesisofthe media 6892b351)</p>
+<h3 id="limitations-and-evidence-gaps">Limitations and evidence gaps</h3>
+<ul>
+<li><strong>Direct UniProt cross-reference</strong>: the retrieved papers do not explicitly mention UniProt accession <strong>P04532</strong>; mapping is inferred from organism/gene/protein identity and size. (hashemolhosseini1996characterizationofthe pages 1-1, matsui1997isolationandcharacterization pages 1-2)</li>
+<li><strong>2023–2024 T4-gp57A-specific primary research</strong>: within the retrieved accessible corpus, recent work primarily cites gp57A as a canonical model rather than providing new direct mechanistic detail; recent advances are instead exemplified through broader phage engineering studies highlighting tail fiber + chaperone co-dependence. (steczynska2023ataleof pages 1-4)</li>
+<li><strong>Localization</strong>: no microscopy-based intracellular localization was retrieved; localization is inferred from the well-supported nonstructural chaperone role. (matsui1997isolationandcharacterization pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(matsui1997isolationandcharacterization pages 1-2): T. Matsui, B. Griniuviene, E. Goldberg, A. Tsugita, N. Tanaka, and F. Arisaka. Isolation and characterization of a molecular chaperone, gp57a, of bacteriophage t4. Journal of Bacteriology, 179:1846-1851, Mar 1997. URL: https://doi.org/10.1128/jb.179.6.1846-1851.1997, doi:10.1128/jb.179.6.1846-1851.1997. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hashemolhosseini1996characterizationofthe pages 1-1): Said Hashemolhosseini, Y. Stierhof, I. Hindennach, and Ulf Henning. Characterization of the helper proteins for the assembly of tail fibers of coliphages t4 and lambda. Journal of Bacteriology, 178:6258-6265, Nov 1996. URL: https://doi.org/10.1128/jb.178.21.6258-6265.1996, doi:10.1128/jb.178.21.6258-6265.1996. This article has 71 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe pages 2-5): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herrmann2004assemblyofbacteriophage pages 1-2): Richard Herrmann and William B. Wood. Assembly of bacteriophage t4 tail fibers: identification and characterization of the nonstructural protein gp57. Molecular and General Genetics MGG, 184:125-132, Nov 2004. URL: https://doi.org/10.1007/bf00271208, doi:10.1007/bf00271208. This article has 17 citations.</p>
+</li>
+<li>
+<p>(matsui1997isolationandcharacterization pages 4-5): T. Matsui, B. Griniuviene, E. Goldberg, A. Tsugita, N. Tanaka, and F. Arisaka. Isolation and characterization of a molecular chaperone, gp57a, of bacteriophage t4. Journal of Bacteriology, 179:1846-1851, Mar 1997. URL: https://doi.org/10.1128/jb.179.6.1846-1851.1997, doi:10.1128/jb.179.6.1846-1851.1997. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gamkrelidze2014t4bacteriophageas pages 1-2): Mariam Gamkrelidze and Krystyna Dąbrowska. T4 bacteriophage as a phage display platform. Archives of Microbiology, 196:473-479, May 2014. URL: https://doi.org/10.1007/s00203-014-0989-8, doi:10.1007/s00203-014-0989-8. This article has 77 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bartual2010structureofthe pages 1-2): Sergio G. Bartual, José M. Otero, Carmela Garcia-Doval, Antonio L. Llamas-Saiz, Richard Kahn, Gavin C. Fox, and Mark J. van Raaij. Structure of the bacteriophage t4 long tail fiber receptor-binding tip. Proceedings of the National Academy of Sciences, 107:20287-20292, Nov 2010. URL: https://doi.org/10.1073/pnas.1011218107, doi:10.1073/pnas.1011218107. This article has 273 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe media 88bf6b0f): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe media 7bf3e4e7): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe media 6892b351): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(matsui1997isolationandcharacterization pages 5-6): T. Matsui, B. Griniuviene, E. Goldberg, A. Tsugita, N. Tanaka, and F. Arisaka. Isolation and characterization of a molecular chaperone, gp57a, of bacteriophage t4. Journal of Bacteriology, 179:1846-1851, Mar 1997. URL: https://doi.org/10.1128/jb.179.6.1846-1851.1997, doi:10.1128/jb.179.6.1846-1851.1997. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(steczynska2023ataleof pages 1-4): Joanna P. Steczynska, Sarah J. Kerr, Michelle L. Kelly, Michaella J. Whittle, Terry W. Bilverstone, and Nigel P. Minton. A tale of two phage tails: engineering the host range of bacteriophages infecting clostridioides difficile. bioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.16.562632, doi:10.1101/2023.10.16.562632. This article has 4 citations.</p>
+</li>
+<li>
+<p>(ivantsiv2019investigationofthe pages 81-84): O Ivantsiv. Investigation of the tail fibres and tail fibre assembly proteins of contractile-tailed phages. Unknown journal, 2019.</p>
+</li>
+<li>
+<p>(bartual2010twochaperoneassistedsoluble pages 1-2): Sergio Galan Bartual, Carmela Garcia-Doval, Jana Alonso, Guy Schoehn, and Mark J. van Raaij. Two-chaperone assisted soluble expression and purification of the bacteriophage t4 long tail fibre protein gp37. Protein expression and purification, 70 1:116-21, Mar 2010. URL: https://doi.org/10.1016/j.pep.2009.11.005, doi:10.1016/j.pep.2009.11.005. This article has 60 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mahichi2009sitespecificrecombinationof pages 1-2): Faezeh Mahichi, Aidan John Synnott, Keiko Yamamichi, Toshiya Osada, and Yasunori Tanji. Site-specific recombination of t2 phage using ip008 long tail fiber genes provides a targeted method for expanding host range while retaining lytic activity. FEMS microbiology letters, 295 2:211-7, Jun 2009. URL: https://doi.org/10.1111/j.1574-6968.2009.01588.x, doi:10.1111/j.1574-6968.2009.01588.x. This article has 186 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gamkrelidze2014t4bacteriophageas pages 2-4): Mariam Gamkrelidze and Krystyna Dąbrowska. T4 bacteriophage as a phage display platform. Archives of Microbiology, 196:473-479, May 2014. URL: https://doi.org/10.1007/s00203-014-0989-8, doi:10.1007/s00203-014-0989-8. This article has 77 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ivantsiv2019investigationofthe pages 16-19): O Ivantsiv. Investigation of the tail fibres and tail fibre assembly proteins of contractile-tailed phages. Unknown journal, 2019.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="57-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 I have extracted Table 2 and Figure 15, which describe chaperones like gp57A and tail fiber assembly. Additionally, I have provided" src="57-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>matsui1997isolationandcharacterization pages 1-2</li>
+<li>herrmann2004assemblyofbacteriophage pages 1-2</li>
+<li>matsui1997isolationandcharacterization pages 4-5</li>
+<li>hashemolhosseini1996characterizationofthe pages 1-1</li>
+<li>matsui1997isolationandcharacterization pages 5-6</li>
+<li>steczynska2023ataleof pages 1-4</li>
+<li>ivantsiv2019investigationofthe pages 81-84</li>
+<li>bartual2010twochaperoneassistedsoluble pages 1-2</li>
+<li>mahichi2009sitespecificrecombinationof pages 1-2</li>
+<li>leiman2010morphogenesisofthe pages 2-5</li>
+<li>bartual2010structureofthe pages 1-2</li>
+<li>ivantsiv2019investigationofthe pages 16-19</li>
+<li>https://doi.org/10.1128/jb.178.21.6258-6265.1996;</li>
+<li>https://doi.org/10.1128/jb.179.6.1846-1851.1997;</li>
+<li>https://doi.org/10.1186/1743-422x-7-355</li>
+<li>https://doi.org/10.1073/pnas.1011218107;</li>
+<li>https://doi.org/10.1186/1743-422x-7-355;</li>
+<li>https://doi.org/10.1128/jb.178.21.6258-6265.1996</li>
+<li>https://doi.org/10.1007/bf00271208</li>
+<li>https://doi.org/10.1128/jb.179.6.1846-1851.1997</li>
+<li>https://doi.org/10.1016/j.pep.2009.11.005;</li>
+<li>https://doi.org/10.1073/pnas.1011218107</li>
+<li>https://doi.org/10.1111/j.1574-6968.2009.01588.x;</li>
+<li>https://doi.org/10.1101/2023.10.16.562632</li>
+<li>https://doi.org/10.1007/s00203-014-0989-8</li>
+<li>https://doi.org/10.1128/jb.179.6.1846-1851.1997,</li>
+<li>https://doi.org/10.1128/jb.178.21.6258-6265.1996,</li>
+<li>https://doi.org/10.1186/1743-422x-7-355,</li>
+<li>https://doi.org/10.1007/bf00271208,</li>
+<li>https://doi.org/10.1007/s00203-014-0989-8,</li>
+<li>https://doi.org/10.1073/pnas.1011218107,</li>
+<li>https://doi.org/10.1101/2023.10.16.562632,</li>
+<li>https://doi.org/10.1016/j.pep.2009.11.005,</li>
+<li>https://doi.org/10.1111/j.1574-6968.2009.01588.x,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04532
+gene_symbol: P04532
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P04532&#39;
+existing_annotations:
+- term:
+    id: GO:0098003
+    label: viral tail assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098004
+    label: virus tail fiber assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098004
+    label: virus tail fiber assembly
+  evidence_type: IDA
+  original_reference_id: PMID:8892827
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:8892827
+  title: Characterization of the helper proteins for the assembly of tail fibers of
+    coliphages T4 and lambda.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

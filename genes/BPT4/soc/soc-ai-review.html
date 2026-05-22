@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P03715 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P03715</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P03715" target="_blank" class="term-link">
+                        P03715
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P03715";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P03715" data-a="DESCRIPTION: TODO: Add description for P03715..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P03715</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019028" target="_blank" class="term-link">
+                                    GO:0019028
+                                </a>
+                            </span>
+                            <span class="term-label">viral capsid</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P03715" data-a="GO:0019028" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098021" target="_blank" class="term-link">
+                                    GO:0098021
+                                </a>
+                            </span>
+                            <span class="term-label">viral capsid, decoration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P03715" data-a="GO:0098021" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098021" target="_blank" class="term-link">
+                                    GO:0098021
+                                </a>
+                            </span>
+                            <span class="term-label">viral capsid, decoration</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28893988" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28893988
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cryo-EM structure of the bacteriophage T4 isometric head at ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P03715" data-a="GO:0098021" data-r="PMID:28893988" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28893988" target="_blank" class="term-link">
+                            PMID:28893988
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cryo-EM structure of the bacteriophage T4 isometric head at 3.3-Å resolution and its relevance to the assembly of icosahedral viruses.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(soc-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P03715" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T02:17:48.562114</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="soc-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="soc-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 I have extracted the requested schematic and binding curves from the document. The first image shows Figure 10 (page 10), which is </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-bacteriophage-t4-soc-uniprot-p03715-small-outer-capsid-protein-soc">Research report: bacteriophage T4 <strong>soc</strong> (UniProt P03715) — small outer capsid protein (Soc)</h2>
+<h3 id="1-target-verification-mandatory-disambiguation">1) Target verification (mandatory disambiguation)</h3>
+<p>The target gene <strong>soc</strong> in this report refers specifically to <strong>Enterobacteria phage T4</strong> (bacteriophage T4) <strong>small outer capsid protein Soc</strong>, UniProt <strong>P03715</strong>. The cited literature consistently describes Soc as a ~9–10 kDa, nonessential <strong>capsid decoration/stabilization</strong> protein that binds the <em>mature</em> T4 head shell and reinforces capsid integrity by clamping adjacent hexons of the major capsid protein gp23*. This matches the UniProt description and the Tevenvirinae Soc family context, and it is distinct from unrelated “soc” genes in bacteria/eukaryotes. (iwasaki2000moleculararchitectureof pages 1-2, rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3)</p>
+<h3 id="2-key-concepts-and-current-understanding">2) Key concepts and current understanding</h3>
+<h4 id="21-definition-and-core-biological-role">2.1 Definition and core biological role</h4>
+<p><strong>Soc (small outer capsid protein)</strong> is a T4 head-shell accessory protein that <strong>decorates the exterior surface</strong> of the mature capsid and functions primarily as a <strong>structural clamp (“glue”)</strong> that reinforces the gp23<em> capsid lattice. It is described as a rod/tadpole-shaped protein that binds at </em><em>interfaces between neighboring gp23</em> hexameric capsomers**, thereby stabilizing the head shell against environmental stresses. (rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3, li2007assemblyofthe pages 9-10)</p>
+<p>Soc is <strong>nonessential for phage assembly</strong> under standard laboratory conditions and binds <strong>after capsid maturation/expansion</strong> (i.e., decoration occurs post-expansion once binding sites are created on the mature lattice). (fokine2023structureandfunction pages 1-3, rao2010structureandassembly pages 4-5, iwasaki2000moleculararchitectureof pages 1-2)</p>
+<h4 id="22-localization-and-binding-geometry-on-the-virion">2.2 Localization and binding geometry on the virion</h4>
+<p>Soc localizes to the <strong>outside of the T4 capsid</strong>. Structurally, Soc binds primarily at symmetry axes formed by the gp23<em> lattice:<br />
+- </em><em>Trimers at local/quasi-3-fold sites</em><em> where three gp23</em> hexons meet, and<br />
+- <strong>Dimers (and/or monomers in some reconstructions) at local/quasi-2-fold sites</strong> between adjacent hexons.<br />
+This arrangement yields an external, cage-like reinforcement across the capsid surface. (li2007assemblyofthe pages 10-11, li2007assemblyofthe media 04b8a62d, iwasaki2000moleculararchitectureof pages 1-2)</p>
+<p>Importantly, Soc binding sites are <strong>absent</strong> at <strong>hexamer–pentamer</strong> vertex interfaces and at the <strong>portal-related interfaces</strong>, consistent with mapping of Soc occupancy to gp23<em> hexon–hexon junctions rather than gp24</em> (vertex) regions. (fokine2023structureandfunction pages 1-3, li2007assemblyofthe pages 9-10)</p>
+<h4 id="23-stoichiometry-and-copy-number-key-statistics">2.3 Stoichiometry and copy number (key statistics)</h4>
+<p>Reported occupancy is high, with two commonly cited values:<br />
+- ~<strong>810 Soc copies per capsid</strong> in classic display/engineering measurements, and<br />
+- up to <strong>~870 Soc binding sites</strong> per fully occupied prolate T4 capsid in later structural syntheses. (li2007assemblyofthe pages 1-2, fokine2023structureandfunction pages 1-3, rao2010structureandassembly pages 4-5)</p>
+<p>A structural interpretation of Soc as a trimeric clamp implies <strong>~270 trimeric clamps</strong> can form a stabilizing cage over the capsid surface (i.e., 270 × 3 ≈ 810). (rao2010structureandassembly pages 4-5)</p>
+<h3 id="3-mechanistic-evidence-stabilization-and-stress-resistance">3) Mechanistic evidence: stabilization and stress resistance</h3>
+<h4 id="31-capsid-stabilization-phenotype">3.1 Capsid stabilization phenotype</h4>
+<p>Soc strongly increases capsid robustness. A reviewed/compiled quantitative phenotype is that <strong>Soc-minus phage lose viability at pH 10.6</strong>, whereas Soc decoration can enhance survival by approximately <strong>10^4-fold</strong> under extreme alkaline conditions. (rao2010structureandassembly pages 4-5)</p>
+<p>Primary experimental results also show that when inter-Soc contacts are disrupted by some bulky fusion designs, phage can lose most infectious titer under alkaline stress, whereas wild-type or Soc-supplemented phage retain much higher titers; e.g., wild-type or rSoc-supplemented phage retained <strong>~75–85%</strong> titer after alkaline treatment conditions described, while hoc−soc− phage could lose <strong>&gt;98%</strong>. (li2007assemblyofthe pages 6-9)</p>
+<h4 id="32-thermal-stabilization">3.2 Thermal stabilization</h4>
+<p>Cryo-EM/biophysical interpretation indicates Soc increases capsid thermal stability, including a reported <strong>~6 °C increase</strong> in thermal denaturation temperature in one analysis, and broader review statements that Soc contributes to survival under elevated temperature (e.g., ~60 °C conditions in review summaries). (iwasaki2000moleculararchitectureof pages 6-8, rao2010structureandassembly pages 4-5)</p>
+<h3 id="4-biochemistry-and-binding-parameters-quantitative">4) Biochemistry and binding parameters (quantitative)</h3>
+<p>Soc binding to mature capsids can be measured in vitro and is typically high affinity and saturable:<br />
+- Apparent <strong>Kd ~73 nM at 8 °C</strong> and <strong>~54 nM at room temperature</strong> for recombinant Soc (rSoc) binding in a defined in vitro system.<br />
+- Binding saturation observed at ~<strong>4.6 μM</strong> protein concentration in the reported assay. (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 4-6)</p>
+<p>Stoichiometric capacity depends on the construct and steric effects:<br />
+- A representative Bmax reported for rSoc binding was <strong>~746 copies/capsid</strong>, while a tested dual-fusion construct had <strong>~769 copies/capsid</strong>, and using both Soc termini can effectively double displayed moieties (interpreted as ~1,538 displayed units in one design context). (li2007assemblyofthe pages 4-6)<br />
+- Large fused proteins (anthrax PA/LF fusions) can weaken affinity by ~10-fold (Kd in the <strong>~745–784 nM</strong> range) and reduce Bmax to ~<strong>352–365</strong> per capsid, consistent with steric constraints. (li2007assemblyofthe pages 4-6, li2007assemblyofthe pages 9-10)</p>
+<p>A key mechanistic point is that Soc is <strong>monomeric in solution</strong>, with oligomeric clamp interactions imposed by the capsid lattice rather than being constitutively oligomeric in free solution. (iwasaki2000moleculararchitectureof pages 1-2, li2007assemblyofthe pages 11-12)</p>
+<h3 id="5-pathways-and-lifecycle-context-where-soc-acts">5) Pathways and lifecycle context (where Soc acts)</h3>
+<p>Soc participates in the <strong>late stage of virion morphogenesis</strong> as a <strong>post-assembly/post-expansion decoration protein</strong>. Its binding sites arise upon maturational expansion, and it reinforces the <strong>fully assembled head shell</strong> rather than catalyzing a biochemical reaction. Its “pathway” role is therefore structural: stabilizing the particle to endure environmental transmission and stresses (including those encountered in niches such as the gut). (fokine2023structureandfunction pages 1-3)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-soc-as-a-high-density-display-scaffold-core-concept">6.1 Soc as a high-density display scaffold (core concept)</h4>
+<p>Because Soc is present at <strong>hundreds of copies per capsid</strong> and exposes both termini to solvent, it is widely used as a modular anchor to display:<br />
+- vaccine antigens,<br />
+- targeting ligands,<br />
+- and other functional proteins.<br />
+This is done either by <strong>genetic fusion</strong> to Soc (in vivo assembly) or by <strong>purifying Soc-fusion proteins</strong> and then <strong>decorating hoc−soc− capsids in vitro</strong>. (zhu2024bacteriophaget4as pages 4-6, rao2010structureandassembly pages 4-5, li2007assemblyofthe pages 9-10)</p>
+<p>A primary demonstration of high-density display achieved <strong>~1,662 anthrax-related molecules</strong> on a single capsid and suggested a combined Hoc+Soc theoretical capacity of <strong>~1,775</strong> displayed antigens/capsid under those design constraints. (li2007assemblyofthe pages 9-10)</p>
+<h4 id="62-macromolecular-complex-assembly-on-t4-capsids">6.2 Macromolecular complex assembly on T4 capsids</h4>
+<p>T4 capsids decorated via Soc/Hoc can serve as platforms for assembling very large complexes; one study demonstrated <strong>229 complete anthrax toxin complexes per particle</strong>, corresponding to ~<strong>2,400 protein molecules</strong> and ~<strong>133 MDa</strong> of anchored mass. (li2006bacteriophaget4capsid pages 1-2)</p>
+<h4 id="63-20232024-developments-prioritized">6.3 2023–2024 developments (prioritized)</h4>
+<p><strong>2023 (Viruses)</strong>: A contemporary synthesis frames Soc as a post-expansion decoration protein forming an external cage through Soc–Soc and Soc–gp23<em> interactions, emphasizing that Soc (and Hoc) can bind expanded heads with </em><em>nanomolar affinity</em>* and “exquisite specificity,” supporting engineering of T4 nanoparticles for antigen display and delivery of genome-editing molecules (platform framing). (fokine2023structureandfunction pages 1-3)</p>
+<p><strong>2024 (Annual Review of Virology)</strong>: An authoritative review positions the Soc/Hoc-decorated T4 capsid as a <strong>protein-based, adjuvant- and needle-free mucosal vaccine platform</strong>. It reiterates <strong>~870 copies of Soc</strong> and highlights modern engineering approaches including <strong>CRISPR-based genome engineering</strong> and <strong>SpyTag/SpyCatcher</strong> covalent coupling strategies (e.g., spike trimers tethered via Soc-SpyCatcher; cryo-EM supporting native-like spike configuration on the capsid). (zhu2024bacteriophaget4as pages 4-6, zhu2024bacteriophaget4as pages 10-11, zhu2024bacteriophaget4as pages 8-10)</p>
+<p>Quantitative application examples summarized in the 2024 review include reported display levels such as:<br />
+- <strong>~663 copies per capsid</strong> for a plague antigen construct (T4-(F1mut-V-Soc)),<br />
+- Dual display values of <strong>~650 and ~360</strong> copies for F1mut-V-Soc and Soc-PA in one construct context, and<br />
+- A <strong>~355 PA molecules/phage</strong> example (T4-Soc-PA). (zhu2024bacteriophaget4as pages 13-15, zhu2024bacteriophaget4as pages 11-13)</p>
+<p>The same review summarizes multiple <strong>preclinical</strong> animal-model outcomes for Soc-based T4 vaccines, including reports of <strong>100% protection</strong> in plague challenge models and complete protection in influenza models after intranasal delivery, alongside mucosal immune readouts (e.g., antigen-specific sIgA/IgG in bronchoalveolar lavage fluid and lung T cell responses). (zhu2024bacteriophaget4as pages 13-15, zhu2024bacteriophaget4as pages 11-13, zhu2024bacteriophaget4as pages 10-11)</p>
+<h3 id="7-expert-opinion-and-analysis-authoritative-synthesis">7) Expert opinion and analysis (authoritative synthesis)</h3>
+<p>Across authoritative reviews, Soc is consistently interpreted as a <strong>structural reinforcement module</strong> that evolved to increase particle stability and environmental persistence, and whose post-expansion binding and high copy number make it unusually suitable for <strong>programmable nanoparticle display</strong>. In particular, Rao &amp; Black (2010) articulate the clamp/cage model (two gp23 binding sites per Soc; ~270 clamps) and quantify extreme stress stabilization; Zhu et al. (2024) extends this to a translational framing in mucosal vaccinology and platform engineering; Fokine et al. (2023) reinforces the “external cage” concept and situates Soc in broader T4-like phage biology and engineering potential. (rao2010structureandassembly pages 4-5, zhu2024bacteriophaget4as pages 4-6, fokine2023structureandfunction pages 1-3)</p>
+<h3 id="8-figurestables-supporting-key-claims-visual-evidence">8) Figures/tables supporting key claims (visual evidence)</h3>
+<p>Li et al. (2007) includes a schematic of Soc organization on the capsid (trimers at local 3-fold and dimers at local 2-fold axes) and binding curves used to derive Kd/Bmax for rSoc and fusion proteins. These figures provide direct visual/quantitative support for binding geometry and affinity measurements. (li2007assemblyofthe media 04b8a62d, li2007assemblyofthe media 6707ee96)</p>
+<h3 id="9-consolidated-quantitative-evidence-table">9) Consolidated quantitative evidence table</h3>
+<p>The following table consolidates key parameters and evidence used for functional annotation and applied context.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Parameter</th>
+<th>Value</th>
+<th>Experimental context/method</th>
+<th>Source (with year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td>Soc = small outer capsid protein of Enterobacteria phage T4; nonessential outer capsid decoration/stabilization protein, ~9–10 kDa</td>
+<td>Structural/biochemical literature on T4 capsid proteins; distinct from unrelated non-phage “soc” genes</td>
+<td>Iwasaki et al., 2000; Rao &amp; Black, 2010; Fokine et al., 2023 (iwasaki2000moleculararchitectureof pages 1-2, rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3)</td>
+</tr>
+<tr>
+<td>Primary function</td>
+<td>Capsid clamp/glue that reinforces the mature T4 head by bridging adjacent gp23* hexons/capsomers</td>
+<td>Cryo-EM, structural interpretation, biochemical review</td>
+<td>Iwasaki et al., 2000; Rao &amp; Black, 2010; Fokine et al., 2023 (iwasaki2000moleculararchitectureof pages 1-2, rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3)</td>
+</tr>
+<tr>
+<td>Cellular/virion localization</td>
+<td>Exterior of mature capsid head shell; binds after capsid maturation/expansion rather than during initial shell assembly</td>
+<td>Cryo-EM and assembly studies on mature/expanded heads</td>
+<td>Iwasaki et al., 2000; Rao &amp; Black, 2010; Fokine et al., 2023 (iwasaki2000moleculararchitectureof pages 1-2, rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3)</td>
+</tr>
+<tr>
+<td>Binding location on capsid</td>
+<td>Interfaces between adjacent gp23<em> hexameric capsomers; absent at gp24</em> pentamer/vertex interfaces and hexamer–portal interfaces</td>
+<td>Cryo-EM mapping and structural analysis</td>
+<td>Iwasaki et al., 2000; Li et al., 2007; Fokine et al., 2023 (iwasaki2000moleculararchitectureof pages 1-2, li2007assemblyofthe pages 9-10, fokine2023structureandfunction pages 1-3)</td>
+</tr>
+<tr>
+<td>Binding geometry</td>
+<td>Soc forms trimers at local/quasi-3-fold axes and dimers/monomers at local/quasi-2-fold or vertex-proximal sites; each Soc contacts two neighboring capsomers</td>
+<td>Cryo-EM, capsid lattice interpretation, assembly schematics</td>
+<td>Iwasaki et al., 2000; Li et al., 2007 (iwasaki2000moleculararchitectureof pages 1-2, li2007assemblyofthe pages 10-11, li2007assemblyofthe media 04b8a62d)</td>
+</tr>
+<tr>
+<td>Capsid-binding region vs exposed regions</td>
+<td>Central region mediates capsid binding; both N- and C-termini are surface/solvent exposed</td>
+<td>Fusion-protein assembly studies; structural interpretation</td>
+<td>Li et al., 2007; Zhu et al., 2024 (li2007assemblyofthe pages 9-10, zhu2024bacteriophaget4as pages 4-6)</td>
+</tr>
+<tr>
+<td>Soc copy number per capsid (classic estimate)</td>
+<td>~810 copies/capsid</td>
+<td>Quantitative capsid decoration estimates from T4 display studies</td>
+<td>Li et al., 2006; Li et al., 2007 (li2006bacteriophaget4capsid pages 1-2, li2007assemblyofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Soc binding sites per capsid (later estimate)</td>
+<td>Up to 870 sites/capsid when fully occupied</td>
+<td>Structural review/synthesis of T4 head architecture</td>
+<td>Rao &amp; Black, 2010; Fokine et al., 2023; Zhu et al., 2024 (rao2010structureandassembly pages 4-5, fokine2023structureandfunction pages 1-3, zhu2024bacteriophaget4as pages 4-6)</td>
+</tr>
+<tr>
+<td>Clamp/cage stoichiometry</td>
+<td>~270 trimeric Soc clamps can form a reinforcing outer cage on the capsid</td>
+<td>Review of structural data</td>
+<td>Rao &amp; Black, 2010 (rao2010structureandassembly pages 4-5)</td>
+</tr>
+<tr>
+<td>Affinity of recombinant Soc for capsid</td>
+<td>Apparent Kd ~73 nM at 8 °C; ~54 nM at room temperature</td>
+<td>In vitro saturation binding/Scatchard analyses on hoc−soc− capsids</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 4-6, li2007assemblyofthe media 6707ee96)</td>
+</tr>
+<tr>
+<td>Saturation concentration</td>
+<td>Binding saturated at ~4.6 μM Soc in the reported assay</td>
+<td>In vitro binding curves</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10)</td>
+</tr>
+<tr>
+<td>Bmax for recombinant Soc</td>
+<td>~746 copies/capsid</td>
+<td>Densitometry-based saturation binding on purified capsids</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 4-6)</td>
+</tr>
+<tr>
+<td>Bmax for double-fusion LFn–Soc–PA4</td>
+<td>~769 copies/capsid; effective dual-terminal display interpreted as 1,538 displayed moieties</td>
+<td>In vitro binding with dual-terminal antigen fusion</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 4-6)</td>
+</tr>
+<tr>
+<td>Effect of large fusions on affinity/capacity</td>
+<td>Bulky PA/LF fusions weakened binding ~10-fold (Kd ~745–784 nM) and lowered Bmax to ~352–365 copies/capsid</td>
+<td>In vitro binding of full-length anthrax toxin fusions to capsids</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 4-6)</td>
+</tr>
+<tr>
+<td>Oligomeric state in solution</td>
+<td>Soc behaves as a monomer in solution; oligomerization/clamping is imposed by capsid template</td>
+<td>Analytical ultracentrifugation / gel filtration and structural interpretation</td>
+<td>Iwasaki et al., 2000; Li et al., 2007 (iwasaki2000moleculararchitectureof pages 1-2, li2007assemblyofthe pages 11-12)</td>
+</tr>
+<tr>
+<td>Alkaline pH stability phenotype</td>
+<td>Soc-minus phage lose viability at pH 10.6; wild-type or Soc-supplemented particles remain much more stable</td>
+<td>Infectivity assays after alkaline treatment</td>
+<td>Rao &amp; Black, 2010; Li et al., 2007 (rao2010structureandassembly pages 4-5, li2007assemblyofthe pages 1-2, li2007assemblyofthe pages 6-9)</td>
+</tr>
+<tr>
+<td>Quantified alkaline protection</td>
+<td>Addition of Soc enhances survival by ~10^4-fold under extreme alkaline conditions; wild-type/rSoc-supplemented phage retained ~75–85% titer after pH 10.4 treatment whereas hoc−soc− phage lost &gt;98%</td>
+<td>Review synthesis plus primary infectivity experiments</td>
+<td>Rao &amp; Black, 2010; Li et al., 2007 (rao2010structureandassembly pages 4-5, li2007assemblyofthe pages 6-9)</td>
+</tr>
+<tr>
+<td>Stability of bound Soc-fusion proteins</td>
+<td>No dissociation of Soc–anthrax fusions after exposure to pH 10.4</td>
+<td>Capsid-bound fusion stability test</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 10-11, li2007assemblyofthe pages 6-9)</td>
+</tr>
+<tr>
+<td>Relative contribution of Soc–Soc interfaces</td>
+<td>When inter-Soc interactions were perturbed, only ~8% survival remained with trimeric-interface reinforcement and ~4.2% with dimeric-interface reinforcement at pH 10.6</td>
+<td>Engineered fusion constructs probing inter-Soc contacts</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 10-11)</td>
+</tr>
+<tr>
+<td>Thermal stability effect</td>
+<td>Soc raises T4 capsid thermal denaturation temperature by ~6 °C; Soc-decorated capsids tolerate up to ~60 °C in review summaries</td>
+<td>Structural/biophysical analysis and review synthesis</td>
+<td>Iwasaki et al., 2000; Rao &amp; Black, 2010 (iwasaki2000moleculararchitectureof pages 6-8, rao2010structureandassembly pages 4-5)</td>
+</tr>
+<tr>
+<td>Other protective effects</td>
+<td>Soc helps stabilize capsids against osmotic shock and denaturants</td>
+<td>Review synthesis from T4 head studies</td>
+<td>Rao &amp; Black, 2010 (rao2010structureandassembly pages 4-5)</td>
+</tr>
+<tr>
+<td>Maximum anchored fusion size</td>
+<td>Soc can stably anchor proteins up to ~93 kDa in reported experiments</td>
+<td>Soc fusion display with anthrax proteins</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Combined display capacity on T4 surface</td>
+<td>Soc + Hoc together can support up to ~1,775 displayed antigens/capsid; experimentally ~1,662 anthrax-related molecules were achieved</td>
+<td>In vitro assembly of Hoc and Soc fusion proteins</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Soc-only high-density display capacity</td>
+<td>Up to ~1,620 displayed antigens/capsid in dual-terminal Soc fusion configurations</td>
+<td>In vitro display with both Soc termini used</td>
+<td>Li et al., 2007 (li2007assemblyofthe pages 9-10)</td>
+</tr>
+<tr>
+<td>Macromolecular assembly benchmark</td>
+<td>Up to 229 anthrax toxin complexes assembled on one capsid, corresponding to ~2,400 protein molecules and ~133 MDa anchored mass</td>
+<td>Sequential in vitro assembly via Soc/Hoc fusions</td>
+<td>Li et al., 2006 (li2006bacteriophaget4capsid pages 1-2)</td>
+</tr>
+<tr>
+<td>2023 understanding of biological role</td>
+<td>Soc and Soc–gp23*/Soc–Soc interactions form an external cage that protects virions from harsh environmental conditions such as pH and temperature extremes, relevant to survival in environments like the gut</td>
+<td>2023 review integrating structural and functional evidence</td>
+<td>Fokine et al., 2023 (fokine2023structureandfunction pages 1-3)</td>
+</tr>
+<tr>
+<td>2024 platform view</td>
+<td>Soc is one of ~870 nonessential exposed capsid proteins used as a modular “plug-and-play” engineering site; both termini are engineerable and antigen spacing/copy number can be tuned</td>
+<td>Annual Review synthesis of T4 vaccine platform</td>
+<td>Zhu et al., 2024 (zhu2024bacteriophaget4as pages 6-8, zhu2024bacteriophaget4as pages 4-6)</td>
+</tr>
+<tr>
+<td>2024 engineering methods</td>
+<td>Soc-fused antigens can be displayed by purified-protein in vitro assembly, in vivo expression during phage production, CRISPR engineering, or Soc-SpyCatcher/SpyTag coupling</td>
+<td>Review of platform methods and vaccine design strategies</td>
+<td>Zhu et al., 2024 (zhu2024bacteriophaget4as pages 6-8, zhu2024bacteriophaget4as pages 10-11, zhu2024bacteriophaget4as pages 8-10)</td>
+</tr>
+<tr>
+<td>2024 antigen display examples</td>
+<td>Large antigens displayed via Soc include anthrax PA (~83 kDa) and SARS-CoV-2 spike ectodomain (~435 kDa) in review examples</td>
+<td>Review summarizing prior primary studies and newer T4-COVID designs</td>
+<td>Zhu et al., 2024 (zhu2024bacteriophaget4as pages 6-8)</td>
+</tr>
+<tr>
+<td>2024 quantitative vaccine examples</td>
+<td>T4-(F1mut-V-Soc) displayed ~663 copies/capsid; dual-display plague/anthrax constructs showed ~650 copies of F1mut-V-Soc and ~360 copies of Soc-PA; T4-Soc-PA showed ~355 PA molecules/phage</td>
+<td>Vaccine-focused review citing animal studies</td>
+<td>Zhu et al., 2024 (zhu2024bacteriophaget4as pages 13-15, zhu2024bacteriophaget4as pages 11-13)</td>
+</tr>
+<tr>
+<td>2024 mucosal/intranasal vaccine outcomes</td>
+<td>Soc-based T4 vaccines delivered intranasally induced mucosal sIgA and systemic responses; review cites examples of complete protection in influenza models and 100% protection in plague challenge models in mice and Brown Norway rats</td>
+<td>Annual Review synthesis of preclinical animal studies</td>
+<td>Zhu et al., 2024 (zhu2024bacteriophaget4as pages 13-15, zhu2024bacteriophaget4as pages 11-13, zhu2024bacteriophaget4as pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported functional, structural, quantitative, and application-focused facts about bacteriophage T4 Soc (UniProt P03715). It consolidates classic primary literature and 2023-2024 review evidence on binding geometry, stoichiometry, stability, and use as a high-density antigen display scaffold.</em></p>
+<h3 id="10-limitations-and-open-points">10) Limitations and open points</h3>
+<ul>
+<li>Copy-number estimates vary (e.g., ~810 vs ~870) across methods and sources; these differences likely reflect capsid geometry assumptions, site definitions, and measurement approaches across decades of structural refinement and display quantification. (li2007assemblyofthe pages 1-2, fokine2023structureandfunction pages 1-3, rao2010structureandassembly pages 4-5)</li>
+<li>This report focused on sources retrievable in the current tool session; some primary structural papers mentioned in reviews (e.g., atomic Soc structure papers) were not directly retrievable here, so the mechanistic interpretation relies on the accessible primary (Li 2006/2007; Iwasaki 2000) plus authoritative syntheses (Rao &amp; Black 2010; Zhu 2024; Fokine 2023). (rao2010structureandassembly pages 4-5, zhu2024bacteriophaget4as pages 4-6, fokine2023structureandfunction pages 1-3)</li>
+</ul>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Iwasaki K. et al. <strong>2000-06</strong>. <em>Virology</em>. “Molecular architecture of bacteriophage T4 capsid: vertex structure and bimodal binding of the stabilizing accessory protein, Soc.” https://doi.org/10.1006/viro.2000.0321 (iwasaki2000moleculararchitectureof pages 1-2, iwasaki2000moleculararchitectureof pages 6-8)</li>
+<li>Li Q. et al. <strong>2006-10</strong>. <em>Journal of Molecular Biology</em>. “Bacteriophage T4 capsid: a unique platform for efficient surface assembly of macromolecular complexes.” https://doi.org/10.1016/j.jmb.2006.08.049 (li2006bacteriophaget4capsid pages 1-2)</li>
+<li>Li Q. et al. <strong>2007-07</strong>. <em>Journal of Molecular Biology</em>. “Assembly of the small outer capsid protein, Soc, on bacteriophage T4…” https://doi.org/10.1016/j.jmb.2007.05.008 (li2007assemblyofthe pages 9-10, li2007assemblyofthe pages 4-6, li2007assemblyofthe media 04b8a62d)</li>
+<li>Rao V.B., Black L.W. <strong>2010-12</strong>. <em>Virology Journal</em>. “Structure and assembly of bacteriophage T4 head.” https://doi.org/10.1186/1743-422x-7-356 (rao2010structureandassembly pages 4-5)</li>
+<li>Fokine A. et al. <strong>2023-07</strong>. <em>Viruses</em>. “Structure and Function of Hoc—A Novel Environment Sensing Device Encoded by T4 and Other Bacteriophages.” https://doi.org/10.3390/v15071517 (fokine2023structureandfunction pages 1-3)</li>
+<li>Zhu J. et al. <strong>2024-09</strong>. <em>Annual Review of Virology</em>. “Bacteriophage T4 as a Protein-Based, Adjuvant- and Needle-Free, Mucosal Pandemic Vaccine Design Platform.” https://doi.org/10.1146/annurev-virology-111821-111145 (zhu2024bacteriophaget4as pages 4-6, zhu2024bacteriophaget4as pages 13-15, zhu2024bacteriophaget4as pages 8-10)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(iwasaki2000moleculararchitectureof pages 1-2): Kenji Iwasaki, Benes L. Trus, Paul T. Wingfield, Naiqian Cheng, Gregorina Campusano, Venigalla B. Rao, and Alasdair C. Steven. Molecular architecture of bacteriophage t4 capsid: vertex structure and bimodal binding of the stabilizing accessory protein, soc. Virology, 271 2:321-33, Jun 2000. URL: https://doi.org/10.1006/viro.2000.0321, doi:10.1006/viro.2000.0321. This article has 96 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rao2010structureandassembly pages 4-5): Venigalla B Rao and Lindsay W Black. Structure and assembly of bacteriophage t4 head. Virology Journal, 7:356-356, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-356, doi:10.1186/1743-422x-7-356. This article has 162 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2023structureandfunction pages 1-3): Andrei Fokine, Mohammad Zahidul Islam, Qianglin Fang, Zhenguo Chen, Lei Sun, and Venigalla B. Rao. Structure and function of hoc—a novel environment sensing device encoded by t4 and other bacteriophages. Viruses, 15:1517, Jul 2023. URL: https://doi.org/10.3390/v15071517, doi:10.3390/v15071517. This article has 23 citations.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 9-10): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 10-11): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe media 04b8a62d): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 1-2): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 6-9): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(iwasaki2000moleculararchitectureof pages 6-8): Kenji Iwasaki, Benes L. Trus, Paul T. Wingfield, Naiqian Cheng, Gregorina Campusano, Venigalla B. Rao, and Alasdair C. Steven. Molecular architecture of bacteriophage t4 capsid: vertex structure and bimodal binding of the stabilizing accessory protein, soc. Virology, 271 2:321-33, Jun 2000. URL: https://doi.org/10.1006/viro.2000.0321, doi:10.1006/viro.2000.0321. This article has 96 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 4-6): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe pages 11-12): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 4-6): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2006bacteriophaget4capsid pages 1-2): Qin Li, Sathish B. Shivachandra, Stephen H. Leppla, and Venigalla B. Rao. Bacteriophage t4 capsid: a unique platform for efficient surface assembly of macromolecular complexes. Journal of molecular biology, 363 2:577-88, Oct 2006. URL: https://doi.org/10.1016/j.jmb.2006.08.049, doi:10.1016/j.jmb.2006.08.049. This article has 65 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 10-11): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 8-10): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 13-15): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 11-13): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2007assemblyofthe media 6707ee96): Qin Li, Sathish B. Shivachandra, Zhihong Zhang, and Venigalla B. Rao. Assembly of the small outer capsid protein, soc, on bacteriophage t4: a novel system for high density display of multiple large anthrax toxins and foreign proteins on phage capsid. Journal of molecular biology, 370 5:1006-19, Jul 2007. URL: https://doi.org/10.1016/j.jmb.2007.05.008, doi:10.1016/j.jmb.2007.05.008. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhu2024bacteriophaget4as pages 6-8): Jingen Zhu, Pan Tao, Ashok K. Chopra, and Venigalla B. Rao. Bacteriophage t4 as a protein-based, adjuvant- and needle-free, mucosal pandemic vaccine design platform. Sep 2024. URL: https://doi.org/10.1146/annurev-virology-111821-111145, doi:10.1146/annurev-virology-111821-111145. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="soc-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 I have extracted the requested schematic and binding curves from the document. The first image shows Figure 10 (page 10), which is " src="soc-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>rao2010structureandassembly pages 4-5</li>
+<li>li2007assemblyofthe pages 6-9</li>
+<li>li2007assemblyofthe pages 4-6</li>
+<li>fokine2023structureandfunction pages 1-3</li>
+<li>li2007assemblyofthe pages 9-10</li>
+<li>li2007assemblyofthe pages 10-11</li>
+<li>iwasaki2000moleculararchitectureof pages 1-2</li>
+<li>li2007assemblyofthe pages 1-2</li>
+<li>iwasaki2000moleculararchitectureof pages 6-8</li>
+<li>li2007assemblyofthe pages 11-12</li>
+<li>https://doi.org/10.1006/viro.2000.0321</li>
+<li>https://doi.org/10.1016/j.jmb.2006.08.049</li>
+<li>https://doi.org/10.1016/j.jmb.2007.05.008</li>
+<li>https://doi.org/10.1186/1743-422x-7-356</li>
+<li>https://doi.org/10.3390/v15071517</li>
+<li>https://doi.org/10.1146/annurev-virology-111821-111145</li>
+<li>https://doi.org/10.1006/viro.2000.0321,</li>
+<li>https://doi.org/10.1186/1743-422x-7-356,</li>
+<li>https://doi.org/10.3390/v15071517,</li>
+<li>https://doi.org/10.1016/j.jmb.2007.05.008,</li>
+<li>https://doi.org/10.1146/annurev-virology-111821-111145,</li>
+<li>https://doi.org/10.1016/j.jmb.2006.08.049,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P03715
+gene_symbol: P03715
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P03715&#39;
+existing_annotations:
+- term:
+    id: GO:0019028
+    label: viral capsid
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098021
+    label: viral capsid, decoration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098021
+    label: viral capsid, decoration
+  evidence_type: IMP
+  original_reference_id: PMID:28893988
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:28893988
+  title: Cryo-EM structure of the bacteriophage T4 isometric head at 3.3-Å resolution
+    and its relevance to the assembly of icosahedral viruses.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

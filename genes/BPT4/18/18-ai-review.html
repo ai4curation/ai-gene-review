@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P13332 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P13332</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P13332" target="_blank" class="term-link">
+                        P13332
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P13332";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P13332" data-a="DESCRIPTION: TODO: Add description for P13332..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P13332</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046718" target="_blank" class="term-link">
+                                    GO:0046718
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont entry into host cell</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13332" data-a="GO:0046718" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098015" target="_blank" class="term-link">
+                                    GO:0098015
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13332" data-a="GO:0098015" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098027" target="_blank" class="term-link">
+                                    GO:0098027
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, sheath</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13332" data-a="GO:0098027" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099000" target="_blank" class="term-link">
+                                    GO:0099000
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont genome ejection through host cell envelope, contractile tail mechanism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13332" data-a="GO:0099000" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098027" target="_blank" class="term-link">
+                                    GO:0098027
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, sheath</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19229296" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19229296
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The tail sheath structure of bacteriophage T4: a molecular m...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P13332" data-a="GO:0098027" data-r="PMID:19229296" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19229296" target="_blank" class="term-link">
+                            PMID:19229296
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The tail sheath structure of bacteriophage T4: a molecular machine for infecting bacteria.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(18-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P13332" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Functional Annotation Research Report: Enterobacteria phage T4 gene 18 (gp18) tail sheath protein (UniProt: P13332)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">46 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T16:06:15.391237</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="18-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="18-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000029 The provided figures depict the structure, domain organization, and the transition between extended and contracted states of the ba</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-enterobacteria-phage-t4-gene-18-gp18-tail-sheath-protein-uniprot-p13332">Functional Annotation Research Report: Enterobacteria phage T4 gene 18 (gp18) tail sheath protein (UniProt: P13332)</h1>
+<h2 id="0-scope-identity-verification-and-ambiguity-control">0) Scope, identity verification, and ambiguity control</h2>
+<p><strong>Target as provided:</strong> UniProt accession <strong>P13332</strong>, described as <strong>tail sheath protein</strong> (TSP), also called <strong>gene product 18 (gp18)</strong> from <strong>Enterobacteria phage T4</strong>.</p>
+<p><strong>Ambiguity note:</strong> The symbol “gene 18” is widely used across unrelated phages/viruses. The literature retrieved here consistently refers to <strong>bacteriophage T4 “gene product 18 (gp18)”</strong> as the <strong>contractile tail sheath protein</strong>, with a <strong>659-aa</strong> polypeptide assembling into a <strong>138-subunit</strong> sheath surrounding the tail tube. However, the retrieved primary papers do <strong>not</strong> explicitly mention UniProt accession <strong>P13332</strong>, so the mapping <strong>P13332 → T4 gp18</strong> is taken from the user-provided UniProt record; all functional statements below are supported by gp18-specific T4 literature. (kostyuchenko2005thetailstructure pages 1-2, fokine2013themoleculararchitecture pages 1-2, aksyuk2009thetailsheath pages 1-2)</p>
+<h2 id="1-key-concepts-and-current-understanding-definitions-and-mechanisms">1) Key concepts and current understanding (definitions and mechanisms)</h2>
+<h3 id="11-what-is-the-t4-tail-sheath-and-what-does-gp18-do">1.1 What is the T4 tail sheath and what does gp18 do?</h3>
+<p>In myophages such as <strong>bacteriophage T4</strong>, the tail is a <strong>contractile injection machine</strong>. The <strong>tail sheath</strong> is the <strong>outer contractile cylinder</strong> that wraps around a central, relatively rigid <strong>tail tube</strong>; <strong>gp18</strong> is the <strong>major structural subunit</strong> that polymerizes to form this contractile sheath. (aksyuk2009thetailsheath pages 1-2, kostyuchenko2005thetailstructure pages 2-3)</p>
+<p>Functionally, sheath contraction is the key mechanical event that <strong>drives the tail tube into/through the bacterial cell envelope</strong>, creating a conduit for genome delivery. In T4, host recognition and baseplate rearrangements trigger a force on the bottom layer of the sheath that initiates contraction, and a <strong>contraction wave propagates along the sheath</strong>. (kostyuchenko2005thetailstructure pages 2-3, kostyuchenko2005thetailstructure pages 1-2)</p>
+<h3 id="12-virion-localization-and-assembly-context">1.2 Virion localization and assembly context</h3>
+<p><strong>Localization:</strong> gp18 forms the <strong>external contractile sheath</strong> of the mature virion tail, surrounding the <strong>gp19</strong> tail tube. (fokine2013themoleculararchitecture pages 1-2, zinke2022majortailproteins pages 2-4)</p>
+<p><strong>Assembly architecture:</strong> Multiple high-impact structural studies describe the sheath as:</p>
+<ul>
+<li><strong>23 rings</strong> stacked along the tail, each ring containing <strong>6 gp18 molecules</strong>, totaling <strong>138 gp18 subunits per sheath</strong>, and equivalently describable as a <strong>six-start (six-stranded) helical polymer</strong>. (fokine2013themoleculararchitecture pages 1-2, kostyuchenko2005thetailstructure pages 2-3)</li>
+</ul>
+<p><strong>Assembly pathway context:</strong> A synthesis of tail morphogenesis work indicates that gp18 polymerizes cooperatively around the preformed/growing tail tube; tail length is controlled by the tape-measure protein <strong>gp29</strong>, and assembly terminates with additional terminator proteins (e.g., gp15 interacting with the terminal sheath ring). (arisaka2016molecularassemblyand pages 2-4, fokine2013themoleculararchitecture pages 1-2)</p>
+<h3 id="13-structural-mechanism-of-contraction-how-gp18-generates-motion">1.3 Structural mechanism of contraction (how gp18 generates motion)</h3>
+<p>A consistent mechanistic picture from cryo-EM and crystallography is that <strong>gp18 subunits mainly move as rigid bodies that slide/repack</strong>, rather than undergoing large internal refolding. In particular, crystal structures fitted into cryo-EM reconstructions support the view that subunits “slide over each other” during contraction with limited internal conformational change. (aksyuk2009thetailsheath pages 1-2, aksyuk2009thetailsheath pages 2-4)</p>
+<p>Contraction is coupled to baseplate activation following receptor interactions; in T4, baseplate expansion exerts a force on the sheath’s bottom layer, “pulling gp18 molecules away from the tail tube” to initiate the contraction wave. (kostyuchenko2005thetailstructure pages 2-3)</p>
+<h3 id="14-domain-architecture-and-structure-based-functional-inference">1.4 Domain architecture and structure-based functional inference</h3>
+<p>High-resolution fragment structures support a <strong>multi-domain</strong> gp18 organization. Aksyuk et al. describe gp18 as an <strong>S-shaped multidomain protein</strong> with three resolved domains (I–III) and a proposed <strong>C-terminal domain IV</strong> not resolved in the gp18M fragment. (aksyuk2009thetailsheath pages 2-4)</p>
+<ul>
+<li><strong>Domain I (residues ~98–188)</strong> protrudes outward from the tail surface and is proposed to mediate interactions with baseplate and/or tail fiber retraction machinery; mutations in domain I can block tail fiber retraction. (aksyuk2009thetailsheath pages 2-4)</li>
+<li><strong>Domains II–III</strong> form β-sandwich/β-sheet plus surrounding helices that contribute to the sheath structural core; the N- and C-termini are near each other and oriented toward the interior. (aksyuk2009thetailsheath pages 2-4)</li>
+<li>The <strong>C-terminal domain</strong> is implicated in <strong>interaction with the tail tube</strong>, and structural work on deletion mutants supports that this region contributes to sheath–tube contacts and to interactions with terminator proteins at the tail top. (fokine2013themoleculararchitecture pages 1-2)</li>
+</ul>
+<h3 id="15-self-assembly-and-polysheaths">1.5 Self-assembly and polysheaths</h3>
+<p>A distinctive property of gp18 is its strong intrinsic propensity to self-assemble into <strong>“polysheaths”</strong> (tubular polymers) even without the full tail/baseplate context; these polysheaths can share helical parameters with the contracted state, supporting the idea that the contracted-like lattice is an energetically favored assembly for gp18. (aksyuk2009thetailsheath pages 1-2, arisaka2016molecularassemblyand pages 6-8)</p>
+<h2 id="2-recent-developments-and-latest-research-prioritizing-20232024">2) Recent developments and latest research (prioritizing 2023–2024)</h2>
+<p>Direct, T4 gp18–specific primary structural papers are mostly earlier (e.g., 2005–2016), but 2023–2024 work advances the field in ways that directly support <strong>functional annotation confidence</strong> (conservation of contractile sheath/tail principles, improved structural atlases, and engineering readiness).</p>
+<h3 id="21-2024-high-resolution-structural-atlases-of-therapeutic-myophages-engineering-relevance">2.1 2024 high-resolution structural atlases of therapeutic myophages (engineering relevance)</h3>
+<p>A 2024 <strong>Communications Biology</strong> study built a high-resolution <strong>structural atlas</strong> of a <strong>therapeutic, contractile-tailed Pseudomonas phage Pa193</strong> using cryo-EM with localized reconstructions and integrative annotation (bioinformatics + proteomics), producing atomic models for <strong>21 structural polypeptides</strong> across capsid/neck/tail/baseplate. The authors explicitly frame these atlases as supporting phages as <strong>biomedicines</strong> and “inform engineering opportunities,” reflecting a current emphasis on structure-guided phage development. While not T4 gp18 specifically, this demonstrates modern practice for annotating contractile tail components analogous to T4’s sheath/tube modules. (publication: Oct 2024; https://doi.org/10.1038/s42003-024-06985-x) (iglesias2024cryoemanalysisof pages 1-2, iglesias2024cryoemanalysisof pages 2-4)</p>
+<h3 id="22-2024-intact-tail-machine-structures-and-genome-reannotation-in-myophages">2.2 2024 intact tail-machine structures and genome reannotation in myophages</h3>
+<p>A 2024 <strong>Nature Communications</strong> study of cyanophage <strong>A-1(L)</strong> reports a high-resolution cryo-EM structure of an intact tail machine and explicitly states that the structure helped <strong>reannotate its genome</strong>, illustrating how modern cryo-EM resolves tail architecture and improves gene/protein functional calls—an approach directly relevant to accurate annotation of sheath proteins like gp18 across myophages. (publication: Mar 2024; https://doi.org/10.1038/s41467-024-47006-z) (iglesias2024cryoemanalysisof pages 1-2)</p>
+<h3 id="23-comparative-and-ml-enabled-structural-evolution-of-sheath-proteins-context">2.3 Comparative and ML-enabled structural evolution of sheath proteins (context)</h3>
+<p>A broad 2022 analysis modeled <strong>112 contractile phage tail sheath proteins</strong> with AlphaFold2 and concluded there is a conserved sheath core shared across phage sheaths and related systems, with additional domains likely added during evolution for virion stability or host interactions. Although not 2023–2024, this work is part of the recent ML-driven wave supporting domain-level inference for proteins like T4 gp18 and is relevant to interpreting UniProt domain calls (e.g., β-sandwich cores). (publication: May 2022; https://doi.org/10.3390/v14061148) (gonzalez2021structuralstudiesof pages 18-20)</p>
+<h2 id="3-current-applications-and-real-world-implementations">3) Current applications and real-world implementations</h2>
+<h3 id="31-t4-tail-parts-as-bio-nanomachines-and-delivery-devices">3.1 T4 tail parts as bio-nanomachines and delivery devices</h3>
+<p>A 2018 review of <strong>artificial bio-nanomachines derived from bacteriophage T4</strong> describes repurposing of tail components for engineering. It emphasizes that the <strong>gp5 protein needle</strong> at the baseplate center can be engineered to retain puncturing ability and be adapted to <strong>deliver cargos into living cells</strong> (delivery-device concept). The same review notes that <strong>gp18 sheath proteins</strong> have been used to form <strong>nano-assembled tubes consisting of sheath proteins</strong>, i.e., sheath-derived tubular nanostructures (material/scaffold concept). (publication: Nov 2018; https://doi.org/10.1007/s12551-017-0336-9) (inaba2018artificialbionanomachinesbased pages 1-3)</p>
+<h3 id="32-structural-atlases-enabling-phage-engineering-for-therapy-2024">3.2 Structural atlases enabling phage engineering for therapy (2024)</h3>
+<p>The 2024 Pa193 structural atlas explicitly connects high-resolution structural annotation to <strong>phage therapy and engineering opportunities</strong>, underscoring that contractile tail component mapping (including sheath-like proteins) is now being performed in therapeutically oriented projects. (publication: Oct 2024; https://doi.org/10.1038/s42003-024-06985-x) (iglesias2024cryoemanalysisof pages 1-2)</p>
+<p><strong>Caveat:</strong> These application sources do not establish gp18 itself as a deployed clinical product; rather, they document <strong>proof-of-concept engineering</strong> and translational pipelines for phage-derived machines. (inaba2018artificialbionanomachinesbased pages 1-3, iglesias2024cryoemanalysisof pages 1-2)</p>
+<h2 id="4-expert-opinions-and-authoritative-analyses-what-experts-emphasize">4) Expert opinions and authoritative analyses (what experts emphasize)</h2>
+<h3 id="41-gp18-as-a-paradigmatic-contractile-sheath-canonical-model">4.1 gp18 as a paradigmatic contractile sheath (canonical model)</h3>
+<p>The T4 tail sheath has long served as a <strong>canonical model</strong> for contractile injection systems, with expert syntheses framing the sheath/tube pair (gp18/gp19 in T4) as the core repeating module of contractile phage tails. This framing supports high-confidence molecular-function annotation of gp18 as a structural contractile sheath component rather than an enzyme or receptor-binding protein. (zinke2022majortailproteins pages 2-4)</p>
+<h3 id="42-mechanistic-consensus-baseplate-triggered-wave-like-rigid-body-sliding-lattice-transition">4.2 Mechanistic consensus: baseplate-triggered, wave-like, rigid-body sliding lattice transition</h3>
+<p>Across primary structural studies, a coherent mechanistic consensus emerges: host recognition triggers baseplate rearrangement, which mechanically initiates sheath contraction; the contraction propagates along the sheath and involves repacking/sliding of gp18 subunits with limited internal refolding. (kostyuchenko2005thetailstructure pages 2-3, aksyuk2009thetailsheath pages 1-2)</p>
+<h2 id="5-relevant-statistics-and-data-from-studies-quantitative-annotation">5) Relevant statistics and data from studies (quantitative annotation)</h2>
+<h3 id="51-stoichiometry-and-geometry-direct-t4-structural-measurements">5.1 Stoichiometry and geometry (direct T4 structural measurements)</h3>
+<p>Key quantitative parameters repeatedly reported for T4 gp18 sheath include:</p>
+<ul>
+<li><strong>Copy number / stoichiometry:</strong> <strong>138 gp18 subunits</strong> per sheath arranged as <strong>23 rings × 6 subunits</strong> and/or a <strong>six-start helix</strong>. (fokine2013themoleculararchitecture pages 1-2, aksyuk2009thetailsheath pages 1-2)</li>
+<li><strong>Extended vs contracted dimensions:</strong> Sheath length changes from <strong>~925 Å (extended)</strong> to <strong>~420 Å (contracted)</strong>; diameter increases from <strong>~240 Å</strong> to <strong>~330 Å</strong>. (aksyuk2009thetailsheath pages 1-2, kostyuchenko2005thetailstructure pages 2-3)</li>
+<li><strong>Helical parameters:</strong> In the extended state, ring-to-ring geometry includes <strong>~40.6 Å rise</strong> and <strong>~17.2° twist</strong> per ring; in the contracted state, <strong>~16.4 Å rise</strong> and <strong>~32.9° twist</strong> are reported. (kostyuchenko2005thetailstructure pages 2-3, fokine2013themoleculararchitecture pages 2-4)</li>
+</ul>
+<p>These parameters can be used directly in functional annotation as evidence for gp18’s role in a mechanically actuated lattice transition rather than catalytic activity. (kostyuchenko2005thetailstructure pages 2-3)</p>
+<h3 id="52-energetics-and-forces-modeling-constrained-by-t4-structural-parameters">5.2 Energetics and forces (modeling constrained by T4 structural parameters)</h3>
+<p>A 2017 Biophysical Journal modeling study (built on structural measurements and prior energetics reports) compiles quantitative estimates used to interpret the mechanical role of gp18 contraction:</p>
+<ul>
+<li><strong>Estimated contraction energetics</strong> (as cited in that modeling context): ~<strong>3400 kcal/mol per gp18</strong> for <strong>urea-induced</strong> contraction and ~<strong>6000 kcal/mol per gp18</strong> for <strong>heat-induced</strong> contraction. (publication: Jul 2017; https://doi.org/10.1016/j.bpj.2017.05.029) (maghsoodi2017dynamicmodelexposes pages 1-3)</li>
+<li>A <strong>lower-bound estimate</strong> of a cell-rupture-related force scale of ~<strong>103 pN</strong> is also discussed as a reference for the magnitude of forces relevant to envelope failure. (maghsoodi2017dynamicmodelexposes pages 1-3)</li>
+</ul>
+<p>These values are not direct single-molecule measurements of gp18 but provide quantitative bounds and engineering-relevant parameters within a modeling framework explicitly aimed at understanding T4 injection mechanics. (maghsoodi2017dynamicmodelexposes pages 1-3)</p>
+<h2 id="6-functional-annotation-summary-molecular-function-process-localization">6) Functional annotation summary (molecular function, process, localization)</h2>
+<h3 id="61-molecular-function">6.1 Molecular function</h3>
+<p><strong>Gene 18 (gp18)</strong> encodes the <strong>major tail sheath protein</strong> that polymerizes into the <strong>outer contractile sheath</strong> of bacteriophage T4 and acts as a <strong>force-generating structural element</strong>; its functional output is mechanical (contraction) rather than catalytic chemistry. (aksyuk2009thetailsheath pages 1-2, kostyuchenko2005thetailstructure pages 1-2)</p>
+<h3 id="62-biological-process-pathway-context">6.2 Biological process / pathway context</h3>
+<p>gp18 functions in:</p>
+<ol>
+<li><strong>Tail morphogenesis:</strong> cooperative polymerization around the tail tube, forming a metastable extended sheath during assembly. (arisaka2016molecularassemblyand pages 2-4)</li>
+<li><strong>Infection initiation / genome delivery:</strong> baseplate-triggered transition from extended to contracted sheath drives tail tube penetration and enables creation of a delivery channel. (kostyuchenko2005thetailstructure pages 2-3, aksyuk2009thetailsheath pages 1-2)</li>
+</ol>
+<h3 id="63-localization">6.3 Localization</h3>
+<p>gp18 is a <strong>virion structural protein</strong>, localized to the <strong>tail sheath</strong> (external to the tail tube) and interfacing with baseplate components at the distal end and terminator/neck components at the proximal end. (fokine2013themoleculararchitecture pages 1-2, kostyuchenko2005thetailstructure pages 2-3)</p>
+<h2 id="consolidated-evidence-table">Consolidated evidence table</h2>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Molecular function</th>
+<th>Biological process step</th>
+<th>Subcellular/virion localization</th>
+<th>Key structural/assembly details (stoichiometry, dimensions, helical parameters, domains)</th>
+<th>Quantitative data</th>
+<th>Key references (with year, DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity verification / database-to-literature mapping</strong> (direct T4 gp18 in papers; <strong>UniProt P13332 mapping assumed from user-provided accession because retrieved papers do not explicitly cite P13332</strong>)</td>
+<td>Structural tail sheath protein (gp18; gene product 18) of bacteriophage T4</td>
+<td>Tail morphogenesis and infection apparatus function</td>
+<td>Outer contractile sheath surrounding the gp19 tail tube in the mature virion</td>
+<td>gp18 is described as the T4 tail sheath protein; wild-type protein is 659 aa and forms the sheath around the tail tube; literature consistently refers to “gene product 18/gp18” as the sheath subunit, but no retrieved paper explicitly maps this to UniProt P13332</td>
+<td>659 aa; ~71 kDa; sheath contains 138 subunits arranged as 23 hexameric rings / six-start helix</td>
+<td>Aksyuk et al., 2009, https://doi.org/10.1038/emboj.2009.36; Kostyuchenko et al., 2005, https://doi.org/10.1038/nsmb975; Fokine et al., 2013, https://doi.org/10.1016/j.jmb.2013.02.012 (aksyuk2009thetailsheath pages 1-2, kostyuchenko2005thetailstructure pages 1-2, fokine2013themoleculararchitecture pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18</strong></td>
+<td>Contractile sheath subunit that converts stored metastable/elastic energy into mechanical work to drive tail tube penetration</td>
+<td>Infection initiation after host recognition and baseplate activation</td>
+<td>External sheath wrapped around the central non-contractile tail tube; bottom ring contacts the baseplate, top ring interfaces with tail terminator/neck region</td>
+<td>Contraction is triggered by receptor engagement via baseplate rearrangement; gp18 subunits move largely as rigid bodies and slide relative to one another rather than refolding extensively</td>
+<td>Sheath shortens from ~925 Å to ~420 Å; diameter expands from ~240 Å to ~330 Å; ring rise changes from ~40.6 Å to ~16.4 Å; twist changes from ~17.2° to ~32.9°</td>
+<td>Kostyuchenko et al., 2005, https://doi.org/10.1038/nsmb975; Aksyuk et al., 2009, https://doi.org/10.1038/emboj.2009.36 (kostyuchenko2005thetailstructure pages 2-3, aksyuk2009thetailsheath pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18</strong></td>
+<td>Major structural component of the tail sheath; scaffold for a six-start helical contractile machine</td>
+<td>Tail assembly/morphogenesis</td>
+<td>Surrounds gp19 tail tube along the tail shaft</td>
+<td>138 gp18 molecules arranged into 23 stacked hexameric rings; equivalently described as a six-start helix; assembly occurs around the preformed tail tube, with tube length set by tape-measure protein gp29 and termination involving gp3/gp15</td>
+<td>23 rings × 6 subunits = 138 subunits; successive rings rotated by 17.2° and translated by 40.6 Å in the extended state</td>
+<td>Fokine et al., 2013, https://doi.org/10.1016/j.jmb.2013.02.012; Arisaka et al., 2016, https://doi.org/10.1007/s12551-016-0230-x; Zinke et al., 2022, https://doi.org/10.1016/j.jbc.2021.101472 (fokine2013themoleculararchitecture pages 1-2, arisaka2016molecularassemblyand pages 2-4, zinke2022majortailproteins pages 2-4)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18</strong></td>
+<td>Self-assembling sheath protein capable of polymerizing into contracted-like tubular polysheaths in the absence of the full virion</td>
+<td>Sheath self-assembly/polymerization</td>
+<td>Normally virion tail sheath; experimentally can form free polysheaths in vitro/in vivo</td>
+<td>Wild-type gp18 and truncation constructs self-assemble into tubular polysheaths with helical parameters resembling the contracted sheath; indicates intrinsic polymerization program of the sheath protein</td>
+<td>Polysheaths resemble contracted-state geometry; even substantial C-terminal truncations still allow tubular assembly, though with altered helical parameters</td>
+<td>Aksyuk et al., 2009, https://doi.org/10.1038/emboj.2009.36; Arisaka et al., 2016, https://doi.org/10.1007/s12551-016-0230-x (aksyuk2009thetailsheath pages 1-2, arisaka2016molecularassemblyand pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18</strong></td>
+<td>Multi-domain structural protein mediating sheath assembly, sheath-tube interaction, and baseplate-linked triggering</td>
+<td>Structural stabilization and contraction coupling during tail assembly/infection</td>
+<td>Domains are arranged within the sheath subunit; termini oriented toward the sheath interior; protease-resistant core surface exposed</td>
+<td>gp18M/gp18PR structural studies define domains I–III with an unresolved C-terminal domain IV; domain I likely participates in baseplate/retracting tail-fiber interactions; C-terminal domain interacts with the tail tube and terminal ring contacts gp15</td>
+<td>Domain I: residues 98–188; Domain II: residues 88–97 and 189–345; Domain III: residues 20–87 and 346–510; unresolved domain IV ~510–659</td>
+<td>Aksyuk et al., 2009, https://doi.org/10.1038/emboj.2009.36; Fokine et al., 2013, https://doi.org/10.1016/j.jmb.2013.02.012 (aksyuk2009thetailsheath pages 2-4, fokine2013themoleculararchitecture pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18</strong></td>
+<td>Cooperative polymerizing sheath component in tail biogenesis</td>
+<td>Ordered tail assembly before sheath termination/head attachment</td>
+<td>External tail sheath assembled on tube-baseplate intermediate</td>
+<td>gp18 polymerizes cooperatively around the growing tail tube soon after tube polymerization starts; nucleation is difficult and intermediate-length sheaths are uncommon; gp18 assembles before sheath terminator gp15</td>
+<td>~138 copies per virion; contraction is exothermic by microcalorimetry; heat or urea can induce contraction experimentally</td>
+<td>Arisaka et al., 2016, https://doi.org/10.1007/s12551-016-0230-x (arisaka2016molecularassemblyand pages 2-4, arisaka2016molecularassemblyand pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>Direct T4 gp18 + modeling inference from direct T4 geometry</strong></td>
+<td>Mechanical energy storage/release element of a nanoscale injector</td>
+<td>Force generation for piercing the host envelope and supporting DNA delivery</td>
+<td>Contractile sheath of the T4 injection machinery</td>
+<td>Modeling treats the sheath as six interacting helical protein strands/elastic rods coupled to tail tube and capsid; informed by direct T4 structural parameters</td>
+<td>Prior estimates cited in modeling work: ~3400 kcal/mol gp18 for urea-induced contraction, ~6000 kcal/mol gp18 for heat-induced contraction; lower-bound cell-rupture force estimate ~103 pN</td>
+<td>Maghsoodi et al., 2017, https://doi.org/10.1016/j.bpj.2017.05.029; Maghsoodi et al., 2016, https://doi.org/10.1115/1.4033554 (maghsoodi2017dynamicmodelexposes pages 1-3, maghsoodi2016afirstmodel pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Homolog/inference from broader sheath-family analyses</strong></td>
+<td>Conserved contractile sheath fold that mediates interaction with tail tube and assembly across myophages/CISs</td>
+<td>Evolution of contractile injection systems; comparative functional inference for gp18 family</td>
+<td>Contractile sheaths of myophages and related systems</td>
+<td>Comparative structural analyses indicate a conserved sheath core shared with other phage sheaths and contractile injection systems; added domains likely modulate stability/host interactions</td>
+<td>Structural conservation observed across modeled sheath proteins; T4 gp18 used as a reference in evolutionary analyses</td>
+<td>Evseev et al., 2022, https://doi.org/10.3390/v14061148; Aksyuk et al., 2011, https://doi.org/10.1016/j.str.2011.09.012 (gonzalez2021structuralstudiesof pages 18-20, arisaka2016molecularassemblyand pages 2-4)</td>
+</tr>
+<tr>
+<td><strong>Homolog/application inference anchored to T4 components</strong></td>
+<td>Inspiration/template for engineered bio-nanomachines and delivery systems; sheath-derived nanotube/scaffold concept</td>
+<td>Nanotechnology, intracellular delivery, and phage engineering applications</td>
+<td>Engineered derivatives of phage tail components rather than native virion localization</td>
+<td>Reviews of T4-derived bio-nanomachines emphasize modular use of tail components; gp18 specifically noted in nano-assembled sheath tubes, while other T4 tail parts (e.g., gp5 needle) have been engineered for cargo delivery</td>
+<td>No direct clinical implementation for gp18 itself reported here; application evidence is primarily preclinical/conceptual engineering</td>
+<td>Inaba &amp; Ueno, 2018, https://doi.org/10.1007/s12551-017-0336-9; Iglesias et al., 2024, https://doi.org/10.1038/s42003-024-06985-x (inaba2018artificialbionanomachinesbased pages 1-3, iglesias2024cryoemanalysisof pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Recent 2023–2024 context (homolog/inference, not direct gp18-specific experiments)</strong></td>
+<td>Contractile sheath proteins remain central to therapeutic phage structural atlases and engineering-ready phage characterization</td>
+<td>Structural annotation of therapeutic/engineering-relevant myophages</td>
+<td>Contractile tails of therapeutic or chassis phages</td>
+<td>2024 cryo-EM atlases of therapeutic myophages and 2024 intact-tail structures of myophages reinforce conservation of T4-like sheath architecture/mechanistic principles and support rational engineering</td>
+<td>Examples include ~500 Å resolved tail fibers in therapeutic phage Pa193 and ~1045 Å contractile tail in cyanophage A-1(L)</td>
+<td>Iglesias et al., 2024, https://doi.org/10.1038/s42003-024-06985-x; Yu et al., 2024, https://doi.org/10.1038/s41467-024-47006-z (iglesias2024cryoemanalysisof pages 1-2, iglesias2024cryoemanalysisof pages 2-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported functional annotation for Enterobacteria phage T4 gene product 18 (gp18), the tail sheath protein, and clearly distinguishes direct T4 evidence from homolog-based inference. It also flags that mapping to UniProt P13332 is assumed from the user-provided accession because the retrieved papers identify gp18 directly but do not explicitly cite the UniProt entry.</em></p>
+<h2 id="visual-evidence-figures">Visual evidence (figures)</h2>
+<p>Aksyuk et al. provide figures showing gp18 <strong>domain organization</strong> and <strong>fits into extended vs contracted cryo-EM densities</strong>, supporting domain-based functional inference and the rigid-body nature of the conformational transition. (aksyuk2009thetailsheath media 4e9e34c9, aksyuk2009thetailsheath media b49476bc, aksyuk2009thetailsheath media 12f391ef)</p>
+<h2 id="references-urls-publication-dates">References (URLs, publication dates)</h2>
+<ul>
+<li>Kostyuchenko VA et al. <em>Nature Structural &amp; Molecular Biology</em> (Sep 2005). “The tail structure of bacteriophage T4 and its mechanism of contraction.” https://doi.org/10.1038/nsmb975 (kostyuchenko2005thetailstructure pages 1-2, kostyuchenko2005thetailstructure pages 2-3)</li>
+<li>Aksyuk AA et al. <em>The EMBO Journal</em> (Feb 2009). “The tail sheath structure of bacteriophage T4: a molecular machine for infecting bacteria.” https://doi.org/10.1038/emboj.2009.36 (aksyuk2009thetailsheath pages 1-2, aksyuk2009thetailsheath pages 2-4)</li>
+<li>Fokine A et al. <em>Journal of Molecular Biology</em> (May 2013). “The molecular architecture of the bacteriophage T4 neck.” https://doi.org/10.1016/j.jmb.2013.02.012 (fokine2013themoleculararchitecture pages 1-2)</li>
+<li>Arisaka F et al. <em>Biophysical Reviews</em> (Nov 2016). “Molecular assembly and structure of the bacteriophage T4 tail.” https://doi.org/10.1007/s12551-016-0230-x (arisaka2016molecularassemblyand pages 2-4, arisaka2016molecularassemblyand pages 6-8)</li>
+<li>Maghsoodi A et al. <em>Biophysical Journal</em> (Jul 2017). “Dynamic model exposes the energetics and dynamics of the injection machinery for bacteriophage T4.” https://doi.org/10.1016/j.bpj.2017.05.029 (maghsoodi2017dynamicmodelexposes pages 1-3, maghsoodi2017dynamicmodelexposes pages 3-4)</li>
+<li>Inaba H &amp; Ueno T. <em>Biophysical Reviews</em> (Nov 2018). “Artificial bio-nanomachines based on protein needles derived from bacteriophage T4.” https://doi.org/10.1007/s12551-017-0336-9 (inaba2018artificialbionanomachinesbased pages 1-3)</li>
+<li>Zinke M et al. <em>Journal of Biological Chemistry</em> (Jan 2022). “Major tail proteins of bacteriophages of the order Caudovirales.” https://doi.org/10.1016/j.jbc.2021.101472 (zinke2022majortailproteins pages 2-4)</li>
+<li>Evseev P et al. <em>Viruses</em> (May 2022). “Evolution of Phage Tail Sheath Protein.” https://doi.org/10.3390/v14061148 (gonzalez2021structuralstudiesof pages 18-20)</li>
+<li>Iglesias SM et al. <em>Communications Biology</em> (Oct 2024). “Cryo-EM analysis of Pseudomonas phage Pa193 structural components.” https://doi.org/10.1038/s42003-024-06985-x (iglesias2024cryoemanalysisof pages 1-2, iglesias2024cryoemanalysisof pages 2-4)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(kostyuchenko2005thetailstructure pages 1-2): Victor A Kostyuchenko, Paul R Chipman, Petr G Leiman, Fumio Arisaka, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail structure of bacteriophage t4 and its mechanism of contraction. Nature Structural &amp;Molecular Biology, 12:810-813, Sep 2005. URL: https://doi.org/10.1038/nsmb975, doi:10.1038/nsmb975. This article has 220 citations.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture pages 1-2): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aksyuk2009thetailsheath pages 1-2): Anastasia A Aksyuk, Petr G Leiman, Lidia P Kurochkina, Mikhail M Shneider, Victor A Kostyuchenko, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail sheath structure of bacteriophage t4: a molecular machine for infecting bacteria. The EMBO Journal, 28:821-829, Feb 2009. URL: https://doi.org/10.1038/emboj.2009.36, doi:10.1038/emboj.2009.36. This article has 150 citations.</p>
+</li>
+<li>
+<p>(kostyuchenko2005thetailstructure pages 2-3): Victor A Kostyuchenko, Paul R Chipman, Petr G Leiman, Fumio Arisaka, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail structure of bacteriophage t4 and its mechanism of contraction. Nature Structural &amp;Molecular Biology, 12:810-813, Sep 2005. URL: https://doi.org/10.1038/nsmb975, doi:10.1038/nsmb975. This article has 220 citations.</p>
+</li>
+<li>
+<p>(zinke2022majortailproteins pages 2-4): Maximilian Zinke, Gunnar F. Schröder, and Adam Lange. Major tail proteins of bacteriophages of the order caudovirales. Journal of Biological Chemistry, 298:101472, Jan 2022. URL: https://doi.org/10.1016/j.jbc.2021.101472, doi:10.1016/j.jbc.2021.101472. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arisaka2016molecularassemblyand pages 2-4): Fumio Arisaka, Moh Lan Yap, Shuji Kanamaru, and Michael G. Rossmann. Molecular assembly and structure of the bacteriophage t4 tail. Biophysical Reviews, 8:385-396, Nov 2016. URL: https://doi.org/10.1007/s12551-016-0230-x, doi:10.1007/s12551-016-0230-x. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aksyuk2009thetailsheath pages 2-4): Anastasia A Aksyuk, Petr G Leiman, Lidia P Kurochkina, Mikhail M Shneider, Victor A Kostyuchenko, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail sheath structure of bacteriophage t4: a molecular machine for infecting bacteria. The EMBO Journal, 28:821-829, Feb 2009. URL: https://doi.org/10.1038/emboj.2009.36, doi:10.1038/emboj.2009.36. This article has 150 citations.</p>
+</li>
+<li>
+<p>(arisaka2016molecularassemblyand pages 6-8): Fumio Arisaka, Moh Lan Yap, Shuji Kanamaru, and Michael G. Rossmann. Molecular assembly and structure of the bacteriophage t4 tail. Biophysical Reviews, 8:385-396, Nov 2016. URL: https://doi.org/10.1007/s12551-016-0230-x, doi:10.1007/s12551-016-0230-x. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(iglesias2024cryoemanalysisof pages 1-2): Stephano M. Iglesias, Chun-Feng David Hou, Johnny Reid, Evan Schauer, Renae Geier, Angela Soriaga, Lucy Sim, Lucy Gao, Julian Whitelegge, Pierre Kyme, Deborah Birx, Sebastien Lemire, and Gino Cingolani. Cryo-em analysis of pseudomonas phage pa193 structural components. Communications Biology, Oct 2024. URL: https://doi.org/10.1038/s42003-024-06985-x, doi:10.1038/s42003-024-06985-x. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(iglesias2024cryoemanalysisof pages 2-4): Stephano M. Iglesias, Chun-Feng David Hou, Johnny Reid, Evan Schauer, Renae Geier, Angela Soriaga, Lucy Sim, Lucy Gao, Julian Whitelegge, Pierre Kyme, Deborah Birx, Sebastien Lemire, and Gino Cingolani. Cryo-em analysis of pseudomonas phage pa193 structural components. Communications Biology, Oct 2024. URL: https://doi.org/10.1038/s42003-024-06985-x, doi:10.1038/s42003-024-06985-x. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gonzalez2021structuralstudiesof pages 18-20): Brenda Gonzalez. Structural studies of the phage g capsid and helical tail sheath using cryo-em. ArXiv, Aug 2021. URL: https://doi.org/10.25394/pgs.15156780.v1, doi:10.25394/pgs.15156780.v1. This article has 0 citations.</p>
+</li>
+<li>
+<p>(inaba2018artificialbionanomachinesbased pages 1-3): Hiroshi Inaba and Takafumi Ueno. Artificial bio-nanomachines based on protein needles derived from bacteriophage t4. Biophysical Reviews, 10:641-658, Nov 2018. URL: https://doi.org/10.1007/s12551-017-0336-9, doi:10.1007/s12551-017-0336-9. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture pages 2-4): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maghsoodi2017dynamicmodelexposes pages 1-3): Ameneh Maghsoodi, Anupam Chatterjee, Ioan Andricioaei, and Noel C. Perkins. Dynamic model exposes the energetics and dynamics of the injection machinery for bacteriophage t4. Biophysical journal, 113 1:195-205, Jul 2017. URL: https://doi.org/10.1016/j.bpj.2017.05.029, doi:10.1016/j.bpj.2017.05.029. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maghsoodi2016afirstmodel pages 1-2): Ameneh Maghsoodi, Anupam Chatterjee, Ioan Andricioaei, and N. C. Perkins. A first model of the dynamics of the bacteriophage t4 injection machinery. Journal of Computational and Nonlinear Dynamics, 11:041026, Jul 2016. URL: https://doi.org/10.1115/1.4033554, doi:10.1115/1.4033554. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aksyuk2009thetailsheath media 4e9e34c9): Anastasia A Aksyuk, Petr G Leiman, Lidia P Kurochkina, Mikhail M Shneider, Victor A Kostyuchenko, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail sheath structure of bacteriophage t4: a molecular machine for infecting bacteria. The EMBO Journal, 28:821-829, Feb 2009. URL: https://doi.org/10.1038/emboj.2009.36, doi:10.1038/emboj.2009.36. This article has 150 citations.</p>
+</li>
+<li>
+<p>(aksyuk2009thetailsheath media b49476bc): Anastasia A Aksyuk, Petr G Leiman, Lidia P Kurochkina, Mikhail M Shneider, Victor A Kostyuchenko, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail sheath structure of bacteriophage t4: a molecular machine for infecting bacteria. The EMBO Journal, 28:821-829, Feb 2009. URL: https://doi.org/10.1038/emboj.2009.36, doi:10.1038/emboj.2009.36. This article has 150 citations.</p>
+</li>
+<li>
+<p>(aksyuk2009thetailsheath media 12f391ef): Anastasia A Aksyuk, Petr G Leiman, Lidia P Kurochkina, Mikhail M Shneider, Victor A Kostyuchenko, Vadim V Mesyanzhinov, and Michael G Rossmann. The tail sheath structure of bacteriophage t4: a molecular machine for infecting bacteria. The EMBO Journal, 28:821-829, Feb 2009. URL: https://doi.org/10.1038/emboj.2009.36, doi:10.1038/emboj.2009.36. This article has 150 citations.</p>
+</li>
+<li>
+<p>(maghsoodi2017dynamicmodelexposes pages 3-4): Ameneh Maghsoodi, Anupam Chatterjee, Ioan Andricioaei, and Noel C. Perkins. Dynamic model exposes the energetics and dynamics of the injection machinery for bacteriophage t4. Biophysical journal, 113 1:195-205, Jul 2017. URL: https://doi.org/10.1016/j.bpj.2017.05.029, doi:10.1016/j.bpj.2017.05.029. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="18-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000029 The provided figures depict the structure, domain organization, and the transition between extended and contracted states of the ba" src="18-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kostyuchenko2005thetailstructure pages 2-3</li>
+<li>aksyuk2009thetailsheath pages 2-4</li>
+<li>fokine2013themoleculararchitecture pages 1-2</li>
+<li>iglesias2024cryoemanalysisof pages 1-2</li>
+<li>gonzalez2021structuralstudiesof pages 18-20</li>
+<li>inaba2018artificialbionanomachinesbased pages 1-3</li>
+<li>zinke2022majortailproteins pages 2-4</li>
+<li>maghsoodi2017dynamicmodelexposes pages 1-3</li>
+<li>arisaka2016molecularassemblyand pages 2-4</li>
+<li>kostyuchenko2005thetailstructure pages 1-2</li>
+<li>aksyuk2009thetailsheath pages 1-2</li>
+<li>arisaka2016molecularassemblyand pages 6-8</li>
+<li>iglesias2024cryoemanalysisof pages 2-4</li>
+<li>fokine2013themoleculararchitecture pages 2-4</li>
+<li>maghsoodi2016afirstmodel pages 1-2</li>
+<li>maghsoodi2017dynamicmodelexposes pages 3-4</li>
+<li>https://doi.org/10.1038/s42003-024-06985-x</li>
+<li>https://doi.org/10.1038/s41467-024-47006-z</li>
+<li>https://doi.org/10.3390/v14061148</li>
+<li>https://doi.org/10.1007/s12551-017-0336-9</li>
+<li>https://doi.org/10.1016/j.bpj.2017.05.029</li>
+<li>https://doi.org/10.1038/emboj.2009.36;</li>
+<li>https://doi.org/10.1038/nsmb975;</li>
+<li>https://doi.org/10.1016/j.jmb.2013.02.012</li>
+<li>https://doi.org/10.1038/emboj.2009.36</li>
+<li>https://doi.org/10.1016/j.jmb.2013.02.012;</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x;</li>
+<li>https://doi.org/10.1016/j.jbc.2021.101472</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x</li>
+<li>https://doi.org/10.1016/j.bpj.2017.05.029;</li>
+<li>https://doi.org/10.1115/1.4033554</li>
+<li>https://doi.org/10.3390/v14061148;</li>
+<li>https://doi.org/10.1016/j.str.2011.09.012</li>
+<li>https://doi.org/10.1007/s12551-017-0336-9;</li>
+<li>https://doi.org/10.1038/s42003-024-06985-x;</li>
+<li>https://doi.org/10.1038/nsmb975</li>
+<li>https://doi.org/10.1038/nsmb975,</li>
+<li>https://doi.org/10.1016/j.jmb.2013.02.012,</li>
+<li>https://doi.org/10.1038/emboj.2009.36,</li>
+<li>https://doi.org/10.1016/j.jbc.2021.101472,</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x,</li>
+<li>https://doi.org/10.1038/s42003-024-06985-x,</li>
+<li>https://doi.org/10.25394/pgs.15156780.v1,</li>
+<li>https://doi.org/10.1007/s12551-017-0336-9,</li>
+<li>https://doi.org/10.1016/j.bpj.2017.05.029,</li>
+<li>https://doi.org/10.1115/1.4033554,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P13332
+gene_symbol: P13332
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P13332&#39;
+existing_annotations:
+- term:
+    id: GO:0046718
+    label: symbiont entry into host cell
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098015
+    label: virus tail
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098027
+    label: virus tail, sheath
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099000
+    label: symbiont genome ejection through host cell envelope, contractile tail mechanism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098027
+    label: virus tail, sheath
+  evidence_type: IDA
+  original_reference_id: PMID:19229296
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:19229296
+  title: &#39;The tail sheath structure of bacteriophage T4: a molecular machine for infecting
+    bacteria.&#39;
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

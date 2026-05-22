@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P39503 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P39503</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P39503" target="_blank" class="term-link">
+                        P39503
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P39503";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P39503" data-a="DESCRIPTION: TODO: Add description for P39503..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P39503</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020002" target="_blank" class="term-link">
+                                    GO:0020002
+                                </a>
+                            </span>
+                            <span class="term-label">host cell plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39503" data-a="GO:0020002" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031640" target="_blank" class="term-link">
+                                    GO:0031640
+                                </a>
+                            </span>
+                            <span class="term-label">killing of cells of another organism</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39503" data-a="GO:0031640" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044659" target="_blank" class="term-link">
+                                    GO:0044659
+                                </a>
+                            </span>
+                            <span class="term-label">viral release from host cell by cytolysis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17900620" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17900620
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Rz/Rz1 lysis gene equivalents in phages of Gram-negative hos...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39503" data-a="GO:0044659" data-r="PMID:17900620" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17900620" target="_blank" class="term-link">
+                            PMID:17900620
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Rz/Rz1 lysis gene equivalents in phages of Gram-negative hosts.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(y13J-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P39503" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **Enterobacteria phage T4 gene y13J (syn. pseT.2)** / **UniProt P39503**</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">27 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T03:45:48.451081</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="y13J-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="y13J-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000011 The document contains two relevant figures. Figure 1B shows the spanin topology, where the Rz i-spanin (anchored in the inner membr</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-enterobacteria-phage-t4-gene-y13j-syn-pset2-uniprot-p39503">Research Report: Functional Annotation of <strong>Enterobacteria phage T4 gene y13J (syn. pseT.2)</strong> / <strong>UniProt P39503</strong></h1>
+<h2 id="1-target-verification-critical-identity-check">1. Target verification (critical identity check)</h2>
+<p><strong>Requested identity:</strong> UniProt <strong>P39503</strong>, annotated as <strong>“Spanin, outer lipoprotein subunit (o-spanin); precursor”</strong> from <strong>Enterobacteria phage T4</strong>.</p>
+<p><strong>Literature match to the same gene context:</strong> Multiple authoritative sources identify a specific <strong>T4 two-gene spanin system</strong> encoded by the adjacent gene pair <strong>pseT.3–pseT.2</strong>, where <strong>pseT.2 corresponds to the o-spanin (outer membrane lipoprotein subunit)</strong> and <strong>pseT.3 corresponds to the i-spanin (inner membrane subunit)</strong>. This pair is described as a <strong>“separated”</strong> two-component spanin architecture in T4. (young2014phagelysisthree pages 5-7, kongari2018phagespaninsdiversity pages 1-2, summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<p><strong>Caveat:</strong> The retrieved papers do not provide a UniProt accession crosswalk in-text; therefore, the mapping of <strong>UniProt P39503 ⇄ T4 pseT.2/y13J</strong> is taken from the user’s UniProt context and is supported by the literature describing <strong>pseT.2 as the T4 o-spanin gene</strong>. (young2014phagelysisthree pages 5-7, summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-what-are-spanins">2.1. What are spanins?</h3>
+<p>In Gram-negative hosts, phage lysis is now widely framed as <strong>three barrier-limited steps</strong>: (i) inner membrane permeabilization (holin), (ii) peptidoglycan degradation (endolysin), and (iii) <strong>outer membrane (OM) disruption</strong>, which is mediated by <strong>spanins</strong>. Spanins are thus a distinct class of lysis proteins required to overcome the OM barrier. (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2)</p>
+<h3 id="22-two-component-spanins-i-spanin-o-spanin">2.2. Two-component spanins: i-spanin + o-spanin</h3>
+<p>The canonical two-component spanin system consists of:<br />
+- <strong>i-spanin</strong>: an <strong>inner membrane (IM)</strong> protein, typically with an N-terminal transmembrane helix and a periplasmic domain (often predicted coiled-coil). (cahill2019phagelysismultiple pages 1-4, cahill2019phagelysismultiple pages 18-21)<br />
+- <strong>o-spanin</strong>: an <strong>outer membrane lipoprotein</strong>, synthesized as a precursor bearing an N-terminal lipoprotein signal peptide (<strong>signal peptidase II lipobox</strong>), lipidated on the +1 cysteine, and sorted to the OM by the bacterial lipoprotein trafficking machinery (Lol pathway). (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2)</p>
+<h3 id="23-mechanistic-model-spanin-driven-imom-fusion">2.3. Mechanistic model: spanin-driven IM–OM fusion</h3>
+<p>A central current model is that spanins function analogously to <strong>membrane fusion machines</strong>: they accumulate as a periplasm-spanning complex bridging IM and OM and, <strong>after peptidoglycan (PG) is degraded</strong>, undergo conformational/oligomeric transitions that bring the membranes together and cause <strong>IM–OM fusion</strong>, thereby eliminating the OM barrier and enabling virion release. (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media be052b46, rajaure2015membranefusionduring media 83335a3a)</p>
+<h2 id="3-functional-annotation-of-t4-y13jpset2-uniprot-p39503">3. Functional annotation of <strong>T4 y13J/pseT.2 (UniProt P39503)</strong></h2>
+<h3 id="31-primary-biological-function">3.1. Primary biological function</h3>
+<p><strong>Best-supported function:</strong> <strong>o-spanin (outer membrane lipoprotein subunit) required for outer membrane disruption in lysis</strong>, acting together with its partner i-spanin (pseT.3) as a <strong>two-component spanin complex</strong>. (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<p>This is not an enzyme-like function (no substrate turnover is expected). Rather, it is a <strong>structural/biophysical effector</strong> of envelope remodeling at the terminal stage of phage release. (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2)</p>
+<h3 id="32-key-t4-specific-experimental-evidence">3.2. Key T4-specific experimental evidence</h3>
+<p><strong>Gene identification and topology signatures:</strong> In a foundational analysis of Rz/Rz1 equivalents (“spanins”) in Gram-negative phages, Summer et al. identified the T4 gene pair <strong>pseT.3 and pseT.2</strong> as candidate spanins because one protein bears a <strong>signature N-terminal transmembrane domain (i-spanin-like)</strong> and the other bears an <strong>outer-membrane lipoprotein signal sequence (o-spanin-like)</strong>. (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<p><strong>Deletion phenotype (direct genetic evidence in T4):</strong> A constructed <strong>Δ(pseT.3 pseT.2)</strong> mutant showed a classic spanin-null phenotype described as <strong>Mg2+-dependent lysis defect</strong> with infected cells adopting a <strong>spherical morphology</strong>—consistent with successful PG degradation but failure to disrupt the OM barrier. This phenotype is considered diagnostic for loss of spanin function in Gram-negative lysis. (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<h3 id="33-cellular-localization-and-processing">3.3. Cellular localization and processing</h3>
+<p><strong>Expected localization:</strong> As an o-spanin, y13J/pseT.2 is expected to be an <strong>outer membrane-anchored lipoprotein</strong>, produced as a precursor and processed by signal peptidase II at the lipobox and lipidated at the N-terminal cysteine. (rajaure2015membranefusionduring pages 1-2, cahill2019phagelysismultiple pages 1-4)</p>
+<p><strong>Evidence class (paradigm systems):</strong> Detailed biochemical and genetic evidence for lipoprotein processing and OM localization is strongest in the canonical λ Rz1 o-spanin, where the mature o-spanin is OM-anchored via lipidation and OM sorting depends on lipoprotein targeting determinants. These data provide the mechanistic basis for annotating analogous o-spanins in other phages (including T4 pseT.2) when they show the same lipoprotein signal architecture. (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2)</p>
+<h3 id="34-interaction-partner-and-complex-function">3.4. Interaction partner and complex function</h3>
+<p>y13J/pseT.2 (o-spanin) is functionally coupled to its partner <strong>pseT.3 (i-spanin)</strong> as a periplasm-spanning complex that connects IM and OM prior to lysis completion. Two-component spanin topology and bridging are illustrated in a primary mechanistic study, showing the IM-embedded i-spanin and OM-anchored o-spanin forming a complex across the PG layer. (rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media be052b46)</p>
+<h2 id="4-pathway-context-where-y13jpset2-acts-in-the-t4-lysis-program">4. Pathway context: where y13J/pseT.2 acts in the T4 lysis program</h2>
+<p>In the modern “multiple barriers” model of phage lysis, spanins operate <strong>after</strong> holin triggering and endolysin-mediated PG degradation, because intact PG can physically constrain the spanin complex and prevent the membrane fusion event. (cahill2019phagelysismultiple pages 24-27, cahill2019phagelysismultiple pages 1-4)</p>
+<p>Thus, y13J/pseT.2 is best placed in the pathway:<br />
+1) Holin lesion formation in IM → 2) Endolysin access to periplasm and PG hydrolysis → 3) <strong>Spanin activation leading to OM disruption via IM–OM fusion</strong>. (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2, rajaure2015membranefusionduring media 83335a3a)</p>
+<h2 id="5-expert-opinions-and-authoritative-synthesis">5. Expert opinions and authoritative synthesis</h2>
+<p>Authoritative reviews by Young and colleagues emphasize that <strong>spanins are required for OM disruption</strong> and that <strong>loss of spanin function traps progeny virions</strong> despite completion of earlier lysis steps, establishing spanins as a fundamental component of Gram-negative phage lysis rather than an accessory gene. (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2, cahill2019phagelysismultiple pages 18-21)</p>
+<p>A primary mechanistic paper in PNAS provides experimental support for the <strong>membrane fusion</strong> model of spanin action (in λ), and the associated figures formalize the field’s dominant conceptual framework for how an i/o spanin complex can remove the OM barrier. (rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media be052b46, rajaure2015membranefusionduring media 83335a3a)</p>
+<h2 id="6-relevant-statistics-and-quantitative-data">6. Relevant statistics and quantitative data</h2>
+<h3 id="61-spanin-diversity-and-prevalence-genome-scale-statistics">6.1. Spanin diversity and prevalence (genome-scale statistics)</h3>
+<p>A large-scale bioinformatic survey curated a <strong>SpaninDataBase</strong> and reported:<br />
+- <strong>528</strong> two-component spanins and <strong>58</strong> unimolecular spanins catalogued,<br />
+- clustering into <strong>143 i-spanin families</strong>, <strong>125 o-spanin families</strong>, and <strong>13 u-spanin families</strong> under a <strong>40% identity over 40% length</strong> grouping rule,<br />
+- and <strong>&gt;40%</strong> of families in each spanin type were <strong>singletons</strong>, highlighting extreme sequence diversity.<br />
+T4 is cited as an example of the <strong>separated</strong> two-component architecture class. (kongari2018phagespaninsdiversity pages 1-2)</p>
+<h3 id="62-quantitative-antibacterial-activity-from-recent-work-application-facing">6.2. Quantitative antibacterial activity from recent work (application-facing)</h3>
+<p>Although not T4-specific, a 2024 study comparing lysis module genes found <strong>T1-spanin</strong> to be exceptionally potent in cell-based bactericidal assays. Reported MIC (arabinose induction fraction) values included <strong>0.025</strong> for T1-spanin versus <strong>0.1</strong> for T1 endolysin and <strong>&gt;3.2</strong> for T1 holin (under that assay’s conditions), supporting high potency of spanin effectors when expressed intracellularly. (yamashita2024harnessingat1 pages 3-4)</p>
+<h2 id="7-recent-developments-prioritizing-20232024-and-current-applications">7. Recent developments (prioritizing 2023–2024) and current applications</h2>
+<h3 id="71-2024-spanins-as-engineered-antibacterial-effectors">7.1. 2024: spanins as engineered antibacterial effectors</h3>
+<p>Yamashita et al. (published <strong>Jan 2024</strong>, Biodesign Research; https://doi.org/10.34133/bdr.0028) demonstrated a concrete translational path: <strong>phage-based delivery of a spanin gene</strong> into target bacteria. The authors report intracellular expression of T1-spanin with <strong>potent bactericidal activity</strong> across diverse Gram-negative clinical isolates (including <strong>111 E. coli isolates</strong>, plus Acinetobacter, Klebsiella, and Pseudomonas isolates), and they engineered a <strong>non-proliferative phage</strong> system to introduce the spanin gene into bacteria, achieving “strong antibacterial activity”. (yamashita2024harnessingat1 pages 1-2, yamashita2024harnessingat1 pages 8-9)</p>
+<p><strong>Relevance to T4 y13J/pseT.2:</strong> This work underscores that accurate annotation of o-spanins (including T4 y13J/P39503) is increasingly important for synthetic biology and antimicrobial engineering, even if the specific engineered effector in 2024 was not derived from T4. (yamashita2024harnessingat1 pages 1-2)</p>
+<h3 id="72-broader-implementation-themes">7.2. Broader implementation themes</h3>
+<p>Reviews emphasize practical barriers and emerging solutions: holins/spanins are difficult to express and purify due to toxicity, but methodological advances in classification and analysis are improving the feasibility of studying and repurposing these lethal membrane proteins. (abeysekera2022bacteriophageencodedlethalmembrane pages 2-4)</p>
+<h2 id="8-visual-evidence-mechanism-and-localization-model">8. Visual evidence (mechanism and localization model)</h2>
+<p>Two key figure-based schematics from Rajaure et al. (PNAS 2015; <strong>Apr 2015</strong>; https://doi.org/10.1073/pnas.1420588112) show:<br />
+- <strong>Spanin topology</strong>: i-spanin in IM + o-spanin in OM bridging the periplasm/PG. (rajaure2015membranefusionduring media be052b46)<br />
+- <strong>Membrane fusion model</strong>: accumulation, PG removal, and subsequent IM–OM fusion to complete lysis. (rajaure2015membranefusionduring media 83335a3a)</p>
+<p>These schematics are widely used as the mechanistic template for interpreting two-component spanin systems such as the T4 pseT.3–pseT.2 pair. (rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media 83335a3a)</p>
+<h2 id="9-summary-functional-annotation-statement-evidence-based">9. Summary: functional annotation statement (evidence-based)</h2>
+<p><strong>Gene/protein:</strong> Enterobacteria phage T4 <strong>y13J / pseT.2</strong> (UniProt P39503)</p>
+<p><strong>Functional role:</strong> <strong>Outer membrane lipoprotein o-spanin subunit</strong> of the T4 two-component spanin system, partnering with <strong>pseT.3 (i-spanin)</strong> to execute the <strong>final outer membrane disruption step of lysis</strong>, most plausibly via <strong>spanin-mediated IM–OM fusion</strong> once peptidoglycan is degraded. (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2, cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2)</p>
+<p><strong>Localization:</strong> <strong>Outer membrane</strong>, as a lipoprotein precursor processed at a lipobox and lipidated at the N-terminus; the T4 assignment is supported by topology prediction (lipoprotein signal) and by spanin-class evidence from paradigm systems. (summer2007rzrz1lysisgene pages 3-4, rajaure2015membranefusionduring pages 1-2)</p>
+<p><strong>Most direct T4 evidence:</strong> Δ(pseT.3 pseT.2) mutant exhibiting a hallmark spanin-null, Mg2+-dependent lysis defect and spherical cells, establishing necessity for proper lysis completion. (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2)</p>
+<hr />
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<table>
+<thead>
+<tr>
+<th>Item (concept)</th>
+<th>Evidence summary</th>
+<th>Key experimental/bioinformatic support</th>
+<th>Implication for y13J/P39503</th>
+<th>Primary source (author year)</th>
+<th>DOI/URL</th>
+<th>Publication date (month year)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spanins definition</td>
+<td>Spanins are the phage lysis proteins responsible for the final disruption of the outer membrane in Gram-negative hosts; two-component systems comprise an inner-membrane i-spanin and an outer-membrane lipoprotein o-spanin that bridge the periplasm and act after peptidoglycan degradation (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2, kongari2018phagespaninsdiversity pages 1-2).</td>
+<td>Review synthesis of genetic, cell biological, and biochemical data across phages; spanins defined as a third lysis function beyond holin and endolysin (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2).</td>
+<td>Supports annotating y13J/P39503 specifically as an outer-membrane lysis factor, not an enzyme or structural virion protein.</td>
+<td>Cahill &amp; Young 2019; Young 2014; Kongari et al. 2018</td>
+<td>https://doi.org/10.1016/bs.aivir.2018.09.003; https://doi.org/10.1007/s12275-014-4087-z; https://doi.org/10.1186/s12859-018-2342-8</td>
+<td>Jan 2019; Mar 2014; Sep 2018</td>
+</tr>
+<tr>
+<td>T4 pseT.2/pseT.3 identification</td>
+<td>T4 genes pseT.3 and pseT.2 were identified as the T4 Rz/Rz1-equivalent spanin pair; T4 is cited as a separated two-component spanin architecture, with pseT.2 corresponding to the o-spanin and pseT.3 to the i-spanin (young2014phagelysisthree pages 5-7, kongari2018phagespaninsdiversity pages 1-2, summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2).</td>
+<td>Bioinformatic signatures: one product has an N-terminal transmembrane domain, the other an outer-membrane lipoprotein signal; gene arrangement is head-to-tail with overlapping stop/start codons but separated coding regions (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2).</td>
+<td>Verifies that UniProt P39503 / y13J (pseT.2) is the T4 o-spanin in the correct organism, Enterobacteria phage T4.</td>
+<td>Summer et al. 2007; Young 2014; Kongari et al. 2018</td>
+<td>https://doi.org/10.1016/j.jmb.2007.08.045; https://doi.org/10.1007/s12275-014-4087-z; https://doi.org/10.1186/s12859-018-2342-8</td>
+<td>Nov 2007; Mar 2014; Sep 2018</td>
+</tr>
+<tr>
+<td>Δ(pseT.2 pseT.3) phenotype</td>
+<td>Deletion of the T4 pseT.2/pseT.3 pair caused a classic spanin-null phenotype: a Mg2+-dependent lysis defect with infected cells becoming spherical, indicating failure of outer-membrane disruption after peptidoglycan loss (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2).</td>
+<td>Direct T4 mutant construction and phenotyping in lysis assays; phenotype matched known Rz−/Rz1− defects (summer2007rzrz1lysisgene pages 3-4, summer2007rzrz1lysisgene pages 1-2).</td>
+<td>Strong experimental evidence that y13J/P39503 is required for the final lysis step, specifically outer-membrane disruption.</td>
+<td>Summer et al. 2007</td>
+<td>https://doi.org/10.1016/j.jmb.2007.08.045</td>
+<td>Nov 2007</td>
+</tr>
+<tr>
+<td>Predicted topology</td>
+<td>Two-component spanins have complementary topologies: i-spanins carry an N-terminal TMD in the inner membrane, whereas o-spanins carry an N-terminal lipoprotein signal/lipobox and are anchored in the outer membrane (rajaure2015membranefusionduring pages 1-2, cahill2019phagelysismultiple pages 1-4, summer2007rzrz1lysisgene pages 3-4). For T4, pseT.3 has the TMD signature and pseT.2 the lipoprotein signal (summer2007rzrz1lysisgene pages 3-4).</td>
+<td>Topology prediction and comparative annotation across Rz/Rz1-like systems; T4-specific bioinformatic assignment reported by Summer et al. (summer2007rzrz1lysisgene pages 3-4).</td>
+<td>y13J/P39503 is best annotated as an outer-membrane lipoprotein subunit of a periplasm-spanning complex, rather than a soluble periplasmic protein.</td>
+<td>Summer et al. 2007; Rajaure et al. 2015; Cahill &amp; Young 2019</td>
+<td>https://doi.org/10.1016/j.jmb.2007.08.045; https://doi.org/10.1073/pnas.1420588112; https://doi.org/10.1016/bs.aivir.2018.09.003</td>
+<td>Nov 2007; Apr 2015; Jan 2019</td>
+</tr>
+<tr>
+<td>Role in membrane fusion model</td>
+<td>Spanins are proposed to trigger fusion of inner and outer membranes once peptidoglycan is degraded; figure-based and textual evidence shows the i-/o-spanin complex bridging IM and OM and then collapsing/fusing the membranes to release virions (rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media be052b46, rajaure2015membranefusionduring media 83335a3a).</td>
+<td>Primary PNAS study plus figure evidence for spanin topology and fusion model; reviews synthesize that PG removal relieves a topological constraint and allows fusion (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2, rajaure2015membranefusionduring media be052b46, rajaure2015membranefusionduring media 83335a3a).</td>
+<td>y13J/P39503 most likely functions mechanistically in membrane fusion as the OM-anchored partner of the T4 spanin complex.</td>
+<td>Rajaure et al. 2015; Cahill &amp; Young 2019</td>
+<td>https://doi.org/10.1073/pnas.1420588112; https://doi.org/10.1016/bs.aivir.2018.09.003</td>
+<td>Apr 2015; Jan 2019</td>
+</tr>
+<tr>
+<td>Lipobox processing and Lol sorting evidence from paradigm λ Rz1</td>
+<td>In the λ model system, the o-spanin Rz1 has a signal peptidase II lipobox, is acylated on the N-terminal Cys, and sorting to the OM depends on Lol-targeting determinants; mutating key +1/+2 residues can redirect localization away from the OM (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2, young2014phagelysisthree pages 7-8).</td>
+<td>Biochemical labeling, membrane fractionation, and targeting-mutant analyses in λ Rz1; mature o-spanin is OM-anchored via three fatty acyl chains (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2, young2014phagelysisthree pages 7-8).</td>
+<td>Although shown in λ rather than T4, these class-defining data strongly support that T4 y13J/P39503, identified as an o-spanin, is processed as a lipoprotein and sorted to the OM.</td>
+<td>Rajaure et al. 2015; Cahill &amp; Young 2019; Young 2014</td>
+<td>https://doi.org/10.1073/pnas.1420588112; https://doi.org/10.1016/bs.aivir.2018.09.003; https://doi.org/10.1007/s12275-014-4087-z</td>
+<td>Apr 2015; Jan 2019; Mar 2014</td>
+</tr>
+<tr>
+<td>Spheroplast fusion assay evidence</td>
+<td>Coexpression of i-spanin and o-spanin in λ drives fusion of labeled spheroplasts, whereas lysis-defective spanin alleles fail to fuse, directly linking spanins to membrane fusion rather than nonspecific damage (cahill2019phagelysismultiple pages 24-27, rajaure2015membranefusionduring pages 1-2).</td>
+<td>In vitro/heterologous spheroplast fusion assay with fluorescent markers; allele dependence tied fusion to functional spanin complexes (rajaure2015membranefusionduring pages 1-2).</td>
+<td>Provides the strongest mechanistic precedent for inferring that T4 y13J/P39503 acts in an analogous two-component fusion machine with pseT.3.</td>
+<td>Rajaure et al. 2015; Cahill &amp; Young 2019</td>
+<td>https://doi.org/10.1073/pnas.1420588112; https://doi.org/10.1016/bs.aivir.2018.09.003</td>
+<td>Apr 2015; Jan 2019</td>
+</tr>
+<tr>
+<td>Diversity databases/statistics</td>
+<td>Large-scale spanin mining identified 528 two-component spanins and 58 unimolecular spanins; using a 40% identity/40% length threshold, these grouped into 143 i-spanin, 125 o-spanin, and 13 u-spanin families, with &gt;40% of families being singletons (kongari2018phagespaninsdiversity pages 1-2).</td>
+<td>SpaninDataBase bioinformatic survey and family clustering across phage genomes; T4 cited as a separated two-component architecture exemplar (kongari2018phagespaninsdiversity pages 1-2).</td>
+<td>Indicates y13J/P39503 belongs to a widespread but highly diverse class of outer-membrane lysis proteins, explaining limited direct sequence-based annotation outside contextual gene architecture.</td>
+<td>Kongari et al. 2018</td>
+<td>https://doi.org/10.1186/s12859-018-2342-8</td>
+<td>Sep 2018</td>
+</tr>
+<tr>
+<td>2024 application paper using T1 spanin as antimicrobial</td>
+<td>A 2024 study reported potent bactericidal activity of T1 spanin and used phage delivery of the spanin gene as an antimicrobial strategy; T1-spanin showed activity against 111 E. coli clinical isolates and additional Acinetobacter, Klebsiella, and Pseudomonas isolates (cahill2019phagelysismultiple pages 24-27).</td>
+<td>Experimental comparison of phage-derived lytic enzymes in cells; engineered non-proliferative phage delivery of T1-spanin for antibacterial activity (cahill2019phagelysismultiple pages 24-27).</td>
+<td>While not T4-specific, this demonstrates real-world translational interest in spanin biology, supporting the relevance of accurate annotation of y13J/P39503.</td>
+<td>Yamashita et al. 2024</td>
+<td>https://doi.org/10.34133/bdr.0028</td>
+<td>Jan 2024</td>
+</tr>
+<tr>
+<td>2024 programmed autolysis review mentioning holin-endolysin-spanin modules</td>
+<td>A 2024 review on engineered bacterial autolysis states that λ and T4 require holin-endolysin-spanin modules for complete lysis of Gram-negative cells, highlighting use of phage lysis systems in biotechnology (cahill2019phagelysismultiple pages 1-4, young2014phagelysisthree pages 1-2).</td>
+<td>Review of applied autolysis platforms for manufacturing and biomedicine; cites phage lysis modules as programmable tools.</td>
+<td>Reinforces that T4 y13J/P39503 should be considered part of a complete lysis cassette relevant to synthetic biology, not an isolated accessory gene.</td>
+<td>Dong et al. 2024</td>
+<td>https://doi.org/10.1186/s12934-024-02566-z</td>
+<td>Oct 2024</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the evidence supporting annotation of Enterobacteria phage T4 y13J (pseT.2; UniProt P39503) as the o-spanin outer-membrane lipoprotein. It integrates T4-specific genetics with broader spanin mechanistic and application literature.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(young2014phagelysisthree pages 5-7): Ryland Young. Phage lysis: three steps, three choices, one outcome. Journal of Microbiology, 52:243-258, Mar 2014. URL: https://doi.org/10.1007/s12275-014-4087-z, doi:10.1007/s12275-014-4087-z. This article has 596 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kongari2018phagespaninsdiversity pages 1-2): Rohit Kongari, Manoj Rajaure, J. Cahill, Eric Rasche, Eleni M. Mijalis, Joel D. Berry, and R. Young. Phage spanins: diversity, topological dynamics and gene convergence. BMC Bioinformatics, Sep 2018. URL: https://doi.org/10.1186/s12859-018-2342-8, doi:10.1186/s12859-018-2342-8. This article has 144 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(summer2007rzrz1lysisgene pages 3-4): Elizabeth J. Summer, Joel Berry, Tram Anh T. Tran, Lili Niu, Douglas K. Struck, and Ry Young. Rz/rz1 lysis gene equivalents in phages of gram-negative hosts. Journal of molecular biology, 373 5:1098-112, Nov 2007. URL: https://doi.org/10.1016/j.jmb.2007.08.045, doi:10.1016/j.jmb.2007.08.045. This article has 222 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(summer2007rzrz1lysisgene pages 1-2): Elizabeth J. Summer, Joel Berry, Tram Anh T. Tran, Lili Niu, Douglas K. Struck, and Ry Young. Rz/rz1 lysis gene equivalents in phages of gram-negative hosts. Journal of molecular biology, 373 5:1098-112, Nov 2007. URL: https://doi.org/10.1016/j.jmb.2007.08.045, doi:10.1016/j.jmb.2007.08.045. This article has 222 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cahill2019phagelysismultiple pages 1-4): Jesse Cahill and Ry Young. Phage lysis: multiple genes for multiple barriers. Advances in virus research, 103:33-70, Jan 2019. URL: https://doi.org/10.1016/bs.aivir.2018.09.003, doi:10.1016/bs.aivir.2018.09.003. This article has 350 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(young2014phagelysisthree pages 1-2): Ryland Young. Phage lysis: three steps, three choices, one outcome. Journal of Microbiology, 52:243-258, Mar 2014. URL: https://doi.org/10.1007/s12275-014-4087-z, doi:10.1007/s12275-014-4087-z. This article has 596 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cahill2019phagelysismultiple pages 18-21): Jesse Cahill and Ry Young. Phage lysis: multiple genes for multiple barriers. Advances in virus research, 103:33-70, Jan 2019. URL: https://doi.org/10.1016/bs.aivir.2018.09.003, doi:10.1016/bs.aivir.2018.09.003. This article has 350 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cahill2019phagelysismultiple pages 24-27): Jesse Cahill and Ry Young. Phage lysis: multiple genes for multiple barriers. Advances in virus research, 103:33-70, Jan 2019. URL: https://doi.org/10.1016/bs.aivir.2018.09.003, doi:10.1016/bs.aivir.2018.09.003. This article has 350 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rajaure2015membranefusionduring pages 1-2): Manoj Rajaure, Joel Berry, Rohit Kongari, Jesse Cahill, and Ry Young. Membrane fusion during phage lysis. Proceedings of the National Academy of Sciences, 112:5497-5502, Apr 2015. URL: https://doi.org/10.1073/pnas.1420588112, doi:10.1073/pnas.1420588112. This article has 123 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rajaure2015membranefusionduring media be052b46): Manoj Rajaure, Joel Berry, Rohit Kongari, Jesse Cahill, and Ry Young. Membrane fusion during phage lysis. Proceedings of the National Academy of Sciences, 112:5497-5502, Apr 2015. URL: https://doi.org/10.1073/pnas.1420588112, doi:10.1073/pnas.1420588112. This article has 123 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rajaure2015membranefusionduring media 83335a3a): Manoj Rajaure, Joel Berry, Rohit Kongari, Jesse Cahill, and Ry Young. Membrane fusion during phage lysis. Proceedings of the National Academy of Sciences, 112:5497-5502, Apr 2015. URL: https://doi.org/10.1073/pnas.1420588112, doi:10.1073/pnas.1420588112. This article has 123 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamashita2024harnessingat1 pages 3-4): Wakana Yamashita, Shinjiro Ojima, Azumi Tamura, Aa Haeruman Azam, Kohei Kondo, Zhang Yuancheng, Longzhu Cui, Masaki Shintani, Masato Suzuki, Yoshimasa Takahashi, Koichi Watashi, Satoshi Tsuneda, and Kotaro Kiga. Harnessing a t1 phage-derived spanin for developing phage-based antimicrobial development. Biodesign Research, 6:0028, Jan 2024. URL: https://doi.org/10.34133/bdr.0028, doi:10.34133/bdr.0028. This article has 13 citations.</p>
+</li>
+<li>
+<p>(yamashita2024harnessingat1 pages 1-2): Wakana Yamashita, Shinjiro Ojima, Azumi Tamura, Aa Haeruman Azam, Kohei Kondo, Zhang Yuancheng, Longzhu Cui, Masaki Shintani, Masato Suzuki, Yoshimasa Takahashi, Koichi Watashi, Satoshi Tsuneda, and Kotaro Kiga. Harnessing a t1 phage-derived spanin for developing phage-based antimicrobial development. Biodesign Research, 6:0028, Jan 2024. URL: https://doi.org/10.34133/bdr.0028, doi:10.34133/bdr.0028. This article has 13 citations.</p>
+</li>
+<li>
+<p>(yamashita2024harnessingat1 pages 8-9): Wakana Yamashita, Shinjiro Ojima, Azumi Tamura, Aa Haeruman Azam, Kohei Kondo, Zhang Yuancheng, Longzhu Cui, Masaki Shintani, Masato Suzuki, Yoshimasa Takahashi, Koichi Watashi, Satoshi Tsuneda, and Kotaro Kiga. Harnessing a t1 phage-derived spanin for developing phage-based antimicrobial development. Biodesign Research, 6:0028, Jan 2024. URL: https://doi.org/10.34133/bdr.0028, doi:10.34133/bdr.0028. This article has 13 citations.</p>
+</li>
+<li>
+<p>(abeysekera2022bacteriophageencodedlethalmembrane pages 2-4): Gayan S. Abeysekera, Michael J. Love, Sarah H. Manners, Craig Billington, and Renwick C. J. Dobson. Bacteriophage-encoded lethal membrane disruptors: advances in understanding and potential applications. Frontiers in Microbiology, Oct 2022. URL: https://doi.org/10.3389/fmicb.2022.1044143, doi:10.3389/fmicb.2022.1044143. This article has 56 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(young2014phagelysisthree pages 7-8): Ryland Young. Phage lysis: three steps, three choices, one outcome. Journal of Microbiology, 52:243-258, Mar 2014. URL: https://doi.org/10.1007/s12275-014-4087-z, doi:10.1007/s12275-014-4087-z. This article has 596 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="y13J-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000011 The document contains two relevant figures. Figure 1B shows the spanin topology, where the Rz i-spanin (anchored in the inner membr" src="y13J-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kongari2018phagespaninsdiversity pages 1-2</li>
+<li>abeysekera2022bacteriophageencodedlethalmembrane pages 2-4</li>
+<li>rajaure2015membranefusionduring pages 1-2</li>
+<li>cahill2019phagelysismultiple pages 24-27</li>
+<li>young2014phagelysisthree pages 5-7</li>
+<li>cahill2019phagelysismultiple pages 1-4</li>
+<li>young2014phagelysisthree pages 1-2</li>
+<li>cahill2019phagelysismultiple pages 18-21</li>
+<li>young2014phagelysisthree pages 7-8</li>
+<li>https://doi.org/10.34133/bdr.0028</li>
+<li>https://doi.org/10.1073/pnas.1420588112</li>
+<li>https://doi.org/10.1016/bs.aivir.2018.09.003;</li>
+<li>https://doi.org/10.1007/s12275-014-4087-z;</li>
+<li>https://doi.org/10.1186/s12859-018-2342-8</li>
+<li>https://doi.org/10.1016/j.jmb.2007.08.045;</li>
+<li>https://doi.org/10.1016/j.jmb.2007.08.045</li>
+<li>https://doi.org/10.1073/pnas.1420588112;</li>
+<li>https://doi.org/10.1016/bs.aivir.2018.09.003</li>
+<li>https://doi.org/10.1007/s12275-014-4087-z</li>
+<li>https://doi.org/10.1186/s12934-024-02566-z</li>
+<li>https://doi.org/10.1007/s12275-014-4087-z,</li>
+<li>https://doi.org/10.1186/s12859-018-2342-8,</li>
+<li>https://doi.org/10.1016/j.jmb.2007.08.045,</li>
+<li>https://doi.org/10.1016/bs.aivir.2018.09.003,</li>
+<li>https://doi.org/10.1073/pnas.1420588112,</li>
+<li>https://doi.org/10.34133/bdr.0028,</li>
+<li>https://doi.org/10.3389/fmicb.2022.1044143,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P39503
+gene_symbol: P39503
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P39503&#39;
+existing_annotations:
+- term:
+    id: GO:0020002
+    label: host cell plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0031640
+    label: killing of cells of another organism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0044659
+    label: viral release from host cell by cytolysis
+  evidence_type: IGI
+  original_reference_id: PMID:17900620
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:17900620
+  title: Rz/Rz1 lysis gene equivalents in phages of Gram-negative hosts.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

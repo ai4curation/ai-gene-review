@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P04521 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P04521</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04521" target="_blank" class="term-link">
+                        P04521
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P04521";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04521" data-a="DESCRIPTION: TODO: Add description for P04521..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P04521</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004518" target="_blank" class="term-link">
+                                    GO:0004518
+                                </a>
+                            </span>
+                            <span class="term-label">nuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0004518" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004527" target="_blank" class="term-link">
+                                    GO:0004527
+                                </a>
+                            </span>
+                            <span class="term-label">exonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0004527" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0006281" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006974" target="_blank" class="term-link">
+                                    GO:0006974
+                                </a>
+                            </span>
+                            <span class="term-label">DNA damage response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0006974" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0039657" target="_blank" class="term-link">
+                                    GO:0039657
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0039657" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099015" target="_blank" class="term-link">
+                                    GO:0099015
+                                </a>
+                            </span>
+                            <span class="term-label">degradation of host chromosome by virus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04521" data-a="GO:0099015" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(47-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04521" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">25 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T20:33:14.751082</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="47-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="47-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 I have extracted Figure 7, Figure 5, and Table 2, which address your request for nuclease products and ATPase kinetics of the T4 MR</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-bacteriophage-t4-gene-47-gp47-uniprot-p04521">Research report: Functional annotation of bacteriophage T4 gene 47 (gp47; UniProt P04521)</h2>
+<h3 id="0-target-verification-mandatory">0) Target verification (mandatory)</h3>
+<p>The target protein specified by UniProt accession <strong>P04521</strong> corresponds to <strong>gene product 47 (gp47)</strong> from <strong>Enterobacteria phage T4</strong> and is consistently identified in the literature as the <strong>T4 Mre11 homolog</strong> (nuclease subunit) that partners with <strong>gp46 (Rad50 homolog)</strong> to form the <strong>Mre11–Rad50 (MR) complex</strong>. This matches the user-provided UniProt description of an exonuclease subunit and aligns with the conserved MR complex architecture and DNA end-processing role described for T4 gp46/gp47. (herdendorf2011biochemicalcharacterizationof pages 1-1, liu2010assemblyanddynamics pages 1-3, albrecht2012disruptionofthe pages 1-2)</p>
+<h3 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h3>
+<h4 id="11-definitions-and-pathway-context">1.1 Definitions and pathway context</h4>
+<p><strong>Homologous recombination (HR)</strong> in bacteriophage T4 is a DNA strand exchange process that is central not only to genetic exchange but also to <strong>homology-directed repair (HDR)</strong> and <strong>recombination-dependent DNA replication (RDR)</strong>. A common early step in HR/HDR is <strong>ssDNA generation by nucleolytic resection of double-strand breaks (DSBs)</strong>, producing <strong>3′ ssDNA tails</strong> that become substrates for recombinase-filament formation and strand invasion. (liu2010assemblyanddynamics pages 1-3)</p>
+<p>In T4, the <strong>gp46/gp47 complex</strong> is described as a major exonuclease activity for DSB resection in HR models of the T4 system (orthologous to eukaryotic Mre11/Rad50). (liu2010assemblyanddynamics pages 1-3)</p>
+<h4 id="12-molecular-identity-and-complex-membership">1.2 Molecular identity and complex membership</h4>
+<p>T4 <strong>gp47</strong> is the <strong>Mre11-like nuclease</strong> and <strong>gp46</strong> is the <strong>Rad50-like ATPase</strong>; together they form a heterotetrameric MR complex (two Mre11 and two Rad50 subunits are described in broader MR literature, and the T4 MR complex is treated analogously). (teklemariam2018kineticanalysisof pages 1-4, albrecht2012disruptionofthe pages 1-2)</p>
+<h4 id="13-what-reaction-is-catalyzed-substrate-specificity-and-enzymology">1.3 What reaction is catalyzed? Substrate specificity and enzymology</h4>
+<p>Primary biochemical characterization demonstrates that the <strong>T4 MR complex</strong> (gp46/gp47) exhibits multiple enzymatic activities:<br />
+- <strong>DNA-activated ATPase activity</strong> (attributed to Rad50/gp46 and stimulated by Mre11/gp47 and DNA). (herdendorf2011biochemicalcharacterizationof pages 8-9)<br />
+- <strong>Mn2+-dependent ssDNA endonuclease activity</strong>. (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 1-2)<br />
+- <strong>Mn2+- and ATP-dependent dsDNA exonuclease activity</strong>, with prevailing <strong>3′→5′ polarity</strong> in the assays reported. (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 8-9)</p>
+<p>A central conceptual point in the field is an apparent mechanistic paradox: in vivo DSB resection to produce 3′ ssDNA tails is often framed as removal of the <strong>5′ strand</strong> at a DSB, but purified MR complexes frequently show <strong>3′→5′ exonuclease activity</strong> in vitro. The T4 MR complex explicitly exhibits this polarity in directionality assays, and the authors discuss the mismatch between the in vitro polarity and the inferred in vivo role, proposing that other factors can alter the nuclease mode. (herdendorf2011biochemicalcharacterizationof pages 8-9, albrecht2012disruptionofthe pages 1-2)</p>
+<h4 id="14-cofactors-and-regulation-by-other-t4-recombination-proteins">1.4 Cofactors and regulation by other T4 recombination proteins</h4>
+<p>A key finding for functional annotation is that <strong>UvsY (recombination mediator)</strong> and <strong>Gp32 (ssDNA-binding protein)</strong>—proteins essential for downstream presynaptic filament formation—can <strong>change the divalent cation dependence and nuclease product profile</strong> of the T4 MR complex. Specifically, while Mg2+ alone supports little to no detectable nuclease activity, the presence of <strong>UvsY + gp32</strong> enables a <strong>Mg2+-dependent reaction</strong> with a distinct product distribution (consistent with a switch toward endonucleolytic processing products under those conditions). (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 8-9, herdendorf2011biochemicalcharacterizationof media 369df493)</p>
+<p>This establishes a mechanistic link between DNA-end processing and recombinase loading: presynaptic filament assembly by UvsX/UvsY on gp32-coated ssDNA is explicitly suggested to be coupled to the resection step through interactions between gp32/UvsY and the MR nuclease complex. (morrical2025thebacteriophaget4 pages 3-5)</p>
+<h3 id="2-recent-developments-and-latest-research-prioritizing-20232024">2) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="21-availability-of-20232024-t4-gp47-specific-primary-literature">2.1 Availability of 2023–2024 T4 gp47-specific primary literature</h4>
+<p>Within the retrieved corpus, <strong>direct 2023–2024 primary studies focused specifically on T4 gp47 are limited</strong>. This is a common situation for classic phage proteins where foundational biochemical characterization predates the last two years. The most relevant “recent” developments available here come from <strong>(i) newer high-resolution structural work in conserved MR systems that explicitly cross-references T4 gp46/gp47 functional data</strong>, and **(ii) modern synthesis reviews that connect MR to the broader T4 HR/RDR network and to environmental conservation.</p>
+<h4 id="22-2024-structural-framework-and-cross-system-inference">2.2 2024 structural framework and cross-system inference</h4>
+<p>A 2024 preprint reports a <strong>3.2 Å cryo-EM structure</strong> of the <strong>S. cerevisiae Mre11–Rad50</strong> complex bound to dsDNA and highlights conserved Rad50 ATP-pocket interactions and long-distance coupling between coiled coils and ATP hydrolysis. Importantly for T4 annotation, it states that mutation of <strong>corresponding residues in bacteriophage T4 Rad50 (gp46)</strong> severely reduces ATP binding/hydrolysis and <strong>gp47-dependent nuclease activity</strong>, supporting conservation of the ATP-driven regulatory architecture across clades. (Posted date: <strong>Dec 9, 2024</strong>; URL: https://doi.org/10.21203/rs.3.rs-5390974/v1) (petrini2024structureguidedfunctional pages 4-7)</p>
+<h4 id="23-updated-synthesis-of-coupling-to-recombination-machinery-and-conservation-2025-review-used-as-current-understanding">2.3 Updated synthesis of coupling to recombination machinery and conservation (2025 review, used as “current understanding”)</h4>
+<p>A 2025 EcoSal Plus review provides an up-to-date synthesis of T4 HR system mechanism and explicitly lists structural models for <strong>gp47 (Mre11)</strong> based on archaeal Mre11–Mn2+ and Mre11–DNA–Mn2+ structures. It also explicitly notes that presynaptic filament assembly may be coupled to the resection step via gp32/UvsY interactions with the T4 MR complex. (Publication month: <strong>Dec 2025</strong>; URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025) (morrical2025thebacteriophaget4 pages 3-5)</p>
+<h3 id="3-biological-function-processes-and-inferred-localization">3) Biological function, processes, and inferred localization</h3>
+<h4 id="31-biological-processes">3.1 Biological processes</h4>
+<p>The best-supported biological roles for gp47 in T4 infection biology are:<br />
+1. <strong>Processing of DNA ends during DSB repair / HDR</strong>, as part of the gp46/gp47 MR complex. (herdendorf2011biochemicalcharacterizationof pages 1-1, albrecht2012disruptionofthe pages 1-2)<br />
+2. <strong>Recombination-dependent DNA replication (RDR)</strong>, which is a major initiation pathway for T4 DNA replication and is genetically linked to the recombination machinery. (liu2010assemblyanddynamics pages 1-3, george1996repairofdoublestrand pages 1-2)<br />
+3. A proposed role in <strong>host genomic DNA processing/degradation</strong> to supply deoxynucleotides for phage DNA synthesis (noted as a physiological rationale for relatively rapid MR activities in T4 compared with other MR systems). (teklemariam2018kineticanalysisof pages 1-4)</p>
+<h4 id="32-genetic-pathway-dependencies-in-vivo-evidence">3.2 Genetic pathway dependencies (in vivo evidence)</h4>
+<p>An in vivo DSB repair/replication assay during T4 infection reported that the reaction is <strong>absolutely dependent</strong> on recombination functions including <strong>genes 32, 46, 59, uvsX, and uvsY</strong>, and that <strong>both RDR and recombinational repair require the products of genes 32, 46, 47, 59, uvsX, and uvsY</strong>. This positions gp47 (and gp46) as core, required factors in the coupled repair/replication pathway. (Publication: <strong>Aug 1996</strong>; URL: https://doi.org/10.1093/genetics/143.4.1507) (george1996repairofdoublestrand pages 1-2)</p>
+<h4 id="33-localization">3.3 Localization</h4>
+<p>No direct subcellular localization microscopy or compartmental localization for gp47 is present in the retrieved evidence. Functionally, gp47 is inferred to act at <strong>DNA ends/DSBs and recombination intermediates</strong> during infection in the bacterial cytoplasm (where T4 DNA metabolism occurs), and it physically/functional interacts with core DNA metabolism proteins (gp46, gp32, UvsY). (morrical2025thebacteriophaget4 pages 3-5, herdendorf2011biochemicalcharacterizationof pages 8-9)</p>
+<h3 id="4-quantitative-statistics-and-key-experimental-data-biochemical-and-mechanistic">4) Quantitative statistics and key experimental data (biochemical and mechanistic)</h3>
+<h4 id="41-mr-nuclease-and-atpase-kinetics-primary-biochemical-characterization">4.1 MR nuclease and ATPase kinetics (primary biochemical characterization)</h4>
+<p>Key quantitative results for the T4 MR complex that directly inform gp47 functional annotation include:<br />
+- <strong>Maximum dsDNA exonuclease rate</strong>: <strong>7.7 nucleotides/s</strong> (for repetitive exonucleolytic removal under tested conditions). (herdendorf2011biochemicalcharacterizationof pages 8-9)<br />
+- <strong>Coupling stoichiometry</strong>: <strong>~4 nucleotides removed per ATP hydrolyzed</strong> during repetitive dsDNA exonuclease activity. (herdendorf2011biochemicalcharacterizationof pages 8-9)<br />
+- <strong>Rad50 ATPase (gp46) baseline</strong>: <strong>kcat ≈ 0.15 s⁻1</strong> for Rad50 alone in Mg2+. (herdendorf2011biochemicalcharacterizationof pages 8-9)<br />
+- <strong>Stimulation by Mre11 (gp47) + dsDNA</strong>: addition of both <strong>Mre11 and DNA increases ATP hydrolysis ~20-fold</strong>, with positive cooperativity (Hill coefficient increases from ~1.4 to ~2.4 in the MR-DNA condition). (herdendorf2011biochemicalcharacterizationof pages 8-9)</p>
+<p>These data support a model in which gp47’s nuclease function is coordinated with gp46 ATP hydrolysis to support processive processing/translocation along DNA ends. (herdendorf2011biochemicalcharacterizationof pages 8-9)</p>
+<h4 id="42-metal-dependence-and-modulation-by-gp32uvsy-mechanistic-mode-switching">4.2 Metal dependence and modulation by gp32/UvsY (mechanistic “mode switching”)</h4>
+<p>In a Mg2+-dependent reaction <strong>enabled by gp32 and UvsY</strong>, the nuclease product distribution shifts; notably <strong>~32% of products</strong> were reported to be <strong>15–25 nt fragments</strong> under those conditions (with the remainder as mononucleotide), contrasting with Mn2+-dependent conditions that predominantly yield mononucleotide products. This supports the claim that accessory recombination proteins can qualitatively change nuclease behavior and potentially reconcile in vitro polarity with in vivo processing requirements. (herdendorf2011biochemicalcharacterizationof media 369df493)</p>
+<h4 id="43-additional-kinetic-parameters-relevant-to-mr-nuclease-efficiency-and-atp-activation">4.3 Additional kinetic parameters relevant to MR nuclease efficiency and ATP activation</h4>
+<p>A 2020 study evaluating Rad50 C-terminal contributions reports steady-state nuclease parameters for the MR complex (relevant to gp47-dependent activity because nuclease function requires Rad50-dependent processivity/activation):<br />
+- <strong>Km-DNA (1-position assay)</strong>: <strong>3.8 ± 0.7</strong> (units as reported in the table). (Publication: <strong>May 2020</strong>; URL: https://doi.org/10.1016/j.bbrc.2020.02.172) (streff2020functionalevaluationof pages 4-5)<br />
+- <strong>kcat-nuclease (1-position assay)</strong>: <strong>41 ± 3 min⁻1</strong>. (streff2020functionalevaluationof pages 4-5)<br />
+- <strong>Apparent specific activity at 17-position</strong>: <strong>0.019 ± 0.007 min⁻1</strong> without ATP vs <strong>0.18 ± 0.01 min⁻1</strong> with ATP (~10-fold activation). (streff2020functionalevaluationof pages 4-5)</p>
+<p>These results reinforce that ATP’s major role can be increasing apparent processivity (or effective cleavage at positions farther from the end), consistent with the earlier mechanistic interpretation from the 2011 work. (herdendorf2011biochemicalcharacterizationof pages 8-9, streff2020functionalevaluationof pages 4-5)</p>
+<h3 id="5-expert-opinions-and-analysis-authoritative-synthesis">5) Expert opinions and analysis (authoritative synthesis)</h3>
+<h4 id="51-interpretation-of-polarity-paradox-and-coupling-to-recombination">5.1 Interpretation of polarity paradox and coupling to recombination</h4>
+<p>The 2011 biochemical study emphasizes that the observed <strong>3′→5′ dsDNA exonuclease</strong> activity is “at odds” with a simple physiological model of generating 3′ overhangs by 5′ strand removal, and it proposes that <strong>gp32 and UvsY</strong> can alter MR nuclease behavior in ways that may promote the formation of recombinogenic 3′ ssDNA ends. This is a key expert interpretation linking biochemical mechanism to pathway function. (herdendorf2011biochemicalcharacterizationof pages 8-9)</p>
+<p>The 2010 review similarly places gp46/gp47 in the canonical HR schematic as the enzymes thought responsible for the resection step generating 3′ ssDNA tails. (liu2010assemblyanddynamics pages 1-3)</p>
+<h4 id="52-structuralmechanistic-view-of-mr-state-transitions">5.2 Structural/mechanistic view of MR state transitions</h4>
+<p>Work on the Mre11 dimer interface in the T4 MR complex supports a multi-state catalytic cycle in which productive assembly/initiation and translocation/processivity are separable functional states; disruption of the Mre11 dimer interface can reduce processive dsDNA exonuclease activity ~10-fold under processive conditions. (Publication: <strong>Sep 2012</strong>; URL: https://doi.org/10.1074/jbc.m112.392316) (albrecht2012disruptionofthe pages 1-2)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-applications-of-the-broader-t4-recombination-system">6.1 Applications of the broader T4 recombination system</h4>
+<p>While gp47 itself is not highlighted as a commonly deployed reagent in diagnostics, the <strong>T4 HR/RDR machinery</strong> has yielded direct biotechnology applications. A 2025 review describes industrial development of <strong>isothermal amplification technologies</strong> derived from simplified T4 recombination systems:<br />
+- <strong>SIBA (strand invasion-based amplification)</strong> using <strong>UvsX + gp32</strong> (and a strand-displacing polymerase) with reported clinical/pathogen detection applications, including SARS-CoV-2, RSV, rhinoviruses, Chlamydia trachomatis, and Neisseria gonorrhoeae. (morrical2025thebacteriophaget4 pages 9-12)<br />
+- <strong>RPA (recombinase polymerase amplification)</strong> requiring <strong>UvsX, UvsY, gp32</strong> with a strand-displacing polymerase; commercial kits exist and applications include detection of S. aureus, P. aeruginosa, measles, and influenza. (morrical2025thebacteriophaget4 pages 9-12)</p>
+<h4 id="62-is-gp47-mr-complex-used-directly-in-applications">6.2 Is gp47 (MR complex) used directly in applications?</h4>
+<p>In the retrieved application-focused sources, <strong>gp46/gp47 (MR complex)</strong> is discussed primarily as a conserved and mechanistically informative DNA-end processing machine rather than as a directly commercialized biotechnology enzyme. The most explicit applications described derive from <strong>UvsX/UvsY/gp32</strong>, not MR. (morrical2025thebacteriophaget4 pages 9-12, morrical2025thebacteriophaget4 pages 1-3)</p>
+<h3 id="7-environmental-and-evolutionary-significance-real-world-relevance-beyond-biotech">7) Environmental and evolutionary significance (real-world relevance beyond biotech)</h3>
+<p>Metagenomics-based perspectives emphasize that <strong>T4-like phages are abundant and widespread</strong> across environments, and that core recombination and repair modules (including MR components in many lineages) are broadly conserved, suggesting strong selective pressure for recombination-coupled replication/repair strategies in phage ecology. (morrical2025thebacteriophaget4 pages 12-14)</p>
+<h3 id="8-summary-of-functional-annotation-structured">8) Summary of functional annotation (structured)</h3>
+<p>The following table consolidates functional conclusions, biochemical evidence, cofactors, interactions, and quantitative data.</p>
+<table>
+<thead>
+<tr>
+<th>Function/role</th>
+<th>Biochemical activity &amp; directionality</th>
+<th>Cofactors/modulators</th>
+<th>Complex partners/interactions</th>
+<th>Key quantitative data</th>
+<th>Key sources with year and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Core nuclease subunit of T4 MR complex (gp47 = Mre11 homolog)</td>
+<td>gp47 is the nuclease subunit in the heterotetrameric Mre11-Rad50 complex; activities observed for T4 MR are a Mn2+-dependent ssDNA endonuclease and a Mn2+- and ATP-dependent dsDNA exonuclease with prevailing 3′→5′ polarity on dsDNA (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 1-2, herdendorf2011biochemicalcharacterizationof pages 8-9, teklemariam2018kineticanalysisof pages 1-4)</td>
+<td>Strong dependence on Mn2+ for canonical in vitro nuclease assays; ATP needed mainly for repetitive/processive dsDNA cleavage rather than first-nucleotide removal (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 8-9)</td>
+<td>Forms MR complex with gp46 (Rad50); T4 MR is described as Mre112-Rad502 heterotetramer, with possible higher-order assemblies via Rad50 zinc-hook/coiled coils (teklemariam2018kineticanalysisof pages 1-4, herdendorf2011biochemicalcharacterizationof pages 8-9, albrecht2012disruptionofthe pages 1-2)</td>
+<td>Max dsDNA exonuclease rate ~7.7 nt/s; ~4 nt removed per ATP hydrolyzed (herdendorf2011biochemicalcharacterizationof pages 8-9)</td>
+<td>Herdendorf et al. 2011, JBC, https://doi.org/10.1074/jbc.m110.178871 ; Teklemariam et al. 2018, Methods Enzymol., https://doi.org/10.1016/bs.mie.2017.12.007</td>
+</tr>
+<tr>
+<td>ATPase-coupled DNA end processing</td>
+<td>Rad50 ATPase is allosterically stimulated by gp47/Mre11 and DNA; ATP hydrolysis supports translocation/processive nucleotide removal during exonuclease action (herdendorf2011biochemicalcharacterizationof pages 8-9, albrecht2012disruptionofthe pages 1-2)</td>
+<td>DNA and Mre11 stimulate Rad50 ATPase; ATP/AMP-PNP alter exonuclease behavior; Mre11 dimer interface is functionally coupled to Rad50 ATPase (herdendorf2011biochemicalcharacterizationof pages 8-9, albrecht2012disruptionofthe pages 1-2)</td>
+<td>gp47-Mre11 activates gp46-Rad50 ATPase through allosteric communication; disruption of Mre11 dimer interface uncouples nuclease from ATPase activation (albrecht2012disruptionofthe pages 1-2)</td>
+<td>Rad50 alone kcat ~0.15 s^-1; Mre11 + dsDNA increase ATP hydrolysis ~20-fold; Hill coefficient rises from ~1.4 to ~2.4 in MR-DNA complex (herdendorf2011biochemicalcharacterizationof pages 8-9)</td>
+<td>Herdendorf et al. 2011, JBC, https://doi.org/10.1074/jbc.m110.178871 ; Albrecht et al. 2012, JBC, https://doi.org/10.1074/jbc.m112.392316</td>
+</tr>
+<tr>
+<td>Mg2+ vs Mn2+ nuclease mode switching</td>
+<td>Under Mg2+ alone, little/no nuclease is detected; with gp32 + UvsY, Mg2+-supported cleavage appears and yields altered products consistent with endonucleolytic processing rather than the standard Mn2+-supported exonuclease profile (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 8-9, herdendorf2011biochemicalcharacterizationof media 369df493)</td>
+<td>UvsY recombination mediator and gp32 ssDNA-binding protein alter divalent-cation preference and nuclease output; Mn2+ supports canonical MR nuclease directly, Mg2+ requires accessory proteins for robust activity (herdendorf2011biochemicalcharacterizationof pages 1-1, herdendorf2011biochemicalcharacterizationof pages 8-9, morrical2025thebacteriophaget4 pages 3-5)</td>
+<td>Functional coupling to gp32 and UvsY links DNA resection to downstream presynaptic filament assembly in T4 HR/RDR (morrical2025thebacteriophaget4 pages 3-5)</td>
+<td>In Mg2+ with UvsY/gp32, ~32% of products were 15-25 nt long, versus mostly mononucleotide products in Mn2+-dependent reaction (herdendorf2011biochemicalcharacterizationof media 369df493)</td>
+<td>Herdendorf et al. 2011, JBC, https://doi.org/10.1074/jbc.m110.178871 ; Morrical 2025, EcoSal Plus, https://doi.org/10.1128/ecosalplus.esp-0003-2025</td>
+</tr>
+<tr>
+<td>DSB resection and homologous recombination / recombination-dependent replication (RDR)</td>
+<td>Current model places gp47/gp46 in the initial DNA-end resection step that generates recombinogenic 3′ ssDNA tails used for UvsX-mediated strand invasion and RDR, although the isolated enzyme shows predominant 3′→5′ dsDNA exonuclease activity in vitro (liu2010assemblyanddynamics pages 1-3, herdendorf2011biochemicalcharacterizationof pages 1-2, herdendorf2011biochemicalcharacterizationof pages 8-9)</td>
+<td>Likely coordinated with gp32, UvsY, UvsX, and other T4 HR proteins during infection (liu2010assemblyanddynamics pages 1-3, morrical2025thebacteriophaget4 pages 3-5, george1996repairofdoublestrand pages 1-2)</td>
+<td>Genetic pathway links gp47/gp46 with genes 32, 59, uvsX, and uvsY in T4 recombination and repair (george1996repairofdoublestrand pages 1-2)</td>
+<td>In vivo DSB repair/replication reaction is reported as absolutely dependent on products of genes including 46; repaired products formed long plasmid concatemers and often exchanged flanking DNA (george1996repairofdoublestrand pages 1-2)</td>
+<td>Liu &amp; Morrical 2010, Virol. J., https://doi.org/10.1186/1743-422x-7-357 ; George &amp; Kreuzer 1996, Genetics, https://doi.org/10.1093/genetics/143.4.1507 ; Herdendorf et al. 2011, JBC, https://doi.org/10.1074/jbc.m110.178871</td>
+</tr>
+<tr>
+<td>Host genome degradation during T4 infection</td>
+<td>T4 MR complex is also assigned a noncanonical role in degradation/processing of host genomic DNA to supply deoxynucleotides for phage DNA synthesis (teklemariam2018kineticanalysisof pages 1-4)</td>
+<td>Same MR machinery; comparatively rapid ATPase/exonuclease behavior has been proposed to relate to this physiological role (teklemariam2018kineticanalysisof pages 1-4)</td>
+<td>gp47 acts with gp46/Rad50 as the phage MR complex during infection (teklemariam2018kineticanalysisof pages 1-4)</td>
+<td>No direct numeric in vivo host-degradation rate extracted here; review/chapter sources emphasize host DNA degradation as a major physiological function (teklemariam2018kineticanalysisof pages 1-4)</td>
+<td>Teklemariam et al. 2018, Methods Enzymol., https://doi.org/10.1016/bs.mie.2017.12.007</td>
+</tr>
+<tr>
+<td>Structure-function annotation of gp47 itself</td>
+<td>gp47 is consistently annotated as the T4 Mre11 ortholog and structural models are based on archaeal Mre11 bound to Mn2+ and DNA; Mre11 dimer interface regulates at least two exonuclease states (morrical2025thebacteriophaget4 pages 3-5, albrecht2012disruptionofthe pages 1-2)</td>
+<td>Metal-dependent phosphodiesterase core inferred from Mre11-family conservation; activity state influenced by ATP/DNA through Rad50 and by Mre11 dimer conformation (albrecht2012disruptionofthe pages 1-2)</td>
+<td>Interacts with gp46/Rad50, dsDNA, gp32, and UvsY; Mre11 dimer interface is critical for productive assembly/translocation balance (albrecht2012disruptionofthe pages 1-2)</td>
+<td>L101D Mre11 mutant retains Rad50/dsDNA binding but reduces processive dsDNA exonuclease ~10-fold under processive conditions (albrecht2012disruptionofthe pages 1-2)</td>
+<td>Albrecht et al. 2012, JBC, https://doi.org/10.1074/jbc.m112.392316 ; Morrical 2025, EcoSal Plus, https://doi.org/10.1128/ecosalplus.esp-0003-2025</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compacts the main functional annotation for bacteriophage T4 gp47/Mre11, emphasizing its nuclease role in the gp46-gp47 MR complex, metal/cofactor dependence, pathway context, and quantitative biochemical data. It is useful as a quick evidence map linking function, mechanism, and sources.</em></p>
+<h3 id="9-notes-on-limitations-and-evidence-gaps">9) Notes on limitations and evidence gaps</h3>
+<ul>
+<li><strong>Direct gp47 localization</strong> (e.g., imaging-based intracellular localization) was not available in the retrieved texts; localization is inferred from function at DNA ends in the infection cycle. (morrical2025thebacteriophaget4 pages 3-5)</li>
+<li><strong>2023–2024 gp47-specific primary literature</strong> was limited in the retrieved corpus; therefore, the “latest research” section relies on a 2024 MR structural preprint that explicitly references T4 gp46/gp47 functional data and on a 2025 synthesis review for up-to-date mechanistic framing. (petrini2024structureguidedfunctional pages 4-7, morrical2025thebacteriophaget4 pages 3-5)</li>
+</ul>
+<h3 id="key-primary-sources-with-dates-and-urls">Key primary sources (with dates and URLs)</h3>
+<ul>
+<li>Herdendorf TJ et al. <strong>Jan 28, 2011</strong>. <em>Biochemical Characterization of Bacteriophage T4 Mre11-Rad50 Complex</em>. <strong>J Biol Chem</strong>. https://doi.org/10.1074/jbc.m110.178871 (herdendorf2011biochemicalcharacterizationof pages 1-2, herdendorf2011biochemicalcharacterizationof pages 8-9)</li>
+<li>Albrecht DW et al. <strong>Sep 7, 2012</strong>. <em>Disruption of the Bacteriophage T4 Mre11 Dimer Interface Reveals a Two-state Mechanism for Exonuclease Activity</em>. <strong>J Biol Chem</strong>. https://doi.org/10.1074/jbc.m112.392316 (albrecht2012disruptionofthe pages 1-2)</li>
+<li>George JW, Kreuzer KN. <strong>Aug 1996</strong>. <em>Repair of Double-Strand Breaks in Bacteriophage T4…</em>. <strong>Genetics</strong>. https://doi.org/10.1093/genetics/143.4.1507 (george1996repairofdoublestrand pages 1-2)</li>
+<li>Streff HE et al. <strong>May 2020</strong>. <em>Functional evaluation of the C-terminal region of bacteriophage T4 Rad50</em>. <strong>BBRC</strong>. https://doi.org/10.1016/j.bbrc.2020.02.172 (streff2020functionalevaluationof pages 4-5)</li>
+<li>Teklemariam TA et al. <strong>2018</strong>. <em>Kinetic Analysis of the Exonuclease Activity of the Bacteriophage T4 Mre11–Rad50 Complex</em>. <strong>Methods in Enzymology</strong>. https://doi.org/10.1016/bs.mie.2017.12.007 (teklemariam2018kineticanalysisof pages 1-4)</li>
+<li>Petrini J et al. Posted <strong>Dec 9, 2024</strong>. <em>Structure guided functional analysis of the S. cerevisiae Mre11 complex</em>. <strong>Research Square (preprint)</strong>. https://doi.org/10.21203/rs.3.rs-5390974/v1 (petrini2024structureguidedfunctional pages 4-7)</li>
+<li>Morrical SW. <strong>Dec 2025</strong>. <em>The bacteriophage T4 homologous recombination system: mechanism, applications, conservation, and environmental significance</em>. <strong>EcoSal Plus</strong>. https://doi.org/10.1128/ecosalplus.esp-0003-2025 (morrical2025thebacteriophaget4 pages 1-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(herdendorf2011biochemicalcharacterizationof pages 1-1): Timothy J. Herdendorf, Dustin W. Albrecht, Stephen J. Benkovic, and Scott W. Nelson. Biochemical characterization of bacteriophage t4 mre11-rad50 complex. Journal of Biological Chemistry, 286:2382-2392, Jan 2011. URL: https://doi.org/10.1074/jbc.m110.178871, doi:10.1074/jbc.m110.178871. This article has 66 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2010assemblyanddynamics pages 1-3): Jie Liu and Scott W Morrical. Assembly and dynamics of the bacteriophage t4 homologous recombination machinery. Virology Journal, 7:357-357, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-357, doi:10.1186/1743-422x-7-357. This article has 68 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(albrecht2012disruptionofthe pages 1-2): Dustin W. Albrecht, Timothy J. Herdendorf, and Scott W. Nelson. Disruption of the bacteriophage t4 mre11 dimer interface reveals a two-state mechanism for exonuclease activity. Journal of Biological Chemistry, 287:31371-31381, Sep 2012. URL: https://doi.org/10.1074/jbc.m112.392316, doi:10.1074/jbc.m112.392316. This article has 18 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(teklemariam2018kineticanalysisof pages 1-4): Tibebe A. Teklemariam, Osvaldo D. Rivera, and Scott W. Nelson. Kinetic analysis of the exonuclease activity of the bacteriophage t4 mre11-rad50 complex. Methods in enzymology, 600:135-156, Jan 2018. URL: https://doi.org/10.1016/bs.mie.2017.12.007, doi:10.1016/bs.mie.2017.12.007. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herdendorf2011biochemicalcharacterizationof pages 8-9): Timothy J. Herdendorf, Dustin W. Albrecht, Stephen J. Benkovic, and Scott W. Nelson. Biochemical characterization of bacteriophage t4 mre11-rad50 complex. Journal of Biological Chemistry, 286:2382-2392, Jan 2011. URL: https://doi.org/10.1074/jbc.m110.178871, doi:10.1074/jbc.m110.178871. This article has 66 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herdendorf2011biochemicalcharacterizationof pages 1-2): Timothy J. Herdendorf, Dustin W. Albrecht, Stephen J. Benkovic, and Scott W. Nelson. Biochemical characterization of bacteriophage t4 mre11-rad50 complex. Journal of Biological Chemistry, 286:2382-2392, Jan 2011. URL: https://doi.org/10.1074/jbc.m110.178871, doi:10.1074/jbc.m110.178871. This article has 66 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herdendorf2011biochemicalcharacterizationof media 369df493): Timothy J. Herdendorf, Dustin W. Albrecht, Stephen J. Benkovic, and Scott W. Nelson. Biochemical characterization of bacteriophage t4 mre11-rad50 complex. Journal of Biological Chemistry, 286:2382-2392, Jan 2011. URL: https://doi.org/10.1074/jbc.m110.178871, doi:10.1074/jbc.m110.178871. This article has 66 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(morrical2025thebacteriophaget4 pages 3-5): Scott W. Morrical. The bacteriophage t4 homologous recombination system: mechanism, applications, conservation, and environmental significance. EcoSal Plus, Dec 2025. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025, doi:10.1128/ecosalplus.esp-0003-2025. This article has 0 citations.</p>
+</li>
+<li>
+<p>(petrini2024structureguidedfunctional pages 4-7): John Petrini, Marcel Hohl, You Yu, Vitaly Kuryavyi, and Dinshaw Patel. Structure guided functional analysis of the s. cerevisiae mre11 complex. Research Square, Dec 2024. URL: https://doi.org/10.21203/rs.3.rs-5390974/v1, doi:10.21203/rs.3.rs-5390974/v1. This article has 3 citations.</p>
+</li>
+<li>
+<p>(george1996repairofdoublestrand pages 1-2): James W George and Kenneth N Kreuzer. Repair of double-strand breaks in bacteriophage t4 by a mechanism that involves extensive dna replication. Genetics, 143:1507-1520, Aug 1996. URL: https://doi.org/10.1093/genetics/143.4.1507, doi:10.1093/genetics/143.4.1507. This article has 61 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(streff2020functionalevaluationof pages 4-5): Haley E. Streff, Yang Gao, and Scott W. Nelson. Functional evaluation of the c-terminal region of bacteriophage t4 rad50. Biochemical and Biophysical Research Communications, 526:485-490, May 2020. URL: https://doi.org/10.1016/j.bbrc.2020.02.172, doi:10.1016/j.bbrc.2020.02.172. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(morrical2025thebacteriophaget4 pages 9-12): Scott W. Morrical. The bacteriophage t4 homologous recombination system: mechanism, applications, conservation, and environmental significance. EcoSal Plus, Dec 2025. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025, doi:10.1128/ecosalplus.esp-0003-2025. This article has 0 citations.</p>
+</li>
+<li>
+<p>(morrical2025thebacteriophaget4 pages 1-3): Scott W. Morrical. The bacteriophage t4 homologous recombination system: mechanism, applications, conservation, and environmental significance. EcoSal Plus, Dec 2025. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025, doi:10.1128/ecosalplus.esp-0003-2025. This article has 0 citations.</p>
+</li>
+<li>
+<p>(morrical2025thebacteriophaget4 pages 12-14): Scott W. Morrical. The bacteriophage t4 homologous recombination system: mechanism, applications, conservation, and environmental significance. EcoSal Plus, Dec 2025. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025, doi:10.1128/ecosalplus.esp-0003-2025. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="47-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 I have extracted Figure 7, Figure 5, and Table 2, which address your request for nuclease products and ATPase kinetics of the T4 MR" src="47-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>liu2010assemblyanddynamics pages 1-3</li>
+<li>herdendorf2011biochemicalcharacterizationof pages 8-9</li>
+<li>petrini2024structureguidedfunctional pages 4-7</li>
+<li>teklemariam2018kineticanalysisof pages 1-4</li>
+<li>george1996repairofdoublestrand pages 1-2</li>
+<li>streff2020functionalevaluationof pages 4-5</li>
+<li>albrecht2012disruptionofthe pages 1-2</li>
+<li>herdendorf2011biochemicalcharacterizationof pages 1-1</li>
+<li>herdendorf2011biochemicalcharacterizationof pages 1-2</li>
+<li>https://doi.org/10.21203/rs.3.rs-5390974/v1</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0003-2025</li>
+<li>https://doi.org/10.1093/genetics/143.4.1507</li>
+<li>https://doi.org/10.1016/j.bbrc.2020.02.172</li>
+<li>https://doi.org/10.1074/jbc.m112.392316</li>
+<li>https://doi.org/10.1074/jbc.m110.178871</li>
+<li>https://doi.org/10.1016/bs.mie.2017.12.007</li>
+<li>https://doi.org/10.1186/1743-422x-7-357</li>
+<li>https://doi.org/10.1074/jbc.m110.178871,</li>
+<li>https://doi.org/10.1186/1743-422x-7-357,</li>
+<li>https://doi.org/10.1074/jbc.m112.392316,</li>
+<li>https://doi.org/10.1016/bs.mie.2017.12.007,</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0003-2025,</li>
+<li>https://doi.org/10.21203/rs.3.rs-5390974/v1,</li>
+<li>https://doi.org/10.1093/genetics/143.4.1507,</li>
+<li>https://doi.org/10.1016/j.bbrc.2020.02.172,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04521
+gene_symbol: P04521
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P04521&#39;
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004518
+    label: nuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004527
+    label: exonuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006974
+    label: DNA damage response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0039657
+    label: symbiont-mediated suppression of host gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099015
+    label: degradation of host chromosome by virus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

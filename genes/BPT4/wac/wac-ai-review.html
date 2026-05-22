@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P10104 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P10104</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P10104" target="_blank" class="term-link">
+                        P10104
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P10104";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P10104" data-a="DESCRIPTION: TODO: Add description for P10104..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P10104</p>
+    </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wac-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P10104" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">42 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T03:36:59.676838</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="wac-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="wac-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000027 The document contains two figures showing the T4 collar and whiskers (fibritin/gpwac) around the neck with relevant labels. The fir</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-wac-uniprot-p10104-in-enterobacteria-phage-t4-bpt4">Research report: functional annotation of <strong>wac</strong> (UniProt <strong>P10104</strong>) in Enterobacteria phage T4 (BPT4)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The bacteriophage T4 gene <strong>wac</strong> (UniProt P10104) encodes <strong>fibritin</strong> (also called <strong>Wac</strong> or <strong>gpwac</strong>), a trimeric fibrous structural protein that decorates the <strong>virion neck</strong> as the <strong>collar and whiskers</strong>. Its primary biological role is to (i) promote efficient <strong>attachment/positioning of long tail fibers (LTFs)</strong> during late virion assembly and (ii) contribute to <strong>control of LTF retraction/availability</strong>, which modulates adsorption and infectivity under different environmental conditions. wac is <strong>nonessential</strong> but affects infectivity/fitness (e.g., small-plaque phenotype). (letarov2005gpwacofthe pages 1-2, fokine2013themoleculararchitecture pages 1-2, hu2015structuralremodelingof pages 1-3)</p>
+<h3 id="1-target-verification-and-definitions-disambiguation">1) Target verification and definitions (disambiguation)</h3>
+<p><strong>Verified identity.</strong> Multiple independent sources explicitly link T4 <strong>wac</strong> to <strong>fibritin</strong> and to the <strong>collar/whiskers</strong> structure at the phage neck. Efimov et al. describe “late gene <strong>wac</strong>” as encoding fibritin (named for “<strong>whisker’s antigen control</strong>”) and state that fibritin “builds the collar/whiskers complex on the phage neck.” (Jun 2005; https://doi.org/10.1007/bf01702598) (efimov2005bacteriophaget4as pages 1-3). Letarov et al. likewise identify the “wac gene product (gpwac) or fibritin of bacteriophage T4,” forming the fibers radiating from the neck and functioning in morphogenesis and infectivity control. (Feb 2005; https://doi.org/10.1128/jb.187.3.1055-1066.2005) (letarov2005gpwacofthe pages 1-2).</p>
+<p><strong>Key concept: collar/whiskers.</strong> The <strong>T4 neck</strong> (head–tail connector region) is “decorated” by a collar and whiskers made of fibritin molecules; cryo-EM fitting and genetic/structural interpretation place Wac/fibritin immediately below the head-tail junction. (May 2013; https://doi.org/10.1016/j.jmb.2013.02.012) (fokine2013themoleculararchitecture pages 1-2).</p>
+<h3 id="2-current-understanding-of-molecular-function">2) Current understanding of molecular function</h3>
+<h4 id="21-primary-function-assembly-chaperonescaffold-for-long-tail-fibers-ltfs">2.1 Primary function: assembly chaperone/scaffold for long tail fibers (LTFs)</h4>
+<p>A central, repeatedly supported function is that Wac/fibritin helps ensure <strong>efficient incorporation and positioning of the six long tail fibers</strong> during late assembly.</p>
+<ul>
+<li>Letarov et al. describe that during morphogenesis the whiskers (gpwac fibers) <strong>bind LTFs</strong> and help position them for attachment to the baseplate. (Feb 2005; https://doi.org/10.1128/jb.187.3.1055-1066.2005) (letarov2005gpwacofthe pages 1-2).</li>
+<li>Fokine et al. summarize fibritin as functioning as a <strong>chaperone during tail fiber attachment</strong>, based on structural and prior genetic evidence. (May 2013; https://doi.org/10.1016/j.jmb.2013.02.012) (fokine2013themoleculararchitecture pages 1-2).</li>
+<li>Leiman et al. note that without fibritin, long tail fibers attach “very slowly,” consistent with a facilitating role in assembly/attachment. (Dec 2010; https://doi.org/10.1186/1743-422x-7-355) (leiman2010morphogenesisofthe pages 21-22).</li>
+</ul>
+<p><strong>Mechanistic interpretation.</strong> Structural descriptions indicate that fibritin interacts with LTF regions (e.g., the LTF “knee” region and/or distal domains) and that both termini of fibritin can attach to LTFs, consistent with a tethering/positioning function rather than an enzymatic role. (leiman2010morphogenesisofthe pages 21-22, letarov2005gpwacofthe pages 2-3).</p>
+<h4 id="22-infectivity-control-environmental-sensing-and-tail-fiber-retraction">2.2 Infectivity control: environmental sensing and tail fiber retraction</h4>
+<p>Beyond assembly, Wac/fibritin is described as a control element for adsorption competence.</p>
+<ul>
+<li>Letarov et al. describe gpwac acting post-lysis as an <strong>environmental sensing device</strong> that holds long tail fibers <strong>retracted</strong> to prevent adsorption under unfavorable conditions. (Feb 2005; https://doi.org/10.1128/jb.187.3.1055-1066.2005) (letarov2005gpwacofthe pages 1-2).</li>
+<li>Fokine et al. similarly note that collar/whiskers assist assembly and “control tail-fiber retraction under conditions unfavorable for infection,” describing LTF interactions with whiskers/collar in the retracted conformation. (May 2013; https://doi.org/10.1016/j.jmb.2013.02.012) (fokine2013themoleculararchitecture pages 5-7).</li>
+</ul>
+<p><strong>Genetic phenotype consistent with fitness impact.</strong> In situ infection-structural work reports that <strong>wac is nonessential</strong>, but <strong>wac mutants form small plaques</strong>, supporting the view that Wac improves infection efficiency/fitness rather than being absolutely required. (Aug 2015; https://doi.org/10.1073/pnas.1501064112) (hu2015structuralremodelingof pages 1-3).</p>
+<h3 id="3-localization-and-virion-architecture">3) Localization and virion architecture</h3>
+<h4 id="31-where-wacfibritin-is-located">3.1 Where Wac/fibritin is located</h4>
+<p>Wac/fibritin forms the <strong>collar and whiskers</strong> at the <strong>neck</strong> (below the head–tail junction). (efimov2005bacteriophaget4as pages 1-3, fokine2013themoleculararchitecture pages 1-2, hu2015structuralremodelingof pages 1-3). Visual evidence from cryo-EM reconstructions and schematic models depicts the collar and whiskers surrounding the neck and labels the “wac” elements as the collar/whisker structures. (fokine2013themoleculararchitecture media 5e121c0c, fokine2013themoleculararchitecture media dee2b4cd).</p>
+<h4 id="32-copy-number-and-oligomerization-state">3.2 Copy number and oligomerization state</h4>
+<p>Two related “copy number” quantities are used in the literature:</p>
+<ul>
+<li><strong>Trimeric oligomerization:</strong> individual fibritin molecules are <strong>trimers</strong> (a key structural property). (leiman2010morphogenesisofthe pages 21-22, letarov2005gpwacofthe pages 5-6, letarov2005gpwacofthe pages 6-7).</li>
+<li><strong>Number of fibritin trimers around the neck:</strong> cryo-EM interpretation supports <strong>12 fibritin molecules</strong> at the neck arranged as <strong>two groups of six</strong>, corresponding to collar and whisker components (six forming the collar disk and six forming whiskers extending downward). (fokine2013themoleculararchitecture pages 5-7, fokine2013themoleculararchitecture pages 1-2, hu2015structuralremodelingof pages 1-3).</li>
+</ul>
+<p>(These are not contradictory: each “fibritin molecule” in this context is a <strong>trimer</strong>.) (leiman2010morphogenesisofthe pages 21-22, fokine2013themoleculararchitecture pages 5-7).</p>
+<h3 id="4-structural-organization-and-domains">4) Structural organization and domains</h3>
+<h4 id="41-domain-architecture">4.1 Domain architecture</h4>
+<p>Wac/fibritin is described as a <strong>segmented coiled-coil fiber</strong> with small globular ends.</p>
+<ul>
+<li>Letarov et al. describe T4 gpwac as a ~486 aa polypeptide that trimerizes into an elongated coiled-coil fiber flanked by N- and C-terminal globular domains; a conserved N-terminal region binds the phage neck and a C-terminal “foldon” is required to initiate trimerization and correct folding. (Feb 2005; https://doi.org/10.1128/jb.187.3.1055-1066.2005) (letarov2005gpwacofthe pages 1-2, letarov2005gpwacofthe pages 5-6).</li>
+<li>Efimov et al. describe fibritin as a <strong>parallel triple-stranded α-helical coiled-coil</strong>, binding the neck via the N-terminal domain, with the C-terminal domain exposed outward. (Jun 2005; https://doi.org/10.1007/bf01702598) (efimov2005bacteriophaget4as pages 1-3).</li>
+</ul>
+<h4 id="42-structural-biology-resources-and-resolution-statistics">4.2 Structural biology resources and resolution (statistics)</h4>
+<p>Fokine et al. model fibritin by combining crystal structures of the <strong>N-terminal residues 1–80</strong> and <strong>C-terminal residues 371–483</strong> with a central coiled-coil model, and fit these into cryo-EM density; they report a deposited model (PDB <strong>3J2O</strong>) and map (EMD-<strong>5528</strong>) and estimate a final cryo-EM reconstruction resolution of ~<strong>25 Å</strong> (FSC 0.5). (May 2013; https://doi.org/10.1016/j.jmb.2013.02.012) (fokine2013themoleculararchitecture pages 10-11).</p>
+<h3 id="5-quantitative-parameters-from-recent-and-foundational-studies">5) Quantitative parameters from recent and foundational studies</h3>
+<ul>
+<li><strong>Neck collar dimensions:</strong> a collar around the neck is described as ~<strong>300 Å</strong> diameter and ~<strong>40 Å</strong> thick, consisting at least in part of fibritin. (Dec 2010; https://doi.org/10.1186/1743-422x-7-355) (leiman2010morphogenesisofthe pages 21-22).</li>
+<li><strong>Fibritin length:</strong> fibritin is described as a segmented coiled-coil fiber ~<strong>530 Å</strong> long (~<strong>53 nm</strong>) and ~<strong>20 Å</strong> in diameter. (Dec 2010; https://doi.org/10.1186/1743-422x-7-355) (leiman2010morphogenesisofthe pages 21-22). Letarov et al. also report a length on the order of ~<strong>480 Å</strong>. (Feb 2005; https://doi.org/10.1128/jb.187.3.1055-1066.2005) (letarov2005gpwacofthe pages 1-2).</li>
+<li><strong>2024 update (super-resolution implementation):</strong> a 2024 Exchange 3D DNA-PAINT study describes fibritin as a homotrimeric coiled-coil forming <strong>six 53 nm-long fibers (“whiskers”)</strong> extending from the neck and provides imaging performance metrics (e.g., ~<strong>3 nm</strong> FRC effective resolution; ~<strong>7 nm</strong> linkage error) relevant to measurement precision in that implementation. (Apr 2024; https://doi.org/10.1101/2024.04.04.588072) (gallea2024superresolutiongoingviral pages 7-10).</li>
+</ul>
+<h3 id="6-recent-developments-prioritizing-20232024">6) Recent developments (prioritizing 2023–2024)</h3>
+<p>Peer-reviewed 2023–2024 primary literature directly focused on T4 Wac/fibritin structure/function appears limited in the retrieved corpus; however, a notable <strong>2024</strong> preprint leverages fibritin as a spatial landmark in high-precision imaging.</p>
+<p><strong>T4 particles as 3D bio-nanorulers (2024).</strong> Gallea et al. propose bacteriophage T4 as a “nature-designed” 3D ruler for super-resolution microscopy and explicitly label fibritin using anti-fibritin antibodies in dual-color Exchange DNA-PAINT workflows, reporting whisker length and imaging accuracy metrics. While not primarily a mechanistic virology study, it represents a modern real-world deployment of the wac gene product as a defined structural feature for quantitative microscopy and method benchmarking. (Apr 2024; https://doi.org/10.1101/2024.04.04.588072) (gallea2024superresolutiongoingviral pages 7-10, gallea2024superresolutiongoingviral pages 10-14).</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-t4-surface-display-via-fibritin-wac-engineering">7.1 T4 surface display via fibritin (wac) engineering</h4>
+<p>Fibritin’s outward-exposed C-terminus and tolerance for C-terminal extensions make it an engineering scaffold.</p>
+<ul>
+<li>Efimov et al. report producing hybrid T4 particles by <strong>lengthening fibritin at its C-terminus</strong> and inserting a <strong>53-residue polypeptide</strong> (45 residues from HBV pre-S2) into fibritin; modified wac was transferred into the T4 genome and the lengthened fibritin incorporated into phage particles. (Jun 2005; https://doi.org/10.1007/bf01702598) (efimov2005bacteriophaget4as pages 1-3).</li>
+<li>A later review of T4 display platforms reiterates that engineered (lengthened) fibritin can be introduced into the genome and assembled onto particles, highlighting this as a practical display route. (May 2014; https://doi.org/10.1007/s00203-014-0989-8) (gamkrelidze2014t4bacteriophageas pages 2-4).</li>
+</ul>
+<h4 id="72-viral-vector-engineering-adenovirus-fiber-replacement-using-t4-fibritin">7.2 Viral vector engineering: adenovirus fiber replacement using T4 fibritin</h4>
+<p>T4 fibritin has been used as a heterologous trimeric scaffold to retarget adenovirus vectors.</p>
+<ul>
+<li>Krasnykh et al. engineered Ad5 vectors by replacing the fiber with a chimeric construct leveraging structural similarity between Ad5 fiber and T4 fibritin; the resulting vector enabled receptor-specific gene delivery. (May 2001; https://doi.org/10.1128/jvi.75.9.4176-4183.2001) (krasnykh2001genetictargetingof pages 1-2).</li>
+</ul>
+<h4 id="73-foldon-fibritin-c-terminal-trimerization-domain-as-a-ubiquitous-trimerization-tag">7.3 Foldon (fibritin C-terminal trimerization domain) as a ubiquitous trimerization tag</h4>
+<p>The <strong>foldon</strong> domain (a short C-terminal trimerization motif from fibritin) is widely repurposed in protein engineering and structural biology to enforce stable trimer formation.</p>
+<ul>
+<li>Papanikolopoulou et al. show that replacing an adenovirus fiber head with the T4 fibritin foldon yields <strong>highly stable, SDS-resistant trimers</strong>, and conclude that foldon can replace the fiber head in ensuring correct trimerization. (Mar 2004; https://doi.org/10.1074/jbc.m311791200) (papanikolopoulou2004formationofhighly pages 1-1).</li>
+<li>Additional structural/engineering-focused work describes foldon-fusion strategies for solving structures of fibrous proteins and for creating hybrid nanorod-like assemblies, emphasizing foldon as a versatile trimerization module in biomaterials contexts. (Sep 2004; https://doi.org/10.1016/j.jmb.2004.07.008) (papanikolopoulou2004adenovirusfibreshaft pages 8-9) and (Jan 2008; https://doi.org/10.1007/978-1-59745-480-3_2) (papanikolopoulou2008creationofhybrid pages 13-16).</li>
+</ul>
+<h3 id="8-expert-synthesis-and-authoritative-interpretation">8) Expert synthesis and authoritative interpretation</h3>
+<p>Across genetic, biochemical, and structural literature, Wac/fibritin is best annotated as a <strong>neck-associated, trimeric coiled-coil structural accessory protein</strong> whose mechanistic contributions are (i) <strong>tail fiber handling</strong> during assembly and (ii) <strong>regulation of tail fiber presentation</strong> (retraction/availability) that impacts adsorption competence. The repeated emphasis on binding/positioning of long tail fibers and environmental control of fiber retraction supports a functional annotation centered on <strong>virion morphogenesis and infectivity modulation</strong>, rather than catalysis or transport. (letarov2005gpwacofthe pages 1-2, fokine2013themoleculararchitecture pages 5-7, hu2015structuralremodelingof pages 1-3).</p>
+<h3 id="summary-table-of-key-evidence">Summary table of key evidence</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key claim/data</th>
+<th>Evidence type</th>
+<th>Source (first author, year, journal)</th>
+<th>Publication date/month</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>In bacteriophage T4, late gene <strong>wac</strong> encodes <strong>fibritin</strong> (also called <strong>gpwac/Wac</strong>); the name is linked to <strong>“whisker antigen control”</strong> and the protein builds the collar/whiskers complex on the phage neck. (letarov2005gpwacofthe pages 1-2, efimov2005bacteriophaget4as pages 1-3, hu2015structuralremodelingof pages 1-3)</td>
+<td>Genetic, structural, review</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Efimov 2005, <em>Virus Genes</em>; Hu 2015, <em>PNAS</em></td>
+<td>Feb 2005; Jun 2005; Aug 2015</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1007/bf01702598 ; https://doi.org/10.1073/pnas.1501064112</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Fibritin/Wac localizes to the <strong>virion neck</strong>, forming the <strong>collar and whiskers</strong> just below the head-tail junction. (letarov2005gpwacofthe pages 1-2, fokine2013themoleculararchitecture pages 1-2, hu2015structuralremodelingof pages 1-3)</td>
+<td>Cryo-EM, structural analysis</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Fokine 2013, <em>Journal of Molecular Biology</em>; Hu 2015, <em>PNAS</em></td>
+<td>Feb 2005; May 2013; Aug 2015</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1016/j.jmb.2013.02.012 ; https://doi.org/10.1073/pnas.1501064112</td>
+</tr>
+<tr>
+<td>Copy number</td>
+<td>Cryo-EM and structural interpretation indicate <strong>12 Wac/fibritin molecules per virion</strong>, arranged as <strong>6 forming the collar</strong> and <strong>6 forming the whiskers</strong>. (fokine2013themoleculararchitecture pages 5-7, fokine2013themoleculararchitecture pages 1-2, hu2015structuralremodelingof pages 1-3)</td>
+<td>Cryo-EM, structural modeling</td>
+<td>Fokine 2013, <em>Journal of Molecular Biology</em>; Hu 2015, <em>PNAS</em></td>
+<td>May 2013; Aug 2015</td>
+<td>https://doi.org/10.1016/j.jmb.2013.02.012 ; https://doi.org/10.1073/pnas.1501064112</td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>Individual fibritin molecules are <strong>trimers</strong>; the protein is a trimeric elongated fiber and can be SDS-resistant in oligomeric form. (leiman2010morphogenesisofthe pages 21-22, letarov2005gpwacofthe pages 5-6, letarov2005gpwacofthe pages 6-7)</td>
+<td>Biochemical, structural</td>
+<td>Leiman 2010, <em>Virology Journal</em>; Letarov 2005, <em>Journal of Bacteriology</em></td>
+<td>Dec 2010; Feb 2005</td>
+<td>https://doi.org/10.1186/1743-422x-7-355 ; https://doi.org/10.1128/jb.187.3.1055-1066.2005</td>
+</tr>
+<tr>
+<td>Structure/domains</td>
+<td>T4 fibritin is a <strong>~486–487 aa</strong> segmented fibrous protein with a conserved <strong>N-terminal neck-binding domain (~50 aa / residues 1–80 modeled)</strong>, a long <strong>central coiled-coil shaft</strong>, and a <strong>C-terminal foldon (~30 aa)</strong> that initiates trimerization and correct folding. (letarov2005gpwacofthe pages 1-2, fokine2013themoleculararchitecture pages 10-11, letarov2005gpwacofthe pages 3-5, letarov2005gpwacofthe pages 5-6, efimov2005bacteriophaget4as pages 1-3)</td>
+<td>X-ray/cryo-EM modeling, biochemical</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Fokine 2013, <em>Journal of Molecular Biology</em>; Efimov 2005, <em>Virus Genes</em></td>
+<td>Feb 2005; May 2013; Jun 2005</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1016/j.jmb.2013.02.012 ; https://doi.org/10.1007/bf01702598</td>
+</tr>
+<tr>
+<td>Quantitative dimensions</td>
+<td>Reported dimensions include fibritin length of <strong>~480 Å</strong> or <strong>~530 Å / 53 nm</strong>, diameter <strong>~20 Å</strong>, and a neck collar of <strong>~300 Å diameter</strong> and <strong>~40 Å thickness</strong>. (letarov2005gpwacofthe pages 1-2, leiman2010morphogenesisofthe pages 21-22, gallea2024superresolutiongoingviral pages 7-10)</td>
+<td>Cryo-EM, structural review, super-resolution implementation</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Leiman 2010, <em>Virology Journal</em>; Gallea 2024, <em>bioRxiv</em></td>
+<td>Feb 2005; Dec 2010; Apr 2024</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1186/1743-422x-7-355 ; https://doi.org/10.1101/2024.04.04.588072</td>
+</tr>
+<tr>
+<td>Assembly role</td>
+<td>During morphogenesis, fibritin/Wac acts as a <strong>chaperone/scaffold for long tail fiber (LTF) attachment</strong>, helping position assembled LTFs for joining to the baseplate; without fibritin, LTF attachment is very slow. (letarov2005gpwacofthe pages 1-2, leiman2010morphogenesisofthe pages 21-22, fokine2013themoleculararchitecture pages 1-2)</td>
+<td>Genetic, structural, morphogenesis studies</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Leiman 2010, <em>Virology Journal</em>; Fokine 2013, <em>Journal of Molecular Biology</em></td>
+<td>Feb 2005; Dec 2010; May 2013</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1186/1743-422x-7-355 ; https://doi.org/10.1016/j.jmb.2013.02.012</td>
+</tr>
+<tr>
+<td>Infectivity role</td>
+<td>Post-lysis, Wac/fibritin acts as an <strong>environmental sensor</strong> that helps keep long tail fibers <strong>retracted under unfavorable conditions</strong>, thereby modulating adsorption and infectivity. (letarov2005gpwacofthe pages 1-2, fokine2013themoleculararchitecture pages 5-7)</td>
+<td>Genetic, functional interpretation</td>
+<td>Letarov 2005, <em>Journal of Bacteriology</em>; Fokine 2013, <em>Journal of Molecular Biology</em></td>
+<td>Feb 2005; May 2013</td>
+<td>https://doi.org/10.1128/jb.187.3.1055-1066.2005 ; https://doi.org/10.1016/j.jmb.2013.02.012</td>
+</tr>
+<tr>
+<td>Mutant phenotype</td>
+<td><strong>wac is nonessential</strong> for T4 viability, but <strong>wac mutants form small plaques</strong> and display defective/short-stub long tail fiber presentation in structural analyses. (hu2015structuralremodelingof pages 1-3)</td>
+<td>Genetic, cryo-EM</td>
+<td>Hu 2015, <em>PNAS</em></td>
+<td>Aug 2015</td>
+<td>https://doi.org/10.1073/pnas.1501064112</td>
+</tr>
+<tr>
+<td>Cryo-EM / structural resources</td>
+<td>Fokine et al. fitted fibritin models built from <strong>N-terminal residues 1–80</strong> and <strong>C-terminal residues 371–483</strong> plus modeled coiled-coil into T4 neck density; reported resources include <strong>PDB 3J2O</strong> and <strong>EMD-5528</strong>, with final cryo-EM reconstruction at <strong>~25 Å</strong>. (fokine2013themoleculararchitecture pages 10-11)</td>
+<td>Cryo-EM, model fitting</td>
+<td>Fokine 2013, <em>Journal of Molecular Biology</em></td>
+<td>May 2013</td>
+<td>https://doi.org/10.1016/j.jmb.2013.02.012</td>
+</tr>
+<tr>
+<td>Application: T4 display</td>
+<td>The outward-exposed C terminus of fibritin can be <strong>lengthened/fused to foreign peptides</strong> without abolishing folding or neck binding; engineered T4 particles displayed a <strong>53-residue insert</strong> including <strong>45 aa from HBV pre-S2</strong>. (efimov2005bacteriophaget4as pages 1-3, gamkrelidze2014t4bacteriophageas pages 2-4)</td>
+<td>Engineering, phage display</td>
+<td>Efimov 2005, <em>Virus Genes</em>; Gamkrelidze 2014, <em>Archives of Microbiology</em></td>
+<td>Jun 2005; May 2014</td>
+<td>https://doi.org/10.1007/bf01702598 ; https://doi.org/10.1007/s00203-014-0989-8</td>
+</tr>
+<tr>
+<td>Application: super-resolution bionanoruler</td>
+<td>A 2024 preprint used <strong>anti-fibritin/Wac labeling</strong> in <strong>Exchange 3D DNA-PAINT</strong> to image T4 as a <strong>3D bio-nanoruler</strong>, resolving the expected fibrous collar morphology and reporting <strong>six 53 nm whiskers</strong>; instrumentation metrics included <strong>~3 nm FRC effective resolution</strong> and <strong>~7 nm linkage error</strong>. (gallea2024superresolutiongoingviral pages 7-10, gallea2024superresolutiongoingviral pages 10-14, gallea2024superresolutiongoingviral pages 14-16)</td>
+<td>Super-resolution imaging, engineering</td>
+<td>Gallea 2024, <em>bioRxiv</em></td>
+<td>Apr 2024</td>
+<td>https://doi.org/10.1101/2024.04.04.588072</td>
+</tr>
+<tr>
+<td>Application: adenovirus targeting</td>
+<td>T4 fibritin was used to engineer <strong>adenovirus vectors</strong> by replacing the native fiber with a <strong>fiber-fibritin chimera</strong>, enabling <strong>receptor-specific gene delivery</strong>. (krasnykh2001genetictargetingof pages 1-2)</td>
+<td>Viral engineering, gene delivery</td>
+<td>Krasnykh 2001, <em>Journal of Virology</em></td>
+<td>May 2001</td>
+<td>https://doi.org/10.1128/jvi.75.9.4176-4183.2001</td>
+</tr>
+<tr>
+<td>Application: foldon as trimerization tag</td>
+<td>The fibritin <strong>foldon</strong> is an autonomously folding trimerization domain that has been widely repurposed as a <strong>trimerization/registration tag</strong> for chimeric fibrous proteins, producing <strong>highly stable SDS-resistant trimers</strong> and aiding structural biology and nanostructure engineering. (papanikolopoulou2008creationofhybrid pages 13-16, papanikolopoulou2004adenovirusfibreshaft pages 8-9, papanikolopoulou2004formationofhighly pages 1-1, boudko2002domainorganizationfolding pages 8-9)</td>
+<td>Protein engineering, structural biology</td>
+<td>Papanikolopoulou 2004, <em>J Mol Biol</em>; Papanikolopoulou 2004, <em>JBC</em>; Papanikolopoulou 2008, <em>Methods Mol Biol</em>; Boudko 2002, <em>Eur J Biochem</em></td>
+<td>Sep 2004; Mar 2004; Jan 2008; Feb 2002</td>
+<td>https://doi.org/10.1016/j.jmb.2004.07.008 ; https://doi.org/10.1074/jbc.m311791200 ; https://doi.org/10.1007/978-1-59745-480-3_2 ; https://doi.org/10.1046/j.1432-1033.2002.02734.x</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation, structural biology, and applied engineering evidence for bacteriophage T4 gene wac/fibritin. It highlights identity verification, virion localization, quantitative structural parameters, and validated applications supported by the gathered sources.</em></p>
+<h3 id="notes-on-scope-and-limitations">Notes on scope and limitations</h3>
+<ul>
+<li>The most detailed mechanistic and structural evidence for wac/fibritin comes from 2005–2015 peer-reviewed studies; within the retrieved set, 2023–2024 literature is primarily methodological/application-focused (super-resolution imaging) rather than new mechanistic virology, though it provides updated quantitative measurements in a modern context. (gallea2024superresolutiongoingviral pages 7-10, gallea2024superresolutiongoingviral pages 10-14).</li>
+<li>This report is restricted to <strong>Enterobacteria phage T4 wac/fibritin</strong> and does not generalize to unrelated genes named “wac” in other organisms.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(letarov2005gpwacofthe pages 1-2): A. Letarov, X. Manival, C. Desplats, and H. M. Krisch. Gpwac of the t4-type bacteriophages: structure, function, and evolution of a segmented coiled-coil protein that controls viral infectivity. Journal of Bacteriology, 187:1055-1066, Feb 2005. URL: https://doi.org/10.1128/jb.187.3.1055-1066.2005, doi:10.1128/jb.187.3.1055-1066.2005. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture pages 1-2): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2015structuralremodelingof pages 1-3): Bo Hu, William Margolin, Ian J. Molineux, and Jun Liu. Structural remodeling of bacteriophage t4 and host membranes during infection initiation. Proceedings of the National Academy of Sciences, 112:E4919-E4928, Aug 2015. URL: https://doi.org/10.1073/pnas.1501064112, doi:10.1073/pnas.1501064112. This article has 317 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(efimov2005bacteriophaget4as pages 1-3): Vladimir P. Efimov, Igor V. Nepluev, and Vadim V. Mesyanzhinov. Bacteriophage t4 as a surface display vector. Virus Genes, 10:173-177, Jun 2005. URL: https://doi.org/10.1007/bf01702598, doi:10.1007/bf01702598. This article has 131 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2010morphogenesisofthe pages 21-22): Petr G Leiman, Fumio Arisaka, Mark J van Raaij, Victor A Kostyuchenko, Anastasia A Aksyuk, Shuji Kanamaru, and Michael G Rossmann. Morphogenesis of the t4 tail and tail fibers. Virology Journal, 7:355-355, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-355, doi:10.1186/1743-422x-7-355. This article has 319 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(letarov2005gpwacofthe pages 2-3): A. Letarov, X. Manival, C. Desplats, and H. M. Krisch. Gpwac of the t4-type bacteriophages: structure, function, and evolution of a segmented coiled-coil protein that controls viral infectivity. Journal of Bacteriology, 187:1055-1066, Feb 2005. URL: https://doi.org/10.1128/jb.187.3.1055-1066.2005, doi:10.1128/jb.187.3.1055-1066.2005. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture pages 5-7): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture media 5e121c0c): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture media dee2b4cd): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(letarov2005gpwacofthe pages 5-6): A. Letarov, X. Manival, C. Desplats, and H. M. Krisch. Gpwac of the t4-type bacteriophages: structure, function, and evolution of a segmented coiled-coil protein that controls viral infectivity. Journal of Bacteriology, 187:1055-1066, Feb 2005. URL: https://doi.org/10.1128/jb.187.3.1055-1066.2005, doi:10.1128/jb.187.3.1055-1066.2005. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(letarov2005gpwacofthe pages 6-7): A. Letarov, X. Manival, C. Desplats, and H. M. Krisch. Gpwac of the t4-type bacteriophages: structure, function, and evolution of a segmented coiled-coil protein that controls viral infectivity. Journal of Bacteriology, 187:1055-1066, Feb 2005. URL: https://doi.org/10.1128/jb.187.3.1055-1066.2005, doi:10.1128/jb.187.3.1055-1066.2005. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fokine2013themoleculararchitecture pages 10-11): Andrei Fokine, Zhihong Zhang, Shuji Kanamaru, Valorie D. Bowman, Anastasia A. Aksyuk, Fumio Arisaka, Venigalla B. Rao, and Michael G. Rossmann. The molecular architecture of the bacteriophage t4 neck. Journal of molecular biology, 425 10:1731-44, May 2013. URL: https://doi.org/10.1016/j.jmb.2013.02.012, doi:10.1016/j.jmb.2013.02.012. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gallea2024superresolutiongoingviral pages 7-10): José Ignacio Gallea, Oleksii Nevskyi, Zuzanna Kaźmierczak, Tao Chen, Paulina Miernikiewicz, Anna Chizhik, Krystyna Dąbrowska, Mark Bates, and Jörg Enderlein. Super-resolution going viral: t4 virus particles as perfect nature-designed 3d-bio-nanorulers. bioRxiv, Apr 2024. URL: https://doi.org/10.1101/2024.04.04.588072, doi:10.1101/2024.04.04.588072. This article has 0 citations.</p>
+</li>
+<li>
+<p>(gallea2024superresolutiongoingviral pages 10-14): José Ignacio Gallea, Oleksii Nevskyi, Zuzanna Kaźmierczak, Tao Chen, Paulina Miernikiewicz, Anna Chizhik, Krystyna Dąbrowska, Mark Bates, and Jörg Enderlein. Super-resolution going viral: t4 virus particles as perfect nature-designed 3d-bio-nanorulers. bioRxiv, Apr 2024. URL: https://doi.org/10.1101/2024.04.04.588072, doi:10.1101/2024.04.04.588072. This article has 0 citations.</p>
+</li>
+<li>
+<p>(gamkrelidze2014t4bacteriophageas pages 2-4): Mariam Gamkrelidze and Krystyna Dąbrowska. T4 bacteriophage as a phage display platform. Archives of Microbiology, 196:473-479, May 2014. URL: https://doi.org/10.1007/s00203-014-0989-8, doi:10.1007/s00203-014-0989-8. This article has 77 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(krasnykh2001genetictargetingof pages 1-2): Victor Krasnykh, Natalya Belousova, Nikolay Korokhov, Galina Mikheeva, and David T. Curiel. Genetic targeting of an adenovirus vector via replacement of the fiber protein with the phage t4 fibritin. Journal of Virology, 75:4176-4183, May 2001. URL: https://doi.org/10.1128/jvi.75.9.4176-4183.2001, doi:10.1128/jvi.75.9.4176-4183.2001. This article has 243 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(papanikolopoulou2004formationofhighly pages 1-1): Katerina Papanikolopoulou, Vincent Forge, Pierrette Goeltz, and Anna Mitraki. Formation of highly stable chimeric trimers by fusion of an adenovirus fiber shaft fragment with the foldon domain of bacteriophage t4 fibritin*. Journal of Biological Chemistry, 279:8991-8998, Mar 2004. URL: https://doi.org/10.1074/jbc.m311791200, doi:10.1074/jbc.m311791200. This article has 91 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(papanikolopoulou2004adenovirusfibreshaft pages 8-9): Katerina Papanikolopoulou, Susana Teixeira, Hassan Belrhali, V. Trevor Forsyth, Anna Mitraki, and Mark J. van Raaij. Adenovirus fibre shaft sequences fold into the native triple beta-spiral fold when n-terminally fused to the bacteriophage t4 fibritin foldon trimerisation motif. Journal of molecular biology, 342 1:219-27, Sep 2004. URL: https://doi.org/10.1016/j.jmb.2004.07.008, doi:10.1016/j.jmb.2004.07.008. This article has 52 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(papanikolopoulou2008creationofhybrid pages 13-16): Katerina Papanikolopoulou, Mark J. Raaij, and Anna Mitraki. Creation of hybrid nanorods from sequences of natural trimeric fibrous proteins using the fibritin trimerization motif. Methods in molecular biology, 474:15-33, Jan 2008. URL: https://doi.org/10.1007/978-1-59745-480-3_2, doi:10.1007/978-1-59745-480-3_2. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(letarov2005gpwacofthe pages 3-5): A. Letarov, X. Manival, C. Desplats, and H. M. Krisch. Gpwac of the t4-type bacteriophages: structure, function, and evolution of a segmented coiled-coil protein that controls viral infectivity. Journal of Bacteriology, 187:1055-1066, Feb 2005. URL: https://doi.org/10.1128/jb.187.3.1055-1066.2005, doi:10.1128/jb.187.3.1055-1066.2005. This article has 39 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gallea2024superresolutiongoingviral pages 14-16): José Ignacio Gallea, Oleksii Nevskyi, Zuzanna Kaźmierczak, Tao Chen, Paulina Miernikiewicz, Anna Chizhik, Krystyna Dąbrowska, Mark Bates, and Jörg Enderlein. Super-resolution going viral: t4 virus particles as perfect nature-designed 3d-bio-nanorulers. bioRxiv, Apr 2024. URL: https://doi.org/10.1101/2024.04.04.588072, doi:10.1101/2024.04.04.588072. This article has 0 citations.</p>
+</li>
+<li>
+<p>(boudko2002domainorganizationfolding pages 8-9): Sergei P. Boudko, Yuri Y. Londer, Andrei V. Letarov, Natalia V. Sernova, Juergen Engel, and Vadim V. Mesyanzhinov. Domain organization, folding and stability of bacteriophage t4 fibritin, a segmented coiled-coil protein. European journal of biochemistry, 269 3:833-41, Feb 2002. URL: https://doi.org/10.1046/j.1432-1033.2002.02734.x, doi:10.1046/j.1432-1033.2002.02734.x. This article has 58 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="wac-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000027 The document contains two figures showing the T4 collar and whiskers (fibritin/gpwac) around the neck with relevant labels. The fir" src="wac-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>letarov2005gpwacofthe pages 1-2</li>
+<li>fokine2013themoleculararchitecture pages 1-2</li>
+<li>leiman2010morphogenesisofthe pages 21-22</li>
+<li>fokine2013themoleculararchitecture pages 5-7</li>
+<li>hu2015structuralremodelingof pages 1-3</li>
+<li>fokine2013themoleculararchitecture pages 10-11</li>
+<li>gallea2024superresolutiongoingviral pages 7-10</li>
+<li>krasnykh2001genetictargetingof pages 1-2</li>
+<li>papanikolopoulou2004formationofhighly pages 1-1</li>
+<li>papanikolopoulou2004adenovirusfibreshaft pages 8-9</li>
+<li>papanikolopoulou2008creationofhybrid pages 13-16</li>
+<li>letarov2005gpwacofthe pages 2-3</li>
+<li>letarov2005gpwacofthe pages 5-6</li>
+<li>letarov2005gpwacofthe pages 6-7</li>
+<li>gallea2024superresolutiongoingviral pages 10-14</li>
+<li>letarov2005gpwacofthe pages 3-5</li>
+<li>gallea2024superresolutiongoingviral pages 14-16</li>
+<li>boudko2002domainorganizationfolding pages 8-9</li>
+<li>https://doi.org/10.1007/bf01702598</li>
+<li>https://doi.org/10.1128/jb.187.3.1055-1066.2005</li>
+<li>https://doi.org/10.1016/j.jmb.2013.02.012</li>
+<li>https://doi.org/10.1186/1743-422x-7-355</li>
+<li>https://doi.org/10.1073/pnas.1501064112</li>
+<li>https://doi.org/10.1101/2024.04.04.588072</li>
+<li>https://doi.org/10.1007/s00203-014-0989-8</li>
+<li>https://doi.org/10.1128/jvi.75.9.4176-4183.2001</li>
+<li>https://doi.org/10.1074/jbc.m311791200</li>
+<li>https://doi.org/10.1016/j.jmb.2004.07.008</li>
+<li>https://doi.org/10.1007/978-1-59745-480-3_2</li>
+<li>https://doi.org/10.1046/j.1432-1033.2002.02734.x</li>
+<li>https://doi.org/10.1128/jb.187.3.1055-1066.2005,</li>
+<li>https://doi.org/10.1016/j.jmb.2013.02.012,</li>
+<li>https://doi.org/10.1073/pnas.1501064112,</li>
+<li>https://doi.org/10.1007/bf01702598,</li>
+<li>https://doi.org/10.1186/1743-422x-7-355,</li>
+<li>https://doi.org/10.1101/2024.04.04.588072,</li>
+<li>https://doi.org/10.1007/s00203-014-0989-8,</li>
+<li>https://doi.org/10.1128/jvi.75.9.4176-4183.2001,</li>
+<li>https://doi.org/10.1074/jbc.m311791200,</li>
+<li>https://doi.org/10.1016/j.jmb.2004.07.008,</li>
+<li>https://doi.org/10.1007/978-1-59745-480-3_2,</li>
+<li>https://doi.org/10.1046/j.1432-1033.2002.02734.x,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P10104
+gene_symbol: P10104
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P10104&#39;
+existing_annotations: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
