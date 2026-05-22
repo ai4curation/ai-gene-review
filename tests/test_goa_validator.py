@@ -584,6 +584,122 @@ UniProtKB	Q12345	TEST		GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		N
         yaml_path.unlink()
 
 
+def test_seed_missing_annotations_preserves_qualifiers():
+    """Test that seeded annotations preserve GOA qualifier values."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	involved_in	GO:0005678	test process	BP	ECO:0000250	ISS	PMID:67890		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	is_active_in	GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88888		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test gene",
+        "existing_annotations": [],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        added_count, _, _ = validator.seed_missing_annotations(yaml_path, goa_path)
+
+        assert added_count == 4
+
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        qualifiers_by_go_id = {
+            ann["term"]["id"]: ann.get("qualifier")
+            for ann in updated_data["existing_annotations"]
+        }
+        assert qualifiers_by_go_id == {
+            "GO:0001234": "enables",
+            "GO:0005678": "involved_in",
+            "GO:0009999": "is_active_in",
+            "GO:0008888": "part_of",
+        }
+    finally:
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
+def test_backfill_qualifiers_preserves_all_goa_qualifiers():
+    """Test backfilling qualifiers beyond contributes_to."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	acts_upstream_of_or_within	GO:0005678	test process	BP	ECO:0000250	ISS	PMID:67890		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88888		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test gene",
+        "existing_annotations": [
+            {
+                "term": {"id": "GO:0001234", "label": "test function"},
+                "evidence_type": "IPI",
+                "original_reference_id": "PMID:12345",
+            },
+            {
+                "term": {"id": "GO:0005678", "label": "test process"},
+                "evidence_type": "ISS",
+                "original_reference_id": "PMID:67890",
+            },
+            {
+                "term": {"id": "GO:0008888", "label": "test complex"},
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:88888",
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        updated_count, _ = validator.backfill_qualifiers(yaml_path, goa_path)
+
+        assert updated_count == 3
+
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        qualifiers_by_go_id = {
+            ann["term"]["id"]: ann.get("qualifier")
+            for ann in updated_data["existing_annotations"]
+        }
+        assert qualifiers_by_go_id == {
+            "GO:0001234": "enables",
+            "GO:0005678": "acts_upstream_of_or_within",
+            "GO:0008888": "part_of",
+        }
+    finally:
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
 def test_new_action_validation():
     """Test validation of annotations with action=NEW."""
     validator = GOAValidator()

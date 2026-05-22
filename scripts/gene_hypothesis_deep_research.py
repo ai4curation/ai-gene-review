@@ -579,6 +579,75 @@ def candidate_records(genes_root: Path, organism: str, gene: str) -> list[GeneHy
     )
 
 
+def core_function_records(
+    records: Sequence[GeneHypothesisRecord],
+) -> list[GeneHypothesisRecord]:
+    return [record for record in records if record.focus_type == "core_function"]
+
+
+def reference_ids_from_context(reference_context: str) -> list[str]:
+    refs: list[str] = []
+    for line in reference_context.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- "):
+            continue
+        ref = stripped[2:].strip()
+        if ref and ref not in refs:
+            refs.append(ref)
+    return refs
+
+
+def combined_core_function_record(
+    records: Sequence[GeneHypothesisRecord],
+    *,
+    slug: str = "combined-core-functions",
+) -> GeneHypothesisRecord:
+    core_records = core_function_records(records)
+    if not core_records:
+        raise ValueError("No core_functions records found for this gene.")
+
+    first = core_records[0]
+    hypothesis_lines = [
+        (
+            f"The current core-function model for {first.gene_symbol} should be evaluated "
+            "as a coherent curation model. Determine which activities/processes are primary "
+            "core functions, which are downstream or non-core, and whether the model should "
+            "be split, merged, or refined."
+        ),
+        "",
+        "Current core-function hypotheses:",
+    ]
+    term_context_lines = ["Current core-function records:"]
+    reference_ids: list[str] = []
+    source_contexts: list[Mapping[str, Any]] = []
+    source_selectors: list[str] = []
+    for index, record in enumerate(core_records, start=1):
+        hypothesis_lines.append(f"{index}. {record.hypothesis_text}")
+        term_context_lines.append(f"\n## Core function {index}: {record.source_selector}")
+        term_context_lines.append(record.term_context)
+        source_contexts.append(record.source_context)
+        source_selectors.append(record.source_selector)
+        for ref in reference_ids_from_context(record.reference_context):
+            if ref not in reference_ids:
+                reference_ids.append(ref)
+
+    return make_record(
+        organism=first.organism,
+        gene=first.gene,
+        gene_symbol=first.gene_symbol,
+        taxon_id=first.taxon_id,
+        taxon_label=first.taxon_label,
+        focus_type="core_function",
+        slug=slug,
+        hypothesis_text="\n".join(hypothesis_lines),
+        term_context="\n".join(term_context_lines),
+        reference_ids=reference_ids,
+        source_file=first.source_file,
+        source_selector=",".join(source_selectors),
+        source_context={"core_functions": source_contexts},
+    )
+
+
 def output_dir_for(
     record: GeneHypothesisRecord, genes_root: Path, organism: str, gene: str
 ) -> Path:
@@ -996,6 +1065,54 @@ def print_run_result(result: RunResult) -> None:
         print(f"detail={result.detail}")
 
 
+def run_batch(
+    records: Sequence[GeneHypothesisRecord],
+    *,
+    provider: str,
+    genes_root: Path,
+    template: Path,
+    extra_args: Sequence[str],
+    timeout_seconds: int,
+    dry_run: bool,
+    overwrite: bool,
+    stop_on_error: bool,
+) -> list[RunResult]:
+    results: list[RunResult] = []
+    for record in records:
+        result = run_record(
+            record,
+            provider=provider,
+            genes_root=genes_root,
+            template=template,
+            extra_args=extra_args,
+            timeout_seconds=timeout_seconds,
+            dry_run=dry_run,
+            overwrite=overwrite,
+        )
+        print_run_result(result)
+        results.append(result)
+        if stop_on_error and result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")):
+            break
+    return results
+
+
+def print_batch_summary(results: Sequence[RunResult]) -> None:
+    counts: dict[str, int] = {}
+    for result in results:
+        counts[result.status] = counts.get(result.status, 0) + 1
+    print("# batch_summary")
+    print(f"# records\t{len(results)}")
+    for status in sorted(counts):
+        print(f"# {status}\t{counts[status]}")
+
+
+def has_failed_result(results: Sequence[RunResult]) -> bool:
+    return any(
+        result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_"))
+        for result in results
+    )
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     if argv is None:
         argv = sys.argv[1:]
@@ -1094,6 +1211,37 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     run_parser.add_argument("--overwrite", action="store_true")
     run_parser.add_argument("--timeout-seconds", type=int, default=5400)
 
+    def add_run_options(subparser: argparse.ArgumentParser) -> None:
+        subparser.add_argument("provider", help="Deep research provider")
+        subparser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
+        subparser.add_argument("--dry-run", action="store_true")
+        subparser.add_argument("--overwrite", action="store_true")
+        subparser.add_argument("--timeout-seconds", type=int, default=5400)
+
+    all_core_parser = subparsers.add_parser(
+        "run-all-core",
+        help="Run deep research for each core_functions[*] record in one gene review.",
+    )
+    add_gene_args(all_core_parser)
+    add_run_options(all_core_parser)
+    all_core_parser.add_argument(
+        "--stop-on-error",
+        action="store_true",
+        help="Stop after the first failed core-function run.",
+    )
+
+    combined_core_parser = subparsers.add_parser(
+        "run-combined-core",
+        help="Run one synthesis query over all core_functions[*] records in one gene review.",
+    )
+    add_gene_args(combined_core_parser)
+    add_run_options(combined_core_parser)
+    combined_core_parser.add_argument(
+        "--slug",
+        default="combined-core-functions",
+        help="Output slug for the combined core-function query.",
+    )
+
     args = parser.parse_args(argv)
     args.research_args = research_args
     return args
@@ -1114,6 +1262,44 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         if args.command == "run":
             record = selected_or_direct_record(args)
+            result = run_record(
+                record,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+            )
+            print_run_result(result)
+            return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "run-all-core":
+            records = core_function_records(
+                candidate_records(args.genes_root, args.organism, args.gene)
+            )
+            if not records:
+                raise ValueError("No core_functions records found for this gene.")
+            results = run_batch(
+                records,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+                stop_on_error=args.stop_on_error,
+            )
+            print_batch_summary(results)
+            return 1 if has_failed_result(results) else 0
+
+        if args.command == "run-combined-core":
+            record = combined_core_function_record(
+                candidate_records(args.genes_root, args.organism, args.gene),
+                slug=args.slug,
+            )
             result = run_record(
                 record,
                 provider=args.provider,
