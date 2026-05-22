@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>algE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>algE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88NC8" target="_blank" class="term-link">
+                        Q88NC8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "algE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88NC8" data-a="DESCRIPTION: algE encodes an outer-membrane AlgE-family alginat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>algE encodes an outer-membrane AlgE-family alginate export protein in Pseudomonas putida KT2440. It likely forms the alginate permeability pore at the outer-membrane step of alginate polymer export.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>alginate channel activity</h3>
+                <span class="vote-buttons" data-g="Q88NC8" data-a="alginate channel activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Enables passage of alginate polymer through a membrane channel or pore.</p>
+
+
+
+            <p><strong>Justification:</strong> AlgE is described by similarity as having channel-forming properties and probably functioning as an alginate permeability pore, but the GOA rows capture only outer-membrane localization and alginate biosynthesis process, not the pore activity itself.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015267" target="_blank" class="term-link">
+                    channel activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:PSEPK/algE/algE-uniprot.txt
+
+
+                    : Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore
+
+                </li>
+
+                <li>
+
+                    file:PSEPK/algE/algE-deep-research-falcon.md
+
+
+                    : AlgE-family studies support an alginate-selective outer-membrane pore with L2/T8 gating and AlgK/AlgX-associated export-complex context; this supports a specific alginate channel term rather than generic porin activity.
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                    GO:0009279
+                                </a>
+                            </span>
+                            <span class="term-label">cell outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC8" data-a="GO:0009279" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> algE is correctly localized to the cell outer membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AlgE functions as an outer-membrane alginate pore, so the outer-membrane location is intrinsic to the core channel role. Falcon supports this from AlgE homolog structures and a modeled P. putida AlgE-containing AlgEKX complex, but direct Q88NC8/PP_1284 KT2440 biochemical evidence was not recovered.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell outer membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0009279	cell outer membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Characterized Pseudomonas AlgE homologs are outer-membrane 18-stranded beta-barrel alginate export porins, and a 2022 AlgEKX model includes P. putida AlgE.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                    GO:0042121
+                                </a>
+                            </span>
+                            <span class="term-label">alginic acid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88NC8" data-a="GO:0042121" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AlgE is part of alginate biosynthesis/export and should retain the alginic acid biosynthetic process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places AlgE in alginate biosynthesis and describes it as probably functioning as an alginate permeability pore, consistent with a core pathway role in producing/exporting alginate polymer. Falcon supports AlgE as the outer-membrane translocation route in the envelope-spanning alginate secretion apparatus, but the evidence is homolog/ortholog based for Q88NC8.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Glycan biosynthesis; alginate biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0042121	alginic acid biosynthetic process</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/algE/algE-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">AlgE-family studies place AlgE downstream of Alg8/Alg44 polymerization and AlgK/AlgX-associated periplasmic export/modification, providing the outer-membrane channel for alginate secretion.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Probable outer-membrane alginate permeability pore involved in alginate polymer production/export.</h3>
+                <span class="vote-buttons" data-g="Q88NC8" data-a="FUNCTION: Probable outer-membrane alginate permeability pore..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042121" target="_blank" class="term-link">
+                                alginic acid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                cell outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/algE/algE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/algE/algE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Glycan biosynthesis; alginate biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/algE/algE-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">Falcon deep research supports AlgE as an outer-membrane, 18-stranded beta-barrel alginate export pore with electropositive alginate-binding channel features. The evidence is homolog/ortholog based for Q88NC8 because accession-level P. putida KT2440 experiments were not recovered.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniPathway mapping supplies the alginic acid biosynthetic process annotation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular-location mapping supplies the cell outer membrane annotation.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/algE/algE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for algE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes AlgE as an outer-membrane AlgE-family protein with channel-forming properties and an alginate biosynthesis pathway role.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/algE/algE-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for algE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the annotations reviewed for algE.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/algE/algE-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research for algE</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon deep research for algE supports an outer-membrane alginate export porin function. The strongest experimental evidence is from characterized Pseudomonas AlgE homologs and an AlgEKX model including P. putida AlgE; no retrieved paper explicitly cites UniProt Q88NC8/PP_1284.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 AlgE form an alginate-specific outer-membrane pore with substrate selectivity comparable to characterized AlgE homologs?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88NC8" data-a="Q: Does KT2440 AlgE form an alginate-specific outer-m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute AlgE in proteoliposomes or planar bilayers and test alginate-dependent channel conductance and polymer passage.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: membrane channel assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88NC8" data-a="EXPERIMENT: Reconstitute AlgE in proteoliposomes or planar bil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(algE-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88NC8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">29 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-05-21T19:37:06.897897</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="algE-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="algE-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000011 The requested visual content is found in Figure 1 and Figure 6. Figure 1b provides a schematic of the proteins involved in the algi</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-alge-uniprot-q88nc8-pp_1284-alginate-production-protein-alge-in-pseudomonas-putida-kt2440">Research Report: algE (UniProt Q88NC8; PP_1284) — Alginate production protein AlgE in <em>Pseudomonas putida</em> KT2440</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The UniProt target (Q88NC8; gene <strong>algE</strong>; locus <strong>PP_1284</strong>) is annotated as an AlgE-family “alginate production protein AlgE” precursor from <em>Pseudomonas putida</em> KT2440. In the experimental literature, AlgE is best characterized in <em>Pseudomonas aeruginosa</em> as a <strong>substrate-selective, 18-stranded β-barrel outer-membrane porin</strong> that provides the <strong>outer-membrane translocation route for the polyanionic polysaccharide alginate</strong>. Multiple structural and functional studies support a <strong>charge-complementarity mechanism</strong>, <strong>dual-gate control by extracellular loop L2 and periplasmic loop T8</strong>, and incorporation into an <strong>envelope-spanning secretion/modification complex</strong> with AlgK and AlgX. A recent high-impact structural study explicitly models a <em>P. putida</em> AlgE ortholog (AlgE_Pp) within the AlgEKX complex, supporting the interpretation that <em>P. putida</em> Q88NC8 encodes the analogous outer-membrane alginate export porin, although accession-level mapping (Q88NC8/PP_1284) is not explicitly stated in the retrieved papers and remains an <strong>inference from orthology/family/domain consistency</strong>. (gheorghita2022structureofthe pages 6-8, gheorghita2023pseudomonasaeruginosabiofilm pages 10-12, whitney2011structuralbasisfor pages 1-3)</p>
+<h3 id="0-mandatory-geneprotein-identity-verification-avoid-symbol-ambiguity">0) Mandatory gene/protein identity verification (avoid symbol ambiguity)</h3>
+<p><strong>Verified concept-level identity:</strong> “algE” in <em>Pseudomonas</em> alginate systems refers to the <strong>outer-membrane alginate export porin AlgE</strong>, not to unrelated genes in other organisms. The defining evidence is the solved β-barrel structures and secretion phenotypes in <em>P. aeruginosa</em> and cross-species modeling of <em>P. putida</em> AlgE within the same export apparatus. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12, gheorghita2022structureofthe pages 6-8, whitney2011structuralbasisfor pages 1-3)</p>
+<p><strong>Remaining ambiguity (accession-level):</strong> none of the retrieved papers explicitly cite <strong>UniProt Q88NC8</strong> or <strong>PP_1284</strong>; therefore, statements about Q88NC8 specifically are based on the <strong>AlgE family function</strong> and on a paper that explicitly models <em>P. putida</em> AlgE in the AlgEKX complex. (gheorghita2022structureofthe pages 6-8)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-alginate-substrate">1.1 Alginate (substrate)</h4>
+<p>Alginate is an anionic exopolysaccharide (EPS) secreted by some Gram-negative bacteria (notably <em>Pseudomonas</em>), and its export requires a specialized multi-protein system spanning the cell envelope. Alginate secretion is a key biofilm-associated function in <em>Pseudomonas</em> and is closely tied to envelope-spanning biosynthetic complexes. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12, gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)</p>
+<h4 id="12-alge-alginate-outer-membrane-export-porin">1.2 AlgE: alginate outer-membrane export porin</h4>
+<p><strong>Definition:</strong> AlgE is an <strong>outer-membrane (OM) β-barrel porin</strong> that forms the <strong>outer-membrane channel for alginate export</strong>. The canonical structural model is a <strong>monomeric 18-stranded antiparallel β-barrel</strong> with an <strong>electropositive pore</strong> suited to translocate a <strong>polyanionic</strong> polymer. (whitney2011structuralbasisfor pages 1-3)</p>
+<p><strong>Key structural features:</strong><br />
+- <strong>Electropositive lumen/constriction</strong> with conserved basic residues that likely confer specificity for alginate. (whitney2011structuralbasisfor pages 1-3)<br />
+- <strong>Two gating loops</strong> that occlude the channel in “closed” conformations:<br />
+  - <strong>L2</strong> (extracellular gate)<br />
+  - <strong>T8</strong> (periplasmic gate)<br />
+These loops are central to the modern “double-gate” model of AlgE-mediated secretion. (tan2014aconformationallandscape pages 7-8, whitney2011structuralbasisfor pages 1-3)</p>
+<h4 id="13-synthase-dependent-exopolysaccharide-secretion-systems">1.3 “Synthase-dependent” exopolysaccharide secretion systems</h4>
+<p>Alginate secretion is part of a broader class of “synthase-dependent” secretion systems in Gram-negative bacteria: a cytoplasmic-membrane (inner membrane) polymerase produces the polymer while a periplasm/outer-membrane apparatus protects, modifies, and exports it. (whitney2013synthasedependentexopolysaccharidesecretion pages 3-4)</p>
+<h3 id="2-mechanism-and-functional-annotation-of-alge-with-evidence">2) Mechanism and functional annotation of AlgE (with evidence)</h3>
+<h4 id="21-primary-function-outer-membrane-translocation-of-alginate">2.1 Primary function: outer-membrane translocation of alginate</h4>
+<p><strong>Functional role:</strong> AlgE is required for secretion of intact alginate polymer across the outer membrane; loss-of-function leads to failure of polymer export with release of <strong>degradation products (free uronic acids)</strong> rather than intact polymer. (rehman2013dualrolesof pages 1-5, hay2010membranetopologyof pages 1-2)</p>
+<p><strong>Substrate specificity and physicochemical basis:</strong><br />
+- The AlgE pore is an <strong>electropositive conduit</strong> tailored for an anionic substrate, with a narrow constriction (~8 Å in one structural analysis). (whitney2011structuralbasisfor pages 1-3)<br />
+- <strong>Alginate-related substrate analogs</strong> affect channel function: in liposome-reconstitution experiments, excess <strong>di-mannuronic acid (MM)</strong> reduced iodide efflux to near background, supporting ligand recognition/selectivity rather than a nonspecific porin function. (whitney2011structuralbasisfor pages 3-4)<br />
+- A structural ensemble study identified a <strong>~10 Å electropositive pore</strong> and a bound <strong>citrate</strong> proposed to mimic uronate units, mapping residues (e.g., Lys47, Arg74, Arg353, Arg459) positioned to recognize polyanionic uronates. (tan2014aconformationallandscape pages 7-8)</p>
+<h4 id="22-gating-mechanism-loops-l2-and-t8">2.2 Gating mechanism: loops L2 and T8</h4>
+<p>Structural data support an AlgE “double-gate” model:<br />
+- <strong>L2</strong> can block the pore from the extracellular side, and is variably ordered/disordered among crystal structures. (tan2014aconformationallandscape pages 7-8, whitney2011structuralbasisfor pages 1-3)<br />
+- <strong>T8</strong> occludes the constriction on the periplasmic side and is implicated as a major conductance regulator; removal of T8 increased halide conductance. (whitney2011structuralbasisfor pages 1-3)</p>
+<p><strong>Quantitative functional evidence:</strong><br />
+- <strong>ΔT8</strong> produced an approximately <strong>threefold increase</strong> in iodide efflux in a reconstituted system, strongly supporting T8 as a gate. (whitney2011structuralbasisfor pages 1-3)<br />
+- In vivo complementation results reported partial restoration of secretion with loop deletions: <strong>AlgEΔT8 ~48%</strong> and <strong>AlgEΔL2 ~60%</strong> of wild-type alginate production (in the reported system), consistent with loops having regulatory/structural roles while the barrel remains functional. (whitney2011structuralbasisfor pages 3-4)</p>
+<h4 id="23-cellular-localization-and-topology">2.3 Cellular localization and topology</h4>
+<p>AlgE is an <strong>outer-membrane</strong> channel protein; topology/structure place both termini on the <strong>periplasmic side</strong>, with multiple extracellular loops and periplasmic turns. (tan2014aconformationallandscape pages 7-8, hay2010membranetopologyof pages 1-2)</p>
+<h4 id="24-interaction-network-and-pathway-context-alg8alg44algxalgkalge">2.4 Interaction network and pathway context (Alg8/Alg44/AlgX/AlgK/AlgE)</h4>
+<p>A contemporary mechanistic model is that alginate synthesis, periplasmic modification, and OM export are coordinated by a <strong>trans-envelope multiprotein factory</strong>. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12, gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)</p>
+<p><strong>Upstream polymerization/regulation (inner membrane):</strong><br />
+- Alg8 acts as the polymerase and Alg44 (PilZ domain) couples c-di-GMP signaling to activation of polymerization; polymer is translocated into the periplasm after synthesis. (gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)</p>
+<p><strong>Periplasmic modification and protection:</strong><br />
+- AlgI/AlgJ/AlgF with AlgX participate in O-acetylation; AlgL is a lyase that can degrade aberrant polymer. (gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)<br />
+- Export failure (e.g., deleting algX/algK in some systems) results in secretion of small degradation products, supporting that a correctly assembled trans-envelope complex prevents periplasmic degradation and enables successful export. (gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)</p>
+<p><strong>Outer membrane export complex:</strong><br />
+- A 2023 authoritative review synthesizes structural and genetic evidence that AlgE’s T8 gate is likely controlled in the secretion context and proposes interaction with the TPR-containing periplasmic lipoprotein <strong>AlgK</strong>; this interaction is proposed to facilitate opening for export. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12)<br />
+- A 2013 mutational/phenotypic study supports a “dual role” for AlgE: secretion pore and a <strong>stabilizing/scaffold component</strong> in a multiprotein secretion complex, because deletion of algE destabilized AlgK and AlgX and reduced Alg44 copy number; chromosomal complementation restored these components. (rehman2013dualrolesof pages 1-5)</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-2023-integrated-structure-informed-model-of-alginate-export">3.1 2023: integrated, structure-informed model of alginate export</h4>
+<p>A 2023 review in <em>FEMS Microbiology Reviews</em> highlights major advances in understanding <em>Pseudomonas</em> EPS secretion systems, emphasizing that AlgE is an 18-stranded OM β-barrel with an electropositive constriction and that L2/T8 gating and AlgK-associated opening are central to the prevailing model. It also synthesizes modeling/simulation results suggesting AlgE itself does not supply directionality/energy for transport; instead, energy is thought to come primarily from inner-membrane polymerization while AlgE “breathing” may facilitate passage. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12)</p>
+<p><strong>Publication details:</strong> Gheorghita et al., 2023-10 (Oct 2023), https://doi.org/10.1093/femsre/fuad060 (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12)</p>
+<h4 id="32-2024-practical-strain-engineering-linked-to-alginate-associated-biofilm-traits">3.2 2024: practical strain engineering linked to alginate-associated biofilm traits</h4>
+<p>Although not directly measuring AlgE function, a 2024 fermentation-focused engineering study in <em>P. putida</em> created an engineered strain with deletion of an alginate-pathway gene (<strong>algA</strong>) along with motility/pili genes to reduce biofilm formation (useful in fermentation operations). The triple mutant showed significant biofilm reduction (e.g., <strong>~40% lower biofilm after 72 h</strong>) while maintaining similar growth kinetics, illustrating real-world value in tuning alginate-associated phenotypes for bioprocessing. (frolov2024constructionofthe pages 5-8)</p>
+<p><strong>Publication details:</strong> Frolov et al., 2024-11 (Nov 2024), https://doi.org/10.3390/fermentation10120606 (frolov2024constructionofthe pages 5-8)</p>
+<h4 id="33-20222023-algekx-complex-structural-modeling-connecting-modification-to-export-relevant-to-p-putida">3.3 2022–2023: AlgEKX complex structural modeling connecting modification to export (relevant to <em>P. putida</em>)</h4>
+<p>A 2022 <em>Nature Communications</em> study provides a detailed structural framework for the <strong>AlgKX complex</strong> and a modeled <strong>AlgEKX</strong> outer-membrane modification/secretion assembly. Importantly for your target, it explicitly includes <strong>structural modeling of <em>Pseudomonas putida</em> AlgE (AlgE_Pp)</strong> and uses this to build a plausible model for the periplasm-to-exterior export trajectory, including an electropositive pore pathway. (gheorghita2022structureofthe pages 6-8)</p>
+<p><strong>Publication details:</strong> Gheorghita et al., 2022-12 (Dec 2022), https://doi.org/10.1038/s41467-022-35131-6 (gheorghita2022structureofthe pages 6-8)</p>
+<h3 id="4-current-applications-and-real-world-implementations">4) Current applications and real-world implementations</h3>
+<h4 id="41-bioprocessingfermentation-reducing-biofilm-and-foaming-in-p-putida">4.1 Bioprocessing/fermentation: reducing biofilm and foaming in <em>P. putida</em></h4>
+<p>Biofilm formation is a practical limitation in bioreactors (fouling, mass transfer issues, foam). Engineering <em>P. putida</em> strains with reduced alginate-associated biofilm capability can improve fermentation handling. In the 2024 study, the engineered strain maintained OD_600 while reducing biofilm by <strong>20–30% at 24 h</strong> and up to <strong>40% at 72 h</strong>, supporting utility for fermentation operations. (frolov2024constructionofthe pages 5-8)</p>
+<h4 id="42-microbial-alginate-production-alginate-factories-and-exporter-localization">4.2 Microbial alginate production: “alginate factories” and exporter localization</h4>
+<p>Work in nonpathogenic <em>Pseudomonas fluorescens</em> has practical relevance for microbial production: AlgE can be visualized by immunogold TEM as part of clustered surface “factories,” and AlgE localization depends on other scaffold proteins. The number of detectable factories did not correlate simply with alginate production, suggesting that precursor supply and cellular physiology can be more limiting than exporter abundance. These insights are directly relevant to strategies that aim to engineer efficient microbial alginate production processes. (maleki2016alginatebiosynthesisfactories pages 1-5, maleki2017newinsightsinto pages 1-2)</p>
+<h3 id="5-expert-opinions-and-authoritative-synthesis">5) Expert opinions and authoritative synthesis</h3>
+<p>The strongest authoritative synthesis in the retrieved set (Gheorghita et al., 2023, FEMS Microbiology Reviews) treats AlgE as a canonical outer-membrane β-barrel porin specialized for alginate export, and emphasizes a model in which export is achieved by an <strong>envelope-spanning multiprotein system</strong> with AlgK and AlgX coordinating modification/export and AlgE providing the outer-membrane translocation conduit. (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12)</p>
+<h3 id="6-relevant-statistics-and-quantitative-findings-from-recent-and-foundational-studies">6) Relevant statistics and quantitative findings (from recent and foundational studies)</h3>
+<h4 id="61-quantitative-channelfunction-measurements-alge">6.1 Quantitative channel/function measurements (AlgE)</h4>
+<ul>
+<li><strong>Pore size:</strong> ~8 Å narrowest constriction reported for AlgE in one structure analysis; other structural ensemble work reports an electropositive pore around ~10 Å depending on conformation. (whitney2011structuralbasisfor pages 4-5, tan2014aconformationallandscape pages 7-8)</li>
+<li><strong>Gating functional effect:</strong> ΔT8 increases iodide efflux ~3× in liposome assays. (whitney2011structuralbasisfor pages 1-3)</li>
+<li><strong>Complementation:</strong> AlgEΔT8 and AlgEΔL2 restored ~48% and ~60% of WT alginate production in vivo in the reported system. (whitney2011structuralbasisfor pages 3-4)</li>
+</ul>
+<h4 id="62-quantitative-fermentationbiofilm-engineering-data-p-putida-2024">6.2 Quantitative fermentation/biofilm engineering data (<em>P. putida</em>, 2024)</h4>
+<ul>
+<li>Growth kinetics comparable between WT and engineered strain (final OD_600 ~2.0; µ ~0.74–0.79 in the reported setup). (frolov2024constructionofthe pages 5-8)</li>
+<li>Biofilm reduction reported as <strong>20–30% lower at 24 h</strong> and up to <strong>40% lower at 72 h</strong> in the triple-deletion strain. (frolov2024constructionofthe pages 5-8)</li>
+</ul>
+<h3 id="7-cellular-location-and-pathway-placement-for-functional-annotation-for-q88nc8">7) Cellular location and pathway placement for functional annotation (for Q88NC8)</h3>
+<h4 id="71-predicted-localization-for-p-putida-q88nc8-alge-family">7.1 Predicted localization for <em>P. putida</em> Q88NC8 (AlgE family)</h4>
+<p>By family/domain definition and by orthology to experimentally characterized AlgE proteins, Q88NC8 is best annotated as an <strong>outer-membrane β-barrel export porin</strong>, likely with a periplasm-facing interface for interaction with periplasmic scaffold/modification factors. (gheorghita2022structureofthe pages 6-8, whitney2011structuralbasisfor pages 1-3)</p>
+<h4 id="72-pathway-context">7.2 Pathway context</h4>
+<p>AlgE functions at the final outer-membrane step of alginate secretion, downstream of:<br />
+- Inner-membrane polymerization (Alg8/Alg44) (gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)<br />
+- Periplasmic modification (AlgI/J/F/X) and processing control (AlgL) (gheorghita2023pseudomonasaeruginosabiofilm pages 4-5)<br />
+- Periplasmic/export-scaffold interactions (AlgK, AlgKX/AlgEKX assemblies) (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12, gheorghita2022structureofthe pages 6-8)</p>
+<h3 id="8-visual-evidence-pathway-schematic-and-complex-model">8) Visual evidence (pathway schematic and complex model)</h3>
+<p>The following figures provide visual support for the modern mechanistic model of alginate secretion and the proposed AlgEKX outer-membrane complex trajectory:<br />
+- Pathway schematic highlighting AlgX/AlgK/AlgE and their placement in the secretion system. (gheorghita2022structureofthe media 4c188b91)<br />
+- Structural model/electrostatic surface of AlgEKX with a proposed polymer export trajectory across the OM. (gheorghita2022structureofthe media a87fea0f, gheorghita2022structureofthe media b92364ee)</p>
+<h3 id="9-limitations-and-research-gaps-specific-to-p-putida-q88nc8">9) Limitations and research gaps specific to <em>P. putida</em> Q88NC8</h3>
+<ul>
+<li><strong>Direct experimental characterization in <em>P. putida</em> KT2440</strong> (e.g., knockout/phenotype, purified protein structure, conductance assays) was not found in the retrieved corpus; the strongest <em>P. putida</em>-specific evidence is structural modeling of a <em>P. putida</em> AlgE ortholog within AlgEKX. (gheorghita2022structureofthe pages 6-8)</li>
+<li><strong>Accession-level mapping</strong>: the retrieved literature does not explicitly cite UniProt Q88NC8 or PP_1284; a robust next step for higher-confidence functional annotation would be to locate genome-annotation papers or database cross-references that explicitly connect PP_1284/Q88NC8 to AlgE_Pp sequences used in modeling/structural work. (gheorghita2022structureofthe pages 6-8)</li>
+</ul>
+<h3 id="selected-references-urls-and-publication-dates">Selected references (URLs and publication dates)</h3>
+<ul>
+<li>Gheorghita AA et al. “Pseudomonas aeruginosa biofilm exopolysaccharides: Assembly, function, and degradation.” <em>FEMS Microbiology Reviews</em> (Oct 2023). https://doi.org/10.1093/femsre/fuad060 (gheorghita2023pseudomonasaeruginosabiofilm pages 10-12)</li>
+<li>Gheorghita AA et al. “Structure of the AlgKX modification and secretion complex required for alginate production and biofilm attachment in Pseudomonas aeruginosa.” <em>Nature Communications</em> (Dec 2022). https://doi.org/10.1038/s41467-022-35131-6 (gheorghita2022structureofthe pages 6-8)</li>
+<li>Whitney JC et al. “Structural basis for alginate secretion across the bacterial outer membrane.” <em>PNAS</em> (Jul 2011). https://doi.org/10.1073/pnas.1104984108 (whitney2011structuralbasisfor pages 1-3)</li>
+<li>Tan J et al. “A conformational landscape for alginate secretion across the outer membrane of Pseudomonas aeruginosa.” <em>Acta Crystallographica D</em> (Jul 2014). https://doi.org/10.1107/S1399004714001850 (tan2014aconformationallandscape pages 7-8)</li>
+<li>Rehman ZU, Rehm BHA. “Dual Roles of Pseudomonas aeruginosa AlgE in Secretion of the Virulence Factor Alginate and Formation of the Secretion Complex.” <em>Applied and Environmental Microbiology</em> (Mar 2013). https://doi.org/10.1128/AEM.03960-12 (rehman2013dualrolesof pages 1-5)</li>
+<li>Frolov M et al. “Construction of the Pseudomonas putida Strain with Low Motility and Reduced Biofilm Formation for Application in Fermentation.” <em>Fermentation</em> (Nov 2024). https://doi.org/10.3390/fermentation10120606 (frolov2024constructionofthe pages 5-8)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(gheorghita2022structureofthe pages 6-8): Andreea A. Gheorghita, Yancheng E. Li, Elena N. Kitova, Duong T. Bui, Roland Pfoh, Kristin E. Low, Gregory B. Whitfield, Marthe T. C. Walvoort, Qingju Zhang, Jeroen D. C. Codée, John S. Klassen, and P. Lynne Howell. Structure of the algkx modification and secretion complex required for alginate production and biofilm attachment in pseudomonas aeruginosa. Nature Communications, Dec 2022. URL: https://doi.org/10.1038/s41467-022-35131-6, doi:10.1038/s41467-022-35131-6. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gheorghita2023pseudomonasaeruginosabiofilm pages 10-12): Andreea A Gheorghita, Daniel J Wozniak, Matthew R Parsek, and P Lynne Howell. Pseudomonas aeruginosa biofilm exopolysaccharides: assembly, function, and degradation. FEMS microbiology reviews, Oct 2023. URL: https://doi.org/10.1093/femsre/fuad060, doi:10.1093/femsre/fuad060. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(whitney2011structuralbasisfor pages 1-3): John C. Whitney, Iain D. Hay, Canhui Li, Paul D. W. Eckford, Howard Robinson, Maria F. Amaya, Lynn F. Wood, Dennis E. Ohman, Christine E. Bear, Bernd H. Rehm, and P. Lynne Howell. Structural basis for alginate secretion across the bacterial outer membrane. Proceedings of the National Academy of Sciences, 108:13083-13088, Jul 2011. URL: https://doi.org/10.1073/pnas.1104984108, doi:10.1073/pnas.1104984108. This article has 126 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gheorghita2023pseudomonasaeruginosabiofilm pages 4-5): Andreea A Gheorghita, Daniel J Wozniak, Matthew R Parsek, and P Lynne Howell. Pseudomonas aeruginosa biofilm exopolysaccharides: assembly, function, and degradation. FEMS microbiology reviews, Oct 2023. URL: https://doi.org/10.1093/femsre/fuad060, doi:10.1093/femsre/fuad060. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tan2014aconformationallandscape pages 7-8): Jingquan Tan, Sarah L. Rouse, Dianfan Li, Valerie E. Pye, Lutz Vogeley, Alette R. Brinth, Toufic El Arnaout, John C. Whitney, P. Lynne Howell, Mark S. P. Sansom, and Martin Caffrey. A conformational landscape for alginate secretion across the outer membrane of<i>pseudomonas aeruginosa</i>. Acta Crystallographica Section D Biological Crystallography, 70:2054-2068, Jul 2014. URL: https://doi.org/10.1107/s1399004714001850, doi:10.1107/s1399004714001850. This article has 63 citations.</p>
+</li>
+<li>
+<p>(whitney2013synthasedependentexopolysaccharidesecretion pages 3-4): J.C. Whitney and P.L. Howell. Synthase-dependent exopolysaccharide secretion in gram-negative bacteria. Trends in microbiology, 21 2:63-72, Feb 2013. URL: https://doi.org/10.1016/j.tim.2012.10.001, doi:10.1016/j.tim.2012.10.001. This article has 313 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rehman2013dualrolesof pages 1-5): Zahid U. Rehman and Bernd H. A. Rehm. Dual roles of pseudomonas aeruginosa alge in secretion of the virulence factor alginate and formation of the secretion complex. Applied and Environmental Microbiology, 79:2002-2011, Mar 2013. URL: https://doi.org/10.1128/aem.03960-12, doi:10.1128/aem.03960-12. This article has 35 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hay2010membranetopologyof pages 1-2): Iain D. Hay, Zahid U. Rehman, and Bernd H. A. Rehm. Membrane topology of outer membrane protein alge, which is required for alginate production in <i>pseudomonas aeruginosa</i>. Mar 2010. URL: https://doi.org/10.1128/aem.02945-09, doi:10.1128/aem.02945-09. This article has 53 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(whitney2011structuralbasisfor pages 3-4): John C. Whitney, Iain D. Hay, Canhui Li, Paul D. W. Eckford, Howard Robinson, Maria F. Amaya, Lynn F. Wood, Dennis E. Ohman, Christine E. Bear, Bernd H. Rehm, and P. Lynne Howell. Structural basis for alginate secretion across the bacterial outer membrane. Proceedings of the National Academy of Sciences, 108:13083-13088, Jul 2011. URL: https://doi.org/10.1073/pnas.1104984108, doi:10.1073/pnas.1104984108. This article has 126 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frolov2024constructionofthe pages 5-8): Mikhail Frolov, Galim Alimzhanovich Kungurov, Emil Elmirovich Valiakhmetov, Artur Sergeyevich Gogov, Natalia Viktorovna Trachtmann, and Shamil Zavdatovich Validov. Construction of the pseudomonas putida strain with low motility and reduced biofilm formation for application in fermentation. Fermentation, 10:606, Nov 2024. URL: https://doi.org/10.3390/fermentation10120606, doi:10.3390/fermentation10120606. This article has 2 citations.</p>
+</li>
+<li>
+<p>(maleki2016alginatebiosynthesisfactories pages 1-5): Susan Maleki, Eivind Almaas, Sergey Zotchev, Svein Valla, and Helga Ertesvåg. Alginate biosynthesis factories in pseudomonas fluorescens: localization and correlation with alginate production level. Applied and Environmental Microbiology, 82:1227-1236, Feb 2016. URL: https://doi.org/10.1128/aem.03114-15, doi:10.1128/aem.03114-15. This article has 53 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maleki2017newinsightsinto pages 1-2): Susan Maleki, Mali Mærk, Radka Hrudikova, Svein Valla, and Helga Ertesvåg. New insights into pseudomonas fluorescens alginate biosynthesis relevant for the establishment of an efficient production process for microbial alginates. New biotechnology, 37 Pt A:2-8, Jul 2017. URL: https://doi.org/10.1016/j.nbt.2016.08.005, doi:10.1016/j.nbt.2016.08.005. This article has 31 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(whitney2011structuralbasisfor pages 4-5): John C. Whitney, Iain D. Hay, Canhui Li, Paul D. W. Eckford, Howard Robinson, Maria F. Amaya, Lynn F. Wood, Dennis E. Ohman, Christine E. Bear, Bernd H. Rehm, and P. Lynne Howell. Structural basis for alginate secretion across the bacterial outer membrane. Proceedings of the National Academy of Sciences, 108:13083-13088, Jul 2011. URL: https://doi.org/10.1073/pnas.1104984108, doi:10.1073/pnas.1104984108. This article has 126 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gheorghita2022structureofthe media 4c188b91): Andreea A. Gheorghita, Yancheng E. Li, Elena N. Kitova, Duong T. Bui, Roland Pfoh, Kristin E. Low, Gregory B. Whitfield, Marthe T. C. Walvoort, Qingju Zhang, Jeroen D. C. Codée, John S. Klassen, and P. Lynne Howell. Structure of the algkx modification and secretion complex required for alginate production and biofilm attachment in pseudomonas aeruginosa. Nature Communications, Dec 2022. URL: https://doi.org/10.1038/s41467-022-35131-6, doi:10.1038/s41467-022-35131-6. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gheorghita2022structureofthe media a87fea0f): Andreea A. Gheorghita, Yancheng E. Li, Elena N. Kitova, Duong T. Bui, Roland Pfoh, Kristin E. Low, Gregory B. Whitfield, Marthe T. C. Walvoort, Qingju Zhang, Jeroen D. C. Codée, John S. Klassen, and P. Lynne Howell. Structure of the algkx modification and secretion complex required for alginate production and biofilm attachment in pseudomonas aeruginosa. Nature Communications, Dec 2022. URL: https://doi.org/10.1038/s41467-022-35131-6, doi:10.1038/s41467-022-35131-6. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gheorghita2022structureofthe media b92364ee): Andreea A. Gheorghita, Yancheng E. Li, Elena N. Kitova, Duong T. Bui, Roland Pfoh, Kristin E. Low, Gregory B. Whitfield, Marthe T. C. Walvoort, Qingju Zhang, Jeroen D. C. Codée, John S. Klassen, and P. Lynne Howell. Structure of the algkx modification and secretion complex required for alginate production and biofilm attachment in pseudomonas aeruginosa. Nature Communications, Dec 2022. URL: https://doi.org/10.1038/s41467-022-35131-6, doi:10.1038/s41467-022-35131-6. This article has 37 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="algE-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000011 The requested visual content is found in Figure 1 and Figure 6. Figure 1b provides a schematic of the proteins involved in the algi" src="algE-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gheorghita2022structureofthe pages 6-8</li>
+<li>whitney2011structuralbasisfor pages 1-3</li>
+<li>whitney2013synthasedependentexopolysaccharidesecretion pages 3-4</li>
+<li>whitney2011structuralbasisfor pages 3-4</li>
+<li>tan2014aconformationallandscape pages 7-8</li>
+<li>gheorghita2023pseudomonasaeruginosabiofilm pages 4-5</li>
+<li>gheorghita2023pseudomonasaeruginosabiofilm pages 10-12</li>
+<li>rehman2013dualrolesof pages 1-5</li>
+<li>frolov2024constructionofthe pages 5-8</li>
+<li>hay2010membranetopologyof pages 1-2</li>
+<li>maleki2016alginatebiosynthesisfactories pages 1-5</li>
+<li>maleki2017newinsightsinto pages 1-2</li>
+<li>whitney2011structuralbasisfor pages 4-5</li>
+<li>https://doi.org/10.1093/femsre/fuad060</li>
+<li>https://doi.org/10.3390/fermentation10120606</li>
+<li>https://doi.org/10.1038/s41467-022-35131-6</li>
+<li>https://doi.org/10.1073/pnas.1104984108</li>
+<li>https://doi.org/10.1107/S1399004714001850</li>
+<li>https://doi.org/10.1128/AEM.03960-12</li>
+<li>https://doi.org/10.1038/s41467-022-35131-6,</li>
+<li>https://doi.org/10.1093/femsre/fuad060,</li>
+<li>https://doi.org/10.1073/pnas.1104984108,</li>
+<li>https://doi.org/10.1107/s1399004714001850,</li>
+<li>https://doi.org/10.1016/j.tim.2012.10.001,</li>
+<li>https://doi.org/10.1128/aem.03960-12,</li>
+<li>https://doi.org/10.1128/aem.02945-09,</li>
+<li>https://doi.org/10.3390/fermentation10120606,</li>
+<li>https://doi.org/10.1128/aem.03114-15,</li>
+<li>https://doi.org/10.1016/j.nbt.2016.08.005,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88NC8
+gene_symbol: algE
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: algE encodes an outer-membrane AlgE-family alginate export protein in
+  Pseudomonas putida KT2440. It likely forms the alginate permeability pore at
+  the outer-membrane step of alginate polymer export.
+existing_annotations:
+- term:
+    id: GO:0009279
+    label: cell outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: algE is correctly localized to the cell outer membrane.
+    action: ACCEPT
+    reason: AlgE functions as an outer-membrane alginate pore, so the outer-membrane location is intrinsic to the core channel
+      role. Falcon supports this from AlgE homolog structures and a modeled P. putida AlgE-containing AlgEKX complex, but
+      direct Q88NC8/PP_1284 KT2440 biochemical evidence was not recovered.
+    supported_by:
+    - reference_id: file:PSEPK/algE/algE-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cell outer membrane&#39;
+    - reference_id: file:PSEPK/algE/algE-goa.tsv
+      supporting_text: &#34;GO:0009279\tcell outer membrane&#34;
+    - reference_id: file:PSEPK/algE/algE-deep-research-falcon.md
+      supporting_text: &gt;-
+        Characterized Pseudomonas AlgE homologs are outer-membrane 18-stranded
+        beta-barrel alginate export porins, and a 2022 AlgEKX model includes P.
+        putida AlgE.
+- term:
+    id: GO:0042121
+    label: alginic acid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: AlgE is part of alginate biosynthesis/export and should retain the alginic acid biosynthetic process annotation.
+    action: ACCEPT
+    reason: UniProt places AlgE in alginate biosynthesis and describes it as probably functioning as an alginate permeability
+      pore, consistent with a core pathway role in producing/exporting alginate polymer. Falcon supports AlgE as the
+      outer-membrane translocation route in the envelope-spanning alginate secretion apparatus, but the evidence is
+      homolog/ortholog based for Q88NC8.
+    supported_by:
+    - reference_id: file:PSEPK/algE/algE-uniprot.txt
+      supporting_text: Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore
+    - reference_id: file:PSEPK/algE/algE-uniprot.txt
+      supporting_text: &#39;PATHWAY: Glycan biosynthesis; alginate biosynthesis&#39;
+    - reference_id: file:PSEPK/algE/algE-goa.tsv
+      supporting_text: &#34;GO:0042121\talginic acid biosynthetic process&#34;
+    - reference_id: file:PSEPK/algE/algE-deep-research-falcon.md
+      supporting_text: &gt;-
+        AlgE-family studies place AlgE downstream of Alg8/Alg44 polymerization
+        and AlgK/AlgX-associated periplasmic export/modification, providing the
+        outer-membrane channel for alginate secretion.
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings:
+  - statement: UniPathway mapping supplies the alginic acid biosynthetic process annotation.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping
+  findings:
+  - statement: UniProt subcellular-location mapping supplies the cell outer membrane annotation.
+- id: file:PSEPK/algE/algE-uniprot.txt
+  title: UniProtKB reviewed entry for algE
+  findings:
+  - statement: UniProt describes AlgE as an outer-membrane AlgE-family protein with channel-forming properties and an alginate
+      biosynthesis pathway role.
+- id: file:PSEPK/algE/algE-goa.tsv
+  title: QuickGO GOA annotations for algE
+  findings:
+  - statement: The fetched GOA table contains the annotations reviewed for algE.
+- id: file:PSEPK/algE/algE-deep-research-falcon.md
+  title: Falcon deep research for algE
+  findings:
+  - statement: &gt;-
+      Falcon deep research for algE supports an outer-membrane alginate export
+      porin function. The strongest experimental evidence is from characterized
+      Pseudomonas AlgE homologs and an AlgEKX model including P. putida AlgE;
+      no retrieved paper explicitly cites UniProt Q88NC8/PP_1284.
+core_functions:
+- description: Probable outer-membrane alginate permeability pore involved in alginate polymer production/export.
+  directly_involved_in:
+  - id: GO:0042121
+    label: alginic acid biosynthetic process
+  locations:
+  - id: GO:0009279
+    label: cell outer membrane
+  supported_by:
+  - reference_id: file:PSEPK/algE/algE-uniprot.txt
+    supporting_text: Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore
+  - reference_id: file:PSEPK/algE/algE-uniprot.txt
+    supporting_text: &#39;PATHWAY: Glycan biosynthesis; alginate biosynthesis&#39;
+  - reference_id: file:PSEPK/algE/algE-deep-research-falcon.md
+    supporting_text: &gt;-
+      Falcon deep research supports AlgE as an outer-membrane, 18-stranded
+      beta-barrel alginate export pore with electropositive alginate-binding
+      channel features. The evidence is homolog/ortholog based for Q88NC8
+      because accession-level P. putida KT2440 experiments were not recovered.
+proposed_new_terms:
+- proposed_name: alginate channel activity
+  proposed_definition: Enables passage of alginate polymer through a membrane channel or pore.
+  justification: AlgE is described by similarity as having channel-forming properties and probably functioning as an alginate
+    permeability pore, but the GOA rows capture only outer-membrane localization and alginate biosynthesis process, not the
+    pore activity itself.
+  proposed_parent:
+    id: GO:0015267
+    label: channel activity
+  supported_by:
+  - reference_id: file:PSEPK/algE/algE-uniprot.txt
+    supporting_text: Has non-porin-like, channel-forming properties and probably functions as an alginate permeability pore
+  - reference_id: file:PSEPK/algE/algE-deep-research-falcon.md
+    supporting_text: &gt;-
+      AlgE-family studies support an alginate-selective outer-membrane pore
+      with L2/T8 gating and AlgK/AlgX-associated export-complex context; this
+      supports a specific alginate channel term rather than generic porin
+      activity.
+suggested_questions:
+- question: Does KT2440 AlgE form an alginate-specific outer-membrane pore with substrate selectivity comparable to characterized
+    AlgE homologs?
+suggested_experiments:
+- description: Reconstitute AlgE in proteoliposomes or planar bilayers and test alginate-dependent channel conductance and
+    polymer passage.
+  experiment_type: membrane channel assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

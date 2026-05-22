@@ -230,6 +230,21 @@ gene-hypothesis-list organism gene *args="":
 gene-hypothesis-research provider organism gene *args="":
     uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} {{provider}} {{args}}
 
+# Run focused deep research for every core_functions[*] record in one gene
+# Existing provider outputs are skipped unless --overwrite is supplied.
+# Examples:
+#   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
+#   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+gene-hypothesis-research-all-core provider organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} {{provider}} {{args}}
+
+# Run one synthesis query over all core_functions[*] records in one gene
+# Examples:
+#   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
+#   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param max_iterations=1 --param use_hypotheses=true
+gene-hypothesis-research-combined-core provider organism gene *args="":
+    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} {{provider}} {{args}}
+
 # Term deep research (open-ended biological concepts)
 # Examples:
 #   just term-deep-research-openai "JAK-STAT pathway"
@@ -1368,6 +1383,7 @@ deploy-browser: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
     @cp src/ai_gene_review/browser/index.html app/
     @echo "Browser deployed to app/ directory"
     @echo "To view: open app/index.html or run 'just serve-browser'"
@@ -1387,6 +1403,7 @@ update-browser-data: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
     @cp src/ai_gene_review/browser/index.html app/
     @echo "Data updated in app/"
 

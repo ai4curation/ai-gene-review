@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nosZ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nosZ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6N843" target="_blank" class="term-link">
+                        Q6N843
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Rhodopseudomonas palustris (strain ATCC BAA-98 / CGA009)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nosZ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6N843" data-a="DESCRIPTION: nosZ encodes nitrous-oxide reductase, the copper e..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>nosZ encodes nitrous-oxide reductase, the copper enzyme that reduces nitrous oxide to dinitrogen in the terminal N2O-reduction step of denitrification or nitrogen oxide respiration.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004129" target="_blank" class="term-link">
+                                    GO:0004129
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome-c oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0004129" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> REMOVE. NosZ is a nitrous-oxide reductase, not cytochrome-c oxidase. The specific nitrous-oxide reductase activity annotation is present.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cytochrome-c oxidase activity term appears to come from a shared cytochrome oxidase subunit II-like copper-binding domain. The protein assignment, EC number, HAMAP model, and PANTHER subfamily all identify this sequence as nitrous-oxide reductase, so GO:0050304 is the correct MF. Family research confirms that PTHR42838 can conflate NosZ with cytochrome c oxidase subunit II because both carry CuA-related domains.
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050304" target="_blank" class="term-link">
+                                    nitrous-oxide reductase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Nitrous-oxide reductase; EC=1.7.2.4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PANTHER; PTHR42838:SF2; NITROUS-OXIDE REDUCTASE.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">PTHR42838 family research separates true NosZ/N2OR proteins from cytochrome c oxidase subunit II homologs and warns against assigning oxidase activity to NosZ from CuA-domain similarity.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005507" target="_blank" class="term-link">
+                                    GO:0005507
+                                </a>
+                            </span>
+                            <span class="term-label">copper ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0005507" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. Nitrous-oxide reductase is a copper enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NosZ binds copper cofactors required for nitrous-oxide reduction. UniProt notes six copper cations per subunit and identifies the CuA and CuZ centers. Falcon supports the conserved CuA/CuZ architecture but did not recover Q6N843-specific metal analysis.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 6 Cu cations per subunit. Each subunit contains 2 copper centers, CuA and CuZ.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Canonical NosZ enzymes contain CuA electron-entry and CuZ catalytic copper centers for N2O reduction; Q6N843-specific metal analysis was not recovered.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0005509" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KEEP_AS_NON_CORE. This may reflect family-level cofactor information, but copper-dependent nitrous-oxide reduction is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Calcium binding may be associated with the family/domain model, but the core experimentally meaningful cofactor for NosZ catalysis is copper. Keep as non-core rather than centering the review on this cofactor.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 2 calcium ions per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UNDECIDED. NosZ is usually exported to the periplasm and can associate with membrane electron-transfer systems, but this broad membrane annotation is not resolved from the current automated evidence alone.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is predicted to be exported to the periplasm by the Tat system. A broad membrane annotation may reflect associated respiratory electron-transfer context or family transfer rather than the location of the soluble catalytic protein itself, so this is left unresolved. Falcon supports periplasmic/Tat biology as family-level evidence but did not find a CGA009 localization experiment.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Predicted to be exported by the Tat system.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NosZ is commonly Tat-exported to the periplasm for copper-center maturation, but no Q6N843-specific fractionation experiment was recovered.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0042597" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. Bacterial NosZ functions as an exported/periplasmic denitrification enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Periplasmic localization is directly predicted in UniProt and is consistent with Tat export of bacterial NosZ nitrous-oxide reductases. Falcon supports this as canonical NosZ-family biology rather than direct CGA009 localization evidence.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Periplasm.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NosZ family literature supports periplasmic maturation after Tat export; Q6N843-specific localization was not directly resolved.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050304" target="_blank" class="term-link">
+                                    GO:0050304
+                                </a>
+                            </span>
+                            <span class="term-label">nitrous-oxide reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0050304" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. This is the specific molecular function of NosZ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the precise EC-supported activity for the protein. UniProt names the sequence nitrous-oxide reductase, assigns EC 1.7.2.4, and PANTHER places it in a nitrous-oxide reductase subfamily. Falcon did not recover a purified R. palustris Q6N843 assay, so the support is EC/subfamily/family mechanism.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Nitrous-oxide reductase; EC=1.7.2.4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NosZ-family literature supports N2O + 2 electrons + 2 protons to N2 and water as the core reaction; no Q6N843-specific kinetic assay was recovered.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    GO:1902600
+                                </a>
+                            </span>
+                            <span class="term-label">proton transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:1902600" data-r="GO_REF:0000108" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UNDECIDED. The gene participates in respiratory electron transfer, but direct assignment of proton transmembrane transport to NosZ itself is not supported by the current local evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NosZ is part of a respiratory chain at the pathway level, but the local evidence identifies this gene product as nitrous-oxide reductase rather than a proton-translocating complex. Do not infer direct proton transport from respiratory-chain participation alone.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Nitrous-oxide reductase is part of a bacterial respiratory chain that uses nitrate or nitrous oxide.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019333" target="_blank" class="term-link">
+                                    GO:0019333
+                                </a>
+                            </span>
+                            <span class="term-label">denitrification pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6N843" data-a="GO:0019333" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. UniPathway correctly captures the pathway role of NosZ as the terminal nitrous-oxide-reduction enzyme in denitrification.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The denitrification pathway annotation follows directly from the enzyme role: NosZ catalyzes nitrous oxide reduction, the terminal step in denitrification. This is supported by conserved NosZ family/EC evidence and UniProt pathway mapping. Falcon supports the terminal N2O-sink step and notes that electron delivery/accessory requirements are context dependent.
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Nitrogen metabolism; nitrate reduction (denitrification); dinitrogen from nitrate: step 4/4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NosZ/N2OR catalyzes N2O reduction to N2, the terminal step of denitrification, while cytochrome c oxidase subunit II is a distinct CuA-containing electron-entry subunit.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">NosZ is the only known biological N2O sink and the terminal respiratory reductase for N2O-to-N2 conversion; gene-neighborhood and regulation details for Q6N843 were not directly resolved.</div>
+
+                            </div>
+
+                        </div>
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes nitrous oxide reduction to dinitrogen as the terminal enzyme of bacterial denitrification.</h3>
+                <span class="vote-buttons" data-g="Q6N843" data-a="FUNCTION: Catalyzes nitrous oxide reduction to dinitrogen as..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050304" target="_blank" class="term-link">
+                            nitrous-oxide reductase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019333" target="_blank" class="term-link">
+                                denitrification pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">GOA includes nitrous-oxide reductase activity and UniPathway denitrification pathway annotations for Q6N843.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">True NosZ proteins reduce N2O to N2 at CuA/CuZ centers, whereas cytochrome c oxidase subunit II homologs are functionally distinct.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">Falcon deep research supports NosZ as the terminal nitrous-oxide reductase of denitrification/N2O respiration and supports removing cytochrome-c oxidase activity as a shared CuA-domain over-annotation.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:RHOPA/nosZ/nosZ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for nosZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt/GOA identify Q6N843 as a nitrous-oxide reductase family protein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon family deep research for PTHR42838 NosZ/cytochrome c oxidase subunit II</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Family research found that PTHR42838 mixes true nitrous-oxide reductases with cytochrome c oxidase subunit II-like CuA proteins, explaining the cytochrome-c oxidase over-annotation and supporting NosZ-specific annotation when EC/subfamily evidence is present.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research for nosZ</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon deep research for nosZ supports nitrous-oxide reductase activity from EC 1.7.2.4, CuA/CuZ NosZ-family mechanism, and UniProt step 4/4 pathway mapping. It also notes that Q6N843-specific kinetics, regulation, and exact electron-delivery partners were not recovered.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nosZ-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6N843" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">29 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-05-21T18:58:32.988234</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nosZ-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="nosZ-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000016 The field experiment N2O emission reductions (50–95%) for *Cloacibacterium* sp. CB-01 are reported in Figure 4, which shows reducti</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-nosz-uniprot-q6n843-from-rhodopseudomonas-palustris-cga009">Research report: <strong>nosZ</strong> (UniProt <strong>Q6N843</strong>) from <em>Rhodopseudomonas palustris</em> CGA009</h2>
+<h3 id="0-identity-verification-and-scope">0) Identity verification and scope</h3>
+<p>The UniProt accession <strong>Q6N843</strong> is annotated as <strong>nitrous-oxide reductase (NosZ)</strong> (EC <strong>1.7.2.4</strong> in UniProt) from <em>Rhodopseudomonas palustris</em> strain CGA009, with domain architecture consistent with canonical bacterial NosZ enzymes (including the copper-binding cupredoxin-type folds and the C-terminal cytochrome-c–like region described by UniProt). The literature evidence base available here is largely from well-studied model denitrifiers (e.g., <em>Pseudomonas</em> spp., <em>Paracoccus denitrificans</em>) and recent environmental studies; these sources are used to functionally annotate Q6N843 by <strong>homology to the canonical NosZ family</strong>, not by direct biochemical purification of the <em>R. palustris</em> CGA009 protein in the retrieved corpus.</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-nosz-does-primary-function">1.1 What NosZ does (primary function)</h4>
+<p>NosZ is the <strong>terminal respiratory oxidoreductase</strong> that catalyzes the <strong>reduction of nitrous oxide (N2O) to dinitrogen (N2)</strong> in microbial N2O respiration/denitrification. A widely cited stoichiometry is:</p>
+<p><strong>N2O + 2 H+ + 2 e− → N2 + H2O</strong> (zumft2006biogenesisofthe pages 1-2).</p>
+<p>Because this reaction removes N2O, organisms that encode <strong>nosZ</strong> constitute the <strong>only known biological sink</strong> for N2O (intrator2024aquaticnitrousoxide pages 1-2, zumft2006biogenesisofthe pages 1-2).</p>
+<h4 id="12-substrate-specificity">1.2 Substrate specificity</h4>
+<p>NosZ is functionally specialized for <strong>N2O</strong> as the respiratory electron acceptor (i.e., the substrate being reduced) and produces <strong>N2</strong> as the reduced end-product (zumft2006biogenesisofthe pages 1-2, intrator2024aquaticnitrousoxide pages 1-2). The defining activity is therefore N2O reduction (zumft2006biogenesisofthe pages 1-2).</p>
+<h4 id="13-cofactors-and-catalytic-centers-cua-and-cuz">1.3 Cofactors and catalytic centers (CuA and CuZ)</h4>
+<p>Canonical bacterial NosZ is a <strong>multicopper enzyme</strong> operating as a <strong>homodimer</strong>. Each monomer contains two distinct copper centers:</p>
+<ul>
+<li><strong>CuA</strong>: a <strong>binuclear</strong> electron-entry/electron-transfer site (zumft2006biogenesisofthe pages 1-2, wunsch2003requirementsforcua pages 1-2).</li>
+<li><strong>CuZ</strong>: a <strong>tetranuclear, sulfide-bridged catalytic Cu–S cluster</strong> (four His-liganded Cu bridged by sulfide) where N2O reduction occurs (wunsch2003requirementsforcua pages 1-2, zumft2006biogenesisofthe pages 1-2).</li>
+</ul>
+<p>A canonical copper stoichiometry is <strong>6 Cu per monomer</strong> (2 in CuA + 4 in CuZ; ~12 Cu per dimer) (zumft2006biogenesisofthe pages 1-2, wunsch2005functionaldomainsof pages 6-7).</p>
+<h4 id="14-cellular-localization-and-export">1.4 Cellular localization and export</h4>
+<p>A key mechanistic point for functional annotation is that NosZ is a <strong>periplasmic enzyme</strong> in Gram-negative bacteria and is commonly exported as an <strong>apo-protein via the twin-arginine translocation (Tat) pathway</strong>, followed by <strong>post-translocational copper-center assembly in the periplasm</strong> (zumft2006biogenesisofthe pages 4-5, zumft2006biogenesisofthe pages 5-6). When NosZ is experimentally retained in the cytoplasm by disrupting Tat export (e.g., mutation of Tat components or the twin-arginine motif), the enzyme fails to acquire copper cofactors, supporting the periplasmic maturation model (zumft2006biogenesisofthe pages 4-5).</p>
+<h3 id="2-mechanism-and-pathway-context-for-q6n843-nosz">2) Mechanism and pathway context for Q6N843 nosZ</h3>
+<h4 id="21-role-in-denitrification-n-oxide-respiration">2.1 Role in denitrification / N-oxide respiration</h4>
+<p>NosZ is the terminal step in denitrification-like respiratory chains, reducing N2O to N2 (zumft2006biogenesisofthe pages 1-2). In ecological terms, nosZ-containing organisms can either:<br />
+- be “complete denitrifiers” (carrying additional denitrification steps), or<br />
+- be “partial/non-denitrifiers” specializing in N2O consumption (intrator2024aquaticnitrousoxide pages 1-2, yoon2016nitrousoxidereduction pages 1-2).</p>
+<h4 id="22-electron-delivery-architecture-nosr-and-alternative-arrangements">2.2 Electron delivery architecture (NosR, and alternative arrangements)</h4>
+<p>In many denitrifiers, whole-cell N2O respiration depends on <strong>NosR</strong>, a membrane-associated <strong>iron–sulfur flavoprotein</strong> that is required to sustain in vivo NosZ activity and is implicated in electron transfer from the membrane redox pool to the periplasmic enzyme (wunsch2005functionaldomainsof pages 1-2, wunsch2005functionaldomainsof pages 5-6, wunsch2005functionaldomainsof pages 7-8). Experimental NosR variants lacking key domains can yield NosZ that remains catalytically active in vitro but cannot support whole-cell N2O respiration, consistent with an electron-supply/activation role in vivo (wunsch2005functionaldomainsof pages 7-8).</p>
+<p>Some organisms lack nosR and instead have alternative electron-entry solutions (e.g., a c-type cytochrome fused to NosZ), underscoring that <strong>electron delivery to periplasmic NosZ is modular across bacteria</strong> (wunsch2005functionaldomainsof pages 7-8). This is relevant to Q6N843 because UniProt notes a cytochrome-c–related segment in the C-terminal section, consistent with known diversity in NosZ-associated electron-transfer architectures.</p>
+<h3 id="3-biogenesis-assembly-and-accessory-genes-functional-neighborhood">3) Biogenesis, assembly, and accessory genes (functional neighborhood)</h3>
+<p>NosZ function depends critically on correct assembly of CuA and CuZ in the periplasm.</p>
+<h4 id="31-minimalcentral-maturation-functions-nosdfy-and-nosl">3.1 Minimal/central maturation functions (NosD/F/Y and NosL)</h4>
+<p>A major theme across experimental and review literature is that CuZ biogenesis requires a dedicated accessory apparatus:</p>
+<ul>
+<li><strong>NosD/F/Y</strong>: an <strong>ABC-transporter–like system</strong> required for assembly of the catalytic Cu–S center; strong evidence supports a role in delivering/handling a <strong>sulfur species</strong> needed for CuZ formation (zumft2006biogenesisofthe pages 5-6, wunsch2003requirementsforcua pages 1-2).</li>
+<li><strong>NosL</strong>: a periplasm-facing/outer-membrane-anchored <strong>Cu(I) chaperone</strong> implicated in copper delivery for NosZ maturation (zumft2006biogenesisofthe pages 5-6, zumft2006biogenesisofthe pages 1-2).</li>
+</ul>
+<p>In an experimental heterologous maturation system, coexpression of key nos genes (including nosRZ and nosDFY) was sufficient to produce active holo-NosZ, implicating NosD/F/Y as “obligatory” for Cu–S center assembly in that context (wunsch2003requirementsforcua pages 1-2).</p>
+<h4 id="32-additional-accessory-factors-nosx-nosa-sco-like-proteins">3.2 Additional accessory factors (NosX, NosA, Sco-like proteins)</h4>
+<p>Additional factors frequently cluster with nos genes and influence NosZ maturation/state:</p>
+<ul>
+<li><strong>NosX</strong>: described as a periplasmic <strong>FAD-containing</strong> flavoprotein, often <strong>Tat-exported</strong>, frequently found in nos clusters (e.g., nosRZDFYLX). Lack of NosX can shift the catalytic center toward an altered <strong>CuZ*</strong> state, linking NosX to proper catalytic-center configuration/activation (zumft2006biogenesisofthe pages 9-10).</li>
+<li><strong>NosA</strong>: described (in <em>Pseudomonas stutzeri</em>) as a Cu-containing outer-membrane protein suggested to aid Cu uptake under anaerobic/Cu limitation; however, nosA mutants can still respire N2O in some contexts, indicating species/context dependence (zumft2006biogenesisofthe pages 9-10).</li>
+<li><strong>Sco/ScoP homologues</strong>: Cu-binding proteins with conserved cysteine motifs (e.g., CxxxCP) that can participate in Cu handling/oxidative protection; experimental deletions in some systems suggest they are not always obligatory for NosZ maturation (wunsch2003requirementsforcua pages 4-5, zumft2006biogenesisofthe pages 9-10).</li>
+</ul>
+<p><strong>Implication for Q6N843 annotation:</strong> even if the precise gene neighborhood in <em>R. palustris</em> CGA009 differs, the most evidence-supported expectation is that <strong>functional NosZ requires periplasmic copper delivery and CuZ sulfide insertion machinery</strong>, usually encoded near nosZ (zumft2006biogenesisofthe pages 5-6, zumft2006biogenesisofthe pages 1-2).</p>
+<h3 id="4-clade-i-vs-clade-ii-nosz-definitions-ecology-and-kinetics">4) Clade I vs clade II nosZ: definitions, ecology, and kinetics</h3>
+<h4 id="41-definitions-and-ecological-distribution-2024-synthesis">4.1 Definitions and ecological distribution (2024 synthesis)</h4>
+<p>A 2024 review of aquatic nosZ diversity compiled <strong>&gt;11,000 nosZ sequences</strong> and reinforced that nosZ segregates into <strong>two major clades</strong> with strong ecological patterning (intrator2024aquaticnitrousoxide pages 1-2). In that synthesis:</p>
+<ul>
+<li><strong>Clade I nosZ</strong> is more associated with organisms encoding “complete denitrification” and is prevalent in certain aquatic habitats (e.g., marine sediments) (intrator2024aquaticnitrousoxide pages 1-2).</li>
+<li><strong>Clade II nosZ</strong> is <strong>more phylogenetically diverse</strong> and <strong>more broadly distributed</strong>, and its hosts often lack other denitrification enzymes, consistent with “incomplete denitrifiers” or specialist N2O reducers (intrator2024aquaticnitrousoxide pages 1-2).</li>
+</ul>
+<h4 id="42-kinetic-distinctions-primary-data">4.2 Kinetic distinctions (primary data)</h4>
+<p>Whole-cell kinetic measurements show systematic differences between clades. In a widely used comparative study, the <strong>apparent half-saturation constants (Ks)</strong> for N2O were orders of magnitude lower for clade II organisms than for tested clade I organisms, consistent with higher apparent N2O affinity in clade II:</p>
+<ul>
+<li><strong>Clade II</strong>: <em>Dechloromonas aromatica</em> Ks = <strong>0.324 ± 0.078</strong>; <em>Anaeromyxobacter dehalogenans</em> Ks = <strong>1.34 ± 0.35</strong>.</li>
+<li><strong>Clade I</strong>: <em>Pseudomonas stutzeri</em> Ks = <strong>35.5 ± 9.3</strong>; <em>Shewanella loihica</em> Ks = <strong>7.07 ± 1.13</strong> (yoon2016nitrousoxidereduction pages 1-2).</li>
+</ul>
+<p>The same study reported <strong>~1.5–1.8× higher growth yields</strong> for clade II isolates relative to clade I isolates under N2O-respiring conditions tested (yoon2016nitrousoxidereduction pages 1-2).</p>
+<h4 id="43-ph-sensitivity-and-clade-selection-2024-primary-study">4.3 pH sensitivity and clade selection (2024 primary study)</h4>
+<p>A 2024 soil microcosm study highlighted that the final denitrification step (N2O → N2) can be especially sensitive to pH and that clade II nosZ-containing organisms can dominate N2O reduction potential in certain acidic environments, often lacking nir genes (nirS/nirK) (sun2024phselectsfor pages 1-2). The study used controlled N2O feeding regimes and reported long lag times in some acidic/high-N2O microcosms, consistent with constraints on N2O-reduction activity under low pH (sun2024phselectsfor pages 1-2).</p>
+<h3 id="5-current-applications-and-real-world-implementations-focus-on-20232024">5) Current applications and real-world implementations (focus on 2023–2024)</h3>
+<h4 id="51-field-scale-mitigation-via-inoculationbiostimulation-nature-2024">5.1 Field-scale mitigation via inoculation/biostimulation (Nature 2024)</h4>
+<p>A 2024 field study demonstrated a practical route to reduce agricultural soil N2O emissions by delivering N2O-respiring bacteria (with NosZ activity) using organic waste (digestate) as a substrate/vector. The paper reports that fertilization with digestate containing approximately <strong>6 × 10^9 cells mL−1</strong> of the selected strain reduced N2O emissions by <strong>50–95%</strong>, depending on soil type (hiis2024unlockingbacterialpotential media eb6c8c86). The field reductions are displayed in <strong>Figure 4</strong>, showing reductions of <strong>52%, 89%, 95%, and 53%</strong> across soil types (hiis2024unlockingbacterialpotential media 670020dc).</p>
+<p>These results exemplify a near-term “microbiome engineering” strategy: increasing in situ N2O sink capacity by introducing robust N2O-respiring populations rather than only trying to suppress N2O formation.</p>
+<h4 id="52-environmental-suppression-of-emissions-by-clade-ii-sinks-2024-aquifer-study">5.2 Environmental suppression of emissions by clade II sinks (2024 aquifer study)</h4>
+<p>In a 2024 aquifer investigation with strong subsurface N2O production but limited surface emission, depth-resolved molecular analyses indicated that consumption of N2O near the surface correlated with enrichment of <strong>clade II</strong> N2O reducers, supporting a growing understanding that clade II NosZ guilds can strongly regulate net emissions in some systems (wunsch2005functionaldomainsof pages 5-6).</p>
+<h4 id="53-implications-for-engineered-nitrogen-removal-wastewaterbioreactors">5.3 Implications for engineered nitrogen removal (wastewater/bioreactors)</h4>
+<p>While the detailed engineering literature is broader than the evidence retrieved here, the mechanistic requirements summarized above (periplasmic maturation; dependence on copper delivery and accessory factors) motivate operational strategies that protect/enable NosZ activity (e.g., maintaining conditions supporting periplasmic copper cofactor assembly and avoiding environmental constraints that stall NosZ in inactive forms). The strong dependency of N2O sink capacity on community composition (clade I vs II) and environmental parameters (e.g., pH) is directly supported by 2024 studies (sun2024phselectsfor pages 1-2, intrator2024aquaticnitrousoxide pages 1-2).</p>
+<h3 id="6-expert-synthesis-authoritative-analysis-what-is-well-established-vs-uncertain">6) Expert synthesis / authoritative analysis (what is well established vs. uncertain)</h3>
+<h4 id="61-well-established-features-suitable-for-high-confidence-functional-annotation-of-q6n843">6.1 Well-established features suitable for high-confidence functional annotation of Q6N843</h4>
+<p>On the basis of authoritative mechanistic review and primary genetics/biochemistry in model systems, the following are high-confidence annotations for UniProt Q6N843 NosZ:</p>
+<ul>
+<li><strong>Enzymatic function:</strong> N2O reductase converting N2O to N2 (zumft2006biogenesisofthe pages 1-2).</li>
+<li><strong>Cofactors:</strong> multicopper enzyme with <strong>CuA</strong> and <strong>CuZ</strong> centers; CuZ is a sulfide-bridged tetranuclear catalytic cluster (zumft2006biogenesisofthe pages 1-2, wunsch2003requirementsforcua pages 1-2).</li>
+<li><strong>Localization:</strong> <strong>periplasmic</strong>, with <strong>Tat-dependent export</strong> and <strong>periplasmic cofactor insertion</strong> (zumft2006biogenesisofthe pages 4-5, zumft2006biogenesisofthe pages 5-6).</li>
+<li><strong>Accessory requirements:</strong> NosZ activity depends on a broader nos system, prominently <strong>NosD/F/Y</strong> (CuZ assembly; sulfur handling) and <strong>NosL</strong> (copper chaperoning), and frequently <strong>NosR</strong> and <strong>NosX</strong> for whole-cell N2O respiration/activation (zumft2006biogenesisofthe pages 5-6, zumft2006biogenesisofthe pages 1-2, zumft2006biogenesisofthe pages 9-10, wunsch2005functionaldomainsof pages 7-8).</li>
+</ul>
+<h4 id="62-what-remains-organism-specific-and-not-directly-resolved-here-for-r-palustris-cga009">6.2 What remains organism-specific (and not directly resolved here for <em>R. palustris</em> CGA009)</h4>
+<p>The evidence retrieved does not directly report purified enzyme kinetics, transcriptional regulation, or gene-neighborhood experiments specifically for <strong>Q6N843</strong> in <em>R. palustris</em> CGA009. Therefore, organism-specific annotations such as the exact electron donor pathway (specific cytochromes/quinol dehydrogenases used), operon composition in CGA009, and regulation under different growth modes should be treated as <strong>inferred</strong> from conserved NosZ biology rather than confirmed for this strain.</p>
+<h3 id="7-summary-table-evidence-backed-functional-annotation">7) Summary table (evidence-backed functional annotation)</h3>
+<p>The following table consolidates the key functional and contextual annotations for Q6N843 nosZ.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation topic</th>
+<th>Functional annotation for UniProt Q6N843 / <strong>nosZ</strong> in <em>Rhodopseudomonas palustris</em> CGA009</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Function / reaction (EC)</td>
+<td><strong>NosZ = nitrous-oxide reductase</strong>, the terminal respiratory oxidoreductase of denitrification/N2O respiration; catalyzes <strong>N2O + 2 H+ + 2 e− → N2 + H2O</strong>. Canonical EC in older literature is <strong>1.7.99.6</strong>; UniProt assigns <strong>EC 1.7.2.4</strong> for Q6N843. Overall function is consistent across sources and matches the UniProt description for Q6N843 (zumft2006biogenesisofthe pages 1-2, intrator2024aquaticnitrousoxide pages 1-2).</td>
+</tr>
+<tr>
+<td>Substrate &amp; products</td>
+<td><strong>Substrate:</strong> nitrous oxide (<strong>N2O</strong>). <strong>Products:</strong> dinitrogen (<strong>N2</strong>) and water. NosZ-bearing organisms are the <strong>only known biological sink</strong> for N2O (zumft2006biogenesisofthe pages 1-2, intrator2024aquaticnitrousoxide pages 1-2).</td>
+</tr>
+<tr>
+<td>Electron entry / donors (general)</td>
+<td>Electrons enter NosZ through the <strong>CuA</strong> center and are delivered to catalytic <strong>CuZ</strong>. In vivo, electron supply commonly depends on <strong>NosR</strong>, a membrane Fe-S/flavoprotein proposed to draw electrons from the quinol pool or a related membrane redox chain; some assays used artificial donors such as <strong>benzyl viologen</strong>, while whole-cell studies used organic donors such as <strong>acetate</strong>, <strong>citrate</strong>, or <strong>lactate</strong> depending on organism/experiment. Thus, Q6N843 is best annotated as a <strong>periplasmic respiratory reductase receiving electrons indirectly from membrane/periplasmic redox partners rather than binding a dedicated small-molecule donor itself</strong> (wunsch2005functionaldomainsof pages 7-8, wunsch2005functionaldomainsof pages 6-7, yoon2016nitrousoxidereduction pages 1-2, wunsch2003requirementsforcua pages 4-5, sun2024phselectsfor pages 1-2).</td>
+</tr>
+<tr>
+<td>Cofactors / metal centers</td>
+<td>NosZ is a <strong>multicopper homodimer</strong>. Each monomer carries <strong>CuA</strong> (binuclear, mixed-valent electron-transfer site) and <strong>CuZ</strong> (tetranuclear, sulfide-bridged catalytic Cu-S cluster). Canonical stoichiometry is <strong>6 Cu per monomer / ~12 Cu per dimer</strong>. CuZ is the catalytic center for N2O reduction; CuA is the electron-entry site (zumft2006biogenesisofthe pages 1-2, wunsch2003requirementsforcua pages 1-2, wunsch2005functionaldomainsof pages 6-7, cua2010expressionofgenes pages 37-42).</td>
+</tr>
+<tr>
+<td>Localization &amp; export pathway</td>
+<td>For canonical/clade I NosZ such as Q6N843, activity is <strong>periplasmic</strong>. NosZ is exported as an <strong>apo-protein by the Tat pathway</strong> via a twin-arginine leader; copper loading occurs <strong>post-translocationally in the periplasm</strong>. Cell fractionation and immunogold EM in model systems support periplasmic localization. Clade I enzymes generally have a <strong>Tat leader</strong>, whereas clade II enzymes may instead use a <strong>Sec leader</strong> (zumft2006biogenesisofthe pages 4-5, zumft2006biogenesisofthe pages 5-6, bennett2019assemblyofthe pages 35-39).</td>
+</tr>
+<tr>
+<td>Key maturation / accessory proteins</td>
+<td><strong>NosR:</strong> membrane Fe-S/flavoprotein required for whole-cell N2O respiration; supports mature NosZ activity/electron delivery and can affect nosZ expression (wunsch2005functionaldomainsof pages 5-6, wunsch2005functionaldomainsof pages 1-2, wunsch2005functionaldomainsof pages 7-8). <strong>NosX:</strong> periplasmic FAD protein, often Tat-exported; linked to proper catalytic-center state and may participate in redox activation of NosZ (zumft2006biogenesisofthe pages 9-10, zumft2006biogenesisofthe pages 1-2). <strong>NosD/F/Y:</strong> ABC-type assembly system essential for CuZ biogenesis; strongest evidence supports delivery/handling of a sulfur species needed for the Cu-S catalytic center (zumft2006biogenesisofthe pages 5-6, wunsch2003requirementsforcua pages 1-2, bennett2019assemblyofthe pages 35-39). <strong>NosL:</strong> outer-membrane/periplasm-facing lipoprotein Cu(I) chaperone for periplasmic copper delivery to NosZ assembly (zumft2006biogenesisofthe pages 5-6, bennett2019assemblyofthe pages 35-39, zumft2006biogenesisofthe pages 1-2). <strong>NosA:</strong> Cu-responsive outer-membrane protein proposed to assist copper uptake under Cu limitation, but dispensable in some backgrounds (zumft2006biogenesisofthe pages 9-10). <strong>Sco/ScoP:</strong> Sco1-family Cu-binding protein implicated in Cu handling/oxidative protection; can be nonessential for NosZ maturation in some organisms (zumft2006biogenesisofthe pages 9-10, wunsch2003requirementsforcua pages 4-5).</td>
+</tr>
+<tr>
+<td>Likely operon / family context for Q6N843</td>
+<td>Q6N843 matches the <strong>canonical NosZ family</strong> described in denitrifiers: a periplasmic, multicopper nitrous-oxide reductase typically embedded in a <strong>nos gene cluster</strong> containing core biogenesis functions such as <strong>nosRZDFYL</strong>, often plus <strong>nosX</strong> and sometimes <strong>nosA/sco-like</strong> functions. This fits UniProt domain architecture and annotation for <em>R. palustris</em> CGA009 (zumft2006biogenesisofthe pages 1-2, zumft2006biogenesisofthe pages 9-10, bennett2019assemblyofthe pages 35-39).</td>
+</tr>
+<tr>
+<td>Clade I vs Clade II distinctions</td>
+<td><strong>Clade I:</strong> usually associated with more canonical/complete denitrifiers, often in Proteobacteria/Pseudomonadota; generally Tat-exported NosZ and classical nos operons. <strong>Clade II:</strong> phylogenetically broader, often in organisms lacking <strong>nirS/nirK</strong> and thus acting as specialist or partial N2O reducers; wider environmental distribution and commonly higher apparent N2O affinity. Q6N843 from <em>R. palustris</em> is most consistent with <strong>clade I/canonical NosZ</strong> based on domain architecture and organismal context (intrator2024aquaticnitrousoxide pages 1-2, sun2024phselectsfor pages 1-2, bennett2019assemblyofthe pages 35-39).</td>
+</tr>
+<tr>
+<td>Clade I vs Clade II kinetics (Yoon 2016)</td>
+<td>Whole-cell apparent half-saturation constants (<strong>Ks</strong>) for N2O separated clades: <strong>clade II</strong> <em>Dechloromonas aromatica</em> <strong>0.324 ± 0.078</strong>, <em>Anaeromyxobacter dehalogenans</em> <strong>1.34 ± 0.35</strong>; <strong>clade I</strong> <em>Pseudomonas stutzeri</em> <strong>35.5 ± 9.3</strong>, <em>Shewanella loihica</em> <strong>7.07 ± 1.13</strong>. Clade II strains also showed <strong>~1.5–1.8-fold higher growth yields</strong> with N2O as electron acceptor in that study (yoon2016nitrousoxidereduction pages 1-2).</td>
+</tr>
+<tr>
+<td>Real-world / engineering applications</td>
+<td>NosZ is being actively exploited for <strong>N2O mitigation</strong> in soils, aquifers, and biotechnological nitrogen removal systems. A 2024 <strong>Nature</strong> field study using <strong>Cloacibacterium sp. CB-01</strong> (a NosZ-based inoculant/vector in digestate) reported <strong>soil-specific N2O emission reductions of 52%, 89%, 95%, and 53%</strong> in Figure 4, with the paper summarizing an overall <strong>50–95%</strong> reduction range and projecting potentially meaningful national-scale mitigation if deployed broadly (hiis2024unlockingbacterialpotential media 670020dc, hiis2024unlockingbacterialpotential media eb6c8c86). Recent 2024 studies also link surface N2O suppression to enrichment of <strong>clade II</strong> reducers in aquifers and show strong pH/oxygen-history effects on which NosZ guilds dominate environmental N2O sinks (wunsch2005functionaldomainsof pages 5-6, sun2024phselectsfor pages 1-2, intrator2024aquaticnitrousoxide pages 1-2).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the key functional annotation points for UniProt Q6N843 NosZ, including reaction chemistry, localization, copper cofactors, accessory proteins, clade distinctions, and recent mitigation applications. It is useful as a compact evidence-backed reference for gene function and biological context.</em></p>
+<h3 id="key-references-urls-and-publication-dates">Key references (URLs and publication dates)</h3>
+<ul>
+<li>Zumft WG. <strong>“Biogenesis of the Bacterial Respiratory CuA, Cu-S Enzyme Nitrous Oxide Reductase.”</strong> <em>Journal of Molecular Microbiology and Biotechnology</em> (Apr <strong>2006</strong>). https://doi.org/10.1159/000091562 (zumft2006biogenesisofthe pages 1-2)</li>
+<li>Wunsch P, Herb M, Wieland H, Schiek UM, Zumft WG. <strong>“Requirements for CuA and Cu-S Center Assembly of Nitrous Oxide Reductase…”</strong> <em>Journal of Bacteriology</em> (Feb <strong>2003</strong>). https://doi.org/10.1128/JB.185.3.887-896.2003 (wunsch2003requirementsforcua pages 1-2)</li>
+<li>Wunsch P, Zumft WG. <strong>“Functional Domains of NosR…”</strong> <em>Journal of Bacteriology</em> (Mar <strong>2005</strong>). https://doi.org/10.1128/JB.187.6.1992-2001.2005 (wunsch2005functionaldomainsof pages 5-6)</li>
+<li>Yoon S, Nissen S, Park D, Sanford RA, Löffler FE. <strong>“Nitrous Oxide Reduction Kinetics Distinguish Bacteria Harboring Clade I NosZ from Those Harboring Clade II NosZ.”</strong> <em>Applied and Environmental Microbiology</em> (Jul <strong>2016</strong>). https://doi.org/10.1128/AEM.00409-16 (yoon2016nitrousoxidereduction pages 1-2)</li>
+<li>Intrator N, Jayakumar A, Ward BB. <strong>“Aquatic nitrous oxide reductase gene (nosZ) phylogeny and environmental distribution.”</strong> <em>Frontiers in Microbiology</em> (May <strong>2024</strong>). https://doi.org/10.3389/fmicb.2024.1407573 (intrator2024aquaticnitrousoxide pages 1-2)</li>
+<li>Sun Y, et al. <strong>“pH selects for distinct N2O-reducing microbiomes in tropical soil microcosms.”</strong> <em>ISME Communications</em> (Jan <strong>2024</strong>). https://doi.org/10.1093/ismeco/ycae070 (sun2024phselectsfor pages 1-2)</li>
+<li>Hiis EG, et al. <strong>“Unlocking bacterial potential to reduce farmland N2O emissions.”</strong> <em>Nature</em> (May <strong>2024</strong>). https://doi.org/10.1038/s41586-024-07464-3 (field reductions shown in Fig. 4) (hiis2024unlockingbacterialpotential media 670020dc, hiis2024unlockingbacterialpotential media eb6c8c86)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(zumft2006biogenesisofthe pages 1-2): Walter G. Zumft. Biogenesis of the bacterial respiratory cua, cu-s enzyme nitrous oxide reductase. Journal of Molecular Microbiology and Biotechnology, 10:154-166, Apr 2006. URL: https://doi.org/10.1159/000091562, doi:10.1159/000091562. This article has 87 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(intrator2024aquaticnitrousoxide pages 1-2): Naomi Intrator, Amal Jayakumar, and Bess B. Ward. Aquatic nitrous oxide reductase gene (nosz) phylogeny and environmental distribution. Frontiers in Microbiology, May 2024. URL: https://doi.org/10.3389/fmicb.2024.1407573, doi:10.3389/fmicb.2024.1407573. This article has 19 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2003requirementsforcua pages 1-2): Patrick Wunsch, Margitta Herb, Hagen Wieland, Ulrike M. Schiek, and Walter G. Zumft. Requirements for cua and cu-s center assembly of nitrous oxide reductase deduced from complete periplasmic enzyme maturation in the nondenitrifier pseudomonas putida. Journal of Bacteriology, 185:887-896, Feb 2003. URL: https://doi.org/10.1128/jb.185.3.887-896.2003, doi:10.1128/jb.185.3.887-896.2003. This article has 100 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2005functionaldomainsof pages 6-7): Patrick Wunsch and Walter G. Zumft. Functional domains of nosr, a novel transmembrane iron-sulfur flavoprotein necessary for nitrous oxide respiration. Journal of Bacteriology, 187:1992-2001, Mar 2005. URL: https://doi.org/10.1128/jb.187.6.1992-2001.2005, doi:10.1128/jb.187.6.1992-2001.2005. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zumft2006biogenesisofthe pages 4-5): Walter G. Zumft. Biogenesis of the bacterial respiratory cua, cu-s enzyme nitrous oxide reductase. Journal of Molecular Microbiology and Biotechnology, 10:154-166, Apr 2006. URL: https://doi.org/10.1159/000091562, doi:10.1159/000091562. This article has 87 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zumft2006biogenesisofthe pages 5-6): Walter G. Zumft. Biogenesis of the bacterial respiratory cua, cu-s enzyme nitrous oxide reductase. Journal of Molecular Microbiology and Biotechnology, 10:154-166, Apr 2006. URL: https://doi.org/10.1159/000091562, doi:10.1159/000091562. This article has 87 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoon2016nitrousoxidereduction pages 1-2): Sukhwan Yoon, Silke Nissen, Doyoung Park, Robert A. Sanford, and Frank E. Löffler. Nitrous oxide reduction kinetics distinguish bacteria harboring clade i nosz from those harboring clade ii nosz. Applied and Environmental Microbiology, 82:3793-3800, Jul 2016. URL: https://doi.org/10.1128/aem.00409-16, doi:10.1128/aem.00409-16. This article has 263 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2005functionaldomainsof pages 1-2): Patrick Wunsch and Walter G. Zumft. Functional domains of nosr, a novel transmembrane iron-sulfur flavoprotein necessary for nitrous oxide respiration. Journal of Bacteriology, 187:1992-2001, Mar 2005. URL: https://doi.org/10.1128/jb.187.6.1992-2001.2005, doi:10.1128/jb.187.6.1992-2001.2005. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2005functionaldomainsof pages 5-6): Patrick Wunsch and Walter G. Zumft. Functional domains of nosr, a novel transmembrane iron-sulfur flavoprotein necessary for nitrous oxide respiration. Journal of Bacteriology, 187:1992-2001, Mar 2005. URL: https://doi.org/10.1128/jb.187.6.1992-2001.2005, doi:10.1128/jb.187.6.1992-2001.2005. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2005functionaldomainsof pages 7-8): Patrick Wunsch and Walter G. Zumft. Functional domains of nosr, a novel transmembrane iron-sulfur flavoprotein necessary for nitrous oxide respiration. Journal of Bacteriology, 187:1992-2001, Mar 2005. URL: https://doi.org/10.1128/jb.187.6.1992-2001.2005, doi:10.1128/jb.187.6.1992-2001.2005. This article has 143 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zumft2006biogenesisofthe pages 9-10): Walter G. Zumft. Biogenesis of the bacterial respiratory cua, cu-s enzyme nitrous oxide reductase. Journal of Molecular Microbiology and Biotechnology, 10:154-166, Apr 2006. URL: https://doi.org/10.1159/000091562, doi:10.1159/000091562. This article has 87 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wunsch2003requirementsforcua pages 4-5): Patrick Wunsch, Margitta Herb, Hagen Wieland, Ulrike M. Schiek, and Walter G. Zumft. Requirements for cua and cu-s center assembly of nitrous oxide reductase deduced from complete periplasmic enzyme maturation in the nondenitrifier pseudomonas putida. Journal of Bacteriology, 185:887-896, Feb 2003. URL: https://doi.org/10.1128/jb.185.3.887-896.2003, doi:10.1128/jb.185.3.887-896.2003. This article has 100 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sun2024phselectsfor pages 1-2): Yanchen Sun, Yongchao Yin, Guang He, Gyuhyon Cha, Héctor L Ayala-del-Río, Grizelle González, Konstantinos T Konstantinidis, and Frank E Löffler. Ph selects for distinct n2o-reducing microbiomes in tropical soil microcosms. ISME Communications, Jan 2024. URL: https://doi.org/10.1093/ismeco/ycae070, doi:10.1093/ismeco/ycae070. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hiis2024unlockingbacterialpotential media eb6c8c86): Elisabeth G. Hiis, Silas H. W. Vick, Lars Molstad, Kristine Røsdal, Kjell Rune Jonassen, Wilfried Winiwarter, and Lars R. Bakken. Unlocking bacterial potential to reduce farmland n2o emissions. Nature, 630:421-428, May 2024. URL: https://doi.org/10.1038/s41586-024-07464-3, doi:10.1038/s41586-024-07464-3. This article has 143 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hiis2024unlockingbacterialpotential media 670020dc): Elisabeth G. Hiis, Silas H. W. Vick, Lars Molstad, Kristine Røsdal, Kjell Rune Jonassen, Wilfried Winiwarter, and Lars R. Bakken. Unlocking bacterial potential to reduce farmland n2o emissions. Nature, 630:421-428, May 2024. URL: https://doi.org/10.1038/s41586-024-07464-3, doi:10.1038/s41586-024-07464-3. This article has 143 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cua2010expressionofgenes pages 37-42): L Cua. Expression of genes linked to nox detoxification in aerobic bacteria. Unknown journal, 2010.</p>
+</li>
+<li>
+<p>(bennett2019assemblyofthe pages 35-39): S Bennett. Assembly of the copper centres of nitrous oxide reductase in paracoccus denitrificans and connections to copper detoxification/trafficking. Unknown journal, 2019.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nosZ-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000016 The field experiment N2O emission reductions (50–95%) for *Cloacibacterium* sp. CB-01 are reported in Figure 4, which shows reducti" src="nosZ-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>zumft2006biogenesisofthe pages 1-2</li>
+<li>zumft2006biogenesisofthe pages 4-5</li>
+<li>wunsch2005functionaldomainsof pages 7-8</li>
+<li>wunsch2003requirementsforcua pages 1-2</li>
+<li>zumft2006biogenesisofthe pages 9-10</li>
+<li>intrator2024aquaticnitrousoxide pages 1-2</li>
+<li>yoon2016nitrousoxidereduction pages 1-2</li>
+<li>sun2024phselectsfor pages 1-2</li>
+<li>wunsch2005functionaldomainsof pages 5-6</li>
+<li>wunsch2005functionaldomainsof pages 6-7</li>
+<li>zumft2006biogenesisofthe pages 5-6</li>
+<li>wunsch2005functionaldomainsof pages 1-2</li>
+<li>wunsch2003requirementsforcua pages 4-5</li>
+<li>cua2010expressionofgenes pages 37-42</li>
+<li>bennett2019assemblyofthe pages 35-39</li>
+<li>https://doi.org/10.1159/000091562</li>
+<li>https://doi.org/10.1128/JB.185.3.887-896.2003</li>
+<li>https://doi.org/10.1128/JB.187.6.1992-2001.2005</li>
+<li>https://doi.org/10.1128/AEM.00409-16</li>
+<li>https://doi.org/10.3389/fmicb.2024.1407573</li>
+<li>https://doi.org/10.1093/ismeco/ycae070</li>
+<li>https://doi.org/10.1038/s41586-024-07464-3</li>
+<li>https://doi.org/10.1159/000091562,</li>
+<li>https://doi.org/10.3389/fmicb.2024.1407573,</li>
+<li>https://doi.org/10.1128/jb.185.3.887-896.2003,</li>
+<li>https://doi.org/10.1128/jb.187.6.1992-2001.2005,</li>
+<li>https://doi.org/10.1128/aem.00409-16,</li>
+<li>https://doi.org/10.1093/ismeco/ycae070,</li>
+<li>https://doi.org/10.1038/s41586-024-07464-3,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nosZ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6N843" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nosz-notes">nosZ notes</h1>
+<ul>
+<li>GOA annotates nosZ with nitrous-oxide reductase activity and UniPathway denitrification pathway membership [file:RHOPA/nosZ/nosZ-goa.tsv].</li>
+<li>The UniPathway denitrification pathway annotation is accepted because NosZ catalyzes the terminal nitrous-oxide reduction step in denitrification [file:RHOPA/nosZ/nosZ-uniprot.txt; GO_REF:0000041].</li>
+<li>The cytochrome-c oxidase activity row was removed as a likely family/domain mapping artifact; the specific molecular function is nitrous-oxide reductase activity [file:RHOPA/nosZ/nosZ-goa.tsv].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6N843
+gene_symbol: nosZ
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:258594
+  label: Rhodopseudomonas palustris (strain ATCC BAA-98 / CGA009)
+description: &gt;-
+  nosZ encodes nitrous-oxide reductase, the copper enzyme that reduces nitrous
+  oxide to dinitrogen in the terminal N2O-reduction step of denitrification or
+  nitrogen oxide respiration.
+existing_annotations:
+- term:
+    id: GO:0004129
+    label: cytochrome-c oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      REMOVE. NosZ is a nitrous-oxide reductase, not cytochrome-c oxidase. The
+      specific nitrous-oxide reductase activity annotation is present.
+    action: REMOVE
+    reason: &gt;-
+      The cytochrome-c oxidase activity term appears to come from a shared
+      cytochrome oxidase subunit II-like copper-binding domain. The protein
+      assignment, EC number, HAMAP model, and PANTHER subfamily all identify
+      this sequence as nitrous-oxide reductase, so GO:0050304 is the correct
+      MF. Family research confirms that PTHR42838 can conflate NosZ with
+      cytochrome c oxidase subunit II because both carry CuA-related domains.
+    proposed_replacement_terms:
+    - id: GO:0050304
+      label: nitrous-oxide reductase activity
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;RecName: Full=Nitrous-oxide reductase; EC=1.7.2.4.&#39;
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;PANTHER; PTHR42838:SF2; NITROUS-OXIDE REDUCTASE.&#39;
+    - reference_id: file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+      supporting_text: &gt;-
+        PTHR42838 family research separates true NosZ/N2OR proteins from
+        cytochrome c oxidase subunit II homologs and warns against assigning
+        oxidase activity to NosZ from CuA-domain similarity.
+- term:
+    id: GO:0005507
+    label: copper ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      ACCEPT. Nitrous-oxide reductase is a copper enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      NosZ binds copper cofactors required for nitrous-oxide reduction. UniProt
+      notes six copper cations per subunit and identifies the CuA and CuZ
+      centers. Falcon supports the conserved CuA/CuZ architecture but did not
+      recover Q6N843-specific metal analysis.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: Binds 6 Cu cations per subunit. Each subunit contains 2 copper centers, CuA and CuZ.
+    - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+      supporting_text: &gt;-
+        Canonical NosZ enzymes contain CuA electron-entry and CuZ catalytic
+        copper centers for N2O reduction; Q6N843-specific metal analysis was not
+        recovered.
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KEEP_AS_NON_CORE. This may reflect family-level cofactor information, but
+      copper-dependent nitrous-oxide reduction is the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Calcium binding may be associated with the family/domain model, but the
+      core experimentally meaningful cofactor for NosZ catalysis is copper. Keep
+      as non-core rather than centering the review on this cofactor.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: Binds 2 calcium ions per subunit.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      UNDECIDED. NosZ is usually exported to the periplasm and can associate
+      with membrane electron-transfer systems, but this broad membrane
+      annotation is not resolved from the current automated evidence alone.
+    action: UNDECIDED
+    reason: &gt;-
+      The protein is predicted to be exported to the periplasm by the Tat
+      system. A broad membrane annotation may reflect associated respiratory
+      electron-transfer context or family transfer rather than the location of
+      the soluble catalytic protein itself, so this is left unresolved. Falcon
+      supports periplasmic/Tat biology as family-level evidence but did not find
+      a CGA009 localization experiment.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Periplasm.&#39;
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: Predicted to be exported by the Tat system.
+    - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+      supporting_text: &gt;-
+        NosZ is commonly Tat-exported to the periplasm for copper-center
+        maturation, but no Q6N843-specific fractionation experiment was
+        recovered.
+- term:
+    id: GO:0042597
+    label: periplasmic space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      ACCEPT. Bacterial NosZ functions as an exported/periplasmic denitrification
+      enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Periplasmic localization is directly predicted in UniProt and is
+      consistent with Tat export of bacterial NosZ nitrous-oxide reductases.
+      Falcon supports this as canonical NosZ-family biology rather than direct
+      CGA009 localization evidence.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Periplasm.&#39;
+    - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+      supporting_text: &gt;-
+        NosZ family literature supports periplasmic maturation after Tat export;
+        Q6N843-specific localization was not directly resolved.
+- term:
+    id: GO:0050304
+    label: nitrous-oxide reductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      ACCEPT. This is the specific molecular function of NosZ.
+    action: ACCEPT
+    reason: &gt;-
+      This is the precise EC-supported activity for the protein. UniProt names
+      the sequence nitrous-oxide reductase, assigns EC 1.7.2.4, and PANTHER
+      places it in a nitrous-oxide reductase subfamily. Falcon did not recover
+      a purified R. palustris Q6N843 assay, so the support is
+      EC/subfamily/family mechanism.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;RecName: Full=Nitrous-oxide reductase; EC=1.7.2.4.&#39;
+    - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+      supporting_text: &gt;-
+        NosZ-family literature supports N2O + 2 electrons + 2 protons to N2 and
+        water as the core reaction; no Q6N843-specific kinetic assay was
+        recovered.
+- term:
+    id: GO:1902600
+    label: proton transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: &gt;-
+      UNDECIDED. The gene participates in respiratory electron transfer, but
+      direct assignment of proton transmembrane transport to NosZ itself is not
+      supported by the current local evidence.
+    action: UNDECIDED
+    reason: &gt;-
+      NosZ is part of a respiratory chain at the pathway level, but the local
+      evidence identifies this gene product as nitrous-oxide reductase rather
+      than a proton-translocating complex. Do not infer direct proton transport
+      from respiratory-chain participation alone.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: Nitrous-oxide reductase is part of a bacterial respiratory chain that uses nitrate or nitrous oxide.
+- term:
+    id: GO:0019333
+    label: denitrification pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: &gt;-
+      ACCEPT. UniPathway correctly captures the pathway role of NosZ as the
+      terminal nitrous-oxide-reduction enzyme in denitrification.
+    action: ACCEPT
+    reason: &gt;-
+      The denitrification pathway annotation follows directly from the enzyme
+      role: NosZ catalyzes nitrous oxide reduction, the terminal step in
+      denitrification. This is supported by conserved NosZ family/EC evidence
+      and UniProt pathway mapping. Falcon supports the terminal N2O-sink step
+      and notes that electron delivery/accessory requirements are context
+      dependent.
+    supported_by:
+    - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+      supporting_text: &#39;PATHWAY: Nitrogen metabolism; nitrate reduction (denitrification); dinitrogen from nitrate: step 4/4.&#39;
+    - reference_id: file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+      supporting_text: &gt;-
+        NosZ/N2OR catalyzes N2O reduction to N2, the terminal step of
+        denitrification, while cytochrome c oxidase subunit II is a distinct
+        CuA-containing electron-entry subunit.
+    - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+      supporting_text: &gt;-
+        NosZ is the only known biological N2O sink and the terminal respiratory
+        reductase for N2O-to-N2 conversion; gene-neighborhood and regulation
+        details for Q6N843 were not directly resolved.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:RHOPA/nosZ/nosZ-uniprot.txt
+  title: UniProt record for nosZ
+  findings:
+  - statement: &gt;-
+      UniProt/GOA identify Q6N843 as a nitrous-oxide reductase family protein.
+- id: file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+  title: Falcon family deep research for PTHR42838 NosZ/cytochrome c oxidase subunit II
+  findings:
+  - statement: &gt;-
+      Family research found that PTHR42838 mixes true nitrous-oxide reductases
+      with cytochrome c oxidase subunit II-like CuA proteins, explaining the
+      cytochrome-c oxidase over-annotation and supporting NosZ-specific
+      annotation when EC/subfamily evidence is present.
+- id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+  title: Falcon deep research for nosZ
+  findings:
+  - statement: &gt;-
+      Falcon deep research for nosZ supports nitrous-oxide reductase activity
+      from EC 1.7.2.4, CuA/CuZ NosZ-family mechanism, and UniProt step 4/4
+      pathway mapping. It also notes that Q6N843-specific kinetics, regulation,
+      and exact electron-delivery partners were not recovered.
+core_functions:
+- description: &gt;-
+    Catalyzes nitrous oxide reduction to dinitrogen as the terminal enzyme of
+    bacterial denitrification.
+  molecular_function:
+    id: GO:0050304
+    label: nitrous-oxide reductase activity
+  directly_involved_in:
+  - id: GO:0019333
+    label: denitrification pathway
+  supported_by:
+  - reference_id: file:RHOPA/nosZ/nosZ-uniprot.txt
+    supporting_text: &gt;-
+      GOA includes nitrous-oxide reductase activity and UniPathway
+      denitrification pathway annotations for Q6N843.
+  - reference_id: file:interpro/panther/PTHR42838/PTHR42838-deep-research-falcon.md
+    supporting_text: &gt;-
+      True NosZ proteins reduce N2O to N2 at CuA/CuZ centers, whereas
+      cytochrome c oxidase subunit II homologs are functionally distinct.
+  - reference_id: file:RHOPA/nosZ/nosZ-deep-research-falcon.md
+    supporting_text: &gt;-
+      Falcon deep research supports NosZ as the terminal nitrous-oxide reductase
+      of denitrification/N2O respiration and supports removing cytochrome-c
+      oxidase activity as a shared CuA-domain over-annotation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

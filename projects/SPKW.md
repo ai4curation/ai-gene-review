@@ -11,6 +11,13 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - Bacterial annotations are mostly accurate (~5% issues for P. putida)
 - Viral annotations are clade-sensitive: phage immune/defense terms are often semantic mismatches, while eukaryotic viral immune-evasion terms may be legitimate but too broad
 - Common patterns: process conflation, regulatory vs participatory confusion, caspase substrates
+- **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
+  annotations have been removed from live GOA for all cellular organisms (verified zero for
+  human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
+  project documented is now resolved at the source. Retrospective review of 9 non-Arabidopsis
+  plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
+  real over-annotation risk; removal was justified for those, but blanket retirement also
+  dropped *correct* annotations when the keyword was the only carrier of a fact.
 
 ## Cumulative Results
 
@@ -25,6 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 9 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -60,7 +68,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-21
-- **Total genes reviewed**: 95 recorded in compiled data, plus viral clade reviews summarized in [SPKW-VIRUS.md](SPKW-VIRUS.md)
+- **Total genes reviewed**: 104 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -78,6 +86,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (9 genes, 9 species); term-tier classification + retrospective validation of GOA's SPKW retirement
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -110,6 +119,29 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ---
 
 ## Session Notes
+
+### 2026-05-21
+
+- Added [PLANTS](SPKW-PLANTS.md) subproject: SPKW over-annotation in non-Arabidopsis
+  Viridiplantae.
+- Built `plant.ddb` (go-db, `make plant`) from the Sept 2025 `goa_uniprot_gcrp` snapshot;
+  40.4M annotations, 26,493 SwissProt accessions.
+- Closure-filtered TRUE SPKW-unique query (non-ARATH, SwissProt-only): 6,678 annotations,
+  4,117 genes, 214 terms — 74% closure reduction; aspect F 54% / P 37% / C 8%. Rice
+  dominates (1,927 genes); 200+ species represented.
+- **Discovered GOA retired `GO_REF:0000043` for all cellular organisms** since the snapshot.
+  Reframed PLANTS as a retrospective validation study.
+- Reviewed 4 genes (rice EME1, soybean PPC16, tobacco PARA, tomato PR1B1) — all 4 SPKW-unique
+  annotations were over-annotations; GOA's removal justified for every headline term, but
+  EME1 (endonuclease activity) and PR1B1 (defense response to fungus) lost correct biology.
+- Classified all 214 SPKW-unique terms into 4 tiers: A over-annotation-risk (15%, 29 terms),
+  B broad cofactor/enzyme-class MF (48%), C specific informative (31%), D context-dependent
+  (6%). Only ~15% carry real over-annotation risk; ~79% (B+C) are correct — "SPKW-unique"
+  is not a synonym for "over-annotation".
+- Reviewed 5 more genes across broader taxa (grape STS3, Medicago NFP, poplar METK1,
+  Chlamydomonas psaC, sorghum CASP1) — 9 genes / 9 species total, sampling all 4 tiers.
+  The tier predicts the verdict: every Tier A removal was justified; the Tier C removal
+  (CASP1, cell wall organization) discarded correct plant-specific biology.
 
 ### 2026-02-04
 
