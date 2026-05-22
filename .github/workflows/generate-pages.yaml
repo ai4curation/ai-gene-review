@@ -195,6 +195,43 @@ jobs:
 
           git push --force-with-lease origin "$BRANCH_NAME"
 
+          PR_BODY="$(mktemp)"
+          {
+            echo "## Summary"
+            echo
+            echo "Automated regeneration of static assets after gene review or template changes."
+            echo
+            echo "## Generated Assets"
+            echo
+            echo "| Asset | Count/Status |"
+            echo "|-------|--------------|"
+            echo "| Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |"
+            echo "| Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |"
+            echo "| Project pages | ${{ steps.pr-metadata.outputs.project_count }} |"
+            echo "| Browser app (data.js) | Updated |"
+            echo "| Validation report | Updated |"
+            echo
+            echo "## Trigger"
+            echo
+            echo "This PR was triggered by changes to:"
+            echo "- genes/**/*.yaml - gene review data files"
+            echo "- src/ai_gene_review/schema/** - LinkML schema files"
+            echo "- src/ai_gene_review/templates/** - Jinja2 templates"
+            echo "- src/ai_gene_review/render.py - rendering code"
+            echo "- src/ai_gene_review/export/** - export code"
+            echo "- src/ai_gene_review/browser/** - browser app assets"
+            echo "- src/ai_gene_review/tools/minify_linkml_browser_data.py - browser data compaction"
+            echo "- projects/*.md - project definitions"
+            echo "- project.justfile - just recipes used by CI"
+            echo "- .github/workflows/generate-pages.yaml - workflow definition"
+            echo
+            echo "## Review"
+            echo
+            echo "- [ ] Spot-check a few gene review HTML pages render correctly"
+            echo "- [ ] Verify browser app loads and filters work"
+            echo "- [ ] Check validation report for new issues"
+          } > "$PR_BODY"
+
           EXISTING_PR_NUMBER="$(gh pr list \
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH_NAME" \
@@ -204,6 +241,9 @@ jobs:
             --jq '.[0].number // empty')"
 
           if [ -n "$EXISTING_PR_NUMBER" ]; then
+            gh pr edit "$EXISTING_PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body-file "$PR_BODY"
             echo "Updated existing regeneration PR #$EXISTING_PR_NUMBER."
             exit 0
           fi
@@ -214,39 +254,7 @@ jobs:
             --head "$BRANCH_NAME" \
             --draft \
             --title "Regenerate pages and browser app" \
-            --body "$(cat <<EOF
-            ## Summary
-
-            Automated regeneration of static assets after gene review or template changes.
-
-            ## Generated Assets
-
-            | Asset | Count/Status |
-            |-------|--------------|
-            | Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |
-            | Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |
-            | Project pages | ${{ steps.pr-metadata.outputs.project_count }} |
-            | Browser app (data.js) | Updated |
-            | Validation report | Updated |
-
-            ## Trigger
-
-            This PR was triggered by changes to:
-            - `genes/**/*.yaml` - gene review data files
-            - `src/ai_gene_review/schema/**` - LinkML schema files
-            - `src/ai_gene_review/templates/**` - Jinja2 templates
-            - `src/ai_gene_review/render.py` - rendering code
-            - `src/ai_gene_review/export/**` - export code
-            - `src/ai_gene_review/browser/**` - browser app assets
-            - `projects/*.md` - project definitions
-
-            ## Review
-
-            - [ ] Spot-check a few gene review HTML pages render correctly
-            - [ ] Verify browser app loads and filters work
-            - [ ] Check validation report for new issues
-          EOF
-          )"
+            --body-file "$PR_BODY"
 
           CREATED_PR_NUMBER="$(gh pr list \
             --repo "$GITHUB_REPOSITORY" \
