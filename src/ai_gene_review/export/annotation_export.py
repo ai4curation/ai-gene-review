@@ -467,7 +467,7 @@ class AnnotationExporter:
 
         with open(output_path, "w") as f:
             f.write("window.searchData = ")
-            json.dump(compact, f, indent=2, default=str)
+            json.dump(compact, f, separators=(",", ":"), default=str)
             f.write(";\n")
             f.write("window.dispatchEvent(new Event('searchDataReady'));\n")
 
