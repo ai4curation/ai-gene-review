@@ -254,7 +254,7 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] COX6A1 -- reviewed 2026-05-18 (19 annotations, regulatory/supernumerary CIV subunit)
 - [x] COX6B1 -- reviewed 2026-05-18 (20 annotations, structural CIV subunit; cytochrome-c oxidase MF over-attributed)
 - [x] SCO1 -- reviewed 2026-05-18 (24 annotations, copper chaperone/COX2 CuA maturation factor)
-- [x] COX10 -- reviewed 2026-05-18 (24 annotations, heme O synthase; erroneous GGPP synthase removed)
+- [x] COX10 -- reviewed 2026-05-18 (24 annotations, heme O synthase; erroneous GO:0004311 assignment removed)
 - [x] COX15 -- reviewed 2026-05-18 (25 annotations, heme A synthase; complex-component calls over-annotated)
 - [ ] NDUFS2
 - [ ] NDUFS4
@@ -286,8 +286,8 @@ was marked over-annotated rather than accepted as an individual subunit activity
 SCO1 was curated as a copper chaperone/COX2 CuA-site maturation factor, matching the
 SCO2 pattern. COX10 and COX15 were curated as heme A biosynthesis enzymes rather
 than mature Complex IV components: COX10 as protoheme IX farnesyltransferase/heme O
-synthase, COX15 as heme A synthase. COX10's geranylgeranyl diphosphate synthase
-annotations were removed as wrong-reaction MF assignments.
+synthase, COX15 as heme A synthase. COX10's GO:0004311 annotations were removed as
+wrong-reaction MF assignments.
 
 ## 2026-02-11
 
