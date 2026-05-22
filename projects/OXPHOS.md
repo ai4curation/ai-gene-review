@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # Oxidative Phosphorylation (OXPHOS) Project
 
 ## Overview
@@ -112,20 +116,20 @@ Terminal oxidase. 14 subunits. Transfers electrons from cytochrome c to O2, pump
 | Gene | UniProt | Function | Notes |
 |------|---------|----------|-------|
 | COX5B | P10606 | Nuclear-encoded structural | **Already reviewed** |
-| COX4I1 | P13073 | Regulatory, ATP inhibition | Ubiquitous isoform |
-| COX4I2 | Q96KJ9 | Regulatory | Hypoxia/lung isoform |
-| COX6A1 | P12074 | Liver isoform | Tissue-specific |
-| COX6B1 | P14854 | Stabilizes dimer | |
-| NDUFA4 | O00483 | Confirmed CIV subunit | Reclassified from CI |
+| COX4I1 | P13073 | Regulatory, ATP inhibition | **Already reviewed**; ubiquitous isoform |
+| COX4I2 | Q96KJ9 | Regulatory | **Reviewed 2026-05-18**; hypoxia/lung isoform |
+| COX6A1 | P12074 | Liver isoform | **Reviewed 2026-05-18**; tissue-specific |
+| COX6B1 | P14854 | Stabilizes holoenzyme | **Reviewed 2026-05-18** |
+| NDUFA4 | O00483 | Confirmed CIV subunit | **Already reviewed**; reclassified from CI |
 
 ### Key assembly factors (Priority 1-2)
 | Gene | UniProt | Function | Notes |
 |------|---------|----------|-------|
 | SURF1 | Q15526 | COX1 module assembly | Most common COX Leigh syndrome |
-| SCO2 | O43819 | Copper chaperone for CuA | Cardioencephalomyopathy |
-| SCO1 | O75880 | Copper chaperone for CuA | Hepatopathy |
-| COX10 | Q12887 | Heme a biosynthesis | |
-| COX15 | Q7KZN9 | Heme a synthase | |
+| SCO2 | O43819 | Copper chaperone for CuA | **Already reviewed**; cardioencephalomyopathy |
+| SCO1 | O75880 | Copper chaperone for CuA | **Reviewed 2026-05-18**; hepatopathy |
+| COX10 | Q12887 | Heme a biosynthesis | **Reviewed 2026-05-18** |
+| COX15 | Q7KZN9 | Heme a synthase | **Reviewed 2026-05-18** |
 | LRPPRC | P42704 | Stabilizes MT-CO1/CO3 mRNAs | **Already reviewed** |
 
 ## Complex V -- ATP synthase
@@ -234,6 +238,9 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] ATP5MC3 -- already reviewed
 - [x] TMEM70 -- already reviewed
 - [x] LRPPRC -- already reviewed
+- [x] COX4I1 -- already reviewed
+- [x] NDUFA4 -- already reviewed
+- [x] SCO2 -- already reviewed
 - [x] SDHA -- reviewed 2026-02-11 (56 annotations, core_functions with contributes_to)
 - [x] SDHB -- reviewed 2026-02-11 (49 annotations, tumor suppressor role documented)
 - [x] CYCS -- reviewed 2026-02-11 (53 annotations, dual ETC/apoptosis core_functions)
@@ -243,15 +250,18 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] ATP5F1B -- reviewed 2026-02-11 (89 annotations, catalytic beta subunit, ecto-ATP synthase as non-core)
 - [x] SURF1 -- reviewed 2026-02-11 (19 annotations + 1 NEW, CIV assembly factor, root MF)
 - [x] ATP5IF1 -- reviewed 2026-02-11 (49 annotations + 1 NEW, ATPase inhibitor activity, pH-dependent)
+- [x] COX4I2 -- reviewed 2026-05-18 (21 annotations, non-catalytic COX4 isoform, contributes_to CIV activity)
+- [x] COX6A1 -- reviewed 2026-05-18 (19 annotations, regulatory/supernumerary CIV subunit)
+- [x] COX6B1 -- reviewed 2026-05-18 (20 annotations, structural CIV subunit; cytochrome-c oxidase MF over-attributed)
+- [x] SCO1 -- reviewed 2026-05-18 (24 annotations, copper chaperone/COX2 CuA maturation factor)
+- [x] COX10 -- reviewed 2026-05-18 (24 annotations, heme O synthase; erroneous GO:0004311 assignment removed)
+- [x] COX15 -- reviewed 2026-05-18 (25 annotations, heme A synthase; complex-component calls over-annotated)
 - [ ] NDUFS2
 - [ ] NDUFS4
 - [ ] SDHC
 - [ ] SDHD
 - [ ] UQCRC1
-- [ ] COX4I1
-- [ ] NDUFA4
 - [ ] BCS1L
-- [ ] SCO2
 - [ ] ACAD9
 - [ ] ATP5F1A
 - [ ] SDHAF2
@@ -261,6 +271,23 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [ ] HCCS
 
 # NOTES
+
+## 2026-05-18
+
+Completed the pending Complex IV curation batch: COX4I2, COX6A1, COX6B1, SCO1,
+COX10, and COX15. All six validate cleanly.
+
+COX4I2/COX6A1/COX6B1 use the Complex IV subunit pattern: keep respiratory chain
+Complex IV membership and cytochrome-c-to-oxygen electron transport, but separate
+whole-complex cytochrome-c oxidase activity into `contributes_to_molecular_function`
+for non-catalytic subunits. COX6B1's direct cytochrome-c oxidase activity annotation
+was marked over-annotated rather than accepted as an individual subunit activity.
+
+SCO1 was curated as a copper chaperone/COX2 CuA-site maturation factor, matching the
+SCO2 pattern. COX10 and COX15 were curated as heme A biosynthesis enzymes rather
+than mature Complex IV components: COX10 as protoheme IX farnesyltransferase/heme O
+synthase, COX15 as heme A synthase. COX10's GO:0004311 annotations were removed as
+wrong-reaction MF assignments.
 
 ## 2026-02-11
 

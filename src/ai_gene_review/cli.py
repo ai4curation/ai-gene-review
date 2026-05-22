@@ -995,9 +995,8 @@ def backfill_qualifiers(
         ),
     ] = False,
 ):
-    """Backfill contributes_to qualifier on MF annotations from GOA data.
+    """Backfill GOA qualifier values on existing annotations from GOA data.
 
-    Only records 'contributes_to' -- no qualifier means 'enables' (the default).
     Does NOT modify annotations that already have a qualifier field.
 
     Examples:
@@ -1026,17 +1025,21 @@ def backfill_qualifiers(
                     raise typer.Exit(code=1)
 
             goa_annotations = validator.parse_goa_file(goa_path)
-            contributes = [
-                a for a in goa_annotations
-                if validator._is_contributes_to(a.qualifier, a.go_aspect)
+            qualified = [
+                (a, qualifier)
+                for a in goa_annotations
+                if (qualifier := validator._parse_qualifier(a.qualifier))
             ]
-            if not contributes:
-                typer.echo("No contributes_to annotations found in GOA file")
+            if not qualified:
+                typer.echo("No recognized qualifiers found in GOA file")
                 return
 
-            typer.echo(f"Found {len(contributes)} contributes_to annotations:")
-            for ann in contributes:
-                typer.echo(f"  {ann.go_id} {ann.go_term} ({ann.evidence_code}, {ann.reference})")
+            typer.echo(f"Found {len(qualified)} GOA annotations with recognized qualifiers:")
+            for ann, qualifier in qualified:
+                typer.echo(
+                    f"  {qualifier} {ann.go_id} {ann.go_term} "
+                    f"({ann.evidence_code}, {ann.reference})"
+                )
 
             typer.echo("\nUse without --dry-run to apply these updates")
         except (ValueError, FileNotFoundError) as e:
