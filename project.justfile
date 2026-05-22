@@ -1383,6 +1383,7 @@ deploy-browser: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
     @cp src/ai_gene_review/browser/index.html app/
     @echo "Browser deployed to app/ directory"
     @echo "To view: open app/index.html or run 'just serve-browser'"
@@ -1402,6 +1403,7 @@ update-browser-data: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py app/data.js
     @cp src/ai_gene_review/browser/index.html app/
     @echo "Data updated in app/"
 

@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P18924 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P18924</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P18924" target="_blank" class="term-link">
+                        P18924
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P18924";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P18924" data-a="DESCRIPTION: TODO: Add description for P18924..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P18924</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033644" target="_blank" class="term-link">
+                                    GO:0033644
+                                </a>
+                            </span>
+                            <span class="term-label">host cell membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P18924" data-a="GO:0033644" data-r="GO_REF:0000044" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046677" target="_blank" class="term-link">
+                                    GO:0046677
+                                </a>
+                            </span>
+                            <span class="term-label">response to antibiotic</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P18924" data-a="GO:0046677" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ac-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P18924" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">12 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T23:28:17.134553</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ac-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ac-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000006 I have extracted Figure 2 from page 4, which shows the T4 ac gene sequence changes, and Table 3 from page 5, which contains the mut</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-bacteriophage-t4-gene-ac-protein-522-uniprot-p18924">Research Report: Bacteriophage T4 gene <strong>ac</strong> / protein <strong>52.2</strong> (UniProt <strong>P18924</strong>)</h2>
+<h3 id="0-identity-verification-critical">0) Identity verification (critical)</h3>
+<p>The target is <strong>Enterobacteria phage T4</strong> gene <strong>ac</strong>, explicitly referred to in primary literature as <strong>“the T4 ac gene (gene 52.2)”</strong> and used as a selectable locus for <strong>acriflavin resistance (AcS→AcR)</strong> (mamun2006hypermutagenesisinmuta pages 2-4). A second line of evidence places <strong>ac</strong> in the T4 genome near the <strong>rII region</strong> and <strong>gene 52</strong> based on cloned-fragment mapping (selzer2004invivoexpression pages 2-3). The retrieved evidence therefore matches the UniProt description “Uncharacterized protein 52.2” and the gene symbol <strong>ac</strong> in <strong>bacteriophage T4</strong>, and off-target “ac” usages in other organisms were excluded.</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-ac-gene-522-denotes-in-t4-genetics">1.1 What “ac” / “gene 52.2” denotes in T4 genetics</h4>
+<p>In the T4 genetics literature, <strong>ac</strong> (also called <strong>gene 52.2</strong>) is a small genetic locus whose mutants can be selected using <strong>acriflavin</strong>, a dye that inhibits T4 development. Under acriflavin selection, <strong>mutations in ac permit T4 to develop</strong>, yielding the phenotype <strong>AcR (acriflavin-resistant)</strong> (mamun2006hypermutagenesisinmuta pages 2-4). This provides a convenient <strong>forward-mutation assay</strong> (AcS→AcR) in phage genetics and DNA replication fidelity studies (mamun2006hypermutagenesisinmuta pages 2-4, mamun2006hypermutagenesisinmuta pages 4-5).</p>
+<h4 id="12-small-phage-proteins-as-a-conceptual-class-relevant-to-ac522">1.2 “Small phage proteins” as a conceptual class relevant to ac/52.2</h4>
+<p>Although direct biochemical function of ac/52.2 is not established in the retrieved sources, <strong>its gene length (156 bp)</strong> implies a protein of ~52 aa, placing it within the common definition of <strong>phage-encoded small proteins (&lt;100 aa)</strong> discussed in modern reviews (mamun2006hypermutagenesisinmuta pages 2-4, beggs2024phagesmallproteins pages 1-2). Such proteins are now recognized to often have <strong>outsized regulatory roles</strong> despite being historically under-annotated (beggs2024phagesmallproteins pages 1-2).</p>
+<h3 id="2-experimentally-supported-functional-information-for-t4-ac-what-is-known">2) Experimentally supported functional information for T4 ac (what is known)</h3>
+<h4 id="21-phenotype-ac-mutations-confer-acriflavin-resistance">2.1 Phenotype: ac mutations confer acriflavin resistance</h4>
+<p>The most direct experimental characterization available in the retrieved corpus is phenotypic:<br />
+* <strong>Acriflavin inhibits T4 development</strong>, and <strong>mutations in the T4 ac gene (gene 52.2) overcome acriflavin inhibition and allow phage development</strong> (mamun2006hypermutagenesisinmuta pages 2-4).</p>
+<p>This establishes ac as genetically linked to <strong>drug sensitivity/resistance</strong> during infection, but does <strong>not</strong> establish the molecular mechanism.</p>
+<h4 id="22-molecular-function-remains-unknown-explicitly-stated">2.2 Molecular function remains unknown (explicitly stated)</h4>
+<p>Mamun et al. state plainly that <strong>“The T4 ac gene, whose mode of action and function remain unknown”</strong> (mamun2006hypermutagenesisinmuta pages 2-4). Thus, there is currently <strong>no evidence in the retrieved texts</strong> supporting assignment as an enzyme, structural virion component, transporter, or signaling protein with a defined pathway.</p>
+<h4 id="23-gene-size-and-mutational-target-properties">2.3 Gene size and mutational target properties</h4>
+<p>Mamun et al. report that <strong>ac is 156 bp long</strong>, with the <strong>termination codon at positions 154–156</strong> (mamun2006hypermutagenesisinmuta pages 4-5). The paper uses this locus specifically because its small size makes it well-suited to measure forward mutation and mutation spectra (mamun2006hypermutagenesisinmuta pages 2-4).</p>
+<h3 id="3-genomic-context-t4-genome-neighborhood">3) Genomic context (T4 genome neighborhood)</h3>
+<p>A mapping study of cloned T4 DNA fragments used for rII-region expression analysis places <strong>ac</strong> in the same genomic neighborhood as rII and gene 52. In the plasmid map, the gene order includes <strong>“… stp r ac gene52 …”</strong>, with pTB401 containing parts of <strong>rIIB and gene 52</strong> and labeling <strong>ac</strong> adjacent to gene 52 (selzer2004invivoexpression pages 2-3). This provides <strong>positional context</strong> but not functional annotation.</p>
+<h3 id="4-localization-and-expression-timing">4) Localization and expression timing</h3>
+<h4 id="41-localization-virion-vs-non-virion">4.1 Localization (virion vs non-virion)</h4>
+<p>No retrieved source explicitly states whether T4 protein 52.2 is <strong>virion-associated</strong> or strictly <strong>intracellular</strong> during infection. Therefore, localization cannot be concluded from the current evidence.</p>
+<h4 id="42-expression-timing-earlymiddlelate">4.2 Expression timing (early/middle/late)</h4>
+<p>No retrieved T4-ac-specific source provides expression timing for ac/52.2. However, a 2024 synthesis of T4 infection ‘dual-omics’ observations argues that <strong>a large fraction of early T4 proteins (~65%) are uncharacterized</strong>, and that early appearance may imply roles in <strong>host takeover</strong> or <strong>countering host immunity</strong> (pozhydaieva2024molecularstrategiesapplied pages 281-284). This is <strong>contextual</strong> and does not identify ac/52.2 specifically as early.</p>
+<h3 id="5-recent-developments-and-latest-research-context-prioritizing-20232024">5) Recent developments and latest research context (prioritizing 2023–2024)</h3>
+<p>Direct 2023–2024 experimental work on <strong>T4 gene ac / protein 52.2</strong> itself was not retrieved. However, 2024 literature provides important advances in <em>how</em> such small, uncharacterized phage proteins are approached:</p>
+<h4 id="51-explosion-in-recognition-of-small-phage-proteins">5.1 Explosion in recognition of small phage proteins</h4>
+<p>Beggs &amp; Bassler (2024) report metagenomic discovery of <strong>“over 2 million small genes in phage genomes”</strong>, define small phage proteins as <strong>&lt;100 aa</strong>, and emphasize that they frequently encode proteins with <strong>unknown function</strong> yet can control major host/phage outcomes (beggs2024phagesmallproteins pages 1-2). This frames T4 52.2 (predicted small size from ac length) as consistent with an increasingly important class of phage genes.</p>
+<h4 id="52-methodological-shift-structural-inference-for-uncharacterized-phage-proteins">5.2 Methodological shift: structural inference for uncharacterized phage proteins</h4>
+<p>Pozhydaieva (2024) emphasizes that sequence-homology methods often fail for small, rapidly evolving phage proteins and proposes structural approaches as a remedy. The text states that protein annotation can be improved <strong>“by up to 70% by incorporating structural features”</strong>, facilitated by structure prediction (e.g., <strong>AlphaFold</strong>) and structural homology search (pozhydaieva2024molecularstrategiesapplied pages 281-284). While not specific to ac, this is directly relevant to future functional annotation of protein 52.2.</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-application-as-a-selectable-reporter-in-mutagenesis-and-replication-fidelity-studies">6.1 Application as a selectable reporter in mutagenesis and replication-fidelity studies</h4>
+<p>The primary “real-world” use supported by retrieved evidence is <strong>methodological</strong>: T4 ac/52.2 provides a <strong>selectable forward-mutation assay</strong>.<br />
+* <strong>Selection method:</strong> plating phage lysates on agar containing <strong>acriflavin (2 mg/mL)</strong> to select <strong>AcR</strong> (mamun2006hypermutagenesisinmuta pages 9-10).<br />
+* <strong>Genotyping method:</strong> PCR amplification and sequencing of the ac locus using specific primers (ac_forward/ac_reverse) to map causative changes (mamun2006hypermutagenesisinmuta pages 9-10).</p>
+<p>This establishes ac as a practical tool for <strong>quantifying mutation rates and spectra</strong> (mamun2006hypermutagenesisinmuta pages 2-4, mamun2006hypermutagenesisinmuta pages 4-5).</p>
+<h4 id="62-broader-phage-engineering-relevance-contextual">6.2 Broader phage engineering relevance (contextual)</h4>
+<p>Pozhydaieva (2024) discusses that understanding translation regulation and uncharacterized protein function could be exploited for <strong>synthetic regulation and phage engineering</strong>, but does not link these applications to ac/52.2 specifically (pozhydaieva2024molecularstrategiesapplied pages 281-284).</p>
+<h3 id="7-quantitative-statistics-and-data-from-studies-recent-andor-key">7) Quantitative statistics and data from studies (recent and/or key)</h3>
+<h4 id="71-mutation-rate-changes-in-muta-host-cells-ac-based-assay">7.1 Mutation rate changes in mutA host cells (ac-based assay)</h4>
+<p>Using the AcS→AcR assay, Mamun et al. report that replication of T4 in <strong>E. coli mutA</strong> host cells increases the forward mutation rate to AcR by approximately <strong>4–10-fold</strong> relative to parental hosts (mamun2006hypermutagenesisinmuta pages 2-4). Example values (×10^-8) include:<br />
+* Sm12OP: <strong>3 (2.6–3.8)</strong> in WT vs <strong>28 (21–31)</strong> in mutA (~10-fold) (mamun2006hypermutagenesisinmuta pages 2-4)<br />
+* Sm12OC: <strong>5.5 (4.4–7.7)</strong> in WT vs <strong>22 (18–28)</strong> in mutA (~3.9-fold) (mamun2006hypermutagenesisinmuta pages 2-4)</p>
+<h4 id="72-mutation-spectrum-insertions-strongly-enriched-in-muta">7.2 Mutation spectrum: insertions strongly enriched in mutA</h4>
+<p>Sequencing of AcR mutants showed that in mutA cells, insertions are strongly enriched:<br />
+* Insertions:deletions ratio ~<strong>3:1</strong> in mutA vs ~<strong>1:1</strong> in WT (mamun2006hypermutagenesisinmuta pages 4-5).<br />
+* <strong>1-bp A:T insertions</strong> elevated ~<strong>33-fold</strong> in mutA (mamun2006hypermutagenesisinmuta pages 4-5).<br />
+* Insertions within repeats elevated ~<strong>32-fold</strong> (mamun2006hypermutagenesisinmuta pages 4-5).</p>
+<p>Table 3 also reports class-specific counts and mutation-rate contributions (×10^-8), including 1-bp A:T insertions <strong>0.22 (WT)</strong> vs <strong>7.2 (mutA)</strong> (mamun2006hypermutagenesisinmuta pages 4-5).</p>
+<h4 id="73-not-all-acr-mutants-map-to-ac">7.3 Not all AcR mutants map to ac</h4>
+<p>Of sequenced AcR isolates, about half had mutations within the 156-bp ac gene itself (e.g., 68/126 in WT; 68/120 in mutA), implying that some AcR isolates may involve mutations elsewhere or complex events (mamun2006hypermutagenesisinmuta pages 4-5).</p>
+<h3 id="8-visual-evidence-figuretable">8) Visual evidence (figure/table)</h3>
+<p>Mamun et al. provide a mutation map of the ac locus (Figure 2) and quantitative mutation spectrum (Table 3), both retrieved as images (mamun2006hypermutagenesisinmuta media aa2c1f3a, mamun2006hypermutagenesisinmuta media 50b4f205).</p>
+<h3 id="9-conclusions-and-evidence-based-functional-annotation-statement">9) Conclusions and evidence-based functional annotation statement</h3>
+<ul>
+<li><strong>Supported annotation (high confidence):</strong> T4 <strong>ac/gene 52.2</strong> is a <strong>small genetic locus</strong> whose mutation confers <strong>acriflavin resistance (AcR)</strong> and enables T4 development under acriflavin; it is widely used as a <strong>selectable forward-mutation reporter</strong> in phage mutagenesis studies (mamun2006hypermutagenesisinmuta pages 2-4, mamun2006hypermutagenesisinmuta pages 9-10).</li>
+<li><strong>Unknowns (explicit):</strong> The <strong>mode of action and molecular function remain unknown</strong> in the retrieved primary experimental paper; no direct evidence here supports an enzymatic reaction, substrate specificity, virion structural role, or specific pathway membership (mamun2006hypermutagenesisinmuta pages 2-4).</li>
+<li><strong>Contextual best-practice for future annotation:</strong> Recent 2024 expert syntheses argue that small uncharacterized phage proteins can exert strong host-modulatory functions and that structure-guided inference may substantially improve annotation, providing a roadmap for elucidating T4 protein 52.2 (beggs2024phagesmallproteins pages 1-2, pozhydaieva2024molecularstrategiesapplied pages 281-284).</li>
+</ul>
+<hr />
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Key finding</th>
+<th>Quantitative/statistical details</th>
+<th>Source (include DOI URL and year)</th>
+<th>Notes/limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phenotype/genetics</td>
+<td>Mutations in T4 <strong>ac</strong> (gene 52.2) confer resistance to acriflavin, enabling phage development under acriflavin selection (AcS→AcR assay).</td>
+<td>Forward mutation rate to AcR increased in <strong>mutA</strong> host cells by about <strong>4–10-fold</strong> versus parental cells. Example rates shown for two T4 backgrounds: <strong>3 to 28 ×10^-8</strong> and <strong>4.7 to 50 ×10^-8</strong>; <strong>5.5 to 22 ×10^-8</strong> and <strong>4.4 to 17 ×10^-8</strong> (mamun2006hypermutagenesisinmuta pages 2-4)</td>
+<td>Mamun et al., <em>Molecular Microbiology</em> (2006). DOI: https://doi.org/10.1111/j.1365-2958.2006.05490.x (2006) (mamun2006hypermutagenesisinmuta pages 2-4)</td>
+<td>The paper explicitly states that the <strong>mode of action and function remain unknown</strong>; the assay reports selectable phenotype, not biochemical mechanism.</td>
+</tr>
+<tr>
+<td>Sequence/features</td>
+<td>The <strong>ac</strong> gene is a very small target used for mutagenesis studies.</td>
+<td>Gene length is <strong>156 bp</strong>; the <strong>termination codon is at positions 154–156</strong> (mamun2006hypermutagenesisinmuta pages 4-5)</td>
+<td>Mamun et al., <em>Molecular Microbiology</em> (2006). DOI: https://doi.org/10.1111/j.1365-2958.2006.05490.x (2006) (mamun2006hypermutagenesisinmuta pages 2-4, mamun2006hypermutagenesisinmuta pages 4-5)</td>
+<td>Small gene size makes it useful for forward-mutation analysis, but also means functional/domain inference from sequence alone is limited in this paper.</td>
+</tr>
+<tr>
+<td>Sequence/features / mutation spectrum</td>
+<td>In <strong>mutA</strong> cells, the <strong>ac</strong> mutation spectrum shifts strongly toward insertions, especially 1-bp A:T insertions and repeat-associated events.</td>
+<td>Insertions:deletions ratio changes from about <strong>1:1 in wild type</strong> to <strong>3:1 in mutA</strong>; <strong>1-bp A:T insertions</strong> rise about <strong>33-fold</strong>; <strong>insertions within repeats</strong> rise about <strong>32-fold</strong>; A:T-targeted substitutions appear elevated about <strong>24-fold</strong> (mamun2006hypermutagenesisinmuta pages 4-5)</td>
+<td>Mamun et al., <em>Molecular Microbiology</em> (2006). DOI: https://doi.org/10.1111/j.1365-2958.2006.05490.x (2006) (mamun2006hypermutagenesisinmuta pages 4-5, mamun2006hypermutagenesisinmuta media aa2c1f3a, mamun2006hypermutagenesisinmuta media 50b4f205)</td>
+<td>About half of sequenced AcR mutants carried changes within <strong>ac</strong> itself (<strong>68/126</strong> in WT; <strong>68/120</strong> in mutA), implying some AcR mutants map outside <strong>ac</strong> or were otherwise unresolved.</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td>Plasmid mapping places <strong>ac</strong> in the T4 genomic region near the <strong>rII</strong> locus and <strong>gene 52</strong>.</td>
+<td>In plasmid <strong>pTB401</strong> (~<strong>1,100 bp</strong> insert), the mapped order includes <strong>... stp r ac gene52</strong>; the insert carries the <strong>saA9</strong> deletion. The mapped region spans parts of <strong>rIIB</strong> and <strong>52</strong> and places <strong>ac</strong> adjacent to gene 52 (selzer2004invivoexpression pages 2-3)</td>
+<td>Selzer et al., <em>Molecular and General Genetics MGG</em> (published in tool record as 2004; original classic study). DOI: https://doi.org/10.1007/bf00268772 (tool record year 2004) (selzer2004invivoexpression pages 2-3)</td>
+<td>This is <strong>mapping/context evidence</strong>, not direct functional characterization of ac protein 52.2.</td>
+</tr>
+<tr>
+<td>Phenotype/genetics / interpretation</td>
+<td><strong>ac</strong> is valuable as a reporter for T4 replication fidelity in host mutator backgrounds.</td>
+<td>In the AcS→AcR assay, average mutation rates for sequenced <strong>ac</strong> mutants were summarized as <strong>2.1 ×10^-8</strong> (WT) versus <strong>22 ×10^-8</strong> (<strong>mutA</strong>) (mamun2006hypermutagenesisinmuta pages 4-5)</td>
+<td>Mamun et al., <em>Molecular Microbiology</em> (2006). DOI: https://doi.org/10.1111/j.1365-2958.2006.05490.x (2006) (mamun2006hypermutagenesisinmuta pages 4-5)</td>
+<td>These data support use of <strong>ac</strong> as a mutational readout, but they do <strong>not</strong> establish whether ac is enzymatic, structural, or regulatory in normal T4 biology.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the directly supported evidence recovered for bacteriophage T4 gene ac/protein 52.2 (UniProt P18924). It highlights the strongest experimentally grounded findings on phenotype, sequence features, mutation statistics, and genomic context while making clear where functional knowledge remains limited.</em></p>
+<p>References</p>
+<ol>
+<li>
+<p>(mamun2006hypermutagenesisinmuta pages 2-4): Abu Amar M. Al Mamun, Satyendra Gautam, and M. Zafri Humayun. Hypermutagenesis in muta cells is mediated by mistranslational corruption of polymerase, and is accompanied by replication fork collapse. Molecular Microbiology, 62:1752-1763, Dec 2006. URL: https://doi.org/10.1111/j.1365-2958.2006.05490.x, doi:10.1111/j.1365-2958.2006.05490.x. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(selzer2004invivoexpression pages 2-3): Gerald Selzer, Dominique Belin, Antoinette Bolle, Griet Van Houwe, Tom Mattson, and Richard Epstein. In vivo expression of the rii region of bacteriophage t4 present in chimeric plasmids. Molecular and General Genetics MGG, 183:505-513, Nov 2004. URL: https://doi.org/10.1007/bf00268772, doi:10.1007/bf00268772. This article has 6 citations.</p>
+</li>
+<li>
+<p>(mamun2006hypermutagenesisinmuta pages 4-5): Abu Amar M. Al Mamun, Satyendra Gautam, and M. Zafri Humayun. Hypermutagenesis in muta cells is mediated by mistranslational corruption of polymerase, and is accompanied by replication fork collapse. Molecular Microbiology, 62:1752-1763, Dec 2006. URL: https://doi.org/10.1111/j.1365-2958.2006.05490.x, doi:10.1111/j.1365-2958.2006.05490.x. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(beggs2024phagesmallproteins pages 1-2): Grace A Beggs and Bonnie L Bassler. Phage small proteins play large roles in phage–bacterial interactions. Aug 2024. URL: https://doi.org/10.1016/j.mib.2024.102519, doi:10.1016/j.mib.2024.102519. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pozhydaieva2024molecularstrategiesapplied pages 281-284): Nadiia Pozhydaieva. Molecular strategies applied by bacteriophage t4 for efficient hijacking of escherichia coli. Text, Jun 2024. URL: https://doi.org/10.17192/z2024.0117, doi:10.17192/z2024.0117. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mamun2006hypermutagenesisinmuta pages 9-10): Abu Amar M. Al Mamun, Satyendra Gautam, and M. Zafri Humayun. Hypermutagenesis in muta cells is mediated by mistranslational corruption of polymerase, and is accompanied by replication fork collapse. Molecular Microbiology, 62:1752-1763, Dec 2006. URL: https://doi.org/10.1111/j.1365-2958.2006.05490.x, doi:10.1111/j.1365-2958.2006.05490.x. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mamun2006hypermutagenesisinmuta media aa2c1f3a): Abu Amar M. Al Mamun, Satyendra Gautam, and M. Zafri Humayun. Hypermutagenesis in muta cells is mediated by mistranslational corruption of polymerase, and is accompanied by replication fork collapse. Molecular Microbiology, 62:1752-1763, Dec 2006. URL: https://doi.org/10.1111/j.1365-2958.2006.05490.x, doi:10.1111/j.1365-2958.2006.05490.x. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mamun2006hypermutagenesisinmuta media 50b4f205): Abu Amar M. Al Mamun, Satyendra Gautam, and M. Zafri Humayun. Hypermutagenesis in muta cells is mediated by mistranslational corruption of polymerase, and is accompanied by replication fork collapse. Molecular Microbiology, 62:1752-1763, Dec 2006. URL: https://doi.org/10.1111/j.1365-2958.2006.05490.x, doi:10.1111/j.1365-2958.2006.05490.x. This article has 29 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ac-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000006 I have extracted Figure 2 from page 4, which shows the T4 ac gene sequence changes, and Table 3 from page 5, which contains the mut" src="ac-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mamun2006hypermutagenesisinmuta pages 2-4</li>
+<li>selzer2004invivoexpression pages 2-3</li>
+<li>beggs2024phagesmallproteins pages 1-2</li>
+<li>mamun2006hypermutagenesisinmuta pages 4-5</li>
+<li>pozhydaieva2024molecularstrategiesapplied pages 281-284</li>
+<li>mamun2006hypermutagenesisinmuta pages 9-10</li>
+<li>https://doi.org/10.1111/j.1365-2958.2006.05490.x</li>
+<li>https://doi.org/10.1007/bf00268772</li>
+<li>https://doi.org/10.1111/j.1365-2958.2006.05490.x,</li>
+<li>https://doi.org/10.1007/bf00268772,</li>
+<li>https://doi.org/10.1016/j.mib.2024.102519,</li>
+<li>https://doi.org/10.17192/z2024.0117,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P18924
+gene_symbol: P18924
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P18924&#39;
+existing_annotations:
+- term:
+    id: GO:0033644
+    label: host cell membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046677
+    label: response to antibiotic
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

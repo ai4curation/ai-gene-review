@@ -1,0 +1,8 @@
+> Evidence limitation: a key organism-specific source for *Desulfotalea psychrophila* LSv54—the 2004 genome paper—was identified during search but was not obtainable in-session, so direct confirmation of the DP0344/*nrfA* locus, neighborhood, regulation, and physiology from the primary genome report could not be checked here; the accessible evidence only shows that *D. psychrophila* LSv54 was included as a comparative reference genome in later work that also analyzed *nrfA* phylogeny. (pqac-00000016, pqac-00000019)
+>
+> As a result, confidence is high that Q6ARF1 belongs to the canonical NrfA/cytochrome c-552 ammonia-forming nitrite reductase family, but confidence is lower for DESPS-specific details such as exact operon structure, electron-transfer partner usage, and experimentally demonstrated physiological role in strain LSv54. (pqac-00000000, pqac-00000002, pqac-00000006)
+>
+> Therefore, the most defensible annotation is a conservative one: Q6ARF1 should be described primarily from the UniProt-linked identity plus well-supported family-level NrfA properties, while any finer statements about localization partners, pathway context, or regulation in *D. psychrophila* should be labeled as inference rather than direct strain-specific evidence. (pqac-00000006, pqac-00000011, pqac-00000016)
+
+
+*Blockquote: This blockquote summarizes the main source limitations affecting annotation of Q6ARF1 in *Desulfotalea psychrophila* LSv54. It is useful for distinguishing high-confidence family-level inference from lower-confidence strain-specific claims.*

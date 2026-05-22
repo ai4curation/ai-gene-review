@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P39229 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P39229</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P39229" target="_blank" class="term-link">
+                        P39229
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P39229";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P39229" data-a="DESCRIPTION: TODO: Add description for P39229..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P39229</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052031" target="_blank" class="term-link">
+                                    GO:0052031
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39229" data-a="GO:0052031" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052170" target="_blank" class="term-link">
+                                    GO:0052170
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39229" data-a="GO:0052170" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(adfA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P39229" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">16 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T23:45:12.182811</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="adfA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="adfA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000019 Figure 5 (page 35) contains several panels demonstrating the effects of the gp61.2 (adfA) R164H mutation on phage defense. Specific</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-adfa-anti-dart-factor-a-in-enterobacteria-phage-t4-uniprot-p39229">Research Report: Functional Annotation of <strong>adfA</strong> (Anti-DarT factor A) in Enterobacteria phage T4 (UniProt: P39229)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>Phage T4 gene <strong>adfA</strong> encodes <strong>Anti-DarT factor A (AdfA)</strong>, a phage counter-defense protein discovered through phage escape from the bacterial <strong>DarTG</strong> toxin–antitoxin (TA) anti-phage defense system. In the foundational study, an uncharacterized T-even phage gene (historically <strong>gene 61.2</strong>, encoding a ~212-aa protein) was shown to enable escape from DarTG1 defense when specific mutations were acquired; the gene was renamed <strong>adfA</strong> (“anti-DarT factor A”). AdfA acts as an <strong>anti-toxin</strong> countermeasure that prevents DarT-mediated <strong>ADP-ribosylation of phage DNA</strong>, thereby permitting phage genome replication and productive infection. Evidence suggests AdfA is <strong>non-enzymatic</strong> and likely functions via <strong>protein–protein interaction with the DarT toxin</strong>, with strong allele specificity. In T4, adfA appears <strong>dispensable</strong> for resistance to DarTG1 because T4 also encodes other anti-DarT counter-defense(s) (e.g., the enzymatic NADAR-family factor AdfN described later), illustrating that T4 counter-defense is <strong>multi-layered</strong> rather than reliant on AdfA alone. (leroux2022thedartgtoxinantitoxin pages 7-9, johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2, johannesman2025phagescarryorphan pages 3-4)</p>
+<p><strong>Key recent (2023–2024) development:</strong> DarTG has now been documented in clinically relevant <em>Vibrio cholerae</em> isolates and shown to shape co-circulating phage populations, including selection for phage-encoded “Adf” antitoxin mimics (e.g., AdfB in phage ICP1), reinforcing Adf-type factors as real-world phage counter-defenses rather than laboratory curiosities. (patel2024sporadicphagedefense pages 1-2, patel2024sporadicphagedefense pages 12-14)</p>
+<h3 id="0-mandatory-identity-verification-to-avoid-gene-symbol-ambiguity">0) Mandatory identity verification (to avoid gene-symbol ambiguity)</h3>
+<p><strong>What is “adfA” in the relevant primary literature?</strong> LeRoux et al. (Nature Microbiology, 2022) explicitly identify an uncharacterized T-even phage gene <strong>61.2</strong> and rename it <strong>adfA</strong> (“anti-DarT factor A”) after showing that mutations in this gene allow phage escape from DarTG1 defense. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</p>
+<p><strong>Organism context:</strong> The evidence base connects <strong>adfA homologs</strong> to <strong>T-even (Tevenvirinae) phages</strong>, including <strong>T4 and T6</strong>, and demonstrates function primarily using RB69, with T4 homologs used for complementation/allele comparisons. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</p>
+<p><strong>Caveat (database mapping):</strong> In the retrieved literature, neither the UniProt accession <strong>P39229</strong> nor the synonym <strong>y01L</strong> is explicitly mentioned. Therefore, mapping “adfA” to UniProt P39229 and synonyms relies on the user-provided UniProt context rather than tool-retrieved UniProt/InterPro pages. The <em>functional</em> mapping of “adfA” to <strong>T-even phage gene 61.2 (gp61.2)</strong> is directly supported by primary literature. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-dartg-toxinantitoxin-systems-as-anti-phage-defenses">1.1 DarTG toxin–antitoxin systems as anti-phage defenses</h4>
+<p>DarTG is a two-gene TA system that can function as an anti-phage defense: the <strong>DarT toxin</strong> is a DNA-targeting <strong>ADP-ribosyltransferase</strong> that modifies viral DNA during infection, blocking phage genome replication and disrupting productive development. (leroux2022thedartgtoxinantitoxin pages 9-11)</p>
+<p>In the DarTG1 system studied in <em>E. coli</em>, DarT1 activity during infection causes rapid inhibition of DNA synthesis and reduced RNA synthesis; protein synthesis rates may not drop substantially, but the phage gene-expression program becomes misregulated, contributing to failure to produce mature virions. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h4 id="12-anti-dart-factors-adf-proteins">1.2 Anti-DarT factors (Adf proteins)</h4>
+<p>“Anti-DarT factors” are phage-encoded counter-defenses that antagonize DarT-based defense. In the Adf framework:<br />
+- <strong>AdfA</strong> (anti-DarT factor A) is a small phage protein inferred to act as a <strong>direct inhibitor/antitoxin-like factor</strong>, likely by interacting with DarT. (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2)<br />
+- Other phage counter-defenses can exist, including enzymatic “erasers” of ADP-ribosylation (e.g., NADAR-family proteins described later) and replication proteins that tolerate modified DNA. (leroux2022thedartgtoxinantitoxin pages 9-11, johannesman2025phagescarryorphan pages 1-2)</p>
+<h3 id="2-adfa-adfa-function-and-mechanism">2) adfA / AdfA: function and mechanism</h3>
+<h4 id="21-primary-function">2.1 Primary function</h4>
+<p><strong>Primary functional role:</strong> AdfA is a phage-encoded <strong>anti-defense</strong> factor that counteracts DarTG-mediated defense by <strong>inhibiting DarT toxin activity</strong>, preventing detectable ADP-ribosylation of phage DNA in the escape context, and thereby restoring productive infection. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin media 64d807f6)</p>
+<h4 id="22-mechanistic-evidence-genetics-biochemical-readout">2.2 Mechanistic evidence (genetics + biochemical readout)</h4>
+<p>The strongest direct experimental chain linking AdfA to DarT inhibition comes from LeRoux et al.:<br />
+- RB69 experimentally evolved on DarTG1 hosts yielded multiple resistant clones; resistance repeatedly mapped to mutations in gene 61.2 (renamed adfA), especially at residue 164. (leroux2022thedartgtoxinantitoxin pages 7-9)<br />
+- Infections with evolved RB69 containing the gp61.2(R164H) change showed <strong>“no detectable DNA ADP-ribosylation”</strong> in the assay used (ELTA-based detection), consistent with direct inhibition of DarT’s DNA-modifying activity. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin media 64d807f6)<br />
+- The evolved gp61.2(R164H) variant (but not wild-type RB69 gp61.2) could restore growth to cells producing DarT1, indicating antitoxin-like inhibition even outside the phage infection setting. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h4 id="23-allele-specificity-and-interaction-model">2.3 Allele specificity and interaction model</h4>
+<p>AdfA appears to be <strong>allele-specific</strong> in activity and likely works through interaction with DarT:<br />
+- Escape mutations converged on <strong>R164H</strong> or <strong>R164S</strong>, and related phages T4/T6 naturally encode homologs with histidine at that position, suggesting this residue is a key specificity determinant. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)<br />
+- Later work (preprint) supports a <strong>protein–protein interaction</strong> model: bacterial two-hybrid assays show strong association between DarT1* and AdfA(R164H), whereas T4 AdfA shows weaker interaction. (johannesman2025phagescarryorphan pages 2-3)</p>
+<h3 id="3-biological-process-pathway-context-and-localization">3) Biological process, pathway context, and localization</h3>
+<h4 id="31-pathway-placement-during-infection">3.1 Pathway placement during infection</h4>
+<p>AdfA participates in the <strong>phage–host conflict pathway</strong>:<br />
+1) Host-encoded DarT becomes active during phage infection and ADP-ribosylates incoming/replicating phage DNA, halting DNA synthesis and blocking productive infection. (leroux2022thedartgtoxinantitoxin pages 9-11, leroux2022thedartgtoxinantitoxin pages 7-9)<br />
+2) Phage-encoded AdfA can counter this by inhibiting DarT, preventing the DNA ADP-ribosylation step and restoring replication and plaque formation under DarTG defense. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h4 id="32-cellular-localization-inference-from-function">3.2 Cellular localization (inference from function)</h4>
+<p>No direct subcellular localization imaging (e.g., fluorescence microscopy) was found in the retrieved evidence. However, the experiments imply AdfA functions <strong>inside the infected bacterial cell</strong> (cytoplasm/nucleoid region) during infection where DarT modifies DNA and where phage DNA replication occurs, because:<br />
+- The phenotypes measured are intracellular (DNA ADP-ribosylation, DNA synthesis arrest) and infection outcomes (EOP/plaquing). (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin media 64d807f6)<br />
+- AdfA can inhibit DarT1 even when expressed ectopically in cells, further supporting an intracellular interaction with the toxin. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-dartg-and-adf-type-counter-defenses-in-real-world-vibrio-choleraephage-interactions-2024">4.1 DarTG and Adf-type counter-defenses in real-world <em>Vibrio cholerae</em>–phage interactions (2024)</h4>
+<p>Patel &amp; Seed (mBio, <strong>October 2024</strong>) show that DarTG is present in clinical <em>V. cholerae</em> isolates and can inhibit the lytic phage ICP1 by blocking genome replication and preventing plaquing. They identify an ICP1-encoded counter-defense, <strong>AdfB</strong>, described as a functional antitoxin that likely abrogates DarT through direct interactions. (patel2024sporadicphagedefense pages 1-2, patel2024sporadicphagedefense pages 12-14)</p>
+<p>They further report that AdfB is expressed <strong>early</strong> in infection (before 8 minutes post-infection, with peak by ~8 minutes), consistent with needing to neutralize DarT early enough to permit genome replication. (patel2024sporadicphagedefense pages 12-14)</p>
+<p>Although this paper is centered on AdfB, it explicitly situates <strong>AdfA (RB69/T4/T6-associated)</strong> as an analogous phage-encoded anti-DarT factor with active/inactive alleles, supporting the broader concept that Adf-type counter-defenses are naturally selected and maintained in phage populations. (patel2024sporadicphagedefense pages 14-15, patel2024sporadicphagedefense pages 12-14)</p>
+<p><strong>URL / DOI:</strong> https://doi.org/10.1128/mbio.00111-24 (Oct 2024). (patel2024sporadicphagedefense pages 1-2)</p>
+<h4 id="42-functional-redundancymulti-layer-counter-defense-in-t-even-phages-context-from-later-synthesis">4.2 Functional redundancy/multi-layer counter-defense in T-even phages (context from later synthesis)</h4>
+<p>A later synthesis (preprint) argues that T4 resistance to DarTG1 is not explained solely by adfA. It reports that deletion of <strong>adfA in T4 does not alter susceptibility</strong> to DarTG1, suggesting AdfA is <strong>dispensable</strong> in T4 due to other counter-defenses (notably an enzymatic NADAR-family anti-DarT factor). (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2, johannesman2025phagescarryorphan pages 3-4)</p>
+<p>This point matters for functional annotation: <strong>AdfA is an anti-DarT factor, but not necessarily the dominant DarTG1 counter-defense determinant in T4</strong>.</p>
+<h3 id="5-experimental-evidence-and-data-highlights-statistics-and-measurable-outcomes">5) Experimental evidence and data highlights (statistics and measurable outcomes)</h3>
+<h4 id="51-mutationselection-statistics-for-adfa-leroux-et-al-2022">5.1 Mutation/selection statistics for adfA (LeRoux et al. 2022)</h4>
+<ul>
+<li><strong>Five</strong> independently evolved RB69 populations were used, yielding a DarTG1-resistant clone from each population. (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+<li><strong>Four out of five</strong> resistant clones carried a mutation in the <strong>same codon</strong> of gene 61.2/adfA. (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+<li>Of these four, <strong>three</strong> were <strong>R164H</strong> and <strong>one</strong> was <strong>R164S</strong>. (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+<li>The gene encodes a predicted <strong>212-aa</strong> protein. (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+<li>A multiple sequence alignment contained <strong>124 homologs</strong> of gp61.2, showing natural variation at residue 164 (including H, S, and N). (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+</ul>
+<p>These convergent outcomes are consistent with strong selection on a specific AdfA residue as a specificity/compatibility determinant for neutralizing a given DarT toxin. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h4 id="52-phenotype-level-functional-readouts">5.2 Phenotype-level functional readouts</h4>
+<ul>
+<li>Ectopic expression of evolved gp61.2(R164H) or a T4 homolog improved RB69 <strong>efficiency of plating (EOP)</strong> on DarTG1 hosts (directional result; exact numeric EOP not provided in text excerpt). (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+<li>ELTA-based assay readout: infections with evolved RB69 producing gp61.2(R164H) showed <strong>no detectable DNA ADP-ribosylation</strong>. (leroux2022thedartgtoxinantitoxin pages 7-9)</li>
+</ul>
+<p>The corresponding figure panels (EOP and DNA ADP-ribosylation assay) were retrieved and can be cited as visual evidence. (leroux2022thedartgtoxinantitoxin media 64d807f6, leroux2022thedartgtoxinantitoxin media 8a57b92c)</p>
+<h4 id="53-additional-quantitativestatistical-reporting-from-follow-up-work">5.3 Additional quantitative/statistical reporting from follow-up work</h4>
+<p>A later preprint provides explicit statistical reporting for EOP assays (example: <strong>n = 3</strong> independent replicates; <strong>p = 0.03</strong>, unpaired two-tailed t-test; SD error bars). (johannesman2025phagescarryorphan pages 2-3)</p>
+<p>It also reports prevalence of adfA homologs in a sampled Tevenvirinae set: <strong>13 phages</strong> encode adfA homologs; <strong>10</strong> of those have H at position 164. (johannesman2025phagescarryorphan pages 3-4)</p>
+<h3 id="6-expert-interpretation-and-analysis-authoritative-source-grounded">6) Expert interpretation and analysis (authoritative-source grounded)</h3>
+<h4 id="61-why-adfa-matters-as-a-functional-annotation-target">6.1 Why AdfA matters as a functional annotation target</h4>
+<p>The adfA story is a clear example of how “phage dark matter” genes can encode anti-defense proteins discovered through evolutionary experiments. The repeated emergence of mutations at a single residue (R164) across independent populations indicates that AdfA is a key specificity node in phage adaptation to DarTG defenses. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<p>The genomic context observation—adfA homologs near other anti-toxin/anti-defense genes such as <strong>dmd</strong> (an inhibitor of RnlA toxin)—supports the idea of anti-defense “islands” in T-even phage genomes. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</p>
+<h4 id="62-mechanistic-uncertainty-that-remains">6.2 Mechanistic uncertainty that remains</h4>
+<p>While the escape genetics and inhibition of DNA ADP-ribosylation are strong evidence of function, the <strong>molecular mechanism</strong> of AdfA remains incompletely defined in peer-reviewed literature in this evidence set:<br />
+- No enzymatic activity is attributed to AdfA in the retrieved primary evidence; instead, it is consistent with a direct inhibition model (binding/sequestration of DarT). (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2)<br />
+- Direct biochemical binding kinetics or structural complexes were not found in the retrieved excerpts.</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-phage-engineering-and-host-range-expansion">7.1 Phage engineering and host-range expansion</h4>
+<p>Anti-defense factors like AdfA represent plausible engineering targets for designing phages that can infect bacterial strains carrying specific immunity modules (DarTG and related). This is supported by the direct demonstration that expression of evolved adfA alleles (or T4 homologs) can improve infectivity/plaquing in defense-positive hosts. (leroux2022thedartgtoxinantitoxin pages 7-9)</p>
+<h4 id="72-surveillance-informed-phagebacteria-co-evolution-public-health-relevance">7.2 Surveillance-informed phage–bacteria co-evolution (public health relevance)</h4>
+<p>The 2024 <em>V. cholerae</em> study demonstrates a real-world pattern: emergence/increase of phage isolates carrying a functional antitoxin counter-defense after detection of the corresponding defense system in clinical bacterial isolates, suggesting that tracking defenses and counter-defenses can inform understanding of epidemic strain dynamics and phage predation in nature. (patel2024sporadicphagedefense pages 1-2)</p>
+<h3 id="8-evidence-summary-table">8) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Study</th>
+<th>Organism / phage context</th>
+<th>Experimental approach</th>
+<th>Main findings relevant to AdfA</th>
+<th>Functional annotation / localization implication</th>
+<th>DOI / URL</th>
+<th>Publication date</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LeRoux et al. 2022</td>
+<td><em>E. coli</em> DarTG1 defense; phage RB69 with comparison to T4/T6 homologs</td>
+<td>Experimental evolution of RB69 on DarTG1 cells; sequencing of escape mutants; ectopic expression of RB69 gp61.2(R164H) and T4 homolog; EOP assays; ELTA-based DNA ADP-ribosylation assay; growth rescue upon DarT1 expression; T4 61.2 knockout/stop-codon tests</td>
+<td>Four independent DarTG1-resistant RB69 clones carried mutations in the same codon of phage gene 61.2 (R164H or R164S). Ectopic expression of RB69 gp61.2(R164H) or the T4 homolog improved RB69 EOP on DarTG1 hosts. No detectable DNA ADP-ribosylation was seen in cells infected with evolved RB69 carrying gp61.2(R164H), and gp61.2(R164H) restored growth to cells producing DarT1. Gene 61.2 was therefore renamed <strong>adfA</strong> (anti-DarT factor A). T4 61.2 was nonessential for plaquing without DarTG1. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12, leroux2022thedartgtoxinantitoxin media 64d807f6)</td>
+<td>Strong evidence that AdfA is a phage-encoded anti-DarT factor acting in the infected bacterial cytoplasm during infection to prevent DarT-mediated ADP-ribosylation of phage DNA; likely a counter-defense protein rather than a core virion or replication enzyme. Conserved position near <strong>dmd</strong> suggests an anti-TA/anti-defense locus in T-even phages. (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</td>
+<td>DOI: 10.1038/s41564-022-01153-5; https://doi.org/10.1038/s41564-022-01153-5</td>
+<td>Jun 2022</td>
+</tr>
+<tr>
+<td>Patel &amp; Seed 2024</td>
+<td>Clinical <em>Vibrio cholerae</em> isolates with DarTG defense; phage ICP1; compares with RB69/T4/T6 AdfA-like alleles</td>
+<td>Characterization of phage antitoxin mimic AdfB; infection timing / expression analysis; comparative discussion of AdfA alleles in RB69, T4, T6</td>
+<td>AdfB is expressed early in infection (before and peaking by ~8 min) and likely antagonizes DarT through direct interaction. The paper cites AdfA in RB69/T4/T6 as an analogous phage-encoded anti-DarT factor with active and inactive alleles, supporting the idea that Adf proteins are phage antitoxin mimics shaped by prior exposure to DarTG systems. (patel2024sporadicphagedefense pages 12-14, patel2024sporadicphagedefense pages 14-15)</td>
+<td>Although this study focuses on AdfB, it supports AdfA annotation as a small anti-DarT counter-defense protein that functions early during infection in the bacterial cytoplasm, likely by directly targeting the toxin rather than modifying DNA itself. It also supports allele-specific adaptation of Adf factors in natural phage-host arms races. (patel2024sporadicphagedefense pages 12-14, patel2024sporadicphagedefense pages 14-15)</td>
+<td>DOI: 10.1128/mbio.00111-24; https://doi.org/10.1128/mbio.00111-24</td>
+<td>Oct 2024</td>
+</tr>
+<tr>
+<td>Johannesman et al. 2025 preprint</td>
+<td>T4-like / Tevenvirinae phages including T4, T2, RB69; DarTG1 and DarTG2 defense contexts</td>
+<td>Comparative genetics across T-even phages; adfA deletion analysis in T4; bacterial two-hybrid assays; ectopic expression; identification of additional anti-DarT factor AdfN</td>
+<td>AdfA is described as a small non-enzymatic anti-DarT factor lacking recognizable enzymatic domains. Bacterial two-hybrid assays support toxin association: RB69 AdfA(R164H) shows strong association with DarT1, while T4 AdfA shows weaker interaction. However, <strong>T4 ΔadfA</strong> remains resistant to DarTG1, showing AdfA is dispensable for T4 resistance because T4 also carries <strong>AdfN</strong>, a NADAR-family DNA ADP-ribosylglycohydrolase that is necessary/sufficient for major anti-DarTG1 activity in T-even phages. Presence of AdfA homologs alone does not predict resistance. (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2, johannesman2025phagescarryorphan pages 3-4, johannesman2025phagescarryorphan pages 4-5)</td>
+<td>Refines annotation: T4 AdfA should be annotated as a probable anti-DarT factor acting through protein-protein interaction with DarT during infection, but not necessarily the dominant anti-DarTG1 determinant in T4. Localization is again most consistent with action in the infected host-cell cytoplasm on the DarT defense machinery and/or at phage DNA replication sites. (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 1-2, johannesman2025phagescarryorphan pages 3-4)</td>
+<td>DOI: 10.1101/2024.07.11.602962; https://doi.org/10.1101/2024.07.11.602962</td>
+<td>Jul 2025 preprint</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main experimental evidence supporting annotation of phage gene 61.2/AdfA as an anti-DarT factor, while distinguishing direct evidence from comparative inference. It also highlights that in T4, AdfA appears dispensable because additional anti-DarTG factors such as AdfN contribute to resistance.</em></p>
+<h3 id="9-key-source-list-with-urls-and-publication-dates">9) Key source list (with URLs and publication dates)</h3>
+<ul>
+<li>LeRoux M. et al. <strong>The DarTG toxin-antitoxin system provides phage defence by ADP-ribosylating viral DNA.</strong> <em>Nature Microbiology</em>. <strong>Jun 2022</strong>. https://doi.org/10.1038/s41564-022-01153-5 (leroux2022thedartgtoxinantitoxin pages 7-9, leroux2022thedartgtoxinantitoxin pages 11-12)</li>
+<li>Patel K.M., Seed K.D. <strong>Sporadic phage defense in epidemic <em>Vibrio cholerae</em> mediated by the toxin-antitoxin system DarTG is countered by a phage-encoded antitoxin mimic.</strong> <em>mBio</em>. <strong>Oct 2024</strong>. https://doi.org/10.1128/mbio.00111-24 (patel2024sporadicphagedefense pages 1-2, patel2024sporadicphagedefense pages 12-14)</li>
+<li>(Supplementary contextual source; not peer-reviewed) Johannesman A. et al. <strong>Phages carry orphan antitoxin-like enzymes to neutralize the DarTG1 toxin-antitoxin defense system.</strong> <em>bioRxiv preprint</em>. Posted <strong>Jul 2024</strong> (in metadata as DOI); accessed as <strong>Jul 2025</strong> record. https://doi.org/10.1101/2024.07.11.602962 (johannesman2025phagescarryorphan pages 2-3, johannesman2025phagescarryorphan pages 3-4)</li>
+</ul>
+<h3 id="limitations-of-this-report-tooling-and-evidence-constraints">Limitations of this report (tooling and evidence constraints)</h3>
+<ul>
+<li>The report cannot directly cite UniProt/InterPro/Pfam pages for UniProt accession <strong>P39229</strong>, synonyms (e.g., <strong>y01L</strong>), or domain IDs (<strong>IPR055608</strong>, <strong>PF23813</strong>) because those database pages were not retrievable via the available tools in this run. Consequently, domain/family statements beyond the peer-reviewed functional evidence should be treated as <strong>database-derived</strong> and should be independently verified via UniProt/InterPro.</li>
+<li>Exact numerical EOP values are displayed in figures but were not machine-readable from the retrieved text; conclusions are supported qualitatively and by reported statistical metadata where available. (leroux2022thedartgtoxinantitoxin media 64d807f6, johannesman2025phagescarryorphan pages 2-3)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(leroux2022thedartgtoxinantitoxin pages 7-9): Michele LeRoux, Sriram Srikant, Gabriella I. C. Teodoro, Tong Zhang, Megan L. Littlehale, Shany Doron, Mohsen Badiee, Anthony K. L. Leung, Rotem Sorek, and Michael T. Laub. The dartg toxin-antitoxin system provides phage defence by adp-ribosylating viral dna. Nature Microbiology, 7:1028-1040, Jun 2022. URL: https://doi.org/10.1038/s41564-022-01153-5, doi:10.1038/s41564-022-01153-5. This article has 196 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johannesman2025phagescarryorphan pages 2-3): Anna Johannesman, Nico A. Carlson, and Michele LeRoux. Phages carry orphan antitoxin-like enzymes to neutralize the dartg1 toxin-antitoxin defense system. bioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.11.602962, doi:10.1101/2024.07.11.602962. This article has 15 citations.</p>
+</li>
+<li>
+<p>(johannesman2025phagescarryorphan pages 1-2): Anna Johannesman, Nico A. Carlson, and Michele LeRoux. Phages carry orphan antitoxin-like enzymes to neutralize the dartg1 toxin-antitoxin defense system. bioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.11.602962, doi:10.1101/2024.07.11.602962. This article has 15 citations.</p>
+</li>
+<li>
+<p>(johannesman2025phagescarryorphan pages 3-4): Anna Johannesman, Nico A. Carlson, and Michele LeRoux. Phages carry orphan antitoxin-like enzymes to neutralize the dartg1 toxin-antitoxin defense system. bioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.11.602962, doi:10.1101/2024.07.11.602962. This article has 15 citations.</p>
+</li>
+<li>
+<p>(patel2024sporadicphagedefense pages 1-2): Kishen M. Patel and Kimberley D. Seed. Sporadic phage defense in epidemic <i>vibrio cholerae</i> mediated by the toxin-antitoxin system dartg is countered by a phage-encoded antitoxin mimic. mBio, Oct 2024. URL: https://doi.org/10.1128/mbio.00111-24, doi:10.1128/mbio.00111-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(patel2024sporadicphagedefense pages 12-14): Kishen M. Patel and Kimberley D. Seed. Sporadic phage defense in epidemic <i>vibrio cholerae</i> mediated by the toxin-antitoxin system dartg is countered by a phage-encoded antitoxin mimic. mBio, Oct 2024. URL: https://doi.org/10.1128/mbio.00111-24, doi:10.1128/mbio.00111-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leroux2022thedartgtoxinantitoxin pages 11-12): Michele LeRoux, Sriram Srikant, Gabriella I. C. Teodoro, Tong Zhang, Megan L. Littlehale, Shany Doron, Mohsen Badiee, Anthony K. L. Leung, Rotem Sorek, and Michael T. Laub. The dartg toxin-antitoxin system provides phage defence by adp-ribosylating viral dna. Nature Microbiology, 7:1028-1040, Jun 2022. URL: https://doi.org/10.1038/s41564-022-01153-5, doi:10.1038/s41564-022-01153-5. This article has 196 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leroux2022thedartgtoxinantitoxin pages 9-11): Michele LeRoux, Sriram Srikant, Gabriella I. C. Teodoro, Tong Zhang, Megan L. Littlehale, Shany Doron, Mohsen Badiee, Anthony K. L. Leung, Rotem Sorek, and Michael T. Laub. The dartg toxin-antitoxin system provides phage defence by adp-ribosylating viral dna. Nature Microbiology, 7:1028-1040, Jun 2022. URL: https://doi.org/10.1038/s41564-022-01153-5, doi:10.1038/s41564-022-01153-5. This article has 196 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leroux2022thedartgtoxinantitoxin media 64d807f6): Michele LeRoux, Sriram Srikant, Gabriella I. C. Teodoro, Tong Zhang, Megan L. Littlehale, Shany Doron, Mohsen Badiee, Anthony K. L. Leung, Rotem Sorek, and Michael T. Laub. The dartg toxin-antitoxin system provides phage defence by adp-ribosylating viral dna. Nature Microbiology, 7:1028-1040, Jun 2022. URL: https://doi.org/10.1038/s41564-022-01153-5, doi:10.1038/s41564-022-01153-5. This article has 196 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(patel2024sporadicphagedefense pages 14-15): Kishen M. Patel and Kimberley D. Seed. Sporadic phage defense in epidemic <i>vibrio cholerae</i> mediated by the toxin-antitoxin system dartg is countered by a phage-encoded antitoxin mimic. mBio, Oct 2024. URL: https://doi.org/10.1128/mbio.00111-24, doi:10.1128/mbio.00111-24. This article has 16 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leroux2022thedartgtoxinantitoxin media 8a57b92c): Michele LeRoux, Sriram Srikant, Gabriella I. C. Teodoro, Tong Zhang, Megan L. Littlehale, Shany Doron, Mohsen Badiee, Anthony K. L. Leung, Rotem Sorek, and Michael T. Laub. The dartg toxin-antitoxin system provides phage defence by adp-ribosylating viral dna. Nature Microbiology, 7:1028-1040, Jun 2022. URL: https://doi.org/10.1038/s41564-022-01153-5, doi:10.1038/s41564-022-01153-5. This article has 196 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(johannesman2025phagescarryorphan pages 4-5): Anna Johannesman, Nico A. Carlson, and Michele LeRoux. Phages carry orphan antitoxin-like enzymes to neutralize the dartg1 toxin-antitoxin defense system. bioRxiv, Jul 2025. URL: https://doi.org/10.1101/2024.07.11.602962, doi:10.1101/2024.07.11.602962. This article has 15 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="adfA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000019 Figure 5 (page 35) contains several panels demonstrating the effects of the gp61.2 (adfA) R164H mutation on phage defense. Specific" src="adfA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>leroux2022thedartgtoxinantitoxin pages 9-11</li>
+<li>leroux2022thedartgtoxinantitoxin pages 7-9</li>
+<li>johannesman2025phagescarryorphan pages 2-3</li>
+<li>patel2024sporadicphagedefense pages 12-14</li>
+<li>patel2024sporadicphagedefense pages 1-2</li>
+<li>johannesman2025phagescarryorphan pages 3-4</li>
+<li>johannesman2025phagescarryorphan pages 1-2</li>
+<li>leroux2022thedartgtoxinantitoxin pages 11-12</li>
+<li>patel2024sporadicphagedefense pages 14-15</li>
+<li>johannesman2025phagescarryorphan pages 4-5</li>
+<li>https://doi.org/10.1128/mbio.00111-24</li>
+<li>https://doi.org/10.1038/s41564-022-01153-5</li>
+<li>https://doi.org/10.1101/2024.07.11.602962</li>
+<li>https://doi.org/10.1038/s41564-022-01153-5,</li>
+<li>https://doi.org/10.1101/2024.07.11.602962,</li>
+<li>https://doi.org/10.1128/mbio.00111-24,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P39229
+gene_symbol: P39229
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P39229&#39;
+existing_annotations:
+- term:
+    id: GO:0052031
+    label: symbiont-mediated perturbation of host defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052170
+    label: symbiont-mediated suppression of host innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

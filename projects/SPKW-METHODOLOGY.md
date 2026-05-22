@@ -130,7 +130,8 @@ ORDER BY annotation_count DESC;
 | Well-curated (human, mouse, yeast) | Closure-filtered | Many SPKW annotations are redundant with specific experimental evidence |
 | Moderately curated (Arabidopsis, Drosophila) | Closure-filtered | Still significant redundancy |
 | Poorly curated (most bacteria, parasites) | Naive | Little experimental evidence exists, so closure filtering has minimal effect |
-| Phage/Virus | Naive | Very few annotations overall |
+| Single phage or small viral proteome | Naive | Few annotations overall; closure filtering may hide the practical review queue |
+| Virus-wide mixed-clade dataset | Naive + closure-filtered | Naive gives the scope; closure filtering reduced `virus.ddb` candidates by 41% and is useful for prioritization |
 
 ## Key Insight
 
@@ -138,6 +139,8 @@ ORDER BY annotation_count DESC;
 1. Exploring poorly-curated organisms
 2. Wanting to see the full scope of SPKW coverage
 3. Debugging or validating the closure-filtered results
+
+For viruses, use both views when working across many clades. The virus-wide analysis in [SPKW-VIRUS.md](SPKW-VIRUS.md) found 135,117 naive SPKW-unique annotations and 80,218 closure-filtered SPKW-unique annotations.
 
 ---
 
