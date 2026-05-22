@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P09425 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P09425</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P09425" target="_blank" class="term-link">
+                        P09425
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P09425";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P09425" data-a="DESCRIPTION: TODO: Add description for P09425..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P09425</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098015" target="_blank" class="term-link">
+                                    GO:0098015
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P09425" data-a="GO:0098015" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098025" target="_blank" class="term-link">
+                                    GO:0098025
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, baseplate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P09425" data-a="GO:0098025" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098025" target="_blank" class="term-link">
+                                    GO:0098025
+                                </a>
+                            </span>
+                            <span class="term-label">virus tail, baseplate</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27193680
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of the T4 baseplate and its function in triggering...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P09425" data-a="GO:0098025" data-r="PMID:27193680" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27193680" target="_blank" class="term-link">
+                            PMID:27193680
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of the T4 baseplate and its function in triggering sheath contraction.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(25-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P09425" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">37 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T17:17:09.598802</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="25-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="25-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000010 Figure 4 shows the assembly of the T4 baseplate and the location/interactions of gp25. Specifically, Figure 4B illustrates the &#34;she</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-enterobacteria-phage-t4-gene-25-gp25-uniprot-p09425">Research report: Enterobacteria phage T4 gene 25 (gp25; UniProt P09425)</h2>
+<h3 id="0-identity-verification-and-scope">0) Identity verification and scope</h3>
+<p>The target gene <strong>25</strong> corresponds to <strong>bacteriophage T4 gene product gp25</strong>, annotated as a <strong>baseplate wedge protein</strong> (outer wedge) and member of the <strong>GpW/Gp25 family</strong> (IraD/Gp25-like; PF04965). The evidence summarized below is restricted to <strong>T4 gp25</strong> and to <strong>explicit homologs described as “T4 gp25-like” sheath initiators</strong>; it explicitly excludes unrelated proteins that happen to be named “gp25” in other phages (e.g., capsid cementing proteins). (rossmann2004thebacteriophaget4 pages 2-4, wang2023structureofvibrio pages 3-5, iglesias2024cryoemanalysisof pages 1-2)</p>
+<h3 id="1-key-concepts-and-current-functional-understanding">1) Key concepts and current functional understanding</h3>
+<h4 id="11-what-is-the-t4-baseplate-wedge-and-where-does-gp25-fit">1.1 What is the T4 baseplate wedge and where does gp25 fit?</h4>
+<p>The <strong>T4 baseplate</strong> is the distal tail organelle that orchestrates host recognition and triggers tail sheath contraction during infection. It is built from a <strong>central hub</strong> surrounded by <strong>six wedges</strong>, with wedge formation proceeding by ordered protein–protein assembly. gp25 is consistently listed as one of the <strong>wedge subunits</strong> (with gp10, gp7, gp8, gp6, gp53, gp11), and is part of a <strong>gp6–gp25–gp53</strong> assembly unit in the mature baseplate. (https://doi.org/10.1016/j.sbi.2004.02.001; Apr 2004) (rossmann2004thebacteriophaget4 pages 2-4)</p>
+<h4 id="12-primary-function-structural-baseplate-protein-and-tail-sheath-assembly-initiator">1.2 Primary function: structural baseplate protein and tail sheath assembly initiator</h4>
+<p>The strongest convergent conclusion from structural biology and assembly models is that <strong>T4 gp25 is a structural baseplate wedge protein that also acts as the “sheath initiator” (nucleator)</strong> for polymerization of the contractile tail sheath protein <strong>gp18</strong> in the extended (pre-infection) conformation.</p>
+<p><em>Evidence for “sheath initiator” role</em><br />
+- A pseudo-atomic model of the T4 baseplate/tail argues that gp25 <strong>continues the sheath lattice</strong> at the baseplate-proximal end and is <strong>responsible for starting sheath assembly in the extended conformation</strong>, including symmetry/geometry constraints required to accept sheath subunit arms. (https://doi.org/10.1038/nature17971; May 2016) (taylor2016structureofthe pages 3-6)<br />
+- A synthesis/review of the T4 tail assembly literature explicitly labels gp25 as a baseplate protein with functional note <strong>“sheath initiator”</strong>, consolidating this interpretation. (https://doi.org/10.1007/s12551-016-0230-x; Nov 2016) (arisaka2016molecularassemblyand pages 2-4)</p>
+<h3 id="2-localization-where-gp25-is-in-the-virion">2) Localization: where gp25 is in the virion</h3>
+<p>Across cryo-EM fitting, pseudo-atomic models, and assembly descriptions, gp25 localizes to the <strong>inner region of each baseplate wedge</strong>, associated with the <strong>gp6 ring</strong> and forming part of a <strong>platform on top of the baseplate</strong> that interfaces with the first sheath layer.</p>
+<ul>
+<li>Cryo-EM fitting of the gp6 crystal structure into baseplate reconstructions assigns a density <strong>inside the gp6 ring</strong> to gp25 (one major “blob” per wedge), placing it centrally within each wedge. (https://doi.org/10.1016/j.str.2009.04.005; Jun 2009) (aksyuk2009thestructureof pages 2-3)</li>
+<li>Integrative cryo-EM-based assignment work describes gp25 among the wedge-center densities that, together with gp6 and gp53, contribute to a <strong>platform on top of the baseplate</strong> resembling a layer of sheath subunits, consistent with a baseplate–sheath interface role. (https://doi.org/10.1007/pl00021751; Nov 2004) (mesyanzhinov2004moleculararchitectureof pages 8-9)</li>
+</ul>
+<h3 id="3-interaction-partners-and-structural-role-in-assembly-and-infection">3) Interaction partners and structural role in assembly and infection</h3>
+<h4 id="31-wedge-stabilization-and-hubwedge-reinforcement">3.1 Wedge stabilization and hub–wedge reinforcement</h4>
+<p>A baseplate assembly/infection study that fits gp25 structural information into a baseplate model concludes gp25 contributes to <strong>mechanical reinforcement</strong> at two levels:<br />
+1) It attaches with <strong>gp53 and gp6</strong> to strengthen inter-wedge connections.<br />
+2) It also binds at/near the <strong>gp48–gp54 hub complex</strong> to reinforce hub–wedge connections, which is consistent with gp25 being positioned at the <strong>“sheath initiation interface.”</strong> (https://doi.org/10.1073/pnas.1601654113; Feb 2016) (yap2016roleofbacteriophage pages 3-5)</p>
+<p>A figure from this study explicitly depicts gp25 as <strong>“gp25 × 6”</strong> positioned at the sheath initiation interface above the hub, reinforcing the interpretation of a <strong>hexameric set</strong> of gp25 subunits at the baseplate top. (yap2016roleofbacteriophage media d49dc21f)</p>
+<h4 id="32-direct-coupling-to-sheath-polymerization">3.2 Direct coupling to sheath polymerization</h4>
+<p>Mechanistically, the pseudo-atomic tail/baseplate model argues gp25 must satisfy geometric and symmetry constraints to seed the sheath:<br />
+- “Six gp25 molecules must accommodate twelve long arms” from the first layer of sheath subunits, implying gp25 provides a scaffold that accepts donor-strand/exchange-like arms during early sheath assembly. (https://doi.org/10.1038/nature17971; May 2016) (taylor2016structureofthe pages 3-6)<br />
+- The gp25 crystal structure (PDB <strong>4HRZ</strong>, referenced in these studies) is used to reason about conformational rearrangements and strand accommodation during sheath nucleation. (yap2016roleofbacteriophage pages 3-5, taylor2016structureofthe pages 3-6)</p>
+<h4 id="33-additional-inferred-contacts-proximity-based">3.3 Additional inferred contacts (proximity-based)</h4>
+<p>The same pseudo-atomic model proposes potential interactions between a displaced gp25 strand and nearby hub/tube proteins such as <strong>gp29</strong> and parts of <strong>gp48</strong>, because gp29/part of gp48 are located at the hub–tube interface close to where structural rearrangements might occur during initiation. (taylor2016structureofthe pages 3-6)</p>
+<h3 id="4-quantitative-and-statistical-data-relevant-to-annotation">4) Quantitative and statistical data relevant to annotation</h3>
+<h4 id="41-copy-number-stoichiometry">4.1 Copy number / stoichiometry</h4>
+<p>Multiple sources converge on <strong>six copies</strong> of gp25 per virion/baseplate (one per wedge):<br />
+- Compilation tables and reviews list gp25 as <strong>6 copies</strong> in the baseplate wedge. (https://doi.org/10.1016/j.sbi.2004.02.001; Apr 2004) (rossmann2004thebacteriophaget4 pages 2-4)<br />
+- Another compilation lists gp25 as 15.1 kDa and <strong>6 copies</strong> per virion and locates it in the baseplate wedge. (https://doi.org/10.1007/s00018-003-3072-1; Nov 2003) (leiman2003structureandmorphogenesis pages 7-8)<br />
+- A later tail-assembly review again lists gp25 stoichiometry as <strong>6</strong> and function as sheath initiator. (https://doi.org/10.1007/s12551-016-0230-x; Nov 2016) (arisaka2016molecularassemblyand pages 2-4)</p>
+<h4 id="42-protein-sizelength">4.2 Protein size/length</h4>
+<p>Reported size/length values vary by source/definition but agree that gp25 is small:<br />
+- 15.1 kDa in compiled virion protein tables. (rossmann2004thebacteriophaget4 pages 2-4, leiman2003structureandmorphogenesis pages 7-8)<br />
+- Reported as ~132 aa in one review table. (arisaka2016molecularassemblyand pages 2-4)<br />
+- Reported as 142 residues in the cryo-EM fitting paper. (aksyuk2009thestructureof pages 2-3)</p>
+<h4 id="43-structural-resolution-and-structural-identifiers">4.3 Structural resolution and structural identifiers</h4>
+<p>Key structural milestones relevant to gp25 annotation include:<br />
+- Early T4 baseplate reconstructions at <strong>~12 Å</strong> that enabled coarse placement and density assignment of wedge-center proteins including gp25. (rossmann2004thebacteriophaget4 pages 2-4, mesyanzhinov2004moleculararchitectureof pages 8-9)<br />
+- Use of dome/star-shaped baseplate maps at approximately <strong>~12 Å and ~17 Å</strong> for density fitting and volumetric calibration to assign gp25 density inside the gp6 ring. (aksyuk2009thestructureof pages 2-3)<br />
+- Referenced atomic structures/models: gp25 crystal <strong>PDB 4HRZ</strong> and a later structural model for the tail/baseplate (PDB <strong>5IW9</strong> referenced in the 2016 synthesis). (yap2016roleofbacteriophage pages 3-5, arisaka2016molecularassemblyand pages 2-4)</p>
+<h3 id="5-recent-developments-20232024-gp25-like-sheath-initiators-in-other-contractile-systems">5) Recent developments (2023–2024): gp25-like sheath initiators in other contractile systems</h3>
+<p>Direct new primary-structure work specifically on <strong>T4 gp25</strong> itself (2023–2024) was not identified in the retrieved corpus; however, multiple high-resolution studies in 2023–2024 reinforce and operationalize the “gp25-like sheath initiator” concept across contractile injection systems.</p>
+<h4 id="51-vibrio-phage-xm1-near-atomic-model-of-a-t4-gp25-homolog-2023">5.1 Vibrio phage XM1: near-atomic model of a T4-gp25 homolog (2023)</h4>
+<p>A 2023 cryo-EM study of Vibrio phage <strong>XM1</strong> resolves a 6-fold-symmetric distal tail reconstruction at <strong>3.2 Å</strong> and identifies XM1 <strong>gp15</strong> as <strong>homologous to T4 gp25</strong> and explicitly states that T4 gp25 <strong>serves as the initiator for assembly of the contractile tail sheath</strong>. The XM1 assembly pathway places gp15 binding to the baseplate before the first hexameric ring of sheath protein assembles, making the gp25-like initiator concept experimentally concrete in a different phage chassis. (https://doi.org/10.3390/v15081673; Jul 2023) (wang2023structureofvibrio pages 3-5)</p>
+<h4 id="52-therapeutic-phage-structural-atlases-and-annotation-pipelines-2024">5.2 Therapeutic phage structural atlases and annotation pipelines (2024)</h4>
+<p>A 2024 Communications Biology study provides a high-resolution structural atlas of a therapeutic Pseudomonas phage, combining <strong>bioinformatics, proteomics, and cryo-EM</strong> to build atomic models for <strong>21 structural polypeptides</strong>. Although its “gp25” is a capsid protein (not homologous to T4 gp25), the paper illustrates how near-atomic reconstructions (e.g., capsid at <strong>3.5 Å</strong> and localized vertex reconstruction at <strong>2.9 Å</strong>) support protein identification and functional annotation in clinically relevant phages, a trend that increasingly enables rigorous annotation of baseplate/sheath initiation modules in diverse myophages. (https://doi.org/10.1038/s42003-024-06985-x; Oct 2024) (iglesias2024cryoemanalysisof pages 1-2)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-t4-as-an-engineering-chassis-structural-proteins">6.1 T4 as an engineering chassis (structural proteins)</h4>
+<p>The best-supported “real-world” engineering implementations in the retrieved sources center on <strong>T4 capsid decoration and display</strong> using nonessential outer capsid proteins <strong>Hoc</strong> and <strong>Soc</strong>, rather than gp25 specifically.</p>
+<p>A review of T4 head structure and engineering reports:<br />
+- <strong>Hoc</strong> is present at up to <strong>155 copies/capsid</strong> and <strong>Soc</strong> at up to <strong>870 copies/capsid</strong>, enabling high-density multivalent display. (https://doi.org/10.1186/1743-422x-7-356; Dec 2010) (rao2010structureandassembly pages 1-2)<br />
+- Antigens fused to Hoc/Soc can be assembled onto capsids in vitro; full-length antigens up to ~<strong>90 kDa</strong> have been displayed (examples: 83–90 kDa Bacillus anthracis antigens), and multivalent display can elicit strong immune responses without adjuvant (as summarized in the review). (rao2010structureandassembly pages 4-5)<br />
+- Soc addition stabilizes capsids with a reported ~<strong>10^4-fold</strong> increased survival at high pH in the cited work summarized by the review. (rao2010structureandassembly pages 4-5)</p>
+<h4 id="62-implications-for-gp25-engineering-contractile-injection-systems">6.2 Implications for gp25: engineering contractile injection systems</h4>
+<p>While direct gp25 engineering examples were not captured in the retrieved texts, gp25’s role as the <strong>sheath initiator</strong> makes it a key design element for any attempt to re-engineer or miniaturize <strong>contractile injection systems</strong> (phage tails, tailocins, eCIS) because it defines how the first sheath ring docks and polymerizes. Conservation of a gp25-like initiator in XM1 with near-atomic structural characterization supports this as a transferable module in engineered systems. (wang2023structureofvibrio pages 3-5, taylor2016structureofthe pages 3-6)</p>
+<h3 id="7-expert-interpretation-and-synthesis">7) Expert interpretation and synthesis</h3>
+<p>Structural biologists studying T4 and related contractile machines increasingly treat gp25 not merely as a “wedge subunit,” but as a <strong>specialized structural adaptor</strong> that:<br />
+1) <strong>Mechanically stabilizes</strong> key baseplate interfaces (wedge–wedge and hub–wedge), and<br />
+2) Provides the <strong>template/seed</strong> for correct assembly of the gp18 sheath lattice (extended pre-infection form), thereby controlling assembly fidelity and enabling coordinated firing upon host contact. (yap2016roleofbacteriophage pages 3-5, taylor2016structureofthe pages 3-6)</p>
+<h3 id="8-summary-of-major-claims-evidence-map">8) Summary of major claims (evidence map)</h3>
+<p>A compact evidence map is provided in the table below.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Function</th>
+<th>Evidence type</th>
+<th>Key quantitative details</th>
+<th>Interaction partners</th>
+<th>Primary citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T4 gp25 is a small baseplate wedge component in the assembled tail; part of the gp6-gp25-gp53 assembly unit and incorporated late during wedge formation.</td>
+<td>Review/compilation integrating biochemical and cryo-EM mapping</td>
+<td>15.1 kDa; 6 copies per virion/baseplate; baseplate/tail tube reconstructed at ~12 Å.</td>
+<td>gp6, gp53; wedge proteins overall include gp11, gp10, gp7, gp8, gp6, gp53, gp25.</td>
+<td>Rossmann et al., 2004, DOI: https://doi.org/10.1016/j.sbi.2004.02.001 (rossmann2004thebacteriophaget4 pages 2-4)</td>
+</tr>
+<tr>
+<td>gp25 contributes to an unassigned platform on top of the T4 baseplate that resembles a sheath layer and likely helps connect baseplate to tail sheath/tube.</td>
+<td>Cryo-EM fitting / density assignment</td>
+<td>Cryo-EM baseplate resolution 12 Å; gp25 reported as 5.1 kDa and 6 copies per baseplate; unassigned wedge-center density ~166 kDa per wedge.</td>
+<td>Associated in unresolved density with gp6 and gp53.</td>
+<td>Mesyanzhinov et al., 2004, DOI: https://doi.org/10.1007/pl00021751 (mesyanzhinov2004moleculararchitectureof pages 8-9)</td>
+</tr>
+<tr>
+<td>gp25 localizes inside the gp6 ring within each wedge and helps form the platform on which the first disk of sheath protein gp18 assembles.</td>
+<td>Cryo-EM fitting with volumetric calibration</td>
+<td>gp25 length 142 residues; dome/star maps at ~12 Å and ~17 Å; blob volumes calibrated to assign gp25/gp53 after fitting gp6 crystal structure.</td>
+<td>gp6, gp53, gp18; platform also linked with gp48.</td>
+<td>Aksyuk et al., 2009, DOI: https://doi.org/10.1016/j.str.2009.04.005 (aksyuk2009thestructureof pages 2-3)</td>
+</tr>
+<tr>
+<td>gp25 strengthens both interwedge and hub-wedge connections and is positioned at the sheath initiation interface; structural fitting supports a role in baseplate attachment and sheath polymerization.</td>
+<td>Pseudo-atomic model / structural assembly study</td>
+<td>gp25 crystal structure referenced as PDB 4HRZ; figure evidence shows gp25 x6 at sheath initiation interface on top of hub.</td>
+<td>gp53, gp6, gp48-gp54 complex.</td>
+<td>Yap et al., 2016, DOI: https://doi.org/10.1073/pnas.1601654113 (yap2016roleofbacteriophage pages 3-5, yap2016roleofbacteriophage media d49dc21f)</td>
+</tr>
+<tr>
+<td>gp25 acts as the initiator/nucleus for tail sheath polymerization in the extended T4 tail; it continues the sheath lattice and accommodates arms from the first sheath ring.</td>
+<td>Pseudo-atomic model of intact tail/baseplate</td>
+<td>6 gp25 molecules accommodate 12 long sheath arms; gp25 crystal PDB 4HRZ; baseplate model published in Nature 2016.</td>
+<td>Tail sheath gp18; nearby hub/tube proteins gp29 and gp48.</td>
+<td>Taylor et al., 2016, DOI: https://doi.org/10.1038/nature17971 (taylor2016structureofthe pages 3-6)</td>
+</tr>
+<tr>
+<td>gp25 is functionally annotated as the T4 baseplate “sheath initiator” in a synthesis of tail assembly and structure.</td>
+<td>Review/compilation</td>
+<td>132 aa; stoichiometry 6 copies; structural entry PDB 5IW9; related high-resolution baseplate cryo-EM reported at 3.8 Å.</td>
+<td>Contextual wedge/baseplate assembly with gp10, gp7, gp8, gp6, gp53, gp11; sheath polymerization by gp18.</td>
+<td>Arisaka et al., 2016, DOI: https://doi.org/10.1007/s12551-016-0230-x (arisaka2016molecularassemblyand pages 2-4)</td>
+</tr>
+<tr>
+<td>In Vibrio phage XM1, gp15 is a homolog of T4 gp25 and is explicitly assigned as the sheath initiator that binds the baseplate before the first sheath ring assembles, supporting conservation of gp25-like function.</td>
+<td>Homolog study / near-atomic cryo-EM</td>
+<td>Distal tail/baseplate reconstructed at 3.2 Å; contracted-particle map 9.1 Å; one gp15 per wedge in atomic model.</td>
+<td>gp11, wedge proteins, sheath protein gp6.</td>
+<td>Wang et al., 2023, DOI: https://doi.org/10.3390/v15081673 (wang2023structureofvibrio pages 3-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main experimental and comparative evidence used to functionally annotate bacteriophage T4 gp25 (UniProt P09425). It highlights how structural fitting, pseudo-atomic models, and homolog studies converge on a role for gp25 as a baseplate wedge protein and sheath assembly initiator.</em></p>
+<h3 id="9-key-visual-evidence">9) Key visual evidence</h3>
+<p>A relevant figure showing <strong>gp25 × 6 at the sheath initiation interface</strong> in a T4 baseplate assembly model is available from Yap et al. 2016. (yap2016roleofbacteriophage media d49dc21f)</p>
+<h3 id="10-practical-functional-annotation-suggested-controlled-vocabulary">10) Practical functional annotation (suggested controlled vocabulary)</h3>
+<ul>
+<li><strong>Molecular function:</strong> structural protein; <strong>tail sheath assembly initiator/nucleator</strong> (non-enzymatic). (taylor2016structureofthe pages 3-6, arisaka2016molecularassemblyand pages 2-4)</li>
+<li><strong>Biological process:</strong> baseplate wedge assembly; baseplate–sheath coupling; initiation of sheath polymerization; infection-related conformational triggering (by enabling correct sheath architecture). (yap2016roleofbacteriophage pages 3-5, taylor2016structureofthe pages 3-6)</li>
+<li><strong>Cellular component / localization:</strong> virion tail <strong>baseplate</strong>, <strong>wedge center/platform</strong> at the baseplate–sheath interface; <strong>six copies</strong> (one per wedge). (aksyuk2009thestructureof pages 2-3, rossmann2004thebacteriophaget4 pages 2-4, leiman2003structureandmorphogenesis pages 7-8, yap2016roleofbacteriophage media d49dc21f)</li>
+</ul>
+<h3 id="11-limitations-of-available-evidence">11) Limitations of available evidence</h3>
+<ul>
+<li>The retrieved corpus supports gp25’s role primarily via <strong>structural fitting, pseudo-atomic modeling, and comparative structural biology</strong>; gp25’s precise biochemical interaction kinetics and any conformational switching during infection remain less directly characterized in the cited excerpts.</li>
+<li>2023–2024 evidence is strongest for <strong>gp25-like homologs</strong> (e.g., XM1 gp15) and for general maturation of structural annotation workflows; new 2023–2024 experiments directly perturbing <strong>T4 gp25</strong> were not retrieved here.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(rossmann2004thebacteriophaget4 pages 2-4): Michael G Rossmann, Vadim V Mesyanzhinov, Fumio Arisaka, and Petr G Leiman. The bacteriophage t4 dna injection machine. Current opinion in structural biology, 14 2:171-80, Apr 2004. URL: https://doi.org/10.1016/j.sbi.2004.02.001, doi:10.1016/j.sbi.2004.02.001. This article has 250 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2023structureofvibrio pages 3-5): Zhiqing Wang, Andrei Fokine, Xinwu Guo, Wen Jiang, Michael G. Rossmann, Richard J. Kuhn, Zhu-Hua Luo, and Thomas Klose. Structure of vibrio phage xm1, a simple contractile dna injection machine. Viruses, 15:1673, Jul 2023. URL: https://doi.org/10.3390/v15081673, doi:10.3390/v15081673. This article has 19 citations.</p>
+</li>
+<li>
+<p>(iglesias2024cryoemanalysisof pages 1-2): Stephano M. Iglesias, Chun-Feng David Hou, Johnny Reid, Evan Schauer, Renae Geier, Angela Soriaga, Lucy Sim, Lucy Gao, Julian Whitelegge, Pierre Kyme, Deborah Birx, Sebastien Lemire, and Gino Cingolani. Cryo-em analysis of pseudomonas phage pa193 structural components. Communications Biology, Oct 2024. URL: https://doi.org/10.1038/s42003-024-06985-x, doi:10.1038/s42003-024-06985-x. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taylor2016structureofthe pages 3-6): Nicholas M. I. Taylor, Nikolai S. Prokhorov, Ricardo C. Guerrero-Ferreira, Mikhail M. Shneider, Christopher Browning, Kenneth N. Goldie, Henning Stahlberg, and Petr G. Leiman. Structure of the t4 baseplate and its function in triggering sheath contraction. Nature, 533:346-352, May 2016. URL: https://doi.org/10.1038/nature17971, doi:10.1038/nature17971. This article has 355 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arisaka2016molecularassemblyand pages 2-4): Fumio Arisaka, Moh Lan Yap, Shuji Kanamaru, and Michael G. Rossmann. Molecular assembly and structure of the bacteriophage t4 tail. Biophysical Reviews, 8:385-396, Nov 2016. URL: https://doi.org/10.1007/s12551-016-0230-x, doi:10.1007/s12551-016-0230-x. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aksyuk2009thestructureof pages 2-3): Anastasia A. Aksyuk, Petr G. Leiman, Mikhail M. Shneider, Vadim V. Mesyanzhinov, and Michael G. Rossmann. The structure of gene product 6 of bacteriophage t4, the hinge-pin of the baseplate. Structure, 17 6:800-8, Jun 2009. URL: https://doi.org/10.1016/j.str.2009.04.005, doi:10.1016/j.str.2009.04.005. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mesyanzhinov2004moleculararchitectureof pages 8-9): V. V. Mesyanzhinov, P. G. Leiman, V. A. Kostyuchenko, L. P. Kurochkina, K. A. Miroshnikov, N. N. Sykilinda, and M. M. Shneider. Molecular architecture of bacteriophage t4. Biochemistry (Moscow), 69:1190-1202, Nov 2004. URL: https://doi.org/10.1007/pl00021751, doi:10.1007/pl00021751. This article has 61 citations.</p>
+</li>
+<li>
+<p>(yap2016roleofbacteriophage pages 3-5): Moh Lan Yap, Thomas Klose, Fumio Arisaka, Jeffrey A. Speir, David Veesler, Andrei Fokine, and Michael G. Rossmann. Role of bacteriophage t4 baseplate in regulating assembly and infection. Proceedings of the National Academy of Sciences, 113:2654-2659, Feb 2016. URL: https://doi.org/10.1073/pnas.1601654113, doi:10.1073/pnas.1601654113. This article has 113 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yap2016roleofbacteriophage media d49dc21f): Moh Lan Yap, Thomas Klose, Fumio Arisaka, Jeffrey A. Speir, David Veesler, Andrei Fokine, and Michael G. Rossmann. Role of bacteriophage t4 baseplate in regulating assembly and infection. Proceedings of the National Academy of Sciences, 113:2654-2659, Feb 2016. URL: https://doi.org/10.1073/pnas.1601654113, doi:10.1073/pnas.1601654113. This article has 113 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(leiman2003structureandmorphogenesis pages 7-8): P. G. Leiman, S. Kanamaru, V. V. Mesyanzhinov, F. Arisaka, and M. G. Rossmann. Structure and morphogenesis of bacteriophage t4. Cellular and Molecular Life Sciences CMLS, 60:2356-2370, Nov 2003. URL: https://doi.org/10.1007/s00018-003-3072-1, doi:10.1007/s00018-003-3072-1. This article has 359 citations.</p>
+</li>
+<li>
+<p>(rao2010structureandassembly pages 1-2): Venigalla B Rao and Lindsay W Black. Structure and assembly of bacteriophage t4 head. Virology Journal, 7:356-356, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-356, doi:10.1186/1743-422x-7-356. This article has 162 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rao2010structureandassembly pages 4-5): Venigalla B Rao and Lindsay W Black. Structure and assembly of bacteriophage t4 head. Virology Journal, 7:356-356, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-356, doi:10.1186/1743-422x-7-356. This article has 162 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="25-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000010 Figure 4 shows the assembly of the T4 baseplate and the location/interactions of gp25. Specifically, Figure 4B illustrates the &quot;she" src="25-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>taylor2016structureofthe pages 3-6</li>
+<li>arisaka2016molecularassemblyand pages 2-4</li>
+<li>aksyuk2009thestructureof pages 2-3</li>
+<li>mesyanzhinov2004moleculararchitectureof pages 8-9</li>
+<li>yap2016roleofbacteriophage pages 3-5</li>
+<li>leiman2003structureandmorphogenesis pages 7-8</li>
+<li>wang2023structureofvibrio pages 3-5</li>
+<li>iglesias2024cryoemanalysisof pages 1-2</li>
+<li>rao2010structureandassembly pages 1-2</li>
+<li>rao2010structureandassembly pages 4-5</li>
+<li>https://doi.org/10.1016/j.sbi.2004.02.001;</li>
+<li>https://doi.org/10.1038/nature17971;</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x;</li>
+<li>https://doi.org/10.1016/j.str.2009.04.005;</li>
+<li>https://doi.org/10.1007/pl00021751;</li>
+<li>https://doi.org/10.1073/pnas.1601654113;</li>
+<li>https://doi.org/10.1007/s00018-003-3072-1;</li>
+<li>https://doi.org/10.3390/v15081673;</li>
+<li>https://doi.org/10.1038/s42003-024-06985-x;</li>
+<li>https://doi.org/10.1186/1743-422x-7-356;</li>
+<li>https://doi.org/10.1016/j.sbi.2004.02.001</li>
+<li>https://doi.org/10.1007/pl00021751</li>
+<li>https://doi.org/10.1016/j.str.2009.04.005</li>
+<li>https://doi.org/10.1073/pnas.1601654113</li>
+<li>https://doi.org/10.1038/nature17971</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x</li>
+<li>https://doi.org/10.3390/v15081673</li>
+<li>https://doi.org/10.1016/j.sbi.2004.02.001,</li>
+<li>https://doi.org/10.3390/v15081673,</li>
+<li>https://doi.org/10.1038/s42003-024-06985-x,</li>
+<li>https://doi.org/10.1038/nature17971,</li>
+<li>https://doi.org/10.1007/s12551-016-0230-x,</li>
+<li>https://doi.org/10.1016/j.str.2009.04.005,</li>
+<li>https://doi.org/10.1007/pl00021751,</li>
+<li>https://doi.org/10.1073/pnas.1601654113,</li>
+<li>https://doi.org/10.1007/s00018-003-3072-1,</li>
+<li>https://doi.org/10.1186/1743-422x-7-356,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P09425
+gene_symbol: P09425
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P09425&#39;
+existing_annotations:
+- term:
+    id: GO:0098015
+    label: virus tail
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098025
+    label: virus tail, baseplate
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098025
+    label: virus tail, baseplate
+  evidence_type: IDA
+  original_reference_id: PMID:27193680
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: PMID:27193680
+  title: Structure of the T4 baseplate and its function in triggering sheath contraction.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P15556 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P15556</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15556" target="_blank" class="term-link">
+                        P15556
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P15556";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15556" data-a="DESCRIPTION: TODO: Add description for P15556..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P15556</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15556" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044071" target="_blank" class="term-link">
+                                    GO:0044071
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host cell cycle progression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15556" data-a="GO:0044071" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098673" target="_blank" class="term-link">
+                                    GO:0098673
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15556" data-a="GO:0098673" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ndd-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15556" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">18 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T01:36:01.392693</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ndd-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ndd-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000013 Figure 4C, found on page 7, illustrates the effect of the bacteriophage T4 Ndd protein on the bacterial nucleoid. In cells expressi</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-bacteriophage-t4-ndd-uniprot-p15556-nucleoid-disruption-protein-ndd">Research report: bacteriophage T4 <strong>ndd</strong> (UniProt <strong>P15556</strong>) nucleoid disruption protein (Ndd)</h2>
+<h3 id="0-target-verification-mandatory">0) Target verification (mandatory)</h3>
+<p>The gene symbol <strong>ndd</strong> in this report refers specifically to <strong>Enterobacteria phage T4</strong> gene <strong>ndd</strong>, which encodes the <strong>nucleoid (“nuclear”) disruption protein</strong> described in classic T4 infection studies and matches the UniProt entry described by the user (P15556). Bouet et al. sequenced the T4 <strong>ndd</strong> locus and linked it to nucleoid disruption phenotypes, with a predicted protein size of ~16.9 kDa and an infection-associated band of ~15 kDa absent in ndd mutants, consistent with the UniProt description “Nucleoid disruption protein” (publication date Apr 1994; https://doi.org/10.1016/0378-1119(94)90121-X). (bouet1994directpcrsequencing pages 1-2, bouet1994directpcrsequencing pages 3-4)</p>
+<h3 id="1-key-concepts-and-current-understanding">1) Key concepts and current understanding</h3>
+<h4 id="11-definition-nuclearnucleoid-disruption-in-t4-infection">1.1 Definition: “nuclear/nucleoid disruption” in T4 infection</h4>
+<p>In T4 literature, “<strong>nuclear disruption</strong>” refers to a rapid and dramatic reorganization of the <em>E. coli</em> chromosome (nucleoid) after infection. Koerner &amp; Snustad summarize that within <strong>~2–3 min</strong> of infection, the host nucleoid undergoes disruption/redistribution toward the cell periphery/inner membrane, with ribosomes shifting inward. This phenotype is genetically associated with the phage <strong>ndd</strong> gene product. (publication date Jun 1979; https://doi.org/10.1128/mr.43.2.199-223.1979). (koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 4-6)</p>
+<h4 id="12-what-ndd-is-and-is-not">1.2 What Ndd is (and is not)</h4>
+<ul>
+<li><strong>Ndd is a small early phage protein</strong> (coding capacity consistent with a ~15–17 kDa product) required for the canonical “nuclear disruption” phenotype in infected cells. (koerner1979shutoffofhost pages 11-13, bouet1994directpcrsequencing pages 1-2)</li>
+<li><strong>Ndd is not currently supported to be a nuclease</strong> that drives nucleoid disruption by extensive DNA breakage. Quantitative break data summarized in Koerner &amp; Snustad show only <strong>≤~5 single-strand breaks per strand by 5 min</strong> and <strong>~15–20 by 30 min</strong>, with little dependence on nuclear disruption status, and no detectable host DNA size change at 5 min (host DNA largely &gt;10^8 daltons). (koerner1979shutoffofhost pages 6-8)</li>
+</ul>
+<h4 id="13-early-gene-context-promoter-architecture-supports-early-expression">1.3 Early-gene context: promoter architecture supports early expression</h4>
+<p>Bouet et al. identified two sequences <strong>~730 bp and ~1010 bp upstream</strong> of the ndd start codon that “strongly resemble” <strong>T4 immediate-early promoters</strong>, consistent with the observed very early timing of nucleoid disruption during infection. (publication date Apr 1994; https://doi.org/10.1016/0378-1119(94)90121-X). (bouet1994directpcrsequencing pages 7-8)</p>
+<h3 id="2-mechanistic-function-localization-and-pathways">2) Mechanistic function, localization, and pathways</h3>
+<h4 id="21-primary-functional-role-remodel-host-nucleoid-architecture-very-early-after-infection">2.1 Primary functional role: remodel host nucleoid architecture very early after infection</h4>
+<p>The best-supported functional annotation for T4 Ndd is that it is an <strong>early infection effector</strong> that causes rapid <strong>host nucleoid disruption/redistribution</strong>, a hallmark phenotype beginning <strong>~2–3 minutes</strong> after infection (review synthesis of multiple experiments). (koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 4-6)</p>
+<h4 id="22-cellular-localization-intracellular-drives-nucleoid-relocalization-to-the-inner-membraneperiphery">2.2 Cellular localization: intracellular; drives nucleoid relocalization to the inner membrane/periphery</h4>
+<p>Direct experimental visualization of Ndd’s effect outside the infection context comes from <em>E. coli</em> expression experiments: in a fluorescence microscopy study on protein aggregation and nucleoid organization, short-term expression of bacteriophage T4 <strong>Ndd</strong> disrupted the nucleoid and relocalized it toward the <strong>inner membrane/periphery</strong> (Figure 4C panel showing +Ndd vs −Ndd). (publication date Mar 2010; https://doi.org/10.1038/emboj.2009.412). (winkler2010quantitativeandspatio‐temporal media 199a94dd, winkler2010quantitativeandspatio‐temporal media c49cd054)</p>
+<p>These images support that Ndd acts within the bacterial cytoplasm to reorganize chromosome positioning, aligning with the infection-time microscopy summarized by Koerner &amp; Snustad. (koerner1979shutoffofhost pages 6-8, winkler2010quantitativeandspatio‐temporal media 199a94dd)</p>
+<h4 id="23-relationship-to-host-dna-synthesis-shutoff">2.3 Relationship to host DNA synthesis shutoff</h4>
+<p>Koerner &amp; Snustad report that nuclear disruption (ndd+) is <strong>required for early shutoff of host DNA synthesis</strong>: host DNA synthesis shutoff occurs at approximately <strong>~4 min</strong> postinfection in wild-type infection but is delayed until <strong>~10 min</strong> in <strong>ndd mutants</strong>. They also note nuclear disruption “does not appear” to be involved in shutoff of host RNA or protein synthesis (in the summarized literature). (koerner1979shutoffofhost pages 10-11)</p>
+<p>This links Ndd’s primary role to early reprogramming of host chromosome physiology, rather than a general shutdown of transcription/translation. (koerner1979shutoffofhost pages 10-11)</p>
+<h4 id="24-a-proposed-still-unproven-mechanistic-model-dnamembrane-attachments-and-membrane-release-kinetics">2.4 A proposed (still unproven) mechanistic model: DNA–membrane attachments and membrane release kinetics</h4>
+<p>Koerner &amp; Snustad further summarize biochemical fractionation evidence (M-band assays) that host DNA becomes progressively released from membrane-associated fractions after wild-type infection: release begins at <strong>~10 min</strong>, and by <strong>~30 min ~75%</strong> is non–membrane bound. In contrast, in infections defective for endonuclease II and ndd, <strong>&gt;80%</strong> of host DNA remains membrane associated. (koerner1979shutoffofhost pages 8-10)</p>
+<p>Based on these findings and gene-dosage behavior, the authors propose that the ndd product might either:<br />
+* <strong>catalyze</strong> host DNA binding to membrane components, or<br />
+* function as a <strong>structural bridge</strong> between DNA and membrane;<br />
+with gene-dosage observations interpreted as suggesting <strong>stoichiometric</strong> requirement in a restrictive host background (CT447). (koerner1979shutoffofhost pages 8-10)</p>
+<p>This should be treated as an expert interpretation from an authoritative review rather than a demonstrated molecular interaction model (no direct visualization of multiple attachments was reported in the extracted evidence). (koerner1979shutoffofhost pages 8-10)</p>
+<h4 id="25-interactions-with-host-nucleoid-proteins-hu-h-ns">2.5 Interactions with host nucleoid proteins (HU, H-NS)</h4>
+<p>In the retrieved and analyzed evidence set, <strong>no direct biochemical interaction</strong> between Ndd and specific host nucleoid-associated proteins (e.g., <strong>HU</strong> or <strong>H-NS</strong>) was reported. The classic review focuses on phenotypes, membrane association assays, and DNA break measurements rather than specific Ndd–host protein binding. (koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 8-10)</p>
+<h3 id="3-phenotypes-quantitative-data-and-strain-dependence">3) Phenotypes, quantitative data, and strain dependence</h3>
+<h4 id="31-ndd-mutants-viability-vs-fitness-effects-depend-on-host-context">3.1 ndd mutants: viability vs fitness effects depend on host context</h4>
+<p>Koerner &amp; Snustad note that <strong>ndd mutants can grow with near-normal burst size and growth rate in standard laboratory <em>E. coli</em></strong>, implying nuclear disruption is not universally essential for T4 growth. (koerner1979shutoffofhost pages 4-6)</p>
+<p>However, in the restrictive <em>E. coli</em> strain <strong>CT447</strong>, ndd mutants show strong fitness defects:<br />
+* Wild-type T4 yield: <strong>~150–200 PFU/cell</strong><br />
+* ndd-deficient yield: <strong>~15 PFU/cell</strong><br />
+* In one CT447 background, phage DNA synthesis rate was <strong>~75% of wild type</strong>, but burst size was <strong>&lt;5%</strong> of the wild-type control, with EM indicating <strong>few filled or empty heads</strong>. (koerner1979shutoffofhost pages 10-11, koerner1979shutoffofhost pages 8-10)</p>
+<p>These data support the interpretation that Ndd can be dispensable for replication in some hosts while being important for efficient infection progression in others—an important nuance for functional annotation. (koerner1979shutoffofhost pages 10-11)</p>
+<h4 id="32-mutation-mapping-and-protein-size">3.2 Mutation mapping and protein size</h4>
+<p>Bouet et al. linked two classical ndd alleles to coding changes:<br />
+* <strong>ndd44</strong>: Gly56→Asp<br />
+* <strong>ndd98</strong>: Gln58→Stop (premature termination)<br />
+These genetic lesions support that the Ndd protein is small and that loss-of-function can be achieved by early truncation. (bouet1994directpcrsequencing pages 3-4)</p>
+<h3 id="4-recent-developments-prioritizing-20232024-where-possible">4) Recent developments (prioritizing 2023–2024 where possible)</h3>
+<h4 id="41-status-of-20232024-mechanistic-research-on-ndd">4.1 Status of 2023–2024 mechanistic research on Ndd</h4>
+<p>Within the tool-retrieved corpus, <strong>no 2023–2024 papers were found that newly resolve Ndd’s molecular structure or precise molecular mechanism</strong> (e.g., binding partners, structural fold, enzymatic activity). The dominant mechanistic evidence remains classical genetics/biochemistry and more modern “tool-use” demonstrations of nucleoid perturbation by heterologous expression. (koerner1979shutoffofhost pages 6-8, bouet1994directpcrsequencing pages 7-8, winkler2010quantitativeandspatio‐temporal media 199a94dd)</p>
+<h4 id="42-20222024-ndd-in-modern-phage-engineering-workflows-application-relevant">4.2 2022–2024: Ndd in modern phage engineering workflows (application-relevant)</h4>
+<p>A key modern development is the rise of efficient <strong>phage genome editing</strong> methods that can be applied to T4 and target loci including <strong>ndd</strong>:<br />
+* Adler et al. (publication date Oct 2022; https://doi.org/10.1038/s41564-022-01258-x) describe Cas13a-based counterselection to enrich recombinant phage. Their figure/text explicitly notes protospacer locations near <strong>T4 ndd</strong> (and denB). Quantitatively, they report edits present at approximately <strong>~0.1–1%</strong> after homologous recombination in mixed lysates, and after Cas13a enrichment the edited population approached <strong>nearly 100%</strong> among survivors; for specific edits, screening <strong>9 plaques</strong> yielded <strong>100%</strong> mutant success in their tabled examples. (adler2022broadspectrumcrisprcas13aenables pages 5-7)</p>
+<p>Although this does not directly refine Ndd’s mechanism, it demonstrates real-world feasibility of manipulating ndd genetically for functional studies or engineered phage design. (adler2022broadspectrumcrisprcas13aenables pages 5-7)</p>
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-ndd-as-a-cell-biology-tool-to-perturb-nucleoid-organization">5.1 Ndd as a cell-biology tool to perturb nucleoid organization</h4>
+<p>Ndd has been used experimentally as a <strong>tool to disrupt nucleoid architecture</strong> to study downstream consequences (e.g., spatial protein quality control/aggregation). The microscopy panel (Figure 4C) shows that Ndd expression reorganizes the DAPI-stained nucleoid toward the inner membrane, changing cellular spatial organization. (winkler2010quantitativeandspatio‐temporal media 199a94dd, winkler2010quantitativeandspatio‐temporal media c49cd054)</p>
+<h4 id="52-ndd-in-phage-genetics-and-genome-editing">5.2 Ndd in phage genetics and genome editing</h4>
+<p>Modern phage genome editing can target regions including <strong>ndd</strong>, enabling deletion/mutational analysis, epitope tagging, or regulatory rewiring in a scalable way, with reported strong enrichment performance (pre-enrichment ~0.1–1% to near-total enrichment among survivors). (adler2022broadspectrumcrisprcas13aenables pages 5-7)</p>
+<h3 id="6-expert-synthesis-and-interpretation-authoritative-sources">6) Expert synthesis and interpretation (authoritative sources)</h3>
+<p>Koerner &amp; Snustad’s Microbiological Reviews article remains a foundational synthesis that:<br />
+* frames nuclear disruption as an <strong>early infection program</strong> requiring phage gene expression (chloramphenicol sensitivity),<br />
+* decouples nucleoid disruption from extensive DNA nicking,<br />
+* connects ndd to early host DNA synthesis shutoff,<br />
+* proposes (with caveats) a DNA–membrane attachment/bridging model based on fractionation and gene dosage observations,<br />
+* and documents substantial <strong>host-strain dependence</strong> for the fitness consequences of losing ndd. (koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 8-10, koerner1979shutoffofhost pages 10-11)</p>
+<p>Bouet et al. provide gene-level grounding (sequence, alleles, promoter architecture) supporting classification of Ndd as a dedicated T4 early effector protein and lay out cloning/controlled expression as necessary for pinpointing targets (not yet resolved in the extracted evidence). (bouet1994directpcrsequencing pages 7-8, bouet1994directpcrsequencing pages 3-4)</p>
+<h3 id="7-evidence-summary-table">7) Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Observation</th>
+<th>Evidence type (microscopy, genetics, biochemistry, review)</th>
+<th>Quantitative details</th>
+<th>Experimental system</th>
+<th>Interpretation for function/localization</th>
+<th>Primary source (authors, year, journal)</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T4 <strong>ndd</strong> encodes the protein responsible for early host nucleoid (“nuclear”) disruption and matches the UniProt description of a nucleoid disruption protein</td>
+<td>Genetics, sequence analysis</td>
+<td>Predicted protein size <strong>~16.9 kDa</strong>; earlier infection studies detected an absent band of <strong>~15 kDa</strong> in <strong>ndd</strong> mutants</td>
+<td>Enterobacteria phage T4 infecting <em>E. coli</em>; mutant mapping and sequencing</td>
+<td>Supports annotation of P15556 as the T4 Ndd nucleoid disruption protein; small early phage protein acting on host chromosome organization (bouet1994directpcrsequencing pages 1-2, bouet1994directpcrsequencing pages 3-4)</td>
+<td>Bouet et al., 1994, <em>Gene</em></td>
+<td>https://doi.org/10.1016/0378-1119(94)90121-X</td>
+</tr>
+<tr>
+<td>Nucleoid disruption begins very early after T4 infection and requires phage gene expression</td>
+<td>Review of primary experiments, microscopy/physiology</td>
+<td>Onset within <strong>2–3 min</strong> postinfection; blocked by chloramphenicol when added at infection</td>
+<td><em>E. coli</em> infected with T4 or T-even phages</td>
+<td>Places Ndd function in the <strong>early infection stage</strong> inside the bacterial cytoplasm/nucleoid region rather than at late morphogenesis (koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 4-6)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td><strong>ndd</strong> is not required for basic phage viability in common laboratory strains, but can be important in specific hosts</td>
+<td>Genetics, review</td>
+<td>Wild-type growth largely normal in standard hosts; in strain CT447, wild-type burst size <strong>~150–200 PFU/cell</strong> versus <strong>~15 PFU/cell</strong> for <strong>ndd</strong> mutants</td>
+<td>T4 infection of different <em>E. coli</em> hosts, especially CT447</td>
+<td>Ndd is <strong>host-context dependent</strong>: dispensable in some strains but important for full fitness in restrictive backgrounds (koerner1979shutoffofhost pages 8-10, koerner1979shutoffofhost pages 4-6, koerner1979shutoffofhost pages 10-11)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td>Loss of <strong>ndd</strong> delays shutoff of host DNA synthesis but does not strongly affect host RNA/protein shutoff</td>
+<td>Review of primary physiological studies</td>
+<td>Host DNA synthesis shutoff at <strong>~4 min</strong> with <strong>ndd+</strong> phage versus <strong>~10 min</strong> with <strong>ndd</strong> mutants</td>
+<td>T4-infected <em>E. coli</em></td>
+<td>Functional annotation: Ndd primarily contributes to <strong>rapid host nucleoid remodeling linked to host DNA synthesis shutoff</strong>, not general macromolecular shutoff (koerner1979shutoffofhost pages 10-11)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td>Ndd-dependent nuclear disruption is not simply caused by extensive host DNA nicking or breakage</td>
+<td>Biochemistry, review</td>
+<td>At <strong>5 min</strong>, about <strong>≤5 single-strand breaks per strand</strong>; by <strong>30 min</strong>, <strong>~15–20 breaks</strong>; little difference attributable to nuclear disruption status; most host DNA remained <strong>&gt;10^8 daltons</strong> at 5 min</td>
+<td>Sucrose-gradient and DNA break analyses in infected <em>E. coli</em></td>
+<td>Supports a <strong>structural reorganization mechanism</strong> rather than direct nuclease activity for Ndd; no catalytic substrate specificity has been demonstrated (koerner1979shutoffofhost pages 6-8)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td>Wild-type infection causes progressive release of host DNA from membrane-associated fractions; this is strongly reduced in <strong>ndd</strong>-defective backgrounds</td>
+<td>Biochemistry, review</td>
+<td>Host DNA begins release at <strong>~10 min</strong>; by <strong>30 min</strong>, about <strong>~75%</strong> released from membrane in wild type, whereas <strong>&gt;80%</strong> remains membrane-associated in endonuclease- and <strong>ndd</strong>-deficient infections</td>
+<td>M-band assays in T4-infected <em>E. coli</em></td>
+<td>Suggests Ndd promotes <strong>host chromosome redistribution toward/along the inner membrane</strong> or alters DNA-membrane attachments during infection (koerner1979shutoffofhost pages 8-10)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td>Earlier authors proposed Ndd may act stoichiometrically as a structural bridge between host DNA and membrane components, though this remains unproven</td>
+<td>Review, genetics/physiology interpretation</td>
+<td>Gene-dosage observations were interpreted as indicating a <strong>stoichiometric requirement</strong> in CT447</td>
+<td>T4 infection of restrictive <em>E. coli</em> CT447 and related genetic analysis</td>
+<td>Best current mechanistic inference from classic literature: Ndd is likely a <strong>small structural effector of nucleoid architecture/localization</strong>, not an enzyme with defined reaction chemistry (koerner1979shutoffofhost pages 8-10)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td><strong>ndd</strong> mutants retain substantial phage DNA synthesis in restrictive hosts but show severe defects in productive infection</td>
+<td>Genetics, biochemistry, EM summary</td>
+<td>Phage DNA synthesis rate <strong>~75% of wild type</strong> in CT447, but burst size <strong>&lt;5% of wild type</strong>; EM showed <strong>few filled or empty heads</strong></td>
+<td>T4 <strong>ndd</strong> mutants infecting <em>E. coli</em> CT447 T4 plq+</td>
+<td>Indicates Ndd affects infection efficiency beyond early nucleoid remodeling, possibly by improving intracellular organization needed for maturation in some hosts (koerner1979shutoffofhost pages 10-11)</td>
+<td>Koerner &amp; Snustad, 1979, <em>Microbiological Reviews</em></td>
+<td>https://doi.org/10.1128/mr.43.2.199-223.1979</td>
+</tr>
+<tr>
+<td>The upstream regulatory region of <strong>ndd</strong> contains immediate-early T4-like promoters, consistent with very early expression</td>
+<td>Sequence analysis</td>
+<td>Two promoter-like elements located about <strong>~730 bp</strong> and <strong>~1010 bp</strong> upstream of the start codon</td>
+<td>T4 genomic DNA sequence analysis</td>
+<td>Reinforces annotation of Ndd as an <strong>early phage protein</strong> acting shortly after infection begins (bouet1994directpcrsequencing pages 7-8)</td>
+<td>Bouet et al., 1994, <em>Gene</em></td>
+<td>https://doi.org/10.1016/0378-1119(94)90121-X</td>
+</tr>
+<tr>
+<td>Ectopic Ndd expression in <em>E. coli</em> disrupts and relocalizes the nucleoid to the inner membrane</td>
+<td>Microscopy</td>
+<td>Figure-based cellular phenotype; no additional numeric value reported in the retrieved evidence</td>
+<td><em>E. coli</em> expressing bacteriophage T4 Ndd, visualized by DAPI/fluorescence microscopy</td>
+<td>Direct localization-level evidence that Ndd acts <strong>inside infected cells on host nucleoid architecture</strong>, causing peripheral nucleoid redistribution (winkler2010quantitativeandspatio‐temporal media 199a94dd, winkler2010quantitativeandspatio‐temporal media c49cd054)</td>
+<td>Winkler et al., 2010, <em>The EMBO Journal</em></td>
+<td>https://doi.org/10.1038/emboj.2009.412</td>
+</tr>
+<tr>
+<td>Modern phage-engineering workflows explicitly target T4 genomic regions containing <strong>ndd</strong>, demonstrating current practical relevance</td>
+<td>Application, genetics</td>
+<td>Homologous-recombination edits initially at <strong>~0.1–1%</strong> in mixed lysates; after Cas13a enrichment, edited phage approached <strong>nearly 100%</strong> of survivors in reported workflows</td>
+<td>Cas13a-assisted editing of T4/T4-like phages</td>
+<td>Real-world implementation: <strong>ndd-containing loci are tractable in modern phage genome engineering</strong>, although this does not add a new mechanistic annotation for Ndd itself (adler2022broadspectrumcrisprcas13aenables pages 5-7)</td>
+<td>Adler et al., 2022, <em>Nature Microbiology</em></td>
+<td>https://doi.org/10.1038/s41564-022-01258-x</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported functional-annotation facts for bacteriophage T4 Ndd (UniProt P15556), including timing, phenotypes, localization inferences, and modern applications. It is useful for tracing each annotation claim to specific evidence and quantitative observations.</em></p>
+<h3 id="8-gaps-and-recommendations-for-functional-annotation">8) Gaps and recommendations for functional annotation</h3>
+<ol>
+<li><strong>Molecular mechanism and direct binding partners remain unresolved</strong> in the retrieved evidence: no direct Ndd interaction with HU/H-NS (or other nucleoid proteins) is established here. (koerner1979shutoffofhost pages 6-8)</li>
+<li>The strongest functional annotation supported is <strong>“early phage effector that disrupts and relocalizes the host nucleoid toward the inner membrane/periphery, accelerating shutoff of host DNA synthesis.”</strong> (koerner1979shutoffofhost pages 10-11, koerner1979shutoffofhost pages 6-8, winkler2010quantitativeandspatio‐temporal media 199a94dd)</li>
+<li>For future work, the availability of high-efficiency phage editing methods suggests a practical path to mechanistic studies: construct precise ndd alleles (tagged variants, separation-of-function mutants, expression timing mutants) to assay nucleoid localization dynamics and host-factor dependencies. (adler2022broadspectrumcrisprcas13aenables pages 5-7)</li>
+</ol>
+<h3 id="references-publication-date-url">References (publication date; URL)</h3>
+<ul>
+<li>Koerner JF, Snustad DP. 1979-06. <em>Microbiological Reviews</em>. “Shutoff of host macromolecular synthesis after T-even bacteriophage infection.” https://doi.org/10.1128/mr.43.2.199-223.1979 (koerner1979shutoffofhost pages 10-11, koerner1979shutoffofhost pages 6-8, koerner1979shutoffofhost pages 8-10, koerner1979shutoffofhost pages 11-13, koerner1979shutoffofhost pages 4-6)</li>
+<li>Bouet J-Y et al. 1994-04. <em>Gene</em>. “Direct PCR sequencing of the ndd gene of bacteriophage T4: identification of a product involved in bacterial nucleoid disruption.” https://doi.org/10.1016/0378-1119(94)90121-X (bouet1994directpcrsequencing pages 7-8, bouet1994directpcrsequencing pages 1-2, bouet1994directpcrsequencing pages 3-4)</li>
+<li>Snustad DP et al. 1976-02. <em>Journal of Virology</em>. “Identification and preliminary characterization of a mutant defective in the bacteriophage T4-induced unfolding of the Escherichia coli nucleoid.” https://doi.org/10.1128/jvi.17.2.622-641.1976 (nucleoid1976identificationandpreliminary pages 2-3)</li>
+<li>Winkler J et al. 2010-03. <em>The EMBO Journal</em>. “Quantitative and spatio-temporal features of protein aggregation in Escherichia coli…” (includes Ndd nucleoid disruption panel). https://doi.org/10.1038/emboj.2009.412 (winkler2010quantitativeandspatio‐temporal media 199a94dd, winkler2010quantitativeandspatio‐temporal media c49cd054)</li>
+<li>Adler BA et al. 2022-10. <em>Nature Microbiology</em>. “Broad-spectrum CRISPR-Cas13a enables efficient phage genome editing.” https://doi.org/10.1038/s41564-022-01258-x (adler2022broadspectrumcrisprcas13aenables pages 5-7)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(bouet1994directpcrsequencing pages 1-2): J.-Y. Bouet, J. Woszczyk, F. Repoila, V. François, J.-M. Louarn, and H.M. Krisch. Direct pcr sequencing of the ndd gene of bacteriophage t4: identification of a product involved in bacterial nucleoid disruption. Gene, 141 1:9-16, Apr 1994. URL: https://doi.org/10.1016/0378-1119(94)90121-x, doi:10.1016/0378-1119(94)90121-x. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bouet1994directpcrsequencing pages 3-4): J.-Y. Bouet, J. Woszczyk, F. Repoila, V. François, J.-M. Louarn, and H.M. Krisch. Direct pcr sequencing of the ndd gene of bacteriophage t4: identification of a product involved in bacterial nucleoid disruption. Gene, 141 1:9-16, Apr 1994. URL: https://doi.org/10.1016/0378-1119(94)90121-x, doi:10.1016/0378-1119(94)90121-x. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(koerner1979shutoffofhost pages 6-8): J F Koerner and D P Snustad. Shutoff of host macromolecular synthesis after t-even bacteriophage infection. Microbiological Reviews, 43:199-223, Jun 1979. URL: https://doi.org/10.1128/mr.43.2.199-223.1979, doi:10.1128/mr.43.2.199-223.1979. This article has 57 citations.</p>
+</li>
+<li>
+<p>(koerner1979shutoffofhost pages 4-6): J F Koerner and D P Snustad. Shutoff of host macromolecular synthesis after t-even bacteriophage infection. Microbiological Reviews, 43:199-223, Jun 1979. URL: https://doi.org/10.1128/mr.43.2.199-223.1979, doi:10.1128/mr.43.2.199-223.1979. This article has 57 citations.</p>
+</li>
+<li>
+<p>(koerner1979shutoffofhost pages 11-13): J F Koerner and D P Snustad. Shutoff of host macromolecular synthesis after t-even bacteriophage infection. Microbiological Reviews, 43:199-223, Jun 1979. URL: https://doi.org/10.1128/mr.43.2.199-223.1979, doi:10.1128/mr.43.2.199-223.1979. This article has 57 citations.</p>
+</li>
+<li>
+<p>(bouet1994directpcrsequencing pages 7-8): J.-Y. Bouet, J. Woszczyk, F. Repoila, V. François, J.-M. Louarn, and H.M. Krisch. Direct pcr sequencing of the ndd gene of bacteriophage t4: identification of a product involved in bacterial nucleoid disruption. Gene, 141 1:9-16, Apr 1994. URL: https://doi.org/10.1016/0378-1119(94)90121-x, doi:10.1016/0378-1119(94)90121-x. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(winkler2010quantitativeandspatio‐temporal media 199a94dd): Juliane Winkler, Anja Seybert, Lars König, Sabine Pruggnaller, Uta Haselmann, Victor Sourjik, Matthias Weiss, Achilleas S Frangakis, Axel Mogk, and Bernd Bukau. Quantitative and spatio‐temporal features of protein aggregation in escherichia coli and consequences on protein quality control and cellular ageing. The EMBO Journal, 29:910-923, Mar 2010. URL: https://doi.org/10.1038/emboj.2009.412, doi:10.1038/emboj.2009.412. This article has 334 citations.</p>
+</li>
+<li>
+<p>(winkler2010quantitativeandspatio‐temporal media c49cd054): Juliane Winkler, Anja Seybert, Lars König, Sabine Pruggnaller, Uta Haselmann, Victor Sourjik, Matthias Weiss, Achilleas S Frangakis, Axel Mogk, and Bernd Bukau. Quantitative and spatio‐temporal features of protein aggregation in escherichia coli and consequences on protein quality control and cellular ageing. The EMBO Journal, 29:910-923, Mar 2010. URL: https://doi.org/10.1038/emboj.2009.412, doi:10.1038/emboj.2009.412. This article has 334 citations.</p>
+</li>
+<li>
+<p>(koerner1979shutoffofhost pages 10-11): J F Koerner and D P Snustad. Shutoff of host macromolecular synthesis after t-even bacteriophage infection. Microbiological Reviews, 43:199-223, Jun 1979. URL: https://doi.org/10.1128/mr.43.2.199-223.1979, doi:10.1128/mr.43.2.199-223.1979. This article has 57 citations.</p>
+</li>
+<li>
+<p>(koerner1979shutoffofhost pages 8-10): J F Koerner and D P Snustad. Shutoff of host macromolecular synthesis after t-even bacteriophage infection. Microbiological Reviews, 43:199-223, Jun 1979. URL: https://doi.org/10.1128/mr.43.2.199-223.1979, doi:10.1128/mr.43.2.199-223.1979. This article has 57 citations.</p>
+</li>
+<li>
+<p>(adler2022broadspectrumcrisprcas13aenables pages 5-7): Benjamin A. Adler, Tomas Hessler, Brady F. Cress, Arushi Lahiri, Vivek K. Mutalik, Rodolphe Barrangou, Jillian Banfield, and Jennifer A. Doudna. Broad-spectrum crispr-cas13a enables efficient phage genome editing. Nature Microbiology, 7:1967-1979, Oct 2022. URL: https://doi.org/10.1038/s41564-022-01258-x, doi:10.1038/s41564-022-01258-x. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nucleoid1976identificationandpreliminary pages 2-3): Nucleoid, D. Snustad, Michael A. Tigges, Kathleen A. Parson, C. J. Bursch, Frances M. Caron, James F. Koerner, and D. J. Tutas. Identification and preliminary characterization of a mutant defective in the bacteriophage t4-induced unfolding of the escherichia coli nucleoid. Journal of Virology, 17:622-641, Feb 1976. URL: https://doi.org/10.1128/jvi.17.2.622-641.1976, doi:10.1128/jvi.17.2.622-641.1976. This article has 30 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ndd-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000013 Figure 4C, found on page 7, illustrates the effect of the bacteriophage T4 Ndd protein on the bacterial nucleoid. In cells expressi" src="ndd-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>koerner1979shutoffofhost pages 6-8</li>
+<li>bouet1994directpcrsequencing pages 7-8</li>
+<li>koerner1979shutoffofhost pages 10-11</li>
+<li>koerner1979shutoffofhost pages 8-10</li>
+<li>koerner1979shutoffofhost pages 4-6</li>
+<li>bouet1994directpcrsequencing pages 3-4</li>
+<li>nucleoid1976identificationandpreliminary pages 2-3</li>
+<li>bouet1994directpcrsequencing pages 1-2</li>
+<li>koerner1979shutoffofhost pages 11-13</li>
+<li>https://doi.org/10.1016/0378-1119(94</li>
+<li>https://doi.org/10.1128/mr.43.2.199-223.1979</li>
+<li>https://doi.org/10.1038/emboj.2009.412</li>
+<li>https://doi.org/10.1038/s41564-022-01258-x</li>
+<li>https://doi.org/10.1128/jvi.17.2.622-641.1976</li>
+<li>https://doi.org/10.1128/mr.43.2.199-223.1979,</li>
+<li>https://doi.org/10.1038/emboj.2009.412,</li>
+<li>https://doi.org/10.1038/s41564-022-01258-x,</li>
+<li>https://doi.org/10.1128/jvi.17.2.622-641.1976,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15556
+gene_symbol: P15556
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P15556&#39;
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0044071
+    label: symbiont-mediated perturbation of host cell cycle progression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0098673
+    label: symbiont-mediated suppression of host DNA replication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

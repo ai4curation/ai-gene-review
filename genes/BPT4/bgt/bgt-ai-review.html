@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P04547 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P04547</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P04547" target="_blank" class="term-link">
+                        P04547
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P04547";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P04547" data-a="DESCRIPTION: TODO: Add description for P04547..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P04547</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0016740" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0016757" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033821" target="_blank" class="term-link">
+                                    GO:0033821
+                                </a>
+                            </span>
+                            <span class="term-label">DNA beta-glucosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0033821" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052031" target="_blank" class="term-link">
+                                    GO:0052031
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0052031" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052170" target="_blank" class="term-link">
+                                    GO:0052170
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0052170" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099018" target="_blank" class="term-link">
+                                    GO:0099018
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated evasion of host restriction-modification system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0099018" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006304" target="_blank" class="term-link">
+                                    GO:0006304
+                                </a>
+                            </span>
+                            <span class="term-label">DNA modification</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0006304" data-r="GO_REF:0000041" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033821" target="_blank" class="term-link">
+                                    GO:0033821
+                                </a>
+                            </span>
+                            <span class="term-label">DNA beta-glucosyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6078540" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6078540
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    On the specificity of bacteriophage-induced hydroxymethylcyt...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P04547" data-a="GO:0033821" data-r="PMID:6078540" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6078540" target="_blank" class="term-link">
+                            PMID:6078540
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">On the specificity of bacteriophage-induced hydroxymethylcytosine glucosyltransferases. II. Specificities of hydroxymethylcytosine alphaand beta-glucosyltransferases induced by bacteriophage T4.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bgt-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P04547" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Comprehensive research report: **bgt** (UniProt **P04547**) in Enterobacteria phage T4</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">13 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T00:28:06.439900</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="bgt-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="bgt-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000006 As requested, I have extracted Figure 1, which provides electron density maps of the enzyme and the bound uridine diphosphate (UDP)</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-bgt-uniprot-p04547-in-enterobacteria-phage-t4">Comprehensive research report: <strong>bgt</strong> (UniProt <strong>P04547</strong>) in Enterobacteria phage T4</h1>
+<h2 id="0-plan-executed">0) Plan (executed)</h2>
+<ol>
+<li>Verified target identity and disambiguation (T4 <strong>DNA beta-glucosyltransferase</strong>, EC 2.4.1.27). (vrielinkl1994crystalstructureof pages 1-2, lariviere2003crystalstructuresof pages 1-3)  </li>
+<li>Collected authoritative primary sources for enzymatic reaction + mechanism and structural basis. (vrielinkl1994crystalstructureof pages 1-2, lariviere2003crystalstructuresof pages 1-3)  </li>
+<li>Collected recent (2023–2024) studies for current understanding, applications, and arms-race context. (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57, thomas2018theodd“rb” pages 1-3)  </li>
+<li>Compiled pathway placement and inferred localization during infection. (thomas2018theodd“rb” pages 1-3, vrielinkl1994crystalstructureof pages 1-2)  </li>
+<li>Extracted quantitative statistics and summarized them in a table. (thomas2018theodd“rb” pages 1-3)</li>
+</ol>
+<h2 id="1-target-verification-and-disambiguation-mandatory">1) Target verification and disambiguation (MANDATORY)</h2>
+<p>The gene symbol <strong>bgt</strong> is used here specifically for <strong>Enterobacteria phage T4</strong> and corresponds to <strong>DNA beta-glucosyltransferase (BGT; EC 2.4.1.27)</strong>, which catalyzes glucosylation of hydroxymethylated cytosines in T4 DNA. This exactly matches the UniProt target identity (P04547; “DNA beta-glucosyltransferase; Beta-GT; EC 2.4.1.27”) as supported by primary structural and mechanistic studies on “T4 beta-glucosyltransferase”. (vrielinkl1994crystalstructureof pages 1-2, lariviere2003crystalstructuresof pages 1-3)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h2>
+<h3 id="21-dna-base-hypermodification-in-t-even-phages">2.1 DNA base hypermodification in T-even phages</h3>
+<p>A hallmark of T-even phages such as T4 is replacement of genomic cytosine with <strong>5-hydroxymethylcytosine (5hmC; historically HMC)</strong> during DNA replication, followed by <strong>post-replicative glycosylation</strong> to yield <strong>glucosyl-5-hydroxymethylcytosine (ghmC)</strong>. This is part of a broader “phage DNA protection” strategy that reduces susceptibility to host nucleases and restriction enzymes. (vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</p>
+<h3 id="22-enzyme-definition-dna-beta-glucosyltransferase-bgt">2.2 Enzyme definition: DNA beta-glucosyltransferase (BGT)</h3>
+<p><strong>BGT (bgt; UniProt P04547)</strong> is a <strong>DNA-modifying glycosyltransferase</strong> that transfers glucose from <strong>UDP-glucose</strong> onto <strong>5hmC residues in double-stranded DNA</strong>, producing <strong>β-glucosyl-5hmC</strong> in the phage genome. (lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</p>
+<h3 id="23-donor-and-acceptor-terminology">2.3 Donor and acceptor terminology</h3>
+<ul>
+<li><strong>Donor substrate</strong>: the activated sugar nucleotide <strong>UDP-glucose (UDPG)</strong>, described as <strong>host-synthesized</strong> and used by T4 glucosyltransferases. (vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</li>
+<li><strong>Acceptor substrate</strong>: <strong>5hmC</strong> bases embedded in <strong>duplex DNA</strong>; the acceptor hydroxyl is the hydroxymethyl group on 5hmC. (lariviere2003crystalstructuresof pages 1-3)</li>
+</ul>
+<h2 id="3-primary-function-reaction-catalyzed-and-substrate-specificity">3) Primary function: reaction catalyzed and substrate specificity</h2>
+<h3 id="31-biochemical-reaction-catalyzed">3.1 Biochemical reaction catalyzed</h3>
+<p>The core enzymatic reaction is:</p>
+<p><strong>UDP-glucose + 5hmC-DNA → UDP + β-glucosyl-5hmC-DNA</strong></p>
+<p>This is explicitly described as transfer of glucose from UDP-glucose to <strong>5-hydroxymethylcytosine in duplex T4 DNA</strong> by T4 β-glucosyltransferase (BGT), yielding β-glucosylated 5hmC. (lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</p>
+<h3 id="32-specificity-for-modified-cytosine-acceptor">3.2 Specificity for modified cytosine (acceptor)</h3>
+<p>BGT targets <strong>hydroxymethylated cytosines (5hmC/HMC)</strong> in DNA rather than unmodified cytosine; the biological context is that T4 first incorporates 5hmC during replication and then glucosylates it. (thomas2018theodd“rb” pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</p>
+<h3 id="33-contextual-specificity-and-division-of-labor-with-glucosyltransferase">3.3 Contextual specificity and division of labor with α-glucosyltransferase</h3>
+<p>T4 encodes <strong>two</strong> glucosyltransferases, producing α- and β-glucosylated 5hmC (α- and β-g-hmC). A useful operational model is:<br />
+- <strong>α-GT</strong> acts “immediately after replication” (inferred in that study to be linked to replication machinery), but cannot efficiently modify some neighboring 5hmC sites.<br />
+- <strong>β-GT (BGT/bgt)</strong> then modifies remaining sites, completing glucosylation at positions α-GT fails to access or modify. (thomas2018theodd“rb” pages 1-3)</p>
+<h2 id="4-mechanism-and-structural-biology">4) Mechanism and structural biology</h2>
+<h3 id="41-structural-fold-and-donoracceptor-binding-architecture">4.1 Structural fold and donor/acceptor binding architecture</h3>
+<p>BGT adopts a <strong>GT-B fold</strong> with <strong>two domains</strong> separated by a central cleft. Key structural conclusions include:<br />
+- UDP-glucose donor binding is largely associated with the <strong>C-terminal domain</strong>.<br />
+- Acceptor (DNA/5hmC) binding is predominantly associated with the <strong>N-terminal domain</strong>.<br />
+- A hinge-like region around <strong>residues 166–172</strong> supports domain motion upon ligand binding. (lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</p>
+<p>Visual evidence from the 1994 EMBO Journal structure includes electron density for bound UDP (portion of UDPG) and ribbon/topological representations of the two-domain architecture and the UDP-binding cleft. (vrielinkl1994crystalstructureof media aa897d23, vrielinkl1994crystalstructureof media e64460a9, vrielinkl1994crystalstructureof media 2795b4a7)</p>
+<h3 id="42-catalytic-mechanism-inverting-direct-displacement">4.2 Catalytic mechanism (inverting direct displacement)</h3>
+<p>BGT is described as an <strong>inverting glycosyltransferase</strong>. Structural work with UDP-glucose complexes supports an <strong>in-line (direct-displacement) mechanism</strong> with an oxocarbenium-ion-like transition state and a catalytic base that activates the acceptor hydroxyl for nucleophilic attack. (lariviere2003crystalstructuresof pages 1-3)</p>
+<h3 id="43-catalytic-residue-active-site-base">4.3 Catalytic residue (active-site base)</h3>
+<p>A key mechanistic finding is that <strong>Asp100</strong> functions as the catalytic base: the <strong>D100A</strong> variant shows altered behavior consistent with loss of the base required for efficient catalysis and was used to identify Asp100’s role. (lariviere2003crystalstructuresof pages 1-3)</p>
+<h3 id="44-dna-binding-surface-features">4.4 DNA-binding surface features</h3>
+<p>Electrostatic analysis of the enzyme surface indicates a <strong>large positive potential</strong> along a concave surface, interpreted as consistent with <strong>DNA binding</strong>. (vrielinkl1994crystalstructureof pages 1-2)</p>
+<h2 id="5-biological-role-in-phage-biology-and-hostphage-conflict">5) Biological role in phage biology and host–phage conflict</h2>
+<h3 id="51-role-in-the-t4-dna-modification-pathway">5.1 Role in the T4 DNA modification pathway</h3>
+<p>BGT acts <strong>post-replicatively</strong> to glucosylate 5hmC residues in T4 DNA, converting HMC-DNA to glucose-HMC DNA as part of the DNA modification program of T-even phages. (vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</p>
+<h3 id="52-anti-restriction-dna-protection">5.2 Anti-restriction / DNA protection</h3>
+<p>Glucosylation of 5hmC is described as part of a <strong>phage DNA protection system</strong>, helping prevent cleavage by host nucleases and restriction endonucleases; it may also influence late gene expression. (vrielinkl1994crystalstructureof pages 1-2)</p>
+<p>Recent work on host defenses provides modern mechanistic context for why this modification matters: in a systematic survey of nuclease-containing anti-phage systems, authors describe that T4 incorporates 5-hydroxymethyl dCTP and then glycosylates hmC to <strong>glucosyl-5hmC (ghmC)</strong>; ghmC can abolish or reduce the activity of multiple bacterial defense systems. (thomas2018theodd“rb” pages 1-3)</p>
+<h3 id="53-arms-race-evidence-bacteria-target-glucosylated-5hmc">5.3 “Arms race” evidence: bacteria target glucosylated 5hmC</h3>
+<p>Bacterial defense systems can specifically recognize and target glucosylated 5hmC phage DNA. For example, a Vibrio cholerae Type IV restriction system (TgvAB) was shown to defend against T-even phages by targeting <strong>glucosylated 5hmC</strong>, and T4 mutants lacking glucosylation genes (including <strong>bgt</strong>) can become resistant to that specific defense while potentially becoming susceptible to other systems—illustrating evolutionary tradeoffs. (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h2 id="6-localization-and-timing-during-infection">6) Localization and timing during infection</h2>
+<p>Direct experimental “subcellular localization” measurements for BGT were not retrieved in the current evidence set. However, multiple sources indicate <strong>timing and functional localization</strong>:<br />
+- The modification is <strong>post-replicative</strong>, placing activity in the infected cell compartment where T4 DNA replication and maturation occur (intracellular/cytosolic context). (vrielinkl1994crystalstructureof pages 1-2)<br />
+- β-GT acts after replication and after initial α-GT action to complete glucosylation of sites not modified by α-GT. (thomas2018theodd“rb” pages 1-3)</p>
+<h2 id="7-quantitative-statistics-and-data-from-studies">7) Quantitative statistics and data from studies</h2>
+<h3 id="71-fractional-distribution-of-vs-glucosylation-in-t4-dna">7.1 Fractional distribution of α- vs β-glucosylation in T4 DNA</h3>
+<p>A frequently cited quantitative statistic is that in T4 genomic DNA:<br />
+- ~<strong>70%</strong> of 5hmC residues are <strong>α-glucosylated</strong>, and<br />
+- ~<strong>30%</strong> are <strong>β-glucosylated</strong> (β fraction attributable to β-GT/BGT). (thomas2018theodd“rb” pages 1-3)</p>
+<h3 id="72-what-is-missing-kinetics">7.2 What is missing (kinetics)</h3>
+<p>Although the retrieved structural/mechanistic papers clearly identify the reaction, mechanism class (inverting), and a catalytic base (Asp100), the currently retrieved evidence excerpts did <strong>not</strong> include explicit kinetic constants (Km, kcat) or sequence-context preferences on DNA. Consequently, this report does not provide verified kinetic parameters.</p>
+<h2 id="8-recent-developments-prioritizing-20232024">8) Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="81-phage-genome-modifications-as-counter-defense-2023">8.1 Phage genome modifications as counter-defense (2023)</h3>
+<p>A 2023 Journal of Virology study used an E. coli genome survey to catalog nuclease-containing anti-phage systems and experimentally tested which restrict T4. The authors explicitly frame <strong>hmC and ghmC</strong> as counter-defense modifications and show ghmC can abolish activities of multiple defense systems, emphasizing the modern relevance of T4’s glucosylation pathway (to which BGT contributes). <strong>Publication date:</strong> 2023-06; <strong>URL:</strong> https://doi.org/10.1128/jvi.00599-23 (thomas2018theodd“rb” pages 1-3)</p>
+<h3 id="82-bacterial-restriction-systems-that-sense-glucosyl-5hmc-2024">8.2 Bacterial restriction systems that sense glucosyl-5hmC (2024)</h3>
+<p>A 2024 Journal of Bacteriology study identifies a V. cholerae Type IV restriction system (TgvAB) that targets <strong>glucosylated 5hmC</strong> in T-even phage genomes, and notes that T4 mutants deleted for <strong>bgt</strong> (and agt) lose glucosylation and can escape that defense with tradeoffs. <strong>Publication date:</strong> 2024-09; <strong>URL:</strong> https://doi.org/10.1128/jb.00143-24 (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h3 id="83-broadening-view-virus-encoded-dna-glycosyltransferases-2024-preprint">8.3 Broadening view: virus-encoded DNA glycosyltransferases (2024 preprint)</h3>
+<p>A 2024 bioRxiv preprint argues virus-encoded glycosyltransferases can hypermodify DNA with diverse glycans and includes assays involving <strong>T4 βGT</strong> as a canonical enzyme for converting 5hmC substrates to glucosylated products, situating BGT as a reference point for expanding diversity of DNA glycosylations. <strong>Publication date (preprint):</strong> 2024-12; <strong>URL:</strong> https://doi.org/10.1101/2023.12.21.572611 (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h2 id="9-current-applications-and-real-world-implementations">9) Current applications and real-world implementations</h2>
+<h3 id="91-epigenetics-and-sequencing-workflows-widespread-modern-reuse">9.1 Epigenetics and sequencing workflows (widespread modern reuse)</h3>
+<p>T4 βGT has become a standard enzymatic reagent for <strong>glucosylating 5hmC</strong> in DNA to enable selective detection/protection of 5hmC during downstream steps (e.g., enzymatic conversion or deamination-based approaches). This is highlighted in a 2024 review of cfDNA hydroxymethylation detection methods, which describes T4 βGT-mediated glucosylation as a core step in some assays (e.g., protecting 5hmC). <strong>Publication date:</strong> 2024-09; <strong>URL:</strong> https://doi.org/10.3390/genes15091160 (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<p>A 2023 Nature Biotechnology paper describing a method for simultaneously sequencing genetic and epigenetic bases includes a glycosylation step explicitly using <strong>T4 beta-glucosyltransferase</strong> as part of its conversion workflow. <strong>Publication date:</strong> 2023-02; <strong>URL:</strong> https://doi.org/10.1038/s41587-022-01652-0 (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h3 id="92-practical-interpretation">9.2 Practical interpretation</h3>
+<p>These uses are direct “real-world implementations” because T4 βGT is not merely a historical enzyme—it is routinely deployed in contemporary molecular biology kits and pipelines for mapping or differentiating modified cytosines (especially 5hmC) at scale. (pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h2 id="10-expert-opinions-and-authoritative-interpretations">10) Expert opinions and authoritative interpretations</h2>
+<h3 id="101-structural-enzymology-perspective">10.1 Structural enzymology perspective</h3>
+<p>The structural enzymology literature on BGT is widely cited and interprets the enzyme as a GT-B fold glycosyltransferase with donor and acceptor binding segregated by domain, and it attributes catalysis to a <strong>direct displacement</strong> mechanism requiring a general base (Asp100). These conclusions provide a mechanistically grounded annotation (not merely homology-based). (lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</p>
+<h3 id="102-hostphage-conflict-perspective-modern">10.2 Host–phage conflict perspective (modern)</h3>
+<p>Recent host–phage defense studies interpret ghmC (to which BGT contributes) as a key counter-defense modification that can inactivate multiple bacterial nucleases/defense systems; conversely, bacteria have evolved systems that specifically recognize glucosylated 5hmC, reinforcing the centrality of the BGT-mediated modification in the evolutionary arms race. (thomas2018theodd“rb” pages 1-3, pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</p>
+<h2 id="11-summary-table-of-functional-annotation">11) Summary table of functional annotation</h2>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Functional-annotation fact</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified identity</td>
+<td><strong>bgt</strong> in <strong>Enterobacteria phage T4</strong> encodes <strong>DNA beta-glucosyltransferase (BGT; EC 2.4.1.27)</strong>, the enzyme responsible for the <strong>beta</strong> glucosylation branch of T4 DNA hydroxymethylcytosine modification.</td>
+<td>(vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>Transfers glucose from <strong>UDP-glucose</strong> to <strong>5-hydroxymethylcytosine (5hmC/HMC)</strong> in duplex T4 DNA, yielding <strong>β-glucosyl-5-hydroxymethylcytosine</strong> in DNA plus UDP.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2)</td>
+</tr>
+<tr>
+<td>Donor substrate</td>
+<td><strong>UDP-glucose (uridine diphosphoglucose; host-supplied)</strong>.</td>
+<td>(vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Acceptor substrate</td>
+<td><strong>5hmC-containing duplex DNA</strong>; acceptor binding is primarily associated with the <strong>N-terminal domain</strong> of BGT.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3)</td>
+</tr>
+<tr>
+<td>Product</td>
+<td><strong>β-glucosylated 5hmC</strong> residues in phage DNA; in T4 this contributes to the glucosylated-hmC genome state.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3, thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td><strong>Inverting glycosyltransferase</strong> using a <strong>direct in-line displacement</strong> mechanism with oxocarbenium-ion-like transition-state character.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3)</td>
+</tr>
+<tr>
+<td>Catalytic residue</td>
+<td><strong>Asp100</strong> is identified as the <strong>catalytic base</strong>; the <strong>D100A</strong> mutant blocks normal catalytic behavior and was key to mechanistic assignment.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3)</td>
+</tr>
+<tr>
+<td>Structural fold / domains</td>
+<td>BGT adopts the <strong>GT-B fold</strong> with <strong>two domains</strong> separated by a central cleft; donor nucleotide-sugar binds mainly the <strong>C-terminal domain</strong>, and a hinge around <strong>residues 166-172</strong> supports domain movement.</td>
+<td>(lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2, vrielinkl1994crystalstructureof media e64460a9, vrielinkl1994crystalstructureof media 2795b4a7)</td>
+</tr>
+<tr>
+<td>DNA-binding features</td>
+<td>The enzyme surface includes a <strong>positively charged concave region</strong> consistent with binding DNA substrate.</td>
+<td>(vrielinkl1994crystalstructureof pages 1-2)</td>
+</tr>
+<tr>
+<td>Biological role in T4</td>
+<td>Performs <strong>post-replicative glucosylation</strong> of T4 hydroxymethylcytosine-containing DNA as part of the phage DNA protection system.</td>
+<td>(vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Anti-restriction role</td>
+<td>Glucosylated hmC (<strong>ghmC</strong>) helps protect T4 DNA from many host nucleases/restriction systems; recent work shows ghmC can abolish or reduce several E. coli antiphage nuclease defenses.</td>
+<td>(thomas2018theodd“rb” pages 1-3, mejiapitta2026a5hydroxymethylcytosinedna pages 18-21)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>Upstream, T4 first replaces cytosine with <strong>5hmC</strong> during DNA synthesis; BGT then modifies a subset of those residues after replication.</td>
+<td>(thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Modification fractions in T4 DNA</td>
+<td>In wild-type T4 DNA, approximately <strong>70%</strong> of hmC residues are <strong>α-glucosylated</strong> and <strong>~30%</strong> are <strong>β-glucosylated</strong>.</td>
+<td>(thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Distinction from α-GT</td>
+<td><strong>α-GT</strong> acts immediately after replication but cannot modify neighboring hmC residues efficiently; <strong>BGT</strong> completes modification of sites left unmodified by α-GT.</td>
+<td>(thomas2018theodd“rb” pages 1-3)</td>
+</tr>
+<tr>
+<td>Modern application: epigenetics workflows</td>
+<td>T4 βGT is widely repurposed to <strong>glucosylate/protect 5hmC</strong> in enzymatic sequencing and hydroxymethylation-mapping workflows, enabling selective readout of cytosine modifications.</td>
+<td>(pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</td>
+</tr>
+<tr>
+<td>Modern application: cfDNA/5hmC detection</td>
+<td>Reviews of 5hmC detection methods describe <strong>T4-βGT-mediated glucosylation</strong> as a core step for protecting or labeling 5hmC in cancer cfDNA and related assays.</td>
+<td>(pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional-annotation points for Enterobacteria phage T4 DNA beta-glucosyltransferase (bgt/P04547), including reaction chemistry, mechanism, structural features, biological role, and modern assay applications. It is useful as a compact evidence-backed reference for annotation and report writing.</em></p>
+<h2 id="12-key-structural-figures-visual-evidence">12) Key structural figures (visual evidence)</h2>
+<ul>
+<li>BGT–UDP electron density and overall two-domain structure/topology from the 1994 EMBO Journal crystal structure study. (vrielinkl1994crystalstructureof media aa897d23, vrielinkl1994crystalstructureof media e64460a9, vrielinkl1994crystalstructureof media 2795b4a7)</li>
+</ul>
+<h2 id="13-concise-functional-annotation-recommended-text">13) Concise functional annotation (recommended text)</h2>
+<p><strong>bgt (UniProt P04547)</strong> encodes a <strong>DNA beta-glucosyltransferase (EC 2.4.1.27)</strong> that catalyzes <strong>UDP-glucose-dependent transfer of glucose to 5-hydroxymethylcytosine residues in duplex phage DNA</strong>, producing <strong>β-glucosyl-5hmC</strong>. The enzyme adopts a <strong>GT-B fold</strong>; donor binding is primarily C-terminal, acceptor binding primarily N-terminal; catalysis proceeds by an <strong>inverting direct-displacement mechanism</strong> using <strong>Asp100 as catalytic base</strong>. In the T4 lifecycle, BGT acts <strong>post-replicatively</strong> to complete glucosylation of 5hmC residues not modified by α-glucosyltransferase, contributing to <strong>protection of phage DNA from host restriction/nucleases</strong> and influencing infection success in the face of modern bacterial defense systems. (lariviere2003crystalstructuresof pages 1-3, vrielinkl1994crystalstructureof pages 1-2, thomas2018theodd“rb” pages 1-3)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(vrielinkl1994crystalstructureof pages 1-2): Alice Vrielinkl, W. Ruger, H. P. C. Driessen, and P. Freemont. Crystal structure of the dna modifying enzyme beta‐glucosyltransferase in the presence and absence of the substrate uridine diphosphoglucose. The EMBO Journal, 13:3413-3422, Aug 1994. URL: https://doi.org/10.1002/j.1460-2075.1994.tb06646.x, doi:10.1002/j.1460-2075.1994.tb06646.x. This article has 356 citations.</p>
+</li>
+<li>
+<p>(lariviere2003crystalstructuresof pages 1-3): Laurent Larivière, Virginie Gueguen-Chaignon, and Solange Moréra. Crystal structures of the t4 phage β-glucosyltransferase and the d100a mutant in complex with udp-glucose: glucose binding and identification of the catalytic base for a direct displacement mechanism. Jul 2003. URL: https://doi.org/10.1016/s0022-2836(03)00635-1, doi:10.1016/s0022-2836(03)00635-1. This article has 85 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57): Jesse D. Pyle, Sean R. Lund, Katherine H. O’Toole, and Lana Saleh. Virus-encoded glycosyltransferases hypermodify dna with diverse glycans. bioRxiv, Dec 2024. URL: https://doi.org/10.1101/2023.12.21.572611, doi:10.1101/2023.12.21.572611. This article has 12 citations.</p>
+</li>
+<li>
+<p>(thomas2018theodd“rb” pages 1-3): Julie A. Thomas, Jared Orwenyo, Lai-Xi Wang, and Lindsay W. Black. The odd “rb” phage—identification of arabinosylation as a new epigenetic modification of dna in t4-like phage rb69. Viruses, 10:313, Jun 2018. URL: https://doi.org/10.3390/v10060313, doi:10.3390/v10060313. This article has 43 citations.</p>
+</li>
+<li>
+<p>(vrielinkl1994crystalstructureof media aa897d23): Alice Vrielinkl, W. Ruger, H. P. C. Driessen, and P. Freemont. Crystal structure of the dna modifying enzyme beta‐glucosyltransferase in the presence and absence of the substrate uridine diphosphoglucose. The EMBO Journal, 13:3413-3422, Aug 1994. URL: https://doi.org/10.1002/j.1460-2075.1994.tb06646.x, doi:10.1002/j.1460-2075.1994.tb06646.x. This article has 356 citations.</p>
+</li>
+<li>
+<p>(vrielinkl1994crystalstructureof media e64460a9): Alice Vrielinkl, W. Ruger, H. P. C. Driessen, and P. Freemont. Crystal structure of the dna modifying enzyme beta‐glucosyltransferase in the presence and absence of the substrate uridine diphosphoglucose. The EMBO Journal, 13:3413-3422, Aug 1994. URL: https://doi.org/10.1002/j.1460-2075.1994.tb06646.x, doi:10.1002/j.1460-2075.1994.tb06646.x. This article has 356 citations.</p>
+</li>
+<li>
+<p>(vrielinkl1994crystalstructureof media 2795b4a7): Alice Vrielinkl, W. Ruger, H. P. C. Driessen, and P. Freemont. Crystal structure of the dna modifying enzyme beta‐glucosyltransferase in the presence and absence of the substrate uridine diphosphoglucose. The EMBO Journal, 13:3413-3422, Aug 1994. URL: https://doi.org/10.1002/j.1460-2075.1994.tb06646.x, doi:10.1002/j.1460-2075.1994.tb06646.x. This article has 356 citations.</p>
+</li>
+<li>
+<p>(mejiapitta2026a5hydroxymethylcytosinedna pages 18-21): Adriana Mejía-Pitta, Zhiying Zhang, Amer A. Hossain, Karolina Bartosik, Christian F. Baca, Christopher Peralta, Henrik Molina, Marianna Teplova, Sean F. Brady, Ronald Micura, Dinshaw J. Patel, and Luciano A. Marraffini. A 5-hydroxymethylcytosine dna glycosylase provides defense against t-even bacteriophages. bioRxiv, Feb 2026. URL: https://doi.org/10.64898/2026.02.25.707755, doi:10.64898/2026.02.25.707755. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="bgt-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000006 As requested, I have extracted Figure 1, which provides electron density maps of the enzyme and the bound uridine diphosphate (UDP)" src="bgt-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lariviere2003crystalstructuresof pages 1-3</li>
+<li>vrielinkl1994crystalstructureof pages 1-2</li>
+<li>pyle2024virusencodedglycosyltransferaseshypermodify pages 55-57</li>
+<li>https://doi.org/10.1128/jvi.00599-23</li>
+<li>https://doi.org/10.1128/jb.00143-24</li>
+<li>https://doi.org/10.1101/2023.12.21.572611</li>
+<li>https://doi.org/10.3390/genes15091160</li>
+<li>https://doi.org/10.1038/s41587-022-01652-0</li>
+<li>https://doi.org/10.1002/j.1460-2075.1994.tb06646.x,</li>
+<li>https://doi.org/10.1016/s0022-2836(03</li>
+<li>https://doi.org/10.1101/2023.12.21.572611,</li>
+<li>https://doi.org/10.3390/v10060313,</li>
+<li>https://doi.org/10.64898/2026.02.25.707755,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P04547
+gene_symbol: P04547
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P04547&#39;
+existing_annotations:
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0033821
+    label: DNA beta-glucosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052031
+    label: symbiont-mediated perturbation of host defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052170
+    label: symbiont-mediated suppression of host innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099018
+    label: symbiont-mediated evasion of host restriction-modification system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006304
+    label: DNA modification
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0033821
+    label: DNA beta-glucosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:6078540
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:6078540
+  title: On the specificity of bacteriophage-induced hydroxymethylcytosine glucosyltransferases.
+    II. Specificities of hydroxymethylcytosine alphaand beta-glucosyltransferases
+    induced by bacteriophage T4.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

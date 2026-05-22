@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P39510 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P39510</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P39510" target="_blank" class="term-link">
+                        P39510
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P39510";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P39510" data-a="DESCRIPTION: TODO: Add description for P39510..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P39510</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004518" target="_blank" class="term-link">
+                                    GO:0004518
+                                </a>
+                            </span>
+                            <span class="term-label">nuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0004518" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004519" target="_blank" class="term-link">
+                                    GO:0004519
+                                </a>
+                            </span>
+                            <span class="term-label">endonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0004519" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052031" target="_blank" class="term-link">
+                                    GO:0052031
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0052031" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052170" target="_blank" class="term-link">
+                                    GO:0052170
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0052170" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099018" target="_blank" class="term-link">
+                                    GO:0099018
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated evasion of host restriction-modification system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P39510" data-a="GO:0099018" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(arn-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P39510" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research report: **arn (Arn/urn) anti-restriction endonuclease** from *Enterobacteria phage T4* (UniProt **P39510**)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">18 citations</span>
+                    
+                    
+                    <span class="report-badge">3 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T00:19:00.378982</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="arn-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="arn-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="arn-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000012 I have extracted Table 4 from page 13 of the document. This table includes the &#34;arn&#34; gene, listing its product as &#34;Arn protein&#34; and</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-arn-arnurn-anti-restriction-endonuclease-from-enterobacteria-phage-t4-uniprot-p39510">Research report: <strong>arn (Arn/urn) anti-restriction endonuclease</strong> from <em>Enterobacteria phage T4</em> (UniProt <strong>P39510</strong>)</h1>
+<h2 id="0-executive-summary">0. Executive summary</h2>
+<p>The <em>Enterobacteria</em> phage T4 gene <strong>arn</strong> (historically also called <strong>urn</strong>; UniProt P39510 describes an “anti-restriction endonuclease/anti-rgl nuclease”) is best supported as a <strong>phage-encoded anti-restriction (anti-Rgl/Mcr) factor</strong> that counteracts host restriction of T4 DNA, especially in the context of host systems that target unprotected or improperly modified phage DNA. Comparative genomics explicitly annotates <strong>arn</strong> as countering the host <strong>McR (Rgl)</strong> restriction system. (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<p>Classic infection genetics show that when T4 DNA is <strong>nonglucosylated (glu−)</strong> and enters <strong>rgl+</strong> hosts, host endonucleolytic cleavage can <strong>directly inactivate arn/urn expression</strong>, implying the gene’s protective effect must occur <strong>very early</strong> (within minutes) after infection to be effective. (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>A key limitation of the current evidence base available here is that, despite strong genetic/phenotypic support for an anti-restriction role, the <strong>precise biochemical reaction, substrate specificity, and catalytic mechanism</strong> of the Arn protein are <strong>not clearly established</strong> in the retrieved primary literature excerpts. Modern reviews contextualize Arn within a broader class of phage anti-restriction factors and state that it uses a <strong>DNA-mimic principle</strong> similar to T7 Ocr. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<h2 id="1-mandatory-verification-geneprotein-identity-and-disambiguation">1. Mandatory verification: gene/protein identity and disambiguation</h2>
+<h3 id="11-target-identity-matches-t4-anti-restriction-arnurn">1.1 Target identity matches T4 anti-restriction arn/urn</h3>
+<p>The retrieved primary T4 restriction-alleviation literature describes an “anti-restriction endonuclease” named <strong>urn</strong> and explicitly connects it to inhibition/inactivation of host restriction activities in <strong>rgl+</strong> hosts during T4 infection. This matches the UniProt description provided for accession <strong>P39510</strong> (“Anti-restriction endonuclease; Anti-rgl nuclease”). (dharmalingam1979restrictioninvivo. pages 1-2, dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>A widely cited comparative genomics review of T4-like phages lists <strong>T4 gene arn</strong>, product “Arn protein,” and role “<strong>Counters the restriction effects of the host McR (Rgl) system</strong>,” firmly tying the symbol <strong>arn</strong> to this phage anti-restriction function in the <em>T4</em> organism context. (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<h3 id="12-ambiguity-warning-handled">1.2 Ambiguity warning (handled)</h3>
+<p>The symbol <strong>arn</strong> is highly ambiguous across biology (many bacteria use <em>arn</em> for lipid A modification pathways, etc.), but the evidence used here is restricted to <strong>bacteriophage T4</strong> contexts and to the anti-restriction/anti-Rgl function described above. (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-restriction-modification-and-rglmcr-restriction">2.1 Restriction-modification and “Rgl/Mcr” restriction</h3>
+<p>Restriction-modification (R–M) systems are bacterial defenses that recognize specific DNA patterns and cleave foreign DNA lacking protective modification. Phages evolve multiple countermeasures including DNA modification and direct protein inhibitors. A broad, foundational synthesis of these mechanisms (including viral inhibition of restriction enzymes and genome modifications) is provided in classic reviews. (kruger1983bacteriophagesurvivalmultiple pages 1-2)</p>
+<p>In the T-even/T4 context, host systems described as <strong>Rgl/Mcr</strong> restrict phage DNA that is insufficiently protected by the phage’s characteristic base modifications (e.g., glucosylated hydroxymethylcytosine). (petrov2010genomesofthe pages 12-13)</p>
+<h3 id="22-t4-dna-glucosylation-as-a-major-anti-restriction-layer">2.2 T4 DNA glucosylation as a major anti-restriction layer</h3>
+<p>T4-like phages modify their DNA by incorporating hydroxymethyl-dCMP and then <strong>glucosylating</strong> it. Comparative genomics emphasizes that these glucosyl modifications render DNA resistant to host restriction activities, “particularly” <strong>E. coli Mcr (Rgl)</strong>. (petrov2010genomesofthe pages 12-13)</p>
+<h3 id="23-anti-restriction-proteins-dna-mimicry-as-a-mechanistic-theme">2.3 Anti-restriction proteins: DNA mimicry as a mechanistic theme</h3>
+<p>A recent review on phage counter-defense strategies highlights <strong>DNA-mimic proteins</strong> as a prominent anti-restriction mechanism. T7 Ocr is described as structurally mimicking one helical turn of B-form DNA with a negatively charged surface resembling the DNA phosphate backbone, enabling inhibition of restriction and even BREX. The same review explicitly states that “<strong>Similar to Ocr, the coliphage T4 protein Arn … uses the same principle</strong>,” placing Arn in the modern DNA-mimic anti-restriction conceptual framework. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<h2 id="3-functional-annotation-for-t4-arnurn">3. Functional annotation for T4 Arn/urn</h2>
+<h3 id="31-primary-biological-role-counteracting-host-mcrmcr-rgl-restriction">3.1 Primary biological role: counteracting host McR/Mcr (Rgl) restriction</h3>
+<p>The strongest explicit functional statement in the retrieved corpus is from T4-like phage comparative genomics: <strong>arn encodes Arn protein, which counters host McR (Rgl) restriction effects</strong>. (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<p>This aligns with classic infection genetics showing that the anti-restriction endonuclease activity (urn/arn) is part of the phage’s “restriction alleviation systems,” whose expression can determine whether T4 genomes survive in restricting cells. (dharmalingam1979restrictioninvivo. pages 1-2, dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h3 id="32-what-is-the-molecular-function-reactionsubstrate">3.2 What is the molecular function (reaction/substrate)?</h3>
+<p><strong>What is supported:</strong> Arn/urn is an anti-restriction factor that functionally antagonizes host restriction outcomes in vivo, and modern reviews propose a <strong>DNA-mimic</strong> mode of action (inhibiting restriction systems by binding/interference rather than catalyzing a classic nuclease reaction on DNA). (petrov2010genomesofthe media 176db08c, gao2023bacteriophagestrategiesfor pages 3-4)</p>
+<p><strong>What is not supported (in the retrieved evidence):</strong> A definitive biochemical description of Arn as an enzyme catalyzing a specific cleavage reaction, with a mapped substrate specificity and kinetics, is <strong>not available</strong> in the excerpts retrieved here. Therefore, the “anti-restriction endonuclease/anti-rgl nuclease” label should be interpreted primarily as a <strong>functional genetic phenotype name</strong> rather than as a fully biochemically characterized nuclease reaction in this evidence set. (petrov2010genomesofthe pages 12-13, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<h3 id="33-distinguishing-arnurn-from-other-t4-restriction-alleviation-factors-critical-for-annotation">3.3 Distinguishing Arn/urn from other T4 restriction-alleviation factors (critical for annotation)</h3>
+<p>Dharmalingam &amp; Goldberg distinguish multiple anti-restriction activities in T-even phages. In particular:<br />
+- <strong>arx/urx</strong> is an anti-ExoV activity (host exonuclease V inhibition), for which rapid inhibition and extract-based inhibition assays were used. (dharmalingam1979restrictioninvivo. pages 4-6)<br />
+- <strong>urn/arn</strong> is the anti-restriction endonuclease activity required for inactivation of certain host restriction endonucleases (e.g., r2,4 in that literature’s terminology). (dharmalingam1979restrictioninvivo. pages 4-6, dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>This separation matters for functional annotation: <strong>Arn should not be misassigned as the ExoV inhibitor</strong>, because that role is supported for arx/urx. (dharmalingam1979restrictioninvivo. pages 4-6)</p>
+<h2 id="4-genetic-and-experimental-evidence-with-quantitative-data">4. Genetic and experimental evidence (with quantitative data)</h2>
+<h3 id="41-rgl-cleavage-directly-inactivates-arn-expression-in-restricting-hosts">4.1 rgl cleavage directly inactivates arn expression in restricting hosts</h3>
+<p>Dharmalingam &amp; Goldberg report superinfection and DNA-fragmentation assays supporting that <strong>arn expression is inactivated directly by restriction endonuclease cleavage</strong> in rgl+ hosts infected with nonglucosylated T4. They explicitly conclude: “the expression of arn is inactivated directly by restriction endonuclease cleavage.” (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>Quantitatively, when <strong>rgl+ ExoV+</strong> hosts were primarily infected with <strong>T4 glu− imm−</strong> and superinfected 5 minutes later with labeled <strong>T4 glu−</strong>, the breakdown of superinfecting glu− DNA was <strong>58%</strong>, compared with <strong>5%</strong> when the primary phage was <strong>T4 glu+ imm−</strong> (conditions where restriction is not active). In <strong>rgl+ ExoV−</strong> cells, breakdown was <strong>10%</strong> (glu− primary) versus <strong>3%</strong> (glu+ primary). (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>These data support that in restricting conditions, the system rapidly fragments glu− DNA and prevents effective expression of protective functions such as arn/urn. (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h3 id="42-timing-arnurn-function-must-occur-very-early">4.2 Timing: Arn/urn function must occur very early</h3>
+<p>The experiments repeatedly probe early timepoints (superinfection after <strong>5 minutes</strong>, readouts ~<strong>8 minutes</strong> after superinfection). Under rgl+ ExoV+ conditions, “almost all” superinfecting DNA is fragmented and ~<strong>20%</strong> becomes acid-soluble within this early window, indicating restriction occurs rapidly. (dharmalingam1979restrictioninvivo. pages 6-8, dharmalingam1979restrictioninvivo. pages 2-4)</p>
+<p>The paper’s interpretation is that because arn expression is inactivated by cleavage, a protective function would need to act essentially <strong>immediately</strong> after infection to protect incoming unmodified genomes. (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h3 id="43-glucosylation-dependence-glu-versus-glu-infections">4.3 Glucosylation dependence: glu+ versus glu− infections</h3>
+<p>Comparative genomics and classical infection results converge on the importance of T4 DNA modification state. T4-like phages’ glucosylation of hydroxymethylcytosine is described as a major mechanism to evade restriction, especially Mcr(Rgl). (petrov2010genomesofthe pages 12-13)</p>
+<p>In restricting infections, Dharmalingam &amp; Goldberg report that when the primary infecting genome is <strong>glu−</strong> in <strong>rgl+ ExoV+</strong> cells, anti-restriction systems (including arn/urn) are not expressed from the cleaved genome, consistent with restriction cleavage preventing expression; conversely, <strong>glu+</strong> infections avoid this cleavage and allow anti-restriction expression. (dharmalingam1979restrictioninvivo. pages 4-6, dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h3 id="44-quantitative-data-for-related-anti-restriction-factor-arxurx-clarifies-pathway-logic">4.4 Quantitative data for related anti-restriction factor (arx/urx) clarifies pathway logic</h3>
+<p>To avoid conflating factors: Dharmalingam &amp; Goldberg report that in <strong>T4 glu+</strong> infection of <strong>rgl+ ExoV+</strong> cells, <strong>99% of ExoV activity</strong> is inhibited within <strong>5 minutes</strong>, whereas in <strong>T4 glu−</strong> infection ~<strong>80%</strong> of ExoV activity remains. Mixing assays similarly show strong inhibition only in extracts where the anti-ExoV factor was produced. (dharmalingam1979restrictioninvivo. pages 4-6)</p>
+<p>These numbers are included because they demonstrate the infection is a minutes-scale race between host nucleases and phage countermeasures, but they pertain to the anti-ExoV system rather than Arn/urn directly. (dharmalingam1979restrictioninvivo. pages 4-6)</p>
+<h2 id="5-localization-and-infection-stage-placement">5. Localization and infection-stage placement</h2>
+<h3 id="51-where-does-arn-act">5.1 Where does Arn act?</h3>
+<p>Direct subcellular localization (e.g., microscopy, fractionation specific to Arn) is not present in the retrieved texts; however, the phenotype and experimental designs strongly imply action <strong>inside infected cells on incoming phage DNA and/or host restriction machinery</strong>.</p>
+<p>A key inference is that arn/urn function is relevant during <strong>early intracellular stages after DNA injection</strong>, because restriction cleavage fragments the incoming genome and prevents expression if cleavage happens at/near the locus. (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h3 id="52-expression-timing-and-dependence-on-synthesis">5.2 Expression timing and dependence on synthesis</h3>
+<p>The literature distinguishes restriction alleviation activities that can be triggered by <strong>adsorption without protein synthesis</strong> (e.g., inactivation of one restriction system, r6) from those that <strong>require synthesis</strong> of a protein (e.g., r2,4 inactivation requires urn). (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<p>Thus, Arn/urn is best annotated as an <strong>early gene product</strong> whose function is needed early and is vulnerable to early restriction cleavage if the genome is unprotected. (dharmalingam1979restrictioninvivo. pages 6-8)</p>
+<h2 id="6-recent-developments-prioritizing-20232024">6. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="61-2023-arn-placed-in-modern-anti-defense-taxonomy-dna-mimic-framing">6.1 2023: Arn placed in modern “anti-defense” taxonomy; DNA mimic framing</h3>
+<p>Gao &amp; Feng (Frontiers in Microbiology; published June 2023; https://doi.org/10.3389/fmicb.2023.1211793) synthesize contemporary views of phage counter-defense, including anti-R–M proteins and DNA mimicry. They highlight Ocr as a structural DNA mimic and explicitly extend that principle to <strong>T4 Arn</strong>, which “uses the same principle,” i.e., DNA mimicry to antagonize restriction. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<p>This is an important modernization of interpretation: rather than viewing Arn primarily as a catalytic nuclease, Arn is discussed as part of a set of <strong>protein-based inhibitors/mimics</strong> that subvert restriction systems. (gao2023bacteriophagestrategiesfor pages 3-4)</p>
+<h3 id="62-2024-structure-guided-discovery-pipelines-increase-the-pace-of-anti-defense-identification-context">6.2 2024: structure-guided discovery pipelines increase the pace of anti-defense identification (context)</h3>
+<p>Duan et al. (Nature Communications; published Jan 2024; https://doi.org/10.1038/s41467-024-45068-7) demonstrate a structure-guided discovery approach screening &gt;66 million viral proteins, predicting ~300,000 structures, and using structural similarity (TM-score thresholds) plus gene co-occurrence to identify anti-defense proteins. While not Arn-specific, it reflects the 2024 state-of-the-art approach for uncovering phage anti-defense proteins in general, and it provides a roadmap for finding additional Arn-like families (including those too divergent for sequence-only methods). (duan2024structureguideddiscoveryof pages 1-2)</p>
+<h3 id="63-2024-host-defenses-are-synergistic-context-for-why-anti-restriction-may-need-to-be-multi-layered">6.3 2024: host defenses are synergistic (context for why anti-restriction may need to be multi-layered)</h3>
+<p>Wu et al. (Cell Host &amp; Microbe; published Apr 2024; https://doi.org/10.1016/j.chom.2024.01.015) report synergistic behavior between bacterial defense systems (multiple systems acting together). While not focused on T4 Arn, this supports an expert interpretation that phage anti-restriction factors (including DNA mimics) likely function as part of <strong>multi-component counter-defense strategies</strong> rather than as single “silver bullet” genes. (wu2024bacterialdefensesystems metadata; no direct excerpt evidence beyond retrieved snippet listing anti-restriction peptides; see tool results)</p>
+<h2 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h2>
+<h3 id="71-biotechnology-and-synthetic-biology-restriction-bypass-tools">7.1 Biotechnology and synthetic biology: restriction bypass tools</h3>
+<p>DNA-mimic anti-restriction proteins (e.g., Ocr) are increasingly framed as modular counter-defense parts that can inhibit bacterial restriction and BREX, suggesting potential utility for:<br />
+- improving DNA delivery/transformation into restriction-proficient strains,<br />
+- facilitating phage engineering or phage therapy development by enabling replication in otherwise nonpermissive hosts,<br />
+- transient suppression of restriction barriers in industrial or research settings.</p>
+<p>These are application-relevant implications drawn from the mechanistic description that Ocr binds restriction/BREX components and the explicit analogy that T4 Arn uses the same principle. (gao2023bacteriophagestrategiesfor pages 3-4)</p>
+<p><strong>Evidence limitation:</strong> the retrieved sources did not provide explicit applied performance metrics (e.g., fold-increase in transformation) specifically for Arn; thus the above should be treated as plausible implementation pathways grounded in mechanism rather than documented Arn deployment data within this evidence set. (gao2023bacteriophagestrategiesfor pages 3-4)</p>
+<h3 id="72-phage-therapy-engineering-context">7.2 Phage therapy engineering context</h3>
+<p>Modern reviews emphasize that understanding counter-defense proteins is “critical for phage-based antibacterial measures,” because bacterial immunity (including R–M) can limit therapeutic phage efficacy. Arn-like anti-restriction proteins therefore represent candidate engineering targets (e.g., broadening host range by overcoming R–M barriers), even though direct therapeutic use of T4 Arn is not specifically documented in the retrieved texts. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 1-2)</p>
+<h2 id="8-expert-opinions-and-authoritative-interpretations">8. Expert opinions and authoritative interpretations</h2>
+<h3 id="81-authoritative-comparative-genomics-statement">8.1 Authoritative comparative-genomics statement</h3>
+<p>Petrov et al. (Virology Journal; published Oct 2010; https://doi.org/10.1186/1743-422x-7-292) explicitly classifies <strong>arn</strong> among T4 restriction/antirestriction genes and annotates it as countering host <strong>Mcr(Rgl)</strong>. This is a strong expert-curated synthesis of experimental knowledge integrated with comparative genomics across T4 relatives. (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<h3 id="82-2023-expert-synthesis-dna-mimicry-as-unifying-mechanism">8.2 2023 expert synthesis: DNA mimicry as unifying mechanism</h3>
+<p>Gao &amp; Feng (2023) is an authoritative recent synthesis that explicitly connects Arn to the DNA-mimic anti-restriction framework established by Ocr and other mimics (e.g., Gam), which can be viewed as an expert reinterpretation integrating structural biology and modern anti-defense system taxonomy. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<h2 id="9-evidence-backed-statistics-and-data-highlights">9. Evidence-backed statistics and data highlights</h2>
+<ul>
+<li><strong>Arn annotation in T4-like phage comparative genomics:</strong> arn “Counters the restriction effects of the host McR (Rgl) system” (qualitative but explicit). (petrov2010genomesofthe media 176db08c)</li>
+<li><strong>Restriction outcome assay:</strong> breakdown of superinfecting <strong>T4 glu−</strong> DNA in <strong>rgl+ ExoV+</strong> hosts after <strong>T4 glu− imm−</strong> primary infection: <strong>58%</strong>; after <strong>T4 glu+ imm−</strong> primary infection: <strong>5%</strong>; in <strong>rgl+ ExoV−</strong> hosts: <strong>10%</strong> vs <strong>3%</strong> (glu− vs glu+ primary). (dharmalingam1979restrictioninvivo. pages 6-8)</li>
+<li><strong>Rapid restriction window:</strong> within minutes of infection/superinfection, “almost all” superinfecting DNA fragmented and ~<strong>20%</strong> acid-soluble in rgl+ ExoV+ conditions, implying strong early restriction pressure. (dharmalingam1979restrictioninvivo. pages 6-8)</li>
+<li><strong>Related anti-ExoV kinetic benchmark:</strong> <strong>99%</strong> ExoV inhibition within <strong>5 min</strong> in T4 glu+ infection (anti-ExoV system), illustrating minutes-scale timing relevant for anti-restriction systems overall. (dharmalingam1979restrictioninvivo. pages 4-6)</li>
+</ul>
+<h2 id="10-visual-evidence-from-a-key-paper">10. Visual evidence (from a key paper)</h2>
+<p>Petrov et al. include a table of “T4 DNA modification, restriction and antirestriction genes” that explicitly lists <strong>arn</strong> and its role against McR(Rgl). (petrov2010genomesofthe media 176db08c)</p>
+<h2 id="11-summary-of-what-is-known-vs-unknown-annotation-guidance">11. Summary of what is known vs unknown (annotation guidance)</h2>
+<blockquote>
+<ul>
+<li><strong>Identity verified:</strong> the target is bacteriophage T4 <strong>Arn/urn</strong>, the historical anti-restriction/anti-Rgl factor discussed in T4 infection studies and T4-like phage comparative genomics, matching UniProt P39510 rather than unrelated cellular genes named <em>arn</em> (dharmalingam1979restrictioninvivo. pages 1-2, petrov2010genomesofthe pages 12-13)</li>
+<li><strong>Core function:</strong> Arn is annotated as an <strong>anti-restriction protein that counters host McR/Mcr (Rgl) restriction</strong>, placing it in the T4 DNA protection/counter-defense module (petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</li>
+<li><strong>Not the same as Arx:</strong> older T4 literature distinguishes <strong>arn/urn</strong> (anti-Rgl/anti-r2,4 restriction) from <strong>arx/urx</strong> (anti-ExoV), so Arn should not be misannotated as the ExoV inhibitor (dharmalingam1979restrictioninvivo. pages 4-6)</li>
+<li><strong>Depends on DNA protection state:</strong> when T4 DNA is <strong>glucosylated (glu+)</strong>, restriction is avoided and anti-restriction functions can be expressed; when DNA is <strong>nonglucosylated (glu-)</strong>, rgl cleavage blocks expression of arn/urn in restricting hosts (dharmalingam1979restrictioninvivo. pages 4-6, dharmalingam1979restrictioninvivo. pages 6-8)</li>
+<li><strong>Directly sensitive to rgl cleavage:</strong> classic infection experiments concluded that <strong>arn expression is inactivated directly by restriction endonuclease cleavage</strong>, indicating the locus or its expression unit is disrupted before protective activity can accumulate (dharmalingam1979restrictioninvivo. pages 6-8, dharmalingam1979restrictioninvivo. pages 1-2)</li>
+<li><strong>Acts very early in infection:</strong> superinfection assays were read within minutes, and the data imply Arn must function <strong>very early after DNA entry</strong>; otherwise incoming unmodified phage DNA is irreversibly restricted before protection is established (dharmalingam1979restrictioninvivo. pages 6-8, dharmalingam1979restrictioninvivo. pages 4-6)</li>
+<li><strong>Likely intracellular/DNA-associated:</strong> available evidence supports a role in the infected cell acting on the fate of incoming phage DNA, rather than a demonstrated virion structural localization; however, direct subcellular localization data are limited (dharmalingam1979restrictioninvivo. pages 4-6, dharmalingam1979restrictioninvivo. pages 1-2)</li>
+<li><strong>Current mechanistic view:</strong> a 2023 review places T4 Arn alongside T7 Ocr and states Arn uses a <strong>DNA-mimic principle</strong> to antagonize restriction systems, updating older genetic data with a modern anti-defense framework (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</li>
+<li><strong>What remains unknown:</strong> despite strong genetic evidence for anti-Rgl function, the <strong>exact biochemical reaction, catalytic mechanism, and substrate specificity</strong> of Arn are still not clearly established in the retrieved primary literature (petrov2010genomesofthe pages 12-13, hutinet2021hypermodifieddnain pages 6-7, gao2023bacteriophagestrategiesfor pages 4-5)</li>
+<li><strong>Best-supported annotation:</strong> Arn is most confidently described as an <strong>early phage anti-restriction/anti-Rgl protein protecting T4 against host Mcr/Rgl restriction, especially in the context of hypermodified versus unprotected phage DNA</strong> (petrov2010genomesofthe pages 12-13, gao2023bacteriophagestrategiesfor pages 3-4)</li>
+</ul>
+</blockquote>
+<p><em>Blockquote: This artifact summarizes the main evidence-supported conclusions about bacteriophage T4 Arn/urn, including identity verification, anti-Rgl function, early infection role, and remaining mechanistic uncertainties. It is useful as a concise evidence map for the final report.</em></p>
+<table>
+<thead>
+<tr>
+<th>Verified identity</th>
+<th>Molecular function claim</th>
+<th>Evidence type</th>
+<th>Key experimental observations and quantitative data</th>
+<th>Primary citations with URL and year</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Arn / urn</strong> from <strong>Enterobacteria phage T4</strong>; anti-restriction endonuclease / anti-Rgl nuclease; T4-relative review notes Arn is the factor that counters host <strong>Mcr (Rgl)</strong> restriction and that <strong>arn alleles occur in all T-even phages and CC31</strong> (petrov2010genomesofthe pages 12-13)</td>
+<td>Best-supported function is <strong>antagonism of host Rgl/Mcr restriction of T4 DNA</strong>, specifically the activity historically called <strong>anti-restriction endonuclease (urn/arn)</strong> that inactivates host restriction acting on nonglucosylated T4 DNA; exact catalytic chemistry/substrate cleavage reaction for purified Arn is <strong>not established in the retrieved evidence</strong> (dharmalingam1979restrictioninvivo. pages 1-2, petrov2010genomesofthe pages 12-13)</td>
+<td>Genetic, review, comparative genomics/bioinformatic (dharmalingam1979restrictioninvivo. pages 1-2, petrov2010genomesofthe pages 12-13)</td>
+<td>In restricting hosts, <strong>T4 glu-</strong> genomes fail to express arn when parental DNA is cleaved by <strong>rgl</strong>; authors conclude arn expression is <strong>directly inactivated by restriction endonuclease cleavage</strong>. In <strong>rgl+ ExoV+</strong> cells superinfected with <strong>32P-T4 glu-</strong>, DNA breakdown after primary infection with <strong>T4 glu- imm-</strong> reached <strong>58%</strong>, versus <strong>5%</strong> when primary phage was <strong>T4 glu+ imm-</strong>; in <strong>rgl+ ExoV-</strong> hosts, corresponding breakdown was <strong>10%</strong> vs <strong>3%</strong> (dharmalingam1979restrictioninvivo. pages 6-8, dharmalingam1979restrictioninvivo. pages 1-2)</td>
+<td>Dharmalingam &amp; Goldberg, <em>Virology</em> (1979), https://doi.org/10.1016/0042-6822(79)90098-9 ; Petrov et al., <em>Virology Journal</em> (2010), https://doi.org/10.1186/1743-422x-7-292</td>
+</tr>
+<tr>
+<td>Same T4 Arn/urn identity; distinct from <strong>arx/urx</strong>, the anti-ExoV activity, which is a separate phage anti-restriction function (dharmalingam1979restrictioninvivo. pages 4-6)</td>
+<td>Arn acts in the <strong>restriction-alleviation pathway</strong> directed against host <strong>r2,4/Rgl-type restriction</strong>, whereas <strong>Arx</strong> inhibits host <strong>ExoV</strong>; this distinction is critical because some older literature discusses both activities together (dharmalingam1979restrictioninvivo. pages 4-6)</td>
+<td>Genetic and biochemical cell-extract assays (dharmalingam1979restrictioninvivo. pages 4-6)</td>
+<td>In <strong>T4 glu+</strong> infection of <strong>rgl+ ExoV+</strong> cells, host <strong>ExoV</strong> activity was inhibited by about <strong>99% within 5 min</strong>; in <strong>T4 glu-</strong> infection, about <strong>80%</strong> of ExoV activity remained. Mixing assays showed <strong>T4 glu+</strong> extracts reduced residual ExoV activity to <strong>6-10%</strong>, whereas <strong>T4 glu-</strong> extracts from <strong>rgl+ ExoV+</strong> cells showed <strong>100%</strong> residual activity. These data support that <strong>arx</strong>, not arn, is the anti-ExoV factor, preventing misannotation of Arn as an ExoV inhibitor (dharmalingam1979restrictioninvivo. pages 4-6)</td>
+<td>Dharmalingam &amp; Goldberg, <em>Virology</em> (1979), https://doi.org/10.1016/0042-6822(79)90098-9</td>
+</tr>
+<tr>
+<td>T4 Arn/urn is linked functionally to T4 DNA glucosylation state; T4 relatives use glucosylated hydroxymethylcytosine to resist host restriction, with Arn adding an extra anti-restriction layer against <strong>Mcr/Rgl</strong> systems (petrov2010genomesofthe pages 12-13)</td>
+<td>Biological role is <strong>early protection of infecting phage DNA from host restriction</strong>, especially when DNA is vulnerable because it lacks protective glucosylation; Arn therefore belongs to the broader <strong>phage anti-defense / anti-restriction arsenal</strong> (petrov2010genomesofthe pages 12-13)</td>
+<td>Review and comparative genomics (petrov2010genomesofthe pages 12-13)</td>
+<td>Review evidence states glucosylation of T-even DNA makes it resistant particularly to <strong>E. coli Mcr (Rgl)</strong> and lists <strong>arn</strong> among phage genes involved in genome modification/restriction avoidance. Arn distribution is restricted: <strong>all T-even type phages and phage CC31 only</strong> among surveyed T4 relatives (petrov2010genomesofthe pages 12-13)</td>
+<td>Petrov et al., <em>Virology Journal</em> (2010), https://doi.org/10.1186/1743-422x-7-292</td>
+</tr>
+<tr>
+<td>UniProt target identity is therefore consistent with the literature concept of <strong>T4 anti-Rgl / anti-restriction endonuclease Arn (urn)</strong>, but literature coverage is sparse and nomenclature is old/ambiguous; some sources mention Arn as a <strong>protein mimic of DNA</strong> in the context of hypermodified DNA review (hutinet2021hypermodifieddnain pages 6-7)</td>
+<td>Current understanding: <strong>function is established genetically</strong>, but <strong>direct biochemical mechanism, structure, and subcellular localization remain poorly resolved in the retrieved literature</strong>; likely acts in the <strong>infected-cell cytoplasmic DNA context early after genome entry</strong>, because its benefit would have to precede irreversible restriction (dharmalingam1979restrictioninvivo. pages 6-8, hutinet2021hypermodifieddnain pages 6-7)</td>
+<td>Genetic inference, review, bioinformatic/interpretive (dharmalingam1979restrictioninvivo. pages 6-8, hutinet2021hypermodifieddnain pages 6-7)</td>
+<td>Dharmalingam &amp; Goldberg argue that direct inactivation of arn by restriction cleavage implies anti-restriction would need to act <strong>very early</strong> to protect incoming unmodified phage DNA. The hypermodified-DNA review notes support for T4 Arn as part of anti-restriction strategy, but does not provide mechanistic enzymology; thus claims beyond anti-Rgl function should be treated cautiously (dharmalingam1979restrictioninvivo. pages 6-8, hutinet2021hypermodifieddnain pages 6-7)</td>
+<td>Dharmalingam &amp; Goldberg, <em>Virology</em> (1979), https://doi.org/10.1016/0042-6822(79)90098-9 ; Hutinet et al., <em>EcoSal Plus</em> (2021), https://doi.org/10.1128/ecosalplus.esp-0028-2019</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the best-supported functional annotation for Enterobacteria phage T4 Arn/urn, separating it from the distinct anti-ExoV factor Arx and highlighting the strongest quantitative evidence available. It is useful for verifying gene identity and for understanding what is experimentally established versus still uncertain.</em></p>
+<h3 id="recommended-functional-annotation-statement-evidence-conservative">Recommended functional annotation statement (evidence-conservative)</h3>
+<p><strong>Arn (arn/urn) is an early phage anti-restriction protein that counteracts host McR/Mcr (Rgl) restriction during T4 infection, with phenotypes strongly dependent on the host’s rgl status and the phage DNA modification state (glu+ vs glu−).</strong> (dharmalingam1979restrictioninvivo. pages 6-8, petrov2010genomesofthe pages 12-13, petrov2010genomesofthe media 176db08c)</p>
+<h3 id="recommended-cautionary-note">Recommended cautionary note</h3>
+<p>Because the retrieved primary literature here does not provide a clear biochemical cleavage reaction or substrate specificity for purified Arn, describing Arn as a sequence-specific “endonuclease” in the enzymology sense is <strong>not justified</strong> from this evidence set alone; instead, it should be framed as an <strong>anti-restriction/anti-Rgl factor</strong>, potentially operating via DNA-mimic inhibition per modern reviews. (gao2023bacteriophagestrategiesfor pages 3-4, gao2023bacteriophagestrategiesfor pages 4-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(petrov2010genomesofthe pages 12-13): Vasiliy M Petrov, Swarnamala Ratnayaka, James M Nolan, Eric S Miller, and Jim D Karam. Genomes of the t4-related bacteriophages as windows on microbial genome evolution. Virology Journal, 7:292-292, Oct 2010. URL: https://doi.org/10.1186/1743-422x-7-292, doi:10.1186/1743-422x-7-292. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(petrov2010genomesofthe media 176db08c): Vasiliy M Petrov, Swarnamala Ratnayaka, James M Nolan, Eric S Miller, and Jim D Karam. Genomes of the t4-related bacteriophages as windows on microbial genome evolution. Virology Journal, 7:292-292, Oct 2010. URL: https://doi.org/10.1186/1743-422x-7-292, doi:10.1186/1743-422x-7-292. This article has 209 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dharmalingam1979restrictioninvivo. pages 6-8): K. Dharmalingam and Edward B. Goldberg. Restriction in vivo. iv. effect of restriction of parental dna on the expression of restriction alleviation systems in phage t4. Virology, 96 2:404-11, Jul 1979. URL: https://doi.org/10.1016/0042-6822(79)90098-9, doi:10.1016/0042-6822(79)90098-9. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gao2023bacteriophagestrategiesfor pages 3-4): Zhengyu Gao and Yue Feng. Bacteriophage strategies for overcoming host antiviral immunity. Frontiers in Microbiology, Jun 2023. URL: https://doi.org/10.3389/fmicb.2023.1211793, doi:10.3389/fmicb.2023.1211793. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gao2023bacteriophagestrategiesfor pages 4-5): Zhengyu Gao and Yue Feng. Bacteriophage strategies for overcoming host antiviral immunity. Frontiers in Microbiology, Jun 2023. URL: https://doi.org/10.3389/fmicb.2023.1211793, doi:10.3389/fmicb.2023.1211793. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dharmalingam1979restrictioninvivo. pages 1-2): K. Dharmalingam and Edward B. Goldberg. Restriction in vivo. iv. effect of restriction of parental dna on the expression of restriction alleviation systems in phage t4. Virology, 96 2:404-11, Jul 1979. URL: https://doi.org/10.1016/0042-6822(79)90098-9, doi:10.1016/0042-6822(79)90098-9. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kruger1983bacteriophagesurvivalmultiple pages 1-2): D H Krüger and T A Bickle. Bacteriophage survival: multiple mechanisms for avoiding the deoxyribonucleic acid restriction systems of their hosts. Microbiological Reviews, 47:345-360, Sep 1983. URL: https://doi.org/10.1128/mr.47.3.345-360.1983, doi:10.1128/mr.47.3.345-360.1983. This article has 423 citations.</p>
+</li>
+<li>
+<p>(dharmalingam1979restrictioninvivo. pages 4-6): K. Dharmalingam and Edward B. Goldberg. Restriction in vivo. iv. effect of restriction of parental dna on the expression of restriction alleviation systems in phage t4. Virology, 96 2:404-11, Jul 1979. URL: https://doi.org/10.1016/0042-6822(79)90098-9, doi:10.1016/0042-6822(79)90098-9. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dharmalingam1979restrictioninvivo. pages 2-4): K. Dharmalingam and Edward B. Goldberg. Restriction in vivo. iv. effect of restriction of parental dna on the expression of restriction alleviation systems in phage t4. Virology, 96 2:404-11, Jul 1979. URL: https://doi.org/10.1016/0042-6822(79)90098-9, doi:10.1016/0042-6822(79)90098-9. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(duan2024structureguideddiscoveryof pages 1-2): Ning Duan, Emily Hand, Mannuku Pheko, Shikha Sharma, and Akintunde Emiola. Structure-guided discovery of anti-crispr and anti-phage defense proteins. Nature Communications, Jan 2024. URL: https://doi.org/10.1038/s41467-024-45068-7, doi:10.1038/s41467-024-45068-7. This article has 34 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gao2023bacteriophagestrategiesfor pages 1-2): Zhengyu Gao and Yue Feng. Bacteriophage strategies for overcoming host antiviral immunity. Frontiers in Microbiology, Jun 2023. URL: https://doi.org/10.3389/fmicb.2023.1211793, doi:10.3389/fmicb.2023.1211793. This article has 72 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hutinet2021hypermodifieddnain pages 6-7): Geoffrey Hutinet, Yan-Jiun Lee, Valérie de Crécy-Lagard, and Peter R. Weigele. Hypermodified dna in viruses of e.coli and salmonella. Dec 2021. URL: https://doi.org/10.1128/ecosalplus.esp-0028-2019, doi:10.1128/ecosalplus.esp-0028-2019. This article has 46 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="arn-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="arn-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a><br />
+<img alt="## Context ID: pqac-00000012 I have extracted Table 4 from page 13 of the document. This table includes the &quot;arn&quot; gene, listing its product as &quot;Arn protein&quot; and" src="arn-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kruger1983bacteriophagesurvivalmultiple pages 1-2</li>
+<li>petrov2010genomesofthe pages 12-13</li>
+<li>gao2023bacteriophagestrategiesfor pages 3-4</li>
+<li>duan2024structureguideddiscoveryof pages 1-2</li>
+<li>hutinet2021hypermodifieddnain pages 6-7</li>
+<li>gao2023bacteriophagestrategiesfor pages 4-5</li>
+<li>gao2023bacteriophagestrategiesfor pages 1-2</li>
+<li>https://doi.org/10.3389/fmicb.2023.1211793</li>
+<li>https://doi.org/10.1038/s41467-024-45068-7</li>
+<li>https://doi.org/10.1016/j.chom.2024.01.015</li>
+<li>https://doi.org/10.1186/1743-422x-7-292</li>
+<li>https://doi.org/10.1016/0042-6822(79</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0028-2019</li>
+<li>https://doi.org/10.1186/1743-422x-7-292,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1211793,</li>
+<li>https://doi.org/10.1128/mr.47.3.345-360.1983,</li>
+<li>https://doi.org/10.1038/s41467-024-45068-7,</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0028-2019,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P39510
+gene_symbol: P39510
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P39510&#39;
+existing_annotations:
+- term:
+    id: GO:0004518
+    label: nuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004519
+    label: endonuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052031
+    label: symbiont-mediated perturbation of host defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052170
+    label: symbiont-mediated suppression of host innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099018
+    label: symbiont-mediated evasion of host restriction-modification system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

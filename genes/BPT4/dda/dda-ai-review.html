@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P32270 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P32270</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P32270" target="_blank" class="term-link">
+                        P32270
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P32270";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P32270" data-a="DESCRIPTION: TODO: Add description for P32270..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P32270</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0004386" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0005524" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006260" target="_blank" class="term-link">
+                                    GO:0006260
+                                </a>
+                            </span>
+                            <span class="term-label">DNA replication</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0006260" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0016853" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000116
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0016887" data-r="GO_REF:0000116" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043139" target="_blank" class="term-link">
+                                    GO:0043139
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0043139" data-r="GO_REF:0000003" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1328208" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1328208
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Overexpression, purification, sequence analysis, and charact...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0016887" data-r="PMID:1328208" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043139" target="_blank" class="term-link">
+                                    GO:0043139
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12411580" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12411580
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Pre-steady-state DNA unwinding by bacteriophage T4 Dda helic...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0043139" data-r="PMID:12411580" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043139" target="_blank" class="term-link">
+                                    GO:0043139
+                                </a>
+                            </span>
+                            <span class="term-label">5&#39;-3&#39; DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17823128" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17823128
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The phage T4 protein UvsW drives Holliday junction branch mi...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0043139" data-r="PMID:17823128" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7806534" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7806534
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A role for two DNA helicases in the replication of T4 bacter...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P32270" data-a="GO:0004386" data-r="PMID:7806534" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12411580" target="_blank" class="term-link">
+                            PMID:12411580
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pre-steady-state DNA unwinding by bacteriophage T4 Dda helicase reveals a monomeric molecular motor.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1328208" target="_blank" class="term-link">
+                            PMID:1328208
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Overexpression, purification, sequence analysis, and characterization of the T4 bacteriophage dda DNA helicase.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17823128" target="_blank" class="term-link">
+                            PMID:17823128
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The phage T4 protein UvsW drives Holliday junction branch migration.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7806534" target="_blank" class="term-link">
+                            PMID:7806534
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A role for two DNA helicases in the replication of T4 bacteriophage DNA.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dda-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P32270" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">42 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T00:47:25.162832</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="dda-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="dda-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000024 Figure 1 provides a structural overview of the Dda helicase bound to ssDNA, specifically highlighting the pin (1B), tower, and SH3 </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-bacteriophage-t4-gene-dda-uniprot-p32270-atp-dependent-dna-helicase-dda">Research report: bacteriophage T4 gene <strong>dda</strong> (UniProt <strong>P32270</strong>) — ATP-dependent DNA helicase Dda</h2>
+<h3 id="1-identity-verification-critical-disambiguation">1) Identity verification (critical disambiguation)</h3>
+<p>The literature summarized here refers specifically to the <strong>Dda helicase of Enterobacteria phage T4</strong> (gene <strong>dda</strong>, also called <strong>sud</strong>), matching the UniProt description (ATP-dependent DNA helicase; SF1B/Pif1-like). Multiple independent sources explicitly describe <strong>T4 Dda</strong> as a <strong>monomeric SF1B helicase</strong> that translocates <strong>5′→3′</strong> on ssDNA and couples ATP hydrolysis to DNA strand separation, and the canonical crystal structure of <strong>T4 Dda bound to ssDNA</strong> is reported (PDB <strong>3UPU</strong>) (he2012thet4phage pages 1-2, he2012thet4phage pages 2-3).</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-dda-is-an-atp-dependent-sf1b-dna-helicasetranslocase">2.1 Dda is an ATP-dependent SF1B DNA helicase/translocase</h4>
+<p>Dda is a helicase that uses <strong>ATP hydrolysis</strong> to move along <strong>single-stranded DNA (ssDNA)</strong> and unwind <strong>double-stranded DNA (dsDNA)</strong> junctions encountered during translocation. In T4, Dda is categorized as an <strong>accessory</strong> (non-replicative) helicase distinct from the essential replicative helicase <strong>gp41</strong>, but it contributes to multiple DNA transactions during infection (he2012thet4phage pages 1-2, gauss1994dnahelicaserequirements pages 1-2, brister2008originactivationrequires pages 1-2).</p>
+<h4 id="22-directionality-polarity">2.2 Directionality (polarity)</h4>
+<p>Dda translocates on ssDNA with <strong>5′→3′ polarity</strong>, which is central to its biological deployment at replication forks and recombination intermediates (byrd2012ddahelicasetightly pages 1-2, he2012thet4phage pages 2-3, gauss1994dnahelicaserequirements pages 1-2).</p>
+<h4 id="23-active-versus-passive-dna-unwinding">2.3 “Active” versus “passive” DNA unwinding</h4>
+<p>A major mechanistic concept in helicase biology is whether unwinding is:<br />
+- <strong>Passive</strong> (helicase waits for thermal base-pair opening), or<br />
+- <strong>Active</strong> (helicase directly destabilizes base pairs).</p>
+<p>Dda is a paradigmatic <strong>highly active</strong> helicase. Experimentally, this is captured by comparing its <strong>dsDNA unwinding velocity (Vun)</strong> to its <strong>ssDNA translocation velocity (Vtrans)</strong>. If Vun ≈ Vtrans and unwinding is relatively insensitive to duplex stability/force, unwinding is considered strongly active. Dda satisfies these criteria (byrd2012ddahelicasetightly pages 7-8).</p>
+<h3 id="3-molecular-function-reaction-substrates-and-specificity">3) Molecular function: reaction, substrates, and specificity</h3>
+<h4 id="31-enzymatic-activity-and-coupling-efficiency">3.1 Enzymatic activity and coupling efficiency</h4>
+<p>Single-molecule and ensemble analyses show that Dda’s ssDNA translocation and dsDNA unwinding velocities are nearly identical:<br />
+- <strong>Unwinding velocity:</strong> <strong>257 ± 42 bp/s</strong><br />
+- <strong>ssDNA translocation velocity:</strong> <strong>267 ± 15 nt/s</strong><br />
+- <strong>Coupling ratio:</strong> <strong>Vun/Vtrans ≈ 0.96</strong></p>
+<p>This indicates that Dda is an <strong>“optimally active”</strong> helicase whose unwinding is largely limited by translocation rather than thermal fraying (byrd2012ddahelicasetightly pages 1-2, byrd2012ddahelicasetightly pages 7-8).</p>
+<p>Consistent with an active mechanism, Dda’s unwinding rate is reported to be <strong>largely insensitive</strong> to duplex stability (GC content) and to applied force (byrd2012ddahelicasetightly pages 7-8).</p>
+<h4 id="32-structural-mechanism-of-strand-separation-pintowersh3-organization">3.2 Structural mechanism of strand separation (pin/tower/SH3 organization)</h4>
+<p>The 2012 crystal structure of the <strong>Dda–ssDNA</strong> complex (PDB 3UPU) supports a mechanistic model in which a <strong>rigid “pin” element</strong> (in domain 1B) and a supporting <strong>tower/SH3 architecture</strong> are optimized for strand separation (he2012thet4phage pages 1-2).</p>
+<p>A central structural insight is that an aromatic residue in the pin (<strong>Phe98</strong>) is crucial for duplex separation. A <strong>F98A</strong> mutant preserves ssDNA translocation yet loses unwinding, strongly separating the translocation motor from the strand-separation “splitting” element. Quantitatively, He et al. report for <strong>F98A</strong>:<br />
+- <strong>ktrans ≈ 249 ± 23 nt/s</strong> (near wild-type)<br />
+- <strong>kd ≈ 20.4 ± 2.3 s−1</strong> (increased dissociation)</p>
+<p>Whereas wild-type parameters reported include:<br />
+- <strong>ktrans ≈ 233 ± 27 nt/s</strong><br />
+- <strong>kd ≈ 5.75 ± 1.60 s−1</strong></p>
+<p>These data support a model where the pin provides an essential base-stacking/strand-separation function while the RecA-like core continues to drive ssDNA translocation (he2012thet4phage pages 8-9).</p>
+<h4 id="33-substrate-preference-and-fork-engagement">3.3 Substrate preference and fork engagement</h4>
+<p>Dda’s activity depends on DNA structure and engagement of multiple strands at a fork. Experiments comparing a forked substrate to a simple ss/ds junction found that Dda is <strong>more processive</strong> on fork DNA and that fork binding can disrupt approximately <strong>two base pairs</strong> prior to unwinding, supporting a mechanism involving simultaneous interactions with the tracking strand, displaced strand, and duplex arm (ma2004dualfunctionsof pages 1-2).</p>
+<h4 id="34-protein-displacement-roadblock-removal">3.4 Protein displacement (roadblock removal)</h4>
+<p>Dda can generate force sufficient to <strong>displace tightly bound proteins</strong> from DNA (e.g., streptavidin-biotin roadblocks), consistent with a role in clearing replication/recombination barriers (byrd2012ddahelicasetightly pages 7-8).</p>
+<p>A more recent mechanistic refinement mapped a Dda <strong>SH3-domain “hook”</strong> element (a β-hairpin) that strongly contributes to displacement of certain protein blocks. Deleting residues <strong>279–284</strong> substantially reduces <strong>streptavidin</strong> displacement while leaving unwinding near wild-type, showing that Dda’s protein-remodeling capability can be at least partly separable from core unwinding (byrd2022astructuralfeature pages 1-3).</p>
+<h3 id="4-biological-roles-during-t4-infection-processes-and-pathways">4) Biological roles during T4 infection: processes and pathways</h3>
+<h4 id="41-origin-dependent-dna-replication-early-infection">4.1 Origin-dependent DNA replication (early infection)</h4>
+<p>Genetic and infection profiling support a role for Dda in early origin-dependent initiation. A dda deletion causes a <strong>delay</strong> in early T4 DNA synthesis, although later replication can approach near wild-type levels, consistent with Dda being helpful but not strictly essential (gauss1994dnahelicaserequirements pages 1-2).</p>
+<p>Genome-wide replication mapping showed that dda mutants <strong>lose preferential initiation near origins</strong>, and peaks of replication normally visible near T4 origins are no longer present. A mechanistic model emerging from this work is that Dda <strong>unwinds origin DNA</strong>, clears bound proteins, and creates a <strong>ssDNA “landing zone”</strong> facilitating loading of the replicative helicase (gp41) (brister2008originactivationrequires pages 1-2).</p>
+<h4 id="42-cooperation-and-synthetic-interactions-with-helicase-loading-pathways">4.2 Cooperation and synthetic interactions with helicase loading pathways</h4>
+<p>Dda function overlaps with gp59-dependent loading processes. In vivo, a dda defect combined with a <strong>gp59</strong> defect can produce a profound replication defect (“essentially no DNA was synthesized” in the cited study), indicating that Dda can buffer deficiencies in helicase loading/replication restart pathways (gauss1994dnahelicaserequirements pages 1-2).</p>
+<h4 id="43-recombination-and-branch-migration-support">4.3 Recombination and branch migration support</h4>
+<p>Dda binds the T4 recombinase <strong>UvsX</strong> and stimulates UvsX-catalyzed branch migration by approximately <strong>4-fold</strong> in vitro, linking Dda’s motor/unwinding activity to recombination-mediated DNA transactions (gauss1994dnahelicaserequirements pages 1-2, hacker1992overexpressionpurificationsequence pages 1-2).</p>
+<h4 id="44-replication-fork-rescue-and-error-free-lesion-bypass-template-switching">4.4 Replication-fork rescue and error-free lesion bypass (template switching)</h4>
+<p>A well-defined reconstitution shows that <strong>UvsX recombinase + Dda helicase</strong> are sufficient to rescue a stalled replication fork in vitro via sequential template-switching reactions that enable non-mutagenic bypass of a non-coding lesion (kadyrov2004uvsxrecombinaseand pages 1-2).</p>
+<p>The implementation is experimentally concrete: under a defined reaction containing (example concentrations) <strong>2 nM DNA fork</strong>, <strong>62.5 nM Dda</strong>, and <strong>375 nM UvsX</strong>, polymerase alone produced a <strong>79-nt</strong> product, whereas inclusion of UvsX or Dda produced <strong>90–91 nt</strong> template-switch products, and inclusion of both UvsX and Dda yielded a <strong>120-nt</strong> product consistent with the complete double-switch repair outcome (kadyrov2004uvsxrecombinaseand pages 1-2).</p>
+<h3 id="5-interaction-partners-regulation-and-functional-coupling">5) Interaction partners, regulation, and functional coupling</h3>
+<h4 id="51-interaction-and-cofactor-relationship-with-gp32-t4-ssb">5.1 Interaction and cofactor relationship with gp32 (T4 SSB)</h4>
+<p>The T4 ssDNA-binding protein <strong>gp32</strong> is a major regulatory partner of Dda.</p>
+<p>Evidence indicates:<br />
+- Dda can bind tightly to gp32, and Dda stimulation of strand-displacement synthesis requires <strong>direct gp32–Dda protein–protein interactions</strong> (ma2004dualfunctionsof pages 1-1, ma2004dualfunctionsof pages 1-2).<br />
+- The <strong>acidic C-terminal A-domain</strong> of gp32 mediates protein–protein contacts; gp32 fragments lacking the A-domain lose interaction with Dda despite near-normal ssDNA binding (ma2004dualfunctionsof pages 1-2).</p>
+<p>A dedicated analysis of regulation by gp32 describes a dual role:<br />
+- <strong>Stimulatory:</strong> gp32–Dda interaction can enhance Dda unwinding and increase ATP turnover, particularly under higher salt and in the presence of DNA polymerase.<br />
+- <strong>Inhibitory:</strong> when gp32 forms clusters on ssDNA, those clusters can sterically inhibit Dda loading/unwinding depending on substrate geometry.</p>
+<p>This supports a model in which gp32 can both maintain Dda in an active state at forks and prevent inappropriate unwinding/loading events (jordan2015regulationofthe pages 1-2, jordan2015regulationofthe pages 11-12).</p>
+<h4 id="52-partnering-with-recombination-proteins">5.2 Partnering with recombination proteins</h4>
+<p>Dda interacts with <strong>UvsX</strong> recombinase and functionally cooperates in branch migration and template switching (fork rescue) (gauss1994dnahelicaserequirements pages 1-2, kadyrov2004uvsxrecombinaseand pages 1-2).</p>
+<h3 id="6-cellular-localization-where-dda-acts">6) Cellular localization (where Dda acts)</h3>
+<p>Direct microscopy-based localization for Dda in infected cells was not retrieved in the accessible corpus. However, the combination of (i) origin-activation phenotypes during infection, (ii) requirement for gp32-dependent strand displacement, and (iii) direct activity on forked and recombination DNA intermediates indicates that Dda acts on <strong>phage DNA replication/recombination structures</strong> in the <strong>infected bacterial cytoplasm/nucleoid context</strong> rather than being a virion structural component (brister2008originactivationrequires pages 1-2, ma2004dualfunctionsof pages 1-2, kadyrov2004uvsxrecombinaseand pages 1-2).</p>
+<h3 id="7-recent-developments-prioritizing-20232024-where-possible">7) Recent developments (prioritizing 2023–2024 where possible)</h3>
+<h4 id="71-direct-dda-developments-retrievable-here">7.1 Direct Dda developments retrievable here</h4>
+<p>The most recent directly retrievable primary study on Dda in this run is a 2022 Protein Science paper identifying the SH3 “hook” element that contributes to protein displacement without strongly perturbing unwinding, refining the concept that Dda’s protein-remodeling and helicase activities can be partially modular (byrd2022astructuralfeature pages 1-3).</p>
+<p>A 2025 authoritative review reports that new Dda–ssDNA structures exist (PDB <strong>8GME</strong>, <strong>8S9I</strong>) described as providing the <strong>structural basis of Dda–gp32 interactions</strong>, suggesting substantial recent structural advances likely published in 2023–2024; however, the underlying primary article(s) were not obtainable in the present tool run, so their detailed conclusions cannot be stated here beyond what the review reports (morrical2025thebacteriophaget4 pages 1-3).</p>
+<h4 id="72-indirect-family-level-20232024-insights-relevant-to-dda-clearly-labeled-as-inference">7.2 Indirect (family-level) 2023–2024 insights relevant to Dda (clearly labeled as inference)</h4>
+<p>Dda is related to the <strong>Pif1-family / SF1B</strong> helicases. Recent 2023–2024 Pif1 studies provide updated structural/mechanistic motifs that may inform hypotheses about Dda, but they are not direct evidence about T4 Dda.</p>
+<ul>
+<li>A 2024 Nature Communications structure of yeast Pif1 bound to a G-quadruplex plus 5′ ssDNA describes a conserved <strong>“wedge”</strong> region in domain 1A that contacts the junction and may generalize to how Pif1-family helicases engage structured DNA junctions (inference to Dda should be cautious) (hong2024eukaryoticpif1helicase pages 1-2).</li>
+<li>A 2023 Biochemistry study shows ATP-dependent Pif1-driven displacement of DNA-bound proteins and that dissociation rate increases with loading-site length; this is conceptually consistent with Dda’s demonstrated protein-displacement and multi-monomer enhancement phenomena, but remains indirect (chib2023pif1helicasemediates pages 1-3).</li>
+</ul>
+<h3 id="8-current-applications-and-real-world-implementations">8) Current applications and real-world implementations</h3>
+<h4 id="81-model-enzyme-for-single-molecule-helicase-biophysics">8.1 Model enzyme for single-molecule helicase biophysics</h4>
+<p>Dda is used as a model SF1B helicase in single-molecule and ensemble assays because it is unusually efficient (Vun≈Vtrans) and robust against duplex stability changes. The measured velocities (~260 bp/s and ~270 nt/s) provide benchmark parameters for helicase motor efficiency and for comparing “active” versus “passive” unwinding models (byrd2012ddahelicasetightly pages 1-2).</p>
+<h4 id="82-reconstituted-replication-fork-rescue-lesion-bypass-assays">8.2 Reconstituted replication-fork rescue / lesion bypass assays</h4>
+<p>The UvsX+Dda template-switching system provides a well-defined biochemical platform to study fork regression/restoration and non-mutagenic lesion bypass, with discrete product lengths and defined protein concentrations, enabling mechanistic interrogation and inhibitor/variant testing (kadyrov2004uvsxrecombinaseand pages 1-2).</p>
+<h4 id="83-reconstitution-of-recombination-dependent-replication-rdr">8.3 Reconstitution of recombination-dependent replication (RDR)</h4>
+<p>T4 replication and recombination proteins can be assembled in vitro into systems that mimic infection-time DNA replication and repair. In such reconstitutions, Dda is described as a 5′→3′ helicase that can pry open helices and assist synthesis, while other mediator proteins (e.g., gp59) can dramatically accelerate helicase loading (reported “23-fold” rate increase for gp59 restoring gp41 loading in a competitive context) (barry2019invitroreconstitution pages 1-2).</p>
+<h4 id="84-biotechnology-note-what-is-and-is-not-supported-for-dda">8.4 Biotechnology note (what is and is not supported for Dda)</h4>
+<p>A recent authoritative review states that T4 recombination proteins (UvsX/UvsY/gp32) underpin <strong>isothermal DNA amplification technologies</strong>. The pages retrieved do not show Dda being a core reagent in those amplification methods; therefore, Dda’s role in biotechnology is best described here as (i) a mechanistic model enzyme and (ii) a potential tool in specialized helicase-based assays, rather than as an established amplification enzyme in the retrieved evidence (morrical2025thebacteriophaget4 pages 1-3).</p>
+<h3 id="9-expert-synthesis-and-interpretive-analysis-from-authoritative-sources">9) Expert synthesis and interpretive analysis (from authoritative sources)</h3>
+<p>Across biochemical, structural, genetic, and single-molecule studies, Dda emerges as a specialized <strong>accessory 5′→3′ motor</strong> optimized for:<br />
+1) <strong>Efficient strand separation</strong> at junctions and forks (pin-dependent active mechanism),<br />
+2) <strong>Protein-roadblock removal</strong> on DNA,<br />
+3) Facilitating <strong>origin activation</strong> and early replication dynamics, and<br />
+4) Supporting recombination-driven transactions (branch migration stimulation, fork restart via template switching).</p>
+<p>The mechanistic integration with <strong>gp32</strong> is particularly important: gp32 is not merely an ssDNA coat, but a <strong>regulatory scaffold</strong> whose C-terminal domain mediates protein recruitment and can both stimulate and inhibit Dda depending on how gp32 is assembled on ssDNA, consistent with a regulated fork-restart/processing role rather than constitutive unwinding (jordan2015regulationofthe pages 1-2, ma2004dualfunctionsof pages 1-2).</p>
+<h3 id="10-visual-evidence-figurestables">10) Visual evidence (figures/tables)</h3>
+<p>A structural overview of Dda bound to ssDNA (including pin/tower/SH3 domains) and a kinetic table of wild-type and mutant parameters (including ktrans and kd) are shown in the cropped figure and table extracted from the 2012 Structure paper (he2012thet4phage media c4603177, he2012thet4phage media 5525f826).</p>
+<h3 id="summary-table-of-key-findings">Summary table of key findings</h3>
+<table>
+<thead>
+<tr>
+<th>Functional aspect</th>
+<th>Key result with quantitative numbers where available</th>
+<th>Evidence type</th>
+<th>System/assay</th>
+<th>Citation (author year)</th>
+<th>URL/DOI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity / family</td>
+<td>Dda from bacteriophage T4 is a monomeric SF1B helicase related to the Pif1 family; crystal structure solved with ssDNA (PDB 3UPU), matching the UniProt assignment for P32270</td>
+<td>Structural, biochemistry</td>
+<td>X-ray crystallography of Dda–ssDNA complex; comparative helicase analysis (he2012thet4phage pages 1-2, he2012thet4phage pages 2-3)</td>
+<td>He et al. 2012</td>
+<td>https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Directionality</td>
+<td>Dda translocates/unwinds in the 5′→3′ direction on ssDNA</td>
+<td>Bulk biochemistry</td>
+<td>Helicase/translocation assays on tailed DNA substrates; streptavidin-block directionality tests (byrd2012ddahelicasetightly pages 1-2, he2012thet4phage pages 7-8, he2012thet4phage pages 2-3, gauss1994dnahelicaserequirements pages 1-2)</td>
+<td>Raney &amp; Benkovic 1995; He et al. 2012</td>
+<td>https://doi.org/10.1074/jbc.270.38.22236; https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Unwinding rate</td>
+<td>Average duplex unwinding rate ≈ 257 ± 42 bp/s under single-molecule/bulk analysis</td>
+<td>Single-molecule, bulk biochemistry</td>
+<td>DNA unwinding assays with optical/single-molecule and ensemble kinetics (byrd2012ddahelicasetightly pages 1-2, byrd2012ddahelicasetightly pages 7-8)</td>
+<td>Byrd et al. 2012</td>
+<td>https://doi.org/10.1016/j.jmb.2012.04.007</td>
+</tr>
+<tr>
+<td>ssDNA translocation rate</td>
+<td>Average ssDNA translocation rate ≈ 267 ± 15 nt/s; wild-type fitted ktrans ≈ 233 ± 27 nt/s in structural/kinetic study</td>
+<td>Single-molecule, stopped-flow, bulk biochemistry</td>
+<td>ssDNA translocation assays and kinetic modeling (byrd2012ddahelicasetightly pages 1-2, he2012thet4phage pages 8-9, byrd2012ddahelicasetightly pages 7-8)</td>
+<td>Byrd et al. 2012; He et al. 2012</td>
+<td>https://doi.org/10.1016/j.jmb.2012.04.007; https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Coupling efficiency / helicase mechanism</td>
+<td>Vun/Vtrans ≈ 0.96, indicating Dda is an “optimally active” helicase with tight coupling of translocation to strand separation; unwinding is largely insensitive to GC content and applied force</td>
+<td>Single-molecule, bulk biochemistry</td>
+<td>Comparison of ssDNA translocation and dsDNA unwinding; force and duplex stability dependence (byrd2012ddahelicasetightly pages 1-2, byrd2012ddahelicasetightly pages 7-8)</td>
+<td>Byrd et al. 2012</td>
+<td>https://doi.org/10.1016/j.jmb.2012.04.007</td>
+</tr>
+<tr>
+<td>Processivity / dissociation</td>
+<td>Wild-type dissociation rate from ssDNA reported as kd ≈ 5.75 ± 1.60 s^-1; modeled ssDNA binding site ~8 nt; Dda is intrinsically low/moderate processivity, increased when multiple Dda molecules load</td>
+<td>Bulk biochemistry, kinetics</td>
+<td>Stopped-flow translocation kinetics; unwinding processivity analysis (he2012thet4phage pages 8-9, jordan2015regulationofthe pages 1-2, jordan2015regulationofthe pages 11-12)</td>
+<td>He et al. 2012; Jordan &amp; Morrical 2015</td>
+<td>https://doi.org/10.1016/j.str.2012.04.013; https://doi.org/10.1016/j.dnarep.2014.10.002</td>
+</tr>
+<tr>
+<td>Structural strand-separation mechanism</td>
+<td>The 1B “pin” with Phe98 is essential for duplex separation; F98A abolishes unwinding while preserving ssDNA translocation. The pin is braced by tower/SH3 architecture to couple ATP-driven motion to strand separation</td>
+<td>Structural, mutational biochemistry</td>
+<td>Dda–ssDNA crystal structure; mutant translocation/unwinding assays (he2012thet4phage pages 8-9, he2012thet4phage media c4603177, he2012thet4phage media 5525f826)</td>
+<td>He et al. 2012</td>
+<td>https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Mutant quantitative example</td>
+<td>F98A retains ssDNA translocation (ktrans ≈ 249 ± 23 nt/s) but shows increased dissociation (kd ≈ 20.4 ± 2.3 s^-1) and loss of unwinding, separating translocation from duplex-splitting function</td>
+<td>Structural, kinetics</td>
+<td>Site-directed mutagenesis plus stopped-flow/unwinding assays (he2012thet4phage pages 8-9)</td>
+<td>He et al. 2012</td>
+<td>https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Fork engagement / displaced-strand contacts</td>
+<td>Dda unwinds fork DNA more processively than ss/ds junction substrates; fork binding disrupts ~2 bp before unwinding, supporting simultaneous contacts with tracking strand, displaced strand, and duplex</td>
+<td>Bulk biochemistry</td>
+<td>DNA footprinting and kinetic unwinding on fork versus junction substrates (ma2004dualfunctionsof pages 1-2)</td>
+<td>Aarattuthodiyil et al. 2014</td>
+<td>https://doi.org/10.1093/nar/gku845</td>
+</tr>
+<tr>
+<td>gp32 regulation</td>
+<td>gp32 is an essential cofactor for Dda-stimulated strand-displacement synthesis; direct gp32–Dda protein–protein interactions are required, and Dda binds tightly to gp32 even without ssDNA</td>
+<td>Bulk biochemistry</td>
+<td>Reconstituted T4 fork DNA synthesis with gp32 variants and Dda (jordan2015regulationofthe pages 1-2, ma2004dualfunctionsof pages 1-1, ma2004dualfunctionsof pages 1-2)</td>
+<td>Ma et al. 2004; Jordan &amp; Morrical 2015</td>
+<td>https://doi.org/10.1074/jbc.m311738200; https://doi.org/10.1016/j.dnarep.2014.10.002</td>
+</tr>
+<tr>
+<td>Dual effect of gp32</td>
+<td>gp32–Dda interactions can stimulate Dda unwinding and ATP turnover, especially at higher salt and in the presence of DNA polymerase, but gp32 clusters on ssDNA can also sterically inhibit Dda loading/unwinding depending on geometry</td>
+<td>Bulk biochemistry, mechanistic model</td>
+<td>Unwinding and ATPase analyses with gp32, gp32 fragments, and fork substrates (jordan2015regulationofthe pages 1-2, jordan2015regulationofthe pages 11-12)</td>
+<td>Jordan &amp; Morrical 2015</td>
+<td>https://doi.org/10.1016/j.dnarep.2014.10.002</td>
+</tr>
+<tr>
+<td>gp32 interaction surface</td>
+<td>The acidic C-terminal A-domain of gp32 mediates protein–protein interactions with Dda; gp32 fragments lacking this domain lose interaction despite near-normal ssDNA binding</td>
+<td>Bulk biochemistry</td>
+<td>gp32 truncation/mutant analysis in helicase-loading and strand-displacement reactions (ma2004dualfunctionsof pages 1-2)</td>
+<td>Ma et al. 2004</td>
+<td>https://doi.org/10.1074/jbc.m311738200</td>
+</tr>
+<tr>
+<td>UvsX / branch migration</td>
+<td>Dda binds UvsX and stimulates UvsX-catalyzed branch migration about 4-fold in vitro, linking Dda to recombination-dependent DNA metabolism</td>
+<td>Bulk biochemistry</td>
+<td>Protein interaction and branch-migration assays (gauss1994dnahelicaserequirements pages 1-2, hacker1992overexpressionpurificationsequence pages 1-2)</td>
+<td>Hacker &amp; Alberts 1992; Gauss et al. 1994</td>
+<td>https://doi.org/10.1016/S0021-9258(19)36738-9; https://doi.org/10.1128/jb.176.6.1667-1672.1994</td>
+</tr>
+<tr>
+<td>Replication-fork rescue / lesion bypass</td>
+<td>UvsX plus Dda are sufficient to rescue stalled T4 replication forks in vitro through sequential template-switching reactions that bypass a non-coding lesion without mutagenesis</td>
+<td>Bulk biochemistry</td>
+<td>Reconstituted stalled T4 fork rescue assay (jordan2015regulationofthe pages 1-2)</td>
+<td>Kadyrov &amp; Drake 2004</td>
+<td>https://doi.org/10.1074/jbc.m403942200</td>
+</tr>
+<tr>
+<td>Origin-dependent replication role</td>
+<td>dda mutants show delayed early DNA synthesis, indicating a role in origin-dependent initiation; Dda is nonessential alone but strongly synergizes genetically with gp59 defects</td>
+<td>Genetics/in vivo</td>
+<td>T4 infection time-course and mutant analysis (he2012thet4phage pages 1-2, gauss1994dnahelicaserequirements pages 1-2, brister2008originactivationrequires pages 1-2)</td>
+<td>Gauss et al. 1994; Brister 2008</td>
+<td>https://doi.org/10.1128/jb.176.6.1667-1672.1994; https://doi.org/10.1016/j.jmb.2008.02.002</td>
+</tr>
+<tr>
+<td>Origin activation genome-wide</td>
+<td>In dda mutants, synthesis no longer preferentially initiates near origins; model proposes Dda unwinds origin DNA, clears bound proteins, and creates a ssDNA landing zone for gp41 loading</td>
+<td>Genetics/in vivo</td>
+<td>Genome-wide replication/origin activation analysis during infection (brister2008originactivationrequires pages 1-2)</td>
+<td>Brister 2008</td>
+<td>https://doi.org/10.1016/j.jmb.2008.02.002</td>
+</tr>
+<tr>
+<td>Genetic interaction with gp59</td>
+<td>Combined dda and gp59 defects cause essentially no DNA synthesis, indicating overlapping/synergistic roles in establishing productive replication forks</td>
+<td>Genetics/in vivo</td>
+<td>Double-mutant infection analysis (he2012thet4phage pages 1-2, gauss1994dnahelicaserequirements pages 1-2)</td>
+<td>Gauss et al. 1994; He et al. 2012</td>
+<td>https://doi.org/10.1128/jb.176.6.1667-1672.1994; https://doi.org/10.1016/j.str.2012.04.013</td>
+</tr>
+<tr>
+<td>Protein displacement activity</td>
+<td>Dda can displace proteins from DNA, including streptavidin and trp repressor; multiple Dda molecules enhance displacement efficiency when obstacles are present</td>
+<td>Bulk biochemistry, single-molecule context</td>
+<td>Protein–DNA displacement assays on biotinylated or protein-bound DNA substrates (byrd2012ddahelicasetightly pages 1-2, byrd2012ddahelicasetightly pages 7-8, byrd2022astructuralfeature pages 1-3)</td>
+<td>Byrd et al. 2012; Byrd et al. 2022</td>
+<td>https://doi.org/10.1016/j.jmb.2012.04.007; https://doi.org/10.1002/pro.4232</td>
+</tr>
+<tr>
+<td>Structural determinant of protein displacement</td>
+<td>A SH3-domain “hook” subdomain (Δ279–284 deletion) leaves DNA binding and maximal ATPase largely intact but markedly reduces streptavidin displacement and lowers unwinding processivity, showing separable determinants for unwinding versus protein eviction</td>
+<td>Structural, mutational biochemistry</td>
+<td>Domain deletion and protein-displacement assays (byrd2022astructuralfeature pages 1-3)</td>
+<td>Byrd et al. 2022</td>
+<td>https://doi.org/10.1002/pro.4232</td>
+</tr>
+<tr>
+<td>Functional localization</td>
+<td>Dda acts on phage DNA replication and recombination intermediates in the infected bacterial cytoplasm/nucleoid context, especially at replication forks, origins, and recombination-generated branched DNA rather than as a virion structural protein</td>
+<td>Inference from genetics/biochemistry</td>
+<td>Infected-cell replication phenotypes plus in vitro fork/origin/recombination substrates (he2012thet4phage pages 1-2, jordan2015regulationofthe pages 1-2, brister2008originactivationrequires pages 1-2)</td>
+<td>He et al. 2012; Jordan &amp; Morrical 2015; Brister 2008</td>
+<td>https://doi.org/10.1016/j.str.2012.04.013; https://doi.org/10.1016/j.dnarep.2014.10.002; https://doi.org/10.1016/j.jmb.2008.02.002</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported findings for bacteriophage T4 Dda helicase (UniProt P32270), covering mechanism, kinetics, partner interactions, and biological roles in replication and recombination. It is useful as a compact evidence map linking each claim to assay type and source.</em></p>
+<h3 id="key-references-with-dates-and-urls">Key references (with dates and URLs)</h3>
+<ul>
+<li>He X. et al. <strong>2012-07</strong>. <em>Structure</em>: “The T4 phage SF1B helicase Dda is structurally optimized to perform DNA strand separation.” https://doi.org/10.1016/j.str.2012.04.013 (he2012thet4phage pages 10-11, he2012thet4phage pages 8-9)</li>
+<li>Byrd AK. et al. <strong>2012-07</strong>. <em>J Mol Biol</em>: “Dda helicase tightly couples translocation on ssDNA to unwinding of dsDNA.” https://doi.org/10.1016/j.jmb.2012.04.007 (byrd2012ddahelicasetightly pages 1-2, byrd2012ddahelicasetightly pages 7-8)</li>
+<li>Jordan CS &amp; Morrical SW. <strong>2015-01</strong>. <em>DNA Repair</em>: “Regulation of the bacteriophage T4 dda helicase by gp32.” https://doi.org/10.1016/j.dnarep.2014.10.002 (jordan2015regulationofthe pages 1-2, jordan2015regulationofthe pages 11-12)</li>
+<li>Brister JR. <strong>2008-04</strong>. <em>J Mol Biol</em>: “Origin activation requires both replicative and accessory helicases during T4 infection.” https://doi.org/10.1016/j.jmb.2008.02.002 (brister2008originactivationrequires pages 1-2)</li>
+<li>Ma Y. et al. <strong>2004-04</strong>. <em>J Biol Chem</em>: “Dual functions of SSB (gp32) in helicase loading…; dda stimulation requires gp32–dda interactions.” https://doi.org/10.1074/jbc.m311738200 (ma2004dualfunctionsof pages 1-1, ma2004dualfunctionsof pages 1-2)</li>
+<li>Kadyrov FA &amp; Drake JW. <strong>2004-08</strong>. <em>J Biol Chem</em>: “UvsX and Dda rescue stalled T4 replication forks in vitro.” https://doi.org/10.1074/jbc.m403942200 (kadyrov2004uvsxrecombinaseand pages 1-2)</li>
+<li>Byrd AK. et al. <strong>2022-11</strong>. <em>Protein Science</em>: “A structural feature of Dda helicase which enhances displacement…” https://doi.org/10.1002/pro.4232 (byrd2022astructuralfeature pages 1-3)</li>
+<li>Hong Z. et al. <strong>2024-07</strong>. <em>Nat Commun</em>: “Eukaryotic Pif1 helicase unwinds G4 and dsDNA using a conserved wedge.” https://doi.org/10.1038/s41467-024-50575-8 (indirect family context) (hong2024eukaryoticpif1helicase pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(he2012thet4phage pages 1-2): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage pages 2-3): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gauss1994dnahelicaserequirements pages 1-2): P Gauss, K Park, T E Spencer, and K J Hacker. Dna helicase requirements for dna replication during bacteriophage t4 infection. Journal of Bacteriology, 176:1667-1672, Mar 1994. URL: https://doi.org/10.1128/jb.176.6.1667-1672.1994, doi:10.1128/jb.176.6.1667-1672.1994. This article has 56 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brister2008originactivationrequires pages 1-2): J. Rodney Brister. Origin activation requires both replicative and accessory helicases during t4 infection. Journal of molecular biology, 377 5:1304-13, Apr 2008. URL: https://doi.org/10.1016/j.jmb.2008.02.002, doi:10.1016/j.jmb.2008.02.002. This article has 13 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(byrd2012ddahelicasetightly pages 1-2): Alicia K. Byrd, Dennis L. Matlock, Debjani Bagchi, Suja Aarattuthodiyil, David Harrison, Vincent Croquette, and Kevin D. Raney. Dda helicase tightly couples translocation on single-stranded dna to unwinding of duplex dna: dda is an optimally active helicase. Journal of molecular biology, 420 3:141-54, Jul 2012. URL: https://doi.org/10.1016/j.jmb.2012.04.007, doi:10.1016/j.jmb.2012.04.007. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(byrd2012ddahelicasetightly pages 7-8): Alicia K. Byrd, Dennis L. Matlock, Debjani Bagchi, Suja Aarattuthodiyil, David Harrison, Vincent Croquette, and Kevin D. Raney. Dda helicase tightly couples translocation on single-stranded dna to unwinding of duplex dna: dda is an optimally active helicase. Journal of molecular biology, 420 3:141-54, Jul 2012. URL: https://doi.org/10.1016/j.jmb.2012.04.007, doi:10.1016/j.jmb.2012.04.007. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage pages 8-9): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ma2004dualfunctionsof pages 1-2): Yujie Ma, Tongsheng Wang, Jana L. Villemain, David P. Giedroc, and Scott W. Morrical. Dual functions of single-stranded dna-binding protein in helicase loading at the bacteriophage t4 dna replication fork*. Journal of Biological Chemistry, 279:19035-19045, Apr 2004. URL: https://doi.org/10.1074/jbc.m311738200, doi:10.1074/jbc.m311738200. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(byrd2022astructuralfeature pages 1-3): Alicia K. Byrd, Emory G. Malone, Lindsey Hazeslip, Maroof Khan Zafar, David K. Harrison, Matthew D. Thompson, Jun Gao, Senthil K. Perumal, John C. Marecki, and Kevin D. Raney. A structural feature of dda helicase which enhances displacement of streptavidin and <i>trp</i> repressor from <scp>dna</scp>. Protein Science, 31:407-421, Nov 2022. URL: https://doi.org/10.1002/pro.4232, doi:10.1002/pro.4232. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hacker1992overexpressionpurificationsequence pages 1-2): K.J. Hacker and B.M. Alberts. Overexpression, purification, sequence analysis, and characterization of the t4 bacteriophage dda dna helicase. The Journal of biological chemistry, 267 29:20674-81, Oct 1992. URL: https://doi.org/10.1016/s0021-9258(19)36738-9, doi:10.1016/s0021-9258(19)36738-9. This article has 47 citations.</p>
+</li>
+<li>
+<p>(kadyrov2004uvsxrecombinaseand pages 1-2): Farid A. Kadyrov and John W. Drake. Uvsx recombinase and dda helicase rescue stalled bacteriophage t4 dna replication forks in vitro*. Journal of Biological Chemistry, 279:35735-35740, Aug 2004. URL: https://doi.org/10.1074/jbc.m403942200, doi:10.1074/jbc.m403942200. This article has 34 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ma2004dualfunctionsof pages 1-1): Yujie Ma, Tongsheng Wang, Jana L. Villemain, David P. Giedroc, and Scott W. Morrical. Dual functions of single-stranded dna-binding protein in helicase loading at the bacteriophage t4 dna replication fork*. Journal of Biological Chemistry, 279:19035-19045, Apr 2004. URL: https://doi.org/10.1074/jbc.m311738200, doi:10.1074/jbc.m311738200. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jordan2015regulationofthe pages 1-2): Christian S. Jordan and Scott W. Morrical. Regulation of the bacteriophage t4 dda helicase by gp32 single-stranded dna-binding protein. DNA repair, 25:41-53, Jan 2015. URL: https://doi.org/10.1016/j.dnarep.2014.10.002, doi:10.1016/j.dnarep.2014.10.002. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jordan2015regulationofthe pages 11-12): Christian S. Jordan and Scott W. Morrical. Regulation of the bacteriophage t4 dda helicase by gp32 single-stranded dna-binding protein. DNA repair, 25:41-53, Jan 2015. URL: https://doi.org/10.1016/j.dnarep.2014.10.002, doi:10.1016/j.dnarep.2014.10.002. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(morrical2025thebacteriophaget4 pages 1-3): Scott W. Morrical. The bacteriophage t4 homologous recombination system: mechanism, applications, conservation, and environmental significance. EcoSal Plus, Dec 2025. URL: https://doi.org/10.1128/ecosalplus.esp-0003-2025, doi:10.1128/ecosalplus.esp-0003-2025. This article has 0 citations.</p>
+</li>
+<li>
+<p>(hong2024eukaryoticpif1helicase pages 1-2): Zebin Hong, Alicia K. Byrd, Jun Gao, Poulomi Das, Vanessa Qianmin Tan, Emory G. Malone, Bertha Osei, John C. Marecki, Reine U. Protacio, Wayne P. Wahls, Kevin D. Raney, and Haiwei Song. Eukaryotic pif1 helicase unwinds g-quadruplex and dsdna using a conserved wedge. Nature Communications, Jul 2024. URL: https://doi.org/10.1038/s41467-024-50575-8, doi:10.1038/s41467-024-50575-8. This article has 14 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chib2023pif1helicasemediates pages 1-3): Shubeena Chib, Wezley C. Griffin, Jun Gao, David R. Proffitt, Alicia K. Byrd, and Kevin D. Raney. Pif1 helicase mediates remodeling of protein-nucleic acid complexes by promoting dissociation of sub1 from g-quadruplex dna and cdc13 from g-rich single-stranded dna. Biochemistry, 62:3360-3372, Nov 2023. URL: https://doi.org/10.1021/acs.biochem.3c00441, doi:10.1021/acs.biochem.3c00441. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barry2019invitroreconstitution pages 1-2): Jack Barry, Mei Lie Wong, and Bruce Alberts. In vitro reconstitution of dna replication initiated by genetic recombination: a t4 bacteriophage model for a type of dna synthesis important for all cells. Molecular Biology of the Cell, 30:146-159, Jan 2019. URL: https://doi.org/10.1091/mbc.e18-06-0386, doi:10.1091/mbc.e18-06-0386. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage media c4603177): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage media 5525f826): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage pages 7-8): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2012thet4phage pages 10-11): Xiaoping He, Alicia K. Byrd, Mi-Kyung Yun, Charles W. Pemble, David Harrison, Laxmi Yeruva, Christopher Dahl, Kenneth N. Kreuzer, Kevin D. Raney, and Stephen W. White. The t4 phage sf1b helicase dda is structurally optimized to perform dna strand separation. Structure, 20 7:1189-200, Jul 2012. URL: https://doi.org/10.1016/j.str.2012.04.013, doi:10.1016/j.str.2012.04.013. This article has 51 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dda-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000024 Figure 1 provides a structural overview of the Dda helicase bound to ssDNA, specifically highlighting the pin (1B), tower, and SH3 " src="dda-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>byrd2012ddahelicasetightly pages 7-8</li>
+<li>ma2004dualfunctionsof pages 1-2</li>
+<li>byrd2022astructuralfeature pages 1-3</li>
+<li>gauss1994dnahelicaserequirements pages 1-2</li>
+<li>brister2008originactivationrequires pages 1-2</li>
+<li>kadyrov2004uvsxrecombinaseand pages 1-2</li>
+<li>byrd2012ddahelicasetightly pages 1-2</li>
+<li>barry2019invitroreconstitution pages 1-2</li>
+<li>jordan2015regulationofthe pages 1-2</li>
+<li>hacker1992overexpressionpurificationsequence pages 1-2</li>
+<li>ma2004dualfunctionsof pages 1-1</li>
+<li>jordan2015regulationofthe pages 11-12</li>
+<li>https://doi.org/10.1016/j.str.2012.04.013</li>
+<li>https://doi.org/10.1074/jbc.270.38.22236;</li>
+<li>https://doi.org/10.1016/j.jmb.2012.04.007</li>
+<li>https://doi.org/10.1016/j.jmb.2012.04.007;</li>
+<li>https://doi.org/10.1016/j.str.2012.04.013;</li>
+<li>https://doi.org/10.1016/j.dnarep.2014.10.002</li>
+<li>https://doi.org/10.1093/nar/gku845</li>
+<li>https://doi.org/10.1074/jbc.m311738200;</li>
+<li>https://doi.org/10.1074/jbc.m311738200</li>
+<li>https://doi.org/10.1016/S0021-9258(19</li>
+<li>https://doi.org/10.1128/jb.176.6.1667-1672.1994</li>
+<li>https://doi.org/10.1074/jbc.m403942200</li>
+<li>https://doi.org/10.1128/jb.176.6.1667-1672.1994;</li>
+<li>https://doi.org/10.1016/j.jmb.2008.02.002</li>
+<li>https://doi.org/10.1002/pro.4232</li>
+<li>https://doi.org/10.1016/j.dnarep.2014.10.002;</li>
+<li>https://doi.org/10.1038/s41467-024-50575-8</li>
+<li>https://doi.org/10.1016/j.str.2012.04.013,</li>
+<li>https://doi.org/10.1128/jb.176.6.1667-1672.1994,</li>
+<li>https://doi.org/10.1016/j.jmb.2008.02.002,</li>
+<li>https://doi.org/10.1016/j.jmb.2012.04.007,</li>
+<li>https://doi.org/10.1074/jbc.m311738200,</li>
+<li>https://doi.org/10.1002/pro.4232,</li>
+<li>https://doi.org/10.1016/s0021-9258(19</li>
+<li>https://doi.org/10.1074/jbc.m403942200,</li>
+<li>https://doi.org/10.1016/j.dnarep.2014.10.002,</li>
+<li>https://doi.org/10.1128/ecosalplus.esp-0003-2025,</li>
+<li>https://doi.org/10.1038/s41467-024-50575-8,</li>
+<li>https://doi.org/10.1021/acs.biochem.3c00441,</li>
+<li>https://doi.org/10.1091/mbc.e18-06-0386,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P32270
+gene_symbol: P32270
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P32270&#39;
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0006260
+    label: DNA replication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0043139
+    label: 5&#39;-3&#39; DNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: EXP
+  original_reference_id: PMID:1328208
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0043139
+    label: 5&#39;-3&#39; DNA helicase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12411580
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0043139
+    label: 5&#39;-3&#39; DNA helicase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17823128
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7806534
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: PMID:12411580
+  title: Pre-steady-state DNA unwinding by bacteriophage T4 Dda helicase reveals a
+    monomeric molecular motor.
+  findings: []
+- id: PMID:1328208
+  title: Overexpression, purification, sequence analysis, and characterization of
+    the T4 bacteriophage dda DNA helicase.
+  findings: []
+- id: PMID:17823128
+  title: The phage T4 protein UvsW drives Holliday junction branch migration.
+  findings: []
+- id: PMID:7806534
+  title: A role for two DNA helicases in the replication of T4 bacteriophage DNA.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

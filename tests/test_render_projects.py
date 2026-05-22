@@ -5,7 +5,9 @@ import pytest
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
+    link_uniprot_code_spans,
     parse_frontmatter,
+    replace_gene_tags,
     replace_gene_symbols,
     render_project,
 )
@@ -214,6 +216,33 @@ class TestReplaceGeneSymbols:
         assert "[GPX4]" in result
         assert warnings == []
 
+    def test_symbol_in_inline_code_not_linked(self):
+        """Symbols in inline code are literal identifiers and are not linked."""
+        index = {"frd": ["BPT4"], "psbA": ["9POAL", "MISSI"]}
+        content = "Reviewed `frd/P04382` and `psbA/A0A345AWS2`."
+        result, warnings = replace_gene_symbols(content, index)
+
+        assert result == content
+        assert warnings == []
+
+    def test_symbol_in_existing_link_not_linked(self):
+        """Symbols inside existing markdown links are preserved."""
+        index = {"GPX4": ["human"]}
+        content = "[GPX4](https://example.org) is already linked."
+        result, warnings = replace_gene_symbols(content, index)
+
+        assert result == content
+        assert warnings == []
+
+    def test_symbol_after_slash_not_linked(self):
+        """Symbols embedded in slash-delimited labels are not auto-linked."""
+        index = {"STAT1": ["human"]}
+        content = "JAK-STAT/STAT1 inhibition is a pathway label."
+        result, warnings = replace_gene_symbols(content, index)
+
+        assert result == content
+        assert warnings == []
+
     def test_partial_match_avoided(self):
         """Partial matches should not be linked (e.g., GPX4 in GPX4-pathway)."""
         index = {"GPX4": ["human"]}
@@ -234,6 +263,77 @@ class TestReplaceGeneSymbols:
         )
 
         assert "../../genes/human/GPX4/GPX4-ai-review.html" in result
+
+
+class TestReplaceGeneTags:
+    """Tests for explicit gene tags in project markdown."""
+
+    def test_gene_tag_links_full_visible_label(self, tmp_path):
+        """Explicit gene tags link slash-delimited display text."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+
+        content = '<gene species="BPT4" symbol="E">E/P00720</gene>'
+        result, warnings = replace_gene_tags(content, genes_dir)
+
+        assert result == "[E/P00720](../../genes/BPT4/E/E-ai-review.html)"
+        assert warnings == []
+
+    def test_gene_tag_defaults_empty_label_to_symbol(self, tmp_path):
+        """Empty tags can still link by using the symbol as display text."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "9INFA" / "M2").mkdir(parents=True)
+
+        content = '<gene species="9INFA" symbol="M2"></gene>'
+        result, warnings = replace_gene_tags(content, genes_dir)
+
+        assert result == "[M2](../../genes/9INFA/M2/M2-ai-review.html)"
+        assert warnings == []
+
+    def test_gene_tag_missing_target_warns_and_keeps_label(self, tmp_path):
+        """Missing explicit targets do not produce dead links."""
+        genes_dir = tmp_path / "genes"
+        genes_dir.mkdir()
+
+        content = '<gene species="BPT4" symbol="missing">missing/P00000</gene>'
+        result, warnings = replace_gene_tags(content, genes_dir)
+
+        assert result == "missing/P00000"
+        assert len(warnings) == 1
+        assert "target not found" in warnings[0]
+
+    def test_gene_tag_missing_attrs_warns_and_keeps_label(self, tmp_path):
+        """Malformed explicit tags are visible and produce warnings."""
+        genes_dir = tmp_path / "genes"
+        genes_dir.mkdir()
+
+        content = "<gene>E/P00720</gene>"
+        result, warnings = replace_gene_tags(content, genes_dir)
+
+        assert result == "E/P00720"
+        assert len(warnings) == 1
+        assert "missing required" in warnings[0]
+
+
+class TestLinkUniprotCodeSpans:
+    """Tests for raw SPKW sample code-span links."""
+
+    def test_links_symbol_accession_code_span(self):
+        """Backticked symbol/accession samples become UniProt links."""
+        content = "Reviewed `MCP/P06491`, `OPG108/A0A7H0DN80`, and `Q9G044`."
+        result = link_uniprot_code_spans(content)
+
+        assert "[MCP/P06491](https://www.uniprot.org/uniprotkb/P06491/entry)" in result
+        assert (
+            "[OPG108/A0A7H0DN80]"
+            "(https://www.uniprot.org/uniprotkb/A0A7H0DN80/entry)"
+        ) in result
+        assert "[Q9G044](https://www.uniprot.org/uniprotkb/Q9G044/entry)" in result
+
+    def test_does_not_link_file_path_code_span(self):
+        """File paths and multi-slash code spans are preserved."""
+        content = "`genes/9CAUD/darB/darB-ai-review.yaml`"
+        assert link_uniprot_code_spans(content) == content
 
 
 class TestRenderProject:
@@ -335,6 +435,75 @@ ATG7 is involved in autophagy."""
 
         with pytest.raises(FileNotFoundError):
             render_project(md_file)
+
+    def test_render_project_with_gene_tag(self, tmp_path):
+        """Render project with explicit gene tag labels."""
+        genes_dir = tmp_path / "genes"
+        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+
+        projects_dir = tmp_path / "projects"
+        projects_dir.mkdir()
+        md_content = (
+            "# Test Project\n\n"
+            '<gene species="BPT4" symbol="E">E/P00720</gene> is reviewed.'
+        )
+        md_file = projects_dir / "TEST.md"
+        md_file.write_text(md_content)
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_content = """<!DOCTYPE html>
+<html>
+<head><title>{{ title }}</title></head>
+<body>{{ content | safe }}</body>
+</html>"""
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(template_content)
+
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=tmp_path / "pages" / "projects",
+            genes_dir=genes_dir,
+            template_path=template_file,
+        )
+
+        html_content = output_path.read_text()
+        assert 'href="../../genes/BPT4/E/E-ai-review.html"' in html_content
+        assert ">E/P00720</a>" in html_content
+        assert warnings == []
+
+    def test_render_project_with_uniprot_code_span(self, tmp_path):
+        """Render project with raw SPKW row examples linked to UniProt."""
+        genes_dir = tmp_path / "genes"
+        genes_dir.mkdir()
+
+        projects_dir = tmp_path / "projects"
+        projects_dir.mkdir()
+        md_content = "# Test Project\n\nReviewed `MCP/P06491`."
+        md_file = projects_dir / "TEST.md"
+        md_file.write_text(md_content)
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_content = """<!DOCTYPE html>
+<html>
+<head><title>{{ title }}</title></head>
+<body>{{ content | safe }}</body>
+</html>"""
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(template_content)
+
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=tmp_path / "pages" / "projects",
+            genes_dir=genes_dir,
+            template_path=template_file,
+        )
+
+        html_content = output_path.read_text()
+        assert 'href="https://www.uniprot.org/uniprotkb/P06491/entry"' in html_content
+        assert ">MCP/P06491</a>" in html_content
+        assert warnings == []
 
 
 class TestIntegration:

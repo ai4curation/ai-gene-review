@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P15076 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P15076</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15076" target="_blank" class="term-link">
+                        P15076
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P15076";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15076" data-a="DESCRIPTION: TODO: Add description for P15076..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P15076</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052031" target="_blank" class="term-link">
+                                    GO:0052031
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15076" data-a="GO:0052031" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052170" target="_blank" class="term-link">
+                                    GO:0052170
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15076" data-a="GO:0052170" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099016" target="_blank" class="term-link">
+                                    GO:0099016
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated evasion of DNA end degradation by host</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P15076" data-a="GO:0099016" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15076" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">11 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T16:37:39.516193</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000012 Figure 4 shows the inhibition of DNA degradation by cloned gp2 in vivo, including quantitative timecourse plots for both T4 2- DNA </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-enterobacteria-phage-t4-gene-2-gp2gp64-uniprot-p15076">Research Report: Functional Annotation of <strong>Enterobacteria phage T4 gene 2 (gp2/gp64)</strong> (UniProt <strong>P15076</strong>)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>Enterobacteria phage T4 <strong>gene 2</strong> encodes <strong>gp2</strong> (historically also called <strong>gp64</strong>), a small, highly basic virion-associated protein that <strong>protects the linear T4 dsDNA termini from degradation by host exonuclease V (ExoV; RecBCD complex)</strong> immediately upon injection into the host cytoplasm. Experimental evidence supports a mechanism in which gp2 acts <strong>at/near the DNA ends and the head–tail junction</strong> (end occlusion/binding), rather than functioning primarily as a catalytic inhibitor of RecBCD. Gp2 additionally contributes to efficient <strong>head-to-tail joining</strong> during morphogenesis and can be reconstituted into infectious particles using recombinant protein in vitro. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 1-2, wang2000bacteriophaget4selfassembly pages 1-1)</p>
+<h3 id="1-target-identity-verification-and-nomenclature-critical-disambiguation">1) Target identity verification and nomenclature (critical disambiguation)</h3>
+<ul>
+<li><strong>Correct target:</strong> bacteriophage T4 <strong>gene 2 product gp2</strong>, also referred to as <strong>gp64</strong> in older nomenclature. Lipińska et al. mapped <strong>gene 2 and gene 64 to the same ORF</strong>, encoding a single protein, and experimentally identified the product as gp2. (lipinska1989cloningandidentification pages 8-9)</li>
+<li><strong>Ambiguity warning:</strong> “gene 2” refers to unrelated proteins in other systems (e.g., T7 gene 2.5 ssDNA-binding protein; “gp2” as a terminase in other phages). This report is restricted to <strong>T4 gene 2 / gp2 / gp64 (UniProt P15076)</strong> as experimentally characterized in T4. (lipinska1989cloningandidentification pages 8-9)</li>
+</ul>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h3>
+<h4 id="21-exonucleolytic-restriction-by-recbcdexov">2.1 Exonucleolytic restriction by RecBCD/ExoV</h4>
+<p>In E. coli, the <strong>RecBCD (ExoV) enzyme</strong> is a potent ATP-dependent nuclease/helicase that initiates degradation from free double-stranded DNA ends. For linear phage genomes, this creates strong selection for strategies that <strong>block or evade RecBCD access</strong>.</p>
+<h4 id="22-terminal-dna-protecting-protein-gp2-functional-definition">2.2 “Terminal DNA protecting protein” (gp2): functional definition</h4>
+<p>In the T4 system, gp2 is best defined functionally as a <strong>virion-associated DNA-end protection factor</strong> that prevents RecBCD/ExoV from engaging the incoming linear phage genome ends. Lipińska et al. directly demonstrated that gp2 (from a cloned gene) can <strong>protect T4 dsDNA ends from ExoV action</strong> in vivo. (lipinska1989cloningandidentification pages 1-1, lipinska1989cloningandidentification pages 8-9)</p>
+<h3 id="3-molecular-function-mechanism-and-biological-role">3) Molecular function, mechanism, and biological role</h3>
+<h4 id="31-primary-molecular-function-protection-of-t4-dna-termini-from-recbcdexov">3.1 Primary molecular function: protection of T4 DNA termini from RecBCD/ExoV</h4>
+<ul>
+<li>Lipińska et al. report that cloned gp2 <strong>protects T4 DNA double-stranded ends from exonuclease V (RecBCD/ExoV)</strong>, and that gp2 can function <strong>in trans</strong> when expressed from a plasmid in the host. (lipinska1989cloningandidentification pages 1-1, lipinska1989cloningandidentification pages 8-9)</li>
+<li>Wang et al. frame this as protection against “exonucleolytic restriction,” noting ExoV as the causal activity for incoming DNA hydrolysis and that gp2 is <strong>attached to the DNA terminus in the mature head</strong>, consistent with end protection at entry. (wang2000bacteriophaget4selfassembly pages 1-2)</li>
+</ul>
+<h4 id="32-mechanism-end-occlusionbinding-at-the-headtail-junction-not-a-global-recbcd-inhibitor">3.2 Mechanism: end occlusion/binding at the head–tail junction (not a global RecBCD inhibitor)</h4>
+<ul>
+<li>Lipińska et al. describe gp2 as a <strong>head-associated protein</strong> that binds <strong>at the junction of the head and tail</strong> and protects DNA ends; they propose gp2 accompanies the DNA during morphogenesis/injection to keep termini inaccessible to ExoV. (lipinska1989cloningandidentification pages 1-1)</li>
+<li>Wang et al. argue that gp2’s “functional effect is directly on the DNA and not as an ExoV inhibitor,” noting timing effects (gp2 present shortly before infection yields rapid protection) consistent with terminal binding/occlusion, though they acknowledge the steric model is not proven with definitive structural/biophysical data in their work. (wang2000bacteriophaget4selfassembly pages 7-7)</li>
+</ul>
+<h4 id="33-secondary-morphogenetic-role-head-to-tail-joining">3.3 Secondary (morphogenetic) role: head-to-tail joining</h4>
+<p>Wang et al. show gp2 is also required for efficient <strong>head-to-tail (H–T) joining</strong> during in vitro reconstitution: heads from gene 2 amber mutants require added recombinant gp2 for H–T joining, and reconstituted particles exhibit reduced ability to plaque under conditions requiring ExoV protection. (wang2000bacteriophaget4selfassembly pages 1-1)</p>
+<h3 id="4-localization-and-timing-wherewhen-gp2-acts">4) Localization and timing (where/when gp2 acts)</h3>
+<ul>
+<li><strong>Virion association:</strong> gp2 is incorporated into the phage head and associated with the packaged genome terminus (terminal/end-bound localization). (wang2000bacteriophaget4selfassembly pages 1-2)</li>
+<li><strong>Functional stage:</strong> gp2’s end-protective role is exercised <strong>immediately upon DNA injection into the cytoplasm</strong>, where RecBCD would otherwise degrade the genome from its free ends. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 1-2)</li>
+<li><strong>Expression timing:</strong> gp2 is reported to be <strong>late expressed</strong> in infection; Wang et al. note gp2 detectability after ~<strong>13 min at 37°C</strong>, consistent with incorporation during morphogenesis rather than serving as an early, diffusible anti-RecBCD factor. (wang2000bacteriophaget4selfassembly pages 4-5)</li>
+</ul>
+<h3 id="5-mutant-phenotypes-functional-genetics">5) Mutant phenotypes (functional genetics)</h3>
+<p>Gene 2 mutants show pleiotropic defects attributable to the absence of terminal protection and morphogenetic roles:<br />
+* <strong>Incoming DNA degradation</strong> by host ExoV/RecBCD, leading to <strong>reduced burst size</strong> and failure to grow in ExoV+ hosts; restriction is suppressed in <strong>recBC (ExoV)-negative</strong> hosts, consistent with the RecBCD-targeted phenotype. (wang2000bacteriophaget4selfassembly pages 1-1, lipinska1989cloningandidentification pages 1-1)<br />
+* <strong>Morphogenesis defects,</strong> including impaired head filling and tail attachment/H–T joining. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 1-1)</p>
+<h3 id="6-quantitative-data-and-key-experimental-results">6) Quantitative data and key experimental results</h3>
+<h4 id="61-protein-properties">6.1 Protein properties</h4>
+<ul>
+<li><strong>Size:</strong> gp2 predicted ~<strong>27,068 Da</strong> but migrates ~<strong>30 kDa</strong> on SDS-PAGE. (lipinska1989cloningandidentification pages 1-1, lipinska1989cloningandidentification pages 7-8)</li>
+<li><strong>Basicity:</strong> gp2 is described as extremely basic (reported pI ~<strong>10.94</strong>) and Lys/Arg-rich (migration anomaly attributed to high basic residue content). (wang2000bacteriophaget4selfassembly pages 7-7, lipinska1989cloningandidentification pages 7-8)</li>
+</ul>
+<h4 id="62-in-vivo-protection-assay-direct-evidence">6.2 In vivo protection assay (direct evidence)</h4>
+<p>Lipińska et al. used radiolabeled infecting DNA and measured degradation into acid-soluble fragments; after induction of cloned gp2, infecting DNA degradation was inhibited, demonstrating gp2-dependent end protection in vivo. The experimental time-course curves are shown in <strong>Figure 4</strong>. (lipinska1989cloningandidentification media 07ef0b2d, lipinska1989cloningandidentification pages 8-9)</p>
+<h4 id="63-in-vitro-reconstitution-implementation-as-an-experimental-tool">6.3 In vitro reconstitution / implementation as an experimental tool</h4>
+<p>Wang et al. reconstituted infectious phage from components and showed recombinant gp2 provides measurable rescue:<br />
+* Addition of recombinant gp2 increased total infective phage titer by ~<strong>150–200-fold</strong> and a phenotypic ExoV-protected titer by up to ~<strong>500-fold</strong> in some assays. (wang2000bacteriophaget4selfassembly pages 4-5)<br />
+* Reported maximal yields included ~<strong>2.5 × 10^9 phage/mL</strong> total and ~<strong>0.3 × 10^8 phage/mL</strong> phenotypic ExoV-protected (“phenotypic-21”) particles. (wang2000bacteriophaget4selfassembly pages 4-5)<br />
+* Only ~<strong>15%</strong> of particles reconstituted with recombinant gp2 could grow on an ExoV+ indicator in one assay; in another context, ~<strong>10%</strong> plaque formation on ExoV+ is reported for reconstituted particles. (wang2000bacteriophaget4selfassembly pages 4-5, wang2000bacteriophaget4selfassembly pages 1-1)<br />
+* Historical quantitation in mutant infections reported ~<strong>40 full heads/cell</strong>, ~<strong>20 empty heads/cell</strong>, ~<strong>0.07 infective phage/cell</strong>, and ~<strong>40 killer particles/cell</strong>, illustrating severe fitness reduction despite particle production. (wang2000bacteriophaget4selfassembly pages 1-1)</p>
+<h3 id="7-recent-developments-20232024-prioritized-and-expert-perspective">7) Recent developments (2023–2024 prioritized) and expert perspective</h3>
+<h4 id="71-state-of-recent-gp2-specific-research">7.1 State of recent gp2-specific research</h4>
+<p>Within the retrieved 2023–2024 materials available here, there were <strong>no new peer-reviewed structural or mechanistic studies specifically updating T4 gp2</strong> beyond the established end-protection model and classic T4 experimental literature (1989; 2000). Consequently, current understanding of gp2 remains anchored in these foundational studies. (lipinska1989cloningandidentification pages 8-9, wang2000bacteriophaget4selfassembly pages 7-7)</p>
+<h4 id="72-continued-use-as-an-archetype-for-phage-anti-defense-strategies">7.2 Continued use as an archetype for phage anti-defense strategies</h4>
+<p>A 2023 therapeutic-oriented dissertation-like source lists T4 gp2 as an example of a phage strategy to evade host defense, stating that <strong>T4 gp2 binds free-ended phage DNA and blocks RecBCD access</strong>; the context is descriptive (host-defense evasion) rather than providing new experimental data or an engineered implementation. (aaron2023isolationandcharacterization pages 27-30, aaron2023isolationandcharacterizationa pages 27-30)</p>
+<h3 id="8-current-applications-and-real-world-implementations">8) Current applications and real-world implementations</h3>
+<h4 id="81-demonstrated-applications-directly-supported-by-evidence">8.1 Demonstrated applications (directly supported by evidence)</h4>
+<ul>
+<li><strong>In vitro reconstitution of infectious particles:</strong> Recombinant gp2 can be used to restore infectivity and head-to-tail joining in reconstitution assays, enabling controlled study of morphogenesis and DNA-end protection and potentially informing manufacturing-like workflows for assembling phage components in vitro. (wang2000bacteriophaget4selfassembly pages 4-5, wang2000bacteriophaget4selfassembly pages 1-1)</li>
+</ul>
+<h4 id="82-applications-not-evidenced-in-the-retrieved-corpus">8.2 Applications not evidenced in the retrieved corpus</h4>
+<p>Although gp2 is conceptually relevant to engineering phage–host interactions (e.g., improving stability of linear DNA in RecBCD+ hosts), the retrieved recent applied source that mentions gp2 does <strong>not</strong> describe gp2-based therapeutic products, delivery strategies, dosing, or clinical/industrial implementation pathways. (aaron2023isolationandcharacterization pages 27-30, aaron2023isolationandcharacterizationa pages 27-30)</p>
+<h3 id="9-domainfamilystructure-information">9) Domain/family/structure information</h3>
+<p>The retrieved primary studies characterize gp2 primarily by genetics, biochemical behavior (basicity), and functional assays; <strong>no high-resolution structure, catalytic motifs, or domain architecture</strong> are provided in these sources. The most specific mechanistic localization is <strong>association with the DNA terminus at the head–tail junction/head vertex</strong>, inferred from genetic/functional behavior and reconstitution experiments. (wang2000bacteriophaget4selfassembly pages 1-2, wang2000bacteriophaget4selfassembly pages 7-7)</p>
+<h3 id="10-practical-functional-annotation-summary-for-databases">10) Practical functional annotation summary (for databases)</h3>
+<ul>
+<li><strong>Recommended name:</strong> Terminal DNA protecting protein (T4 gp2; aka gp64). (lipinska1989cloningandidentification pages 8-9)</li>
+<li><strong>Primary function:</strong> Protects incoming T4 linear dsDNA termini from host ExoV/RecBCD degradation. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 1-2)</li>
+<li><strong>Mechanism:</strong> Likely binds/occludes dsDNA ends at the head–tail junction; acts at DNA termini rather than as a generalized soluble RecBCD inhibitor. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 7-7)</li>
+<li><strong>Cellular/virion localization:</strong> Incorporated into phage head; associated with packaged genome termini (head vertex/head–tail junction). (wang2000bacteriophaget4selfassembly pages 1-2, lipinska1989cloningandidentification pages 1-1)</li>
+<li><strong>Additional role:</strong> Facilitates efficient head-to-tail joining during morphogenesis/in vitro reconstitution. (wang2000bacteriophaget4selfassembly pages 1-1)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Key findings</th>
+<th>Key evidence source (author year) with DOI URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>The target matches bacteriophage T4 gene 2 product gp2, historically also called gp64; gene 2 and gene 64 map to the same ORF encoding a head-associated terminal DNA-protecting protein. (lipinska1989cloningandidentification pages 1-1, lipinska1989cloningandidentification pages 8-9, wang2000bacteriophaget4selfassembly pages 1-1)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Size/basicity</td>
+<td>gp2 is predicted to be ~27 kDa, migrates at ~30 kDa on SDS-PAGE, and is highly basic/rich in Lys and Arg; Wang et al. report a high predicted pI (~10.94). (lipinska1989cloningandidentification pages 1-1, lipinska1989cloningandidentification pages 7-8, wang2000bacteriophaget4selfassembly pages 7-7)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Expression timing</td>
+<td>gp2 synthesis is late during infection; Wang et al. note detectability after ~13 min at 37°C, consistent with a morphogenetic/virion-incorporated role rather than an early cytoplasmic antinuclease role. (wang2000bacteriophaget4selfassembly pages 4-5, wang2000bacteriophaget4selfassembly pages 7-7, lipinska1989cloningandidentification pages 8-9)</td>
+<td>Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000; Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>gp2 is incorporated into the phage head, attached to the DNA terminus in the mature head, and proposed to reside at the head vertex/head-tail junction so it can accompany the DNA during injection. (lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 1-2, wang2000bacteriophaget4selfassembly pages 7-7, wang2000bacteriophaget4selfassembly pages 1-1)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>gp2 has two experimentally supported functions: (1) protection of incoming T4 dsDNA ends from host RecBCD/ExoV degradation and (2) participation in normal head-to-tail joining during morphogenesis/reconstitution. (wang2000bacteriophaget4selfassembly pages 1-1, lipinska1989cloningandidentification pages 1-1, wang2000bacteriophaget4selfassembly pages 4-5)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Mechanism evidence</td>
+<td>Evidence favors direct action at phage DNA ends rather than generalized inhibition of RecBCD: cloned gp2 protects entering T4 DNA in vivo; virion gp2 protects natural termini in cis; plasmid-expressed gp2 can act in trans; timing effects show pre-existing gp2 improves rapid end protection. Authors interpret this as end binding/occlusion, though Lipińska et al. discuss analogy to anti-RecBCD systems and Wang et al. note no absolute proof that steric end-blocking is the only mechanism. (lipinska1989cloningandidentification pages 8-9, wang2000bacteriophaget4selfassembly pages 7-7, wang2000bacteriophaget4selfassembly pages 1-2)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Mutant phenotypes</td>
+<td>Gene 2 mutants show degraded injected DNA in ExoV+/RecBCD+ hosts, reduced burst size, fewer DNA-filled heads, impaired tail attachment/head-tail joining, and failure to grow on Su-/Su' hosts; restriction is suppressed in recBC-deficient hosts. More N-terminal lesions can worsen head-tail joining defects. (wang2000bacteriophaget4selfassembly pages 1-1, lipinska1989cloningandidentification pages 1-1)</td>
+<td>Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989; Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>Reported values include: predicted mass ~27,068 Da with apparent ~30 kDa; gp2 detected after ~13 min at 37°C; rgp2 increased total phage titer ~150-200-fold and phenotypic-21 titer up to ~500-fold in some reconstitution assays; maximal yields reached 2.5 × 10^9 phage/mL and 0.3 × 10^8 phenotypic-21 phage/mL; only ~15% of rgp2-reconstituted particles grew on an ExoV1 indicator in one assay; historical mutant infections yielded ~40 full heads/cell, ~20 empty heads/cell, ~0.07 infective phage/cell, and ~40 killer particles/cell. (wang2000bacteriophaget4selfassembly pages 1-1, wang2000bacteriophaget4selfassembly pages 7-7, wang2000bacteriophaget4selfassembly pages 4-5)</td>
+<td>Wang et al. 2000 — https://doi.org/10.1128/jb.182.3.672-679.2000; Lipińska et al. 1989 — https://doi.org/10.1128/jb.171.1.488-497.1989</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported functional annotation of bacteriophage T4 gene 2/gp2 (gp64; UniProt P15076) using only the provided evidence snippets from Lipińska et al. 1989 and Wang et al. 2000. It highlights identity verification, mechanism, localization, mutant phenotypes, and quantitative data relevant to annotation.</em></p>
+<h3 id="key-references-publication-date-url">Key references (publication date + URL)</h3>
+<ul>
+<li>Lipińska B, Rao AS, Bolten BM, Balakrishnan R, Goldberg EB. <strong>1989-01</strong>. <em>Cloning and identification of bacteriophage T4 gene 2 product gp2 and action of gp2 on infecting DNA in vivo</em>. <strong>Journal of Bacteriology</strong>. https://doi.org/10.1128/jb.171.1.488-497.1989 (lipinska1989cloningandidentification pages 1-1)</li>
+<li>Wang GR, Vianelli A, Goldberg EB. <strong>2000-02</strong>. <em>Bacteriophage T4 Self-Assembly: In Vitro Reconstitution of Recombinant gp2 into Infectious Phage</em>. <strong>Journal of Bacteriology</strong>. https://doi.org/10.1128/jb.182.3.672-679.2000 (wang2000bacteriophaget4selfassembly pages 4-5)</li>
+<li>Aaron JA. <strong>2023</strong>. <em>Isolation and characterization of bacteriophages infecting UTI-associated bacteria and evaluation of phage-derived proteins as potential therapeutic agents and …</em> (document type/journal unclear in retrieved metadata). (aaron2023isolationandcharacterization pages 27-30)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(lipinska1989cloningandidentification pages 1-1): B Lipinska, A S Rao, B M Bolten, R Balakrishnan, and E B Goldberg. Cloning and identification of bacteriophage t4 gene 2 product gp2 and action of gp2 on infecting dna in vivo. Journal of Bacteriology, 171:488-497, Jan 1989. URL: https://doi.org/10.1128/jb.171.1.488-497.1989, doi:10.1128/jb.171.1.488-497.1989. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2000bacteriophaget4selfassembly pages 1-2): G. R. Wang, A. Vianelli, and E. B. Goldberg. Bacteriophage t4 self-assembly: in vitro reconstitution of recombinant gp2 into infectious phage. Journal of Bacteriology, 182:672-679, Feb 2000. URL: https://doi.org/10.1128/jb.182.3.672-679.2000, doi:10.1128/jb.182.3.672-679.2000. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2000bacteriophaget4selfassembly pages 1-1): G. R. Wang, A. Vianelli, and E. B. Goldberg. Bacteriophage t4 self-assembly: in vitro reconstitution of recombinant gp2 into infectious phage. Journal of Bacteriology, 182:672-679, Feb 2000. URL: https://doi.org/10.1128/jb.182.3.672-679.2000, doi:10.1128/jb.182.3.672-679.2000. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lipinska1989cloningandidentification pages 8-9): B Lipinska, A S Rao, B M Bolten, R Balakrishnan, and E B Goldberg. Cloning and identification of bacteriophage t4 gene 2 product gp2 and action of gp2 on infecting dna in vivo. Journal of Bacteriology, 171:488-497, Jan 1989. URL: https://doi.org/10.1128/jb.171.1.488-497.1989, doi:10.1128/jb.171.1.488-497.1989. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2000bacteriophaget4selfassembly pages 7-7): G. R. Wang, A. Vianelli, and E. B. Goldberg. Bacteriophage t4 self-assembly: in vitro reconstitution of recombinant gp2 into infectious phage. Journal of Bacteriology, 182:672-679, Feb 2000. URL: https://doi.org/10.1128/jb.182.3.672-679.2000, doi:10.1128/jb.182.3.672-679.2000. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2000bacteriophaget4selfassembly pages 4-5): G. R. Wang, A. Vianelli, and E. B. Goldberg. Bacteriophage t4 self-assembly: in vitro reconstitution of recombinant gp2 into infectious phage. Journal of Bacteriology, 182:672-679, Feb 2000. URL: https://doi.org/10.1128/jb.182.3.672-679.2000, doi:10.1128/jb.182.3.672-679.2000. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lipinska1989cloningandidentification pages 7-8): B Lipinska, A S Rao, B M Bolten, R Balakrishnan, and E B Goldberg. Cloning and identification of bacteriophage t4 gene 2 product gp2 and action of gp2 on infecting dna in vivo. Journal of Bacteriology, 171:488-497, Jan 1989. URL: https://doi.org/10.1128/jb.171.1.488-497.1989, doi:10.1128/jb.171.1.488-497.1989. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lipinska1989cloningandidentification media 07ef0b2d): B Lipinska, A S Rao, B M Bolten, R Balakrishnan, and E B Goldberg. Cloning and identification of bacteriophage t4 gene 2 product gp2 and action of gp2 on infecting dna in vivo. Journal of Bacteriology, 171:488-497, Jan 1989. URL: https://doi.org/10.1128/jb.171.1.488-497.1989, doi:10.1128/jb.171.1.488-497.1989. This article has 44 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aaron2023isolationandcharacterization pages 27-30): JA Aaron. Isolation and characterization of bacteriophages infecting uti-associated bacteria and evaluation of phage-derived proteins as potential therapeutic agents and …. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(aaron2023isolationandcharacterizationa pages 27-30): JA Aaron. Isolation and characterization of bacteriophages infecting uti-associated bacteria and evaluation of phage-derived proteins as potential therapeutic agents and …. Unknown journal, 2023.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000012 Figure 4 shows the inhibition of DNA degradation by cloned gp2 in vivo, including quantitative timecourse plots for both T4 2- DNA " src="2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lipinska1989cloningandidentification pages 8-9</li>
+<li>lipinska1989cloningandidentification pages 1-1</li>
+<li>aaron2023isolationandcharacterization pages 27-30</li>
+<li>lipinska1989cloningandidentification pages 7-8</li>
+<li>aaron2023isolationandcharacterizationa pages 27-30</li>
+<li>https://doi.org/10.1128/jb.171.1.488-497.1989;</li>
+<li>https://doi.org/10.1128/jb.182.3.672-679.2000</li>
+<li>https://doi.org/10.1128/jb.182.3.672-679.2000;</li>
+<li>https://doi.org/10.1128/jb.171.1.488-497.1989</li>
+<li>https://doi.org/10.1128/jb.171.1.488-497.1989,</li>
+<li>https://doi.org/10.1128/jb.182.3.672-679.2000,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15076
+gene_symbol: P15076
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P15076&#39;
+existing_annotations:
+- term:
+    id: GO:0052031
+    label: symbiont-mediated perturbation of host defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052170
+    label: symbiont-mediated suppression of host innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099016
+    label: symbiont-mediated evasion of DNA end degradation by host
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
