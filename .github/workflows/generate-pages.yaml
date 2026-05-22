@@ -36,6 +36,32 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Close stale regeneration PRs
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+        shell: bash
+        run: |
+          mapfile -t stale_prs < <(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --search 'is:open author:app/github-actions Regenerate pages and browser app' \
+              --json number,createdAt \
+              --limit 100 \
+              --jq '.[] | select((now - (.createdAt | fromdateiso8601)) >= 3600) | .number'
+          )
+
+          if [ "${#stale_prs[@]}" -eq 0 ]; then
+            echo "No stale regeneration PRs to close."
+            exit 0
+          fi
+
+          for pr_number in "${stale_prs[@]}"; do
+            echo "Closing stale regeneration PR #$pr_number"
+            gh pr close "$pr_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --comment "Superseded by a newer automated pages regeneration run."
+          done
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -133,24 +159,26 @@ jobs:
 
       - name: Create or update regeneration PR
         if: steps.check-changes.outputs.has_changes == 'true'
-        id: create-pr
-        continue-on-error: true
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
-          branch-token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
-          branch: ${{ steps.pr-metadata.outputs.branch }}
-          base: main
-          delete-branch: true
-          draft: always-true
-          add-paths: |
-            genes/**/*.html
-            app/index.html
-            app/data.js
-            app/schema.js
-            pages/
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="${{ steps.pr-metadata.outputs.branch }}"
+          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
+          git checkout -B "$BRANCH_NAME"
+
+          git add \
+            genes/ \
+            app/index.html \
+            app/data.js \
+            app/schema.js \
+            pages/ \
             reports/
-          commit-message: |
+
+          git commit -m "$(cat <<EOF
             Regenerate pages, browser app, and reports
 
             - ${{ steps.pr-metadata.outputs.html_count }} gene review HTML pages (from ${{ steps.pr-metadata.outputs.gene_count }} YAML reviews)
@@ -159,10 +187,31 @@ jobs:
             - Validation report
 
             Triggered by changes to gene reviews or templates.
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          title: Regenerate pages and browser app
-          body: |
+          EOF
+          )"
+
+          git push --force-with-lease origin "$BRANCH_NAME"
+
+          EXISTING_PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$EXISTING_PR_NUMBER" ]; then
+            echo "Updated existing regeneration PR #$EXISTING_PR_NUMBER."
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --draft \
+            --title "Regenerate pages and browser app" \
+            --body "$(cat <<EOF
             ## Summary
 
             Automated regeneration of static assets after gene review or template changes.
@@ -193,10 +242,21 @@ jobs:
             - [ ] Spot-check a few gene review HTML pages render correctly
             - [ ] Verify browser app loads and filters work
             - [ ] Check validation report for new issues
+          EOF
+          )"
 
-      - name: Report manual PR fallback
-        if: steps.create-pr.outcome == 'failure'
-        shell: bash
-        run: |
-          echo "::warning::Automated PR creation was skipped or blocked. Generated changes remain on branch '${{ steps.pr-metadata.outputs.branch }}'."
-          echo "::notice title=Open PR manually::https://github.com/${GITHUB_REPOSITORY}/compare/main...${{ steps.pr-metadata.outputs.branch }}?expand=1"
+          CREATED_PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
+
+          if [ -z "$CREATED_PR_NUMBER" ]; then
+            echo "Failed to resolve created regeneration PR number for $BRANCH_NAME."
+            echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
+            exit 1
+          fi
+
+          echo "Created regeneration PR #$CREATED_PR_NUMBER."
