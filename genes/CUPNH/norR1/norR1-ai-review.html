@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>norR1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>norR1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9K4V0" target="_blank" class="term-link">
+                        Q9K4V0
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Cupriavidus necator (strain ATCC 17699 / DSM 428 / KCTC 22496 / NCIMB 10442 / H16 / Stanier 337)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "norR1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9K4V0" data-a="DESCRIPTION: norR1 encodes a nitric oxide-responsive sigma-54-d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>norR1 encodes a nitric oxide-responsive sigma-54-dependent transcriptional activator in Cupriavidus necator H16. The protein has the conserved NorR domain architecture: an N-terminal GAF regulatory region, a central AAA+ ATPase domain, and a C-terminal Fis-family helix-turn-helix DNA-binding domain.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9K4V0" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NorR1 contains the conserved sigma-54-interaction/AAA+ ATPase region of bacterial enhancer-binding proteins. ATP binding is plausible, but ATP hydrolysis is the more informative molecular function for the transcriptional activation mechanism.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The InterPro support identifies the sigma-54 interaction ATP-binding region, and NorR-family studies show that NO sensing stimulates NorR ATPase activity to activate transcription. Replace the generic binding term with ATP hydrolysis activity when making a positive MF assertion.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    ATP hydrolysis activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CUPNH/norR1/norR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR002078; Sigma_54_int.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16193057" target="_blank" class="term-link">
+                                        PMID:16193057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binding of NO stimulates the ATPase activity of NorR, enabling the activation of transcription by RNA polymerase.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9K4V0" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NorR1 positively activates NO-responsive transcription of the norAB nitric oxide reductase operon through a sigma-54-dependent promoter.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The existing term is correct but too general. Species-specific Ralstonia evidence shows NorR is required for transcriptional activation of norA1/ norB1 in response to NO, and promoter-site mutations strongly reduce activation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                    positive regulation of DNA-templated transcription
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link">
+                                        PMID:11069685
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">norB1 gene transcription requires a functional rpoN gene and the regulator NorR, a novel member of the NtrC family of response regulators.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15667304" target="_blank" class="term-link">
+                                        PMID:15667304
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">norB and the adjacent norA form an operon that is controlled by the sigma(54)-dependent transcriptional activator NorR in response to NO.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9K4V0" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NorR1 binds regulatory DNA upstream of the nitric oxide reductase operon, but sequence-specific DNA binding alone is an under-specified molecular function for this protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> NorR is an NO-responsive, sigma-54-dependent transcriptional activator. The literature supports both DNA binding to upstream activator sequences and ligand-modulated activation, so GO:0141097 is a better MF endpoint than generic sequence-specific DNA binding.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141097" target="_blank" class="term-link">
+                                    ligand-modulated transcription activator activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15667304" target="_blank" class="term-link">
+                                        PMID:15667304
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A NorR derivative containing MalE in place of the N-terminal domain binds to a 73 bp region upstream of norA that includes three copies of the putative upstream activator sequence GGT-(N(7))-ACC.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16193057" target="_blank" class="term-link">
+                                        PMID:16193057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The NO-responsive activity of NorR raises important questions concerning the mechanism of NO sensing.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019333" target="_blank" class="term-link">
+                                    GO:0019333
+                                </a>
+                            </span>
+                            <span class="term-label">denitrification pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9K4V0" data-a="GO:0019333" data-r="GO_REF:0000041" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NorR1 regulates nitric oxide reductase expression, but it is not itself a denitrification enzyme. UniProt explicitly marks the denitrification pathway association as regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Species-specific evidence supports a regulatory role limited to NO-responsive nitric oxide reductase transcription. The PMID:11069685 abstract states that other nitrogen oxide-reducing steps are independent of NorR, so projecting a direct denitrification-pathway annotation to NorR1 overstates the gene product&#39;s role.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CUPNH/norR1/norR1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Nitrogen metabolism; nitrate reduction (denitrification) [regulation].</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link">
+                                        PMID:11069685
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">This reaction is not strictly co-ordinated on the regulatory level with the other nitrogen oxide-reducing steps of the denitrification chain that are independent of NorR.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141097" target="_blank" class="term-link">
+                                    GO:0141097
+                                </a>
+                            </span>
+                            <span class="term-label">ligand-modulated transcription activator activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11069685
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A novel NO-responding regulator controls the reduction of ni...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q9K4V0" data-a="GO:0141097" data-r="PMID:11069685" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NorR1 is an NO-responsive transcriptional activator of the nitric oxide reductase operon.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This term captures the complete NorR molecular activity better than the separate automated ATP-binding and sequence-specific DNA-binding terms. Ralstonia-specific mutant/reporter evidence establishes NO-responsive transcriptional activation, while broader NorR-family biochemical work explains the ligand-modulated AAA+ activation mechanism.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link">
+                                        PMID:11069685
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Transcription activation by NorR responds to the availability of NO.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15667304" target="_blank" class="term-link">
+                                        PMID:15667304
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Mutations altering individual bases of this sequence resulted in an 80-90% decrease in transcriptional activation by wild-type NorR.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16193057" target="_blank" class="term-link">
+                                        PMID:16193057
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Here we show that the regulatory domain of NorR contains a mononuclear non-haem iron centre, which reversibly binds NO.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:CUPNH/norR1/norR1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Falcon synthesis identifies NorR1 as an NO-sensing sigma-54 bacterial enhancer-binding protein with GAF, AAA+ ATPase, and DNA-binding domains, activating norAB transcription rather than catalyzing a denitrification reaction.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR32071 family research supports sigma-54 enhancer-binding proteins as conserved AAA+ ATPase transcriptional activators whose specific biological-process wiring depends on N-terminal sensory/regulatory domains.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Activates sigma-54-dependent nitric oxide reductase transcription in response to nitric oxide through a GAF/AAA+/HTH NorR regulatory architecture.</h3>
+                <span class="vote-buttons" data-g="Q9K4V0" data-a="FUNCTION: Activates sigma-54-dependent nitric oxide reductas..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0141097" target="_blank" class="term-link">
+                            ligand-modulated transcription activator activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045893" target="_blank" class="term-link">
+                                positive regulation of DNA-templated transcription
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link">
+                                PMID:11069685
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Transcription activation by NorR responds to the availability of NO.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15667304" target="_blank" class="term-link">
+                                PMID:15667304
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">norB and the adjacent norA form an operon that is controlled by the sigma(54)-dependent transcriptional activator NorR in response to NO.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CUPNH/norR1/norR1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">FUNCTION: Required for the nitric oxide (NO) induced expression of NO reductase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:CUPNH/norR1/norR1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Across organism-specific genetics and broader mechanistic work, NorR1 is best annotated as a dedicated NO-sensing bacterial enhancer-binding protein that activates sigma-54-dependent transcription of NO-reduction genes.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">PTHR32071 members share the ATP-dependent sigma-54 activation machinery but differ in regulatory inputs, making ligand-modulated transcription activator activity the appropriate MF framing for NorR.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11069685" target="_blank" class="term-link">
+                            PMID:11069685
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel NO-responding regulator controls the reduction of nitric oxide in Ralstonia eutropha.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Ralstonia NorR is required for NO-responsive transcription of nitric oxide reductase genes.</div>
+                        
+                        <div class="finding-text">"norB1 gene transcription requires a functional rpoN gene and the regulator NorR, a novel member of the NtrC family of response regulators."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NorR controls nitric oxide reduction but not the other denitrification reduction steps.</div>
+                        
+                        <div class="finding-text">"This reaction is not strictly co-ordinated on the regulatory level with the other nitrogen oxide-reducing steps of the denitrification chain that are independent of NorR."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15667304" target="_blank" class="term-link">
+                            PMID:15667304
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional regulation of nitric oxide reduction in Ralstonia eutropha H16.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NorR is a sigma-54-dependent transcriptional activator that binds upstream activator sequences at norA.</div>
+                        
+                        <div class="finding-text">"A NorR derivative containing MalE in place of the N-terminal domain binds to a 73 bp region upstream of norA that includes three copies of the putative upstream activator sequence GGT-(N(7))-ACC."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16193057" target="_blank" class="term-link">
+                            PMID:16193057
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A non-haem iron centre in the transcription factor NorR senses nitric oxide.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">NorR-family proteins sense NO through the regulatory domain and couple NO binding to ATPase-dependent transcription activation.</div>
+                        
+                        <div class="finding-text">"Binding of NO stimulates the ATPase activity of NorR, enabling the activation of transcription by RNA polymerase."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CUPNH/norR1/norR1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for norR1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes NorR1 as required for NO-induced expression of nitric oxide reductase and lists denitrification as regulatory pathway context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:CUPNH/norR1/norR1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research for norR1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Deep research separates organism-specific Ralstonia/Cupriavidus NorR genetics from family-level NorR mechanism and supports treating NorR1 as an NO-responsive sigma-54 transcriptional activator, not a direct denitrification enzyme.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon family deep research for PTHR32071 sigma-54-dependent transcriptional regulators</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Family research found that sigma-54 enhancer-binding proteins conserve an AAA+ transcription-activation core but diverge mainly through sensory domains and pathway-specific regulatory inputs, supporting a specific NorR regulatory annotation rather than broad BP propagation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(norR1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9K4V0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T14:01:28.656559</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="norR1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-norr1-uniprot-q9k4v0-gene-norr1-locus-phg246-in-cupriavidus-necator-h16">Research report: NorR1 (UniProt Q9K4V0; gene <strong>norR1</strong>; locus <strong>PHG246</strong>) in <em>Cupriavidus necator</em> H16</h2>
+<h3 id="executive-summary-identity-verified">Executive summary (identity verified)</h3>
+<p>UniProt Q9K4V0 corresponds to <strong>NorR1</strong>, a nitric-oxide (NO) responsive transcriptional activator in <em>Cupriavidus necator</em> (syn. <em>Ralstonia eutropha</em>) strain H16. Primary literature on H16 shows the organism contains <strong>two closely related paralogs</strong>, <strong>norR1</strong> and <strong>norR2</strong>, each located upstream of a duplicated <strong>norAB</strong> operon; the proteins are highly similar and (at least partly) functionally redundant. NorR1 is a <strong>σ54 (RpoN)-dependent bacterial enhancer-binding protein (bEBP)</strong> that senses NO and activates transcription of NO-reduction genes, principally <strong>norAB</strong> in H16. (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 1-2, busch2004adnaregion pages 1-1, busch2004adnaregion pages 5-6)</p>
+<h3 id="1-key-concepts-and-current-understanding-definitions-and-biological-role">1) Key concepts and current understanding (definitions and biological role)</h3>
+<h4 id="11-what-norr1-is-functional-definition">1.1 What NorR1 is (functional definition)</h4>
+<p>NorR1 is <strong>not an enzyme</strong>; it is a <strong>DNA-binding transcriptional activator</strong> of the σ54/RpoN family (often grouped with NtrC-like bEBPs). Its core molecular role is to couple an NO-sensing module to ATP-driven remodeling of the σ54-RNA polymerase closed complex, enabling transcription initiation at specific promoters. This definition is supported by genetic evidence in H16 that nor gene transcription requires <strong>NorR</strong> and <strong>RpoN/σ54</strong>. (pohlmann2000anovelno‐responding pages 1-2, pohlmann2000anovelno‐responding pages 9-10)</p>
+<h4 id="12-the-pathway-context-no-detoxification-denitrification-branch">1.2 The pathway context: NO detoxification / denitrification branch</h4>
+<p>In H16, NorR activates transcription of <strong>norAB</strong>, where <strong>norB encodes a single-subunit qNor-type nitric oxide reductase</strong> (NO reductase) and <strong>norA encodes a co-transcribed protein of unknown function</strong>. Thus, NorR1 sits upstream of a NO-reduction module that lowers intracellular NO burden under oxygen limitation/denitrifying conditions. (busch2004adnaregion pages 1-1, pohlmann2000anovelno‐responding pages 1-2, rodionov2005dissimilatorymetabolismof pages 1-2)</p>
+<p>Comparative reconstruction of nitrogen-oxide transcription networks further places NorR among NO-responsive regulators that control NO-reductase genes across proteobacteria (e.g., norVW in <em>E. coli</em>; norAB in <em>R. eutropha/H16</em>), emphasizing that <strong>the regulated operon is species-specific</strong>—for <em>C. necator</em> H16 the validated target is <strong>norAB</strong>. (rodionov2005dissimilatorymetabolismof pages 1-2, busch2004adnaregion pages 5-6)</p>
+<h4 id="13-domain-architecture-definition-of-modules">1.3 Domain architecture (definition of modules)</h4>
+<p>NorR1 in H16 has the “typical modular structure” of σ54 activators:<br />
+- <strong>N-terminal signaling domain containing a GAF module</strong> (the NO-sensing/regulatory component) (busch2004adnaregion pages 1-1, pohlmann2000anovelno‐responding pages 3-4)<br />
+- <strong>Central AAA+ ATPase/activation domain</strong> with conserved nucleotide-binding motifs (pohlmann2000anovelno‐responding pages 2-2)<br />
+- <strong>C-terminal DNA-binding domain</strong> (helix–turn–helix-like) that recognizes enhancer-like upstream binding sites (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 3-4)</p>
+<p>This modular architecture aligns with the UniProt/InterPro domain calls supplied in the task prompt (GAF + AAA+_ATPase + DNA-binding). The key functional implication is that NorR1 is expected to be a <strong>cytoplasmic</strong> protein that binds DNA and interacts with cytoplasmic RNAP–σ54 (i.e., it is not membrane-localized). (pohlmann2000anovelno‐responding pages 1-2, bush2015thestructuralbasis pages 1-3)</p>
+<h3 id="2-recent-developments-and-latest-research-prioritizing-20232024-where-possible">2) Recent developments and latest research (prioritizing 2023–2024 where possible)</h3>
+<h4 id="21-availability-of-20232024-literature-specific-to-c-necator-h16-norr1">2.1 Availability of 2023–2024 literature specific to <em>C. necator</em> H16 NorR1</h4>
+<p>Targeted literature searches did <strong>not</strong> retrieve 2023–2024 primary publications that directly characterize <strong>NorR1 (Q9K4V0/PHG246)</strong> in <em>C. necator</em> H16. Consequently, the most authoritative organism-specific evidence remains earlier mechanistic genetics/biochemistry from H16 (2000; 2004), complemented by later high-resolution mechanistic/structural work on NorR as a conserved bEBP (2015) and general bEBP/σ54 reviews (2020). (pohlmann2000anovelno‐responding pages 1-2, busch2004adnaregion pages 1-1, bush2015thestructuralbasis pages 1-3, gao2020bacterialenhancerbinding pages 6-8)</p>
+<h4 id="22-20152020-mechanistic-advances-that-shape-current-understanding">2.2 2015–2020 mechanistic advances that shape “current understanding”</h4>
+<p>Although not 2023–2024, the structural biology work establishing how full-length NorR assembles on enhancer DNA and how the regulatory GAF domain gates ATPase function represents the key “modern” mechanistic framework used for annotation and remains current. In particular, Bush et al. (2015) provided structural and functional characterization of full-length NorR bound to enhancer DNA, refining how signal-dependent conformational changes expose the AAA+ loops required to engage σ54-RNAP. (bush2015thestructuralbasis pages 1-3, bush2015thestructuralbasis pages 10-11)</p>
+<h3 id="3-molecular-function-regulon-and-mechanism-evidence-based-functional-annotation">3) Molecular function, regulon, and mechanism (evidence-based functional annotation)</h3>
+<h4 id="31-verified-norr1-regulated-genes-in-c-necator-h16">3.1 Verified NorR1-regulated genes in <em>C. necator</em> H16</h4>
+<p><strong>Directly supported target operons in H16:</strong><br />
+- <strong>norAB</strong> (dicistronic) is activated by NorR in response to NO/NO-generating agents. In the H16 system, authors note <strong>norA/norB are the only NorR targets identified</strong> in that organism (as of their study). (busch2004adnaregion pages 5-6, busch2004adnaregion pages 1-1)</p>
+<p><strong>Gene duplication and redundancy:</strong><br />
+- H16 contains <strong>two norR genes</strong> (norR1 and norR2) upstream of duplicated norAB operons; the NorR proteins are described as duplicated and isofunctional in NO metabolism, and a deletion of megaplasmid-borne norR1 can show little phenotype due to redundancy with norR2. (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 1-2)</p>
+<h4 id="32-dna-recognition-and-promoter-architecture-enhancer-binding-sites">3.2 DNA recognition and promoter architecture (enhancer binding sites)</h4>
+<p>NorR binds upstream of the σ54-dependent promoter and recognizes an enhancer region with <strong>three conserved inverted repeats</strong>. DNase I footprinting defined a <strong>73-bp protected segment</strong> containing the NorR boxes; the conserved motif is reported as <strong>GGT-(N7)-ACC</strong>. Mutations altering the repeats/spacings drastically reduce NorR-dependent activation (reported ~<strong>80–90%</strong> reduction). (busch2004adnaregion pages 1-1)</p>
+<p>These data support annotation of NorR1 as a sequence-specific enhancer-binding transcriptional activator and indicate that promoter activation in H16 depends on a multi-site enhancer architecture. (busch2004adnaregion pages 1-1)</p>
+<h4 id="33-effector-sensing-no-is-the-primary-inducer">3.3 Effector sensing: NO is the primary inducer</h4>
+<p>Genetic reporter assays in H16 support <strong>NO</strong> as the major effector signal for NorR-dependent activation. For example, the NO donor <strong>sodium nitroprusside (SNP)</strong> restored activity to <strong>~87% of wild-type</strong> in a norA-lacZ reporter context, supporting NO as the physiologically relevant activating signal. (pohlmann2000anovelno‐responding pages 6-6)</p>
+<h4 id="34-domain-to-function-mapping-in-h16-experimental-truncations">3.4 Domain-to-function mapping in H16 (experimental truncations)</h4>
+<p>Deletion/truncation analyses in H16 are consistent with an autoinhibited regulatory model:<br />
+- Removing the N-terminal <strong>A domain (including the GAF motif)</strong> yields a <strong>constitutively active</strong> NorR derivative, implying that the GAF-containing region normally represses activation in the absence of signal. (pohlmann2000anovelno‐responding pages 6-6)<br />
+- Removing additional downstream functional regions abolishes activation, supporting that the central and C-terminal modules are required for transcriptional activation and DNA binding. (pohlmann2000anovelno‐responding pages 6-6)</p>
+<h4 id="35-mechanistic-activation-model-structuralbiophysical-evidence-from-norr-family">3.5 Mechanistic activation model (structural/biophysical evidence from NorR family)</h4>
+<p>A modern mechanistic picture comes from full-length NorR structural/functional work:<br />
+- NorR is described as a <strong>NO-responsive bEBP</strong> comprised of an <strong>N-terminal GAF domain</strong>, <strong>central AAA ATPase</strong>, and <strong>C-terminal DNA-binding domain</strong>. NO binds the GAF iron center, forming a mononitrosyl complex that relieves repression of the AAA+ activation machinery; deleting the GAF makes NorR constitutively active. (bush2015thestructuralbasis pages 1-3)<br />
+- Enhancer DNA binding stabilizes oligomerization into a higher-mass species (gel filtration shift from <strong>16.5 mL</strong> to ~<strong>9 mL</strong> when DNA is present), and EM supports formation of ring-like oligomers consistent with a <strong>hexameric AAA+ ring</strong>. (bush2015thestructuralbasis pages 3-5, bush2015thestructuralbasis pages 7-9)<br />
+- Structural modeling places GAF domains at the periphery of the AAA ring in the activated state and proposes repression operates by restraining the <strong>L1/L2 loops</strong> (which include the GAFTGA family motif) that must engage σ54-RNAP; NO-dependent rearrangement exposes these loops for productive σ54 contact and ATP hydrolysis. (bush2015thestructuralbasis pages 10-11, bush2015thestructuralbasis pages 9-10)</p>
+<p>Quantitative/structural parameters reported include an EM reconstruction at ~<strong>22 Å</strong>, an AAA ring diameter around <strong>~155 Å</strong>, and a geometric estimate that <strong>~350 Å (~100 bp)</strong> of DNA is needed to encircle the hexameric assembly (where a 66 bp fragment is insufficient for stabilization in a tested context). (bush2015thestructuralbasis pages 7-9, bush2015thestructuralbasis pages 9-10)</p>
+<h4 id="36-how-norr1-fits-the-general-54bebp-transcription-initiation-model-expert-synthesis">3.6 How NorR1 fits the general σ54/bEBP transcription initiation model (expert synthesis)</h4>
+<p>A detailed mechanistic review of bEBPs summarizes how AAA+ ATP hydrolysis drives conversion of σ54-RNAP closed complexes to open complexes through intermediate states with partial DNA melting (~<strong>5–6 bp</strong>), DNA kinking (~<strong>30°</strong>), and formation of a transcription bubble (~<strong>13 nt</strong>, −11 to +2). While this is not NorR1-specific data, it provides authoritative mechanistic grounding for functional annotation of NorR-family activators (including NorR1) as AAA+ ATPases that remodel RNAP–σ54. (gao2020bacterialenhancerbinding pages 6-8)</p>
+<h3 id="4-cellular-localization-and-biological-process-assignment">4) Cellular localization and biological process assignment</h3>
+<h4 id="41-subcellular-localization">4.1 Subcellular localization</h4>
+<p>Direct localization experiments for H16 NorR1 were not found in the retrieved sources. However, the demonstrated activities—DNA binding upstream of promoters and ATPase-driven interaction with σ54-RNAP—are consistent with NorR1 acting as a <strong>cytoplasmic</strong> transcription factor associated with the nucleoid (bacterial chromosome/plasmid DNA). No evidence supports membrane or periplasmic localization. (pohlmann2000anovelno‐responding pages 1-2, bush2015thestructuralbasis pages 1-3)</p>
+<h4 id="42-biological-processes">4.2 Biological processes</h4>
+<p>Supported processes for NorR1 in H16:<br />
+- <strong>Regulation of nitric oxide reduction</strong> / NO detoxification under oxygen limitation/denitrifying conditions via activation of norAB. (pohlmann2000anovelno‐responding pages 1-2, busch2004adnaregion pages 1-1)</p>
+<h3 id="5-current-applications-and-real-world-implementations-organism-level-context">5) Current applications and real-world implementations (organism-level context)</h3>
+<p>Although NorR1 itself is a regulatory protein rather than a direct biocatalyst used in industry, its function is relevant to applied use of <em>C. necator</em> H16 because NO/denitrification modules influence redox balance and growth under oxygen-limited conditions.</p>
+<p><em>C. necator</em> H16 is widely used/studied as a biotechnology chassis for hydrogen metabolism and bioenergy applications. In a heterotrophic diauxic batch culture study designed to express soluble hydrogenase (an enzyme of interest for biochemical hydrogen fuel cells), transcriptome-scale changes were measured and provide quantitative context for the organism’s regulated respiratory metabolism:<br />
+- qRT-PCR: <strong>hoxF ~4.6-fold</strong>, <strong>hypF2 ~2.2–2.5-fold</strong>, <strong>hoxA ~4.4–4.5-fold</strong> during the derepression/shift conditions. (jugder2015ananalysisof pages 2-4, jugder2015ananalysisof pages 1-2)<br />
+- Growth rate changed from <strong>~0.31 h−1</strong> (fructose) to <strong>~0.18 h−1</strong> (glycerol) in the reported system, consistent with an altered energy state that can intersect with respiratory regulation. (jugder2015ananalysisof pages 2-4, jugder2015ananalysisof pages 1-2)<br />
+- RNA-seq scale: <strong>~23.2M to ~33.8M read pairs</strong> with <strong>98.9–99.15% alignment</strong>, and thousands of differentially expressed genes, underscoring the organism’s metabolic plasticity. (jugder2015ananalysisof pages 2-4)</p>
+<p>While these data do not directly measure NorR1, they demonstrate the real-world relevance of regulatory networks controlling redox/respiration (including nitrogen-oxide metabolism on megaplasmid pHG1) in bioprocess settings. (jugder2015ananalysisof pages 10-11, jugder2015ananalysisof pages 7-9)</p>
+<h3 id="6-relevant-statistics-and-data-highlights-from-the-evidence-base">6) Relevant statistics and data highlights (from the evidence base)</h3>
+<p>Key quantitative findings useful for functional annotation and promoter engineering:<br />
+- NorR1/NorR2 sizes: <strong>513 aa / 521 aa</strong>; ~<strong>86% identity</strong> between paralogs. (pohlmann2000anovelno‐responding pages 2-2)<br />
+- NorR boxes in H16 norAB enhancer: <strong>73 bp</strong> footprint; motif <strong>GGT-(N7)-ACC</strong>; motif perturbations reduce activation by <strong>~80–90%</strong>. (busch2004adnaregion pages 1-1)<br />
+- NO donor effect: SNP restored reporter activity to <strong>~87% of wild type</strong> in a norA-lacZ assay context (supporting NO as primary effector). (pohlmann2000anovelno‐responding pages 6-6)<br />
+- Structural/biophysical parameters for NorR family: EM reconstruction <strong>~22 Å</strong>, model correlation improvement <strong>0.44 → 0.70</strong>, gel filtration shift <strong>16.5 mL → ~9 mL</strong> with enhancer DNA, estimated <strong>~350 Å (~100 bp)</strong> DNA required to encircle hexamer. (bush2015thestructuralbasis pages 10-11, bush2015thestructuralbasis pages 3-5, bush2015thestructuralbasis pages 9-10)</p>
+<h3 id="7-expert-opinion-authoritative-analysis-interpretation">7) Expert opinion / authoritative analysis (interpretation)</h3>
+<p>Across organism-specific genetics (H16) and broader mechanistic work (structural NorR, bEBP reviews), NorR1 is best annotated as a dedicated NO-sensing bEBP that activates σ54-dependent transcription of NO-reduction genes. The most defensible, evidence-based “primary function” assignment for <strong>Q9K4V0/PHG246</strong> is therefore:<br />
+- <strong>Molecular function:</strong> NO-responsive transcriptional activator (σ54-dependent bEBP)<br />
+- <strong>Biological process:</strong> transcriptional regulation of nitric oxide reduction / nitrosative stress response<br />
+- <strong>Pathway:</strong> NO detoxification branch of denitrification (via norAB activation)<br />
+- <strong>Cellular location:</strong> cytoplasm/nucleoid-associated regulator</p>
+<p>This interpretation is directly supported for H16 by the norR1/norR2 duplication and norAB regulation studies, and mechanistically supported by structural work showing how GAF-mediated allostery gates AAA+ ATPase function and σ54 engagement. (pohlmann2000anovelno‐responding pages 1-2, busch2004adnaregion pages 1-1, bush2015thestructuralbasis pages 1-3, bush2015thestructuralbasis pages 10-11)</p>
+<h3 id="evidence-summary-table">Evidence summary table</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Evidence / Key finding</th>
+<th>Organism / system</th>
+<th>Quantitative details if any</th>
+<th>Primary citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity / disambiguation</td>
+<td>UniProt Q9K4V0 corresponds to <strong>NorR1</strong>, an NO-responsive, <strong>σ54/RpoN-dependent transcriptional activator</strong> adjacent to a duplicated <strong>norAB</strong> locus in <em>Cupriavidus necator</em> H16 (syn. <em>Ralstonia eutropha</em> H16). The organism carries <strong>two NorR paralogs</strong>, <strong>NorR1</strong> and <strong>NorR2</strong>, which are highly similar and functionally redundant in NO metabolism; this matches the UniProt description and warns against confusing it with NorR proteins from other bacteria.</td>
+<td><em>C. necator</em> H16 / <em>R. eutropha</em> H16</td>
+<td>NorR1 <strong>513 aa</strong>; NorR2 <strong>521 aa</strong>; ~<strong>86% identity</strong> between paralogs</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 1-2)</td>
+</tr>
+<tr>
+<td>Genomic context</td>
+<td><strong>norR1</strong> is located upstream of <strong>norA1B1</strong> on megaplasmid <strong>pHG1</strong>; <strong>norR2</strong> is upstream of <strong>norA2B2</strong> on chromosome II. The denitrification / anaerobiosis context on pHG1 is relevant for annotation of PHG246.</td>
+<td><em>C. necator</em> H16</td>
+<td>Two duplicated <strong>norRAB</strong> loci; pHG1 encodes key anaerobic / lithoautotrophic functions</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Jugder et al., 2015, https://doi.org/10.1186/s12934-015-0226-4 (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 1-2, jugder2015ananalysisof pages 10-11)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>NorR1 is <strong>not an enzyme or transporter</strong>; it is a <strong>bacterial enhancer-binding protein (bEBP)</strong> that activates transcription of NO-detoxification genes by coupling signal sensing to ATP-dependent activation of <strong>σ54-RNA polymerase</strong>.</td>
+<td>NorR family / <em>C. necator</em> H16</td>
+<td>Requires ATP hydrolysis by AAA+ domain for transcriptional activation</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Gao et al., 2020, https://doi.org/10.3390/biom10030351 (pohlmann2000anovelno‐responding pages 9-10, gao2020bacterialenhancerbinding pages 6-8)</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>NorR1 has the classic modular architecture of a σ54 activator: <strong>N-terminal GAF signaling domain</strong>, <strong>central AAA+ ATPase / activation domain</strong>, and <strong>C-terminal DNA-binding domain</strong> (HTH-like). This agrees with the UniProt / InterPro domain assignment.</td>
+<td><em>C. necator</em> H16 and NorR family</td>
+<td>Domain mapping by truncation and sequence analysis; GAF-containing A domain relieves repression when removed</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Büsch et al., 2004, https://doi.org/10.1128/JB.186.23.7980-7987.2004 (pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 3-4, busch2004adnaregion pages 1-1, pohlmann2000anovelno‐responding pages 6-6)</td>
+</tr>
+<tr>
+<td>Effector / signal</td>
+<td>The physiological effector is <strong>nitric oxide (NO)</strong>. NO or NO-generating compounds induce NorR-dependent promoter activation; the GAF domain is the sensor module.</td>
+<td><em>C. necator</em> H16; NorR family</td>
+<td>SNP (NO donor) restored promoter activity to about <strong>87% of wild type</strong> in reporter assays; in Bush et al. in vivo assays used <strong>4 mM potassium nitrite</strong> as NO-generating condition</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Bush et al., 2015, https://doi.org/10.1111/mmi.12844 (pohlmann2000anovelno‐responding pages 6-6, bush2015thestructuralbasis pages 3-5, bush2015thestructuralbasis pages 1-3)</td>
+</tr>
+<tr>
+<td>Regulated genes in <em>C. necator</em></td>
+<td>The experimentally identified direct NorR targets in <em>C. necator</em> H16 are <strong>norA</strong> and <strong>norB</strong> in the <strong>norAB</strong> operon; <strong>norB</strong> encodes a <strong>single-subunit qNor-type nitric oxide reductase</strong>, while <strong>norA</strong> encodes a protein of unknown function.</td>
+<td><em>C. necator</em> H16</td>
+<td>Büsch et al. state <strong>norA/norB are the only identified NorR targets</strong> in this organism</td>
+<td>Büsch et al., 2004, https://doi.org/10.1128/JB.186.23.7980-7987.2004; Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x (busch2004adnaregion pages 1-1, busch2004adnaregion pages 5-6, pohlmann2000anovelno‐responding pages 1-2)</td>
+</tr>
+<tr>
+<td>Cross-species regulon context</td>
+<td>Comparative genomics shows NorR regulons in proteobacteria often control <strong>NO detoxification genes</strong>, including <strong>norAB</strong> in <em>R. eutropha</em> and <strong>norVW</strong> in <em>E. coli</em>; however, for this target protein, evidence supports <strong>norAB</strong>, not norVW, in <em>C. necator</em>.</td>
+<td>β- and γ-proteobacteria</td>
+<td>Conserved upstream motif linked to <strong>norB, norV, hmp, hcp</strong> in different species</td>
+<td>Rodionov et al., 2005, https://doi.org/10.1371/journal.pcbi.0010055; Büsch et al., 2004, https://doi.org/10.1128/JB.186.23.7980-7987.2004 (rodionov2005dissimilatorymetabolismof pages 1-2, busch2004adnaregion pages 1-1, busch2004adnaregion pages 5-6)</td>
+</tr>
+<tr>
+<td>DNA-binding site / enhancer architecture</td>
+<td>NorR binds a <strong>73-bp protected region</strong> upstream of <strong>norAB</strong> containing <strong>three conserved inverted repeats</strong> that function as enhancer sites. These are essential for activation.</td>
+<td><em>C. necator</em> H16</td>
+<td>Footprint length <strong>73 bp</strong>; motif <strong>GGT-(N7)-ACC</strong>; mutation of repeats reduced activation by about <strong>80–90%</strong></td>
+<td>Büsch et al., 2004, https://doi.org/10.1128/JB.186.23.7980-7987.2004 (busch2004adnaregion pages 1-1)</td>
+</tr>
+<tr>
+<td>σ54 dependence</td>
+<td>NorR works through a <strong>σ54-dependent promoter</strong> upstream of norAB; NorR and <strong>RpoN</strong> are both required for norB1 expression.</td>
+<td><em>C. necator</em> H16</td>
+<td>Functional dependence demonstrated with promoter fusions / mutant analysis</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Büsch et al., 2004, https://doi.org/10.1128/JB.186.23.7980-7987.2004 (pohlmann2000anovelno‐responding pages 1-2, pohlmann2000anovelno‐responding pages 9-10, busch2004adnaregion pages 5-6)</td>
+</tr>
+<tr>
+<td>Mechanism of repression and activation</td>
+<td>The <strong>GAF domain represses</strong> the AAA+ transcription-activation machinery in the absence of NO. Removal of the GAF-containing A domain makes NorR constitutively active, showing intramolecular negative control.</td>
+<td><em>C. necator</em> H16; NorR family</td>
+<td>ΔA/GAF mutant constitutive; deletions removing additional downstream regions abolish activation</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x (pohlmann2000anovelno‐responding pages 6-6, pohlmann2000anovelno‐responding pages 9-10)</td>
+</tr>
+<tr>
+<td>Structural activation model</td>
+<td>Enhancer DNA binding promotes assembly of NorR into a <strong>hexameric AAA+ ring</strong>. NO signaling causes the GAF domains to move to the periphery, exposing <strong>L1/L2 loops</strong> (with the GAFTGA motif in the family) so the ATPase ring can engage <strong>σ54-RNAP</strong> and remodel the closed complex into an open complex.</td>
+<td>NorR model system / family-level inference applicable to NorR1</td>
+<td>EM reconstruction at ~<strong>22 Å</strong>; map filtered to ~<strong>28 Å</strong>; model correlation improved <strong>0.44 → 0.70</strong></td>
+<td>Bush et al., 2015, https://doi.org/10.1111/mmi.12844; Gao et al., 2020, https://doi.org/10.3390/biom10030351 (bush2015thestructuralbasis pages 10-11, bush2015thestructuralbasis pages 7-9, bush2015thestructuralbasis pages 1-3, bush2015thestructuralbasis pages 9-10, gao2020bacterialenhancerbinding pages 6-8)</td>
+</tr>
+<tr>
+<td>Oligomerization and enhancer dependence</td>
+<td>NorR is unusual among bEBPs in requiring <strong>three enhancer sites</strong>; binding enhancer DNA stabilizes higher-order oligomers even before activation.</td>
+<td>NorR model system / family-level inference</td>
+<td>Gel filtration shift from <strong>16.5 mL</strong> monomer to ~<strong>9 mL</strong> high-mass species on DNA; <strong>~100 bp / ~350 Å</strong> DNA estimated to encircle hexamer; <strong>66 bp</strong> insufficient</td>
+<td>Bush et al., 2015, https://doi.org/10.1111/mmi.12844 (bush2015thestructuralbasis pages 3-5, bush2015thestructuralbasis pages 1-3, bush2015thestructuralbasis pages 9-10)</td>
+</tr>
+<tr>
+<td>ATPase-coupled transcription activation</td>
+<td>Like other bEBPs, NorR uses ATP hydrolysis in an <strong>AAA+ hexamer</strong> to remodel σ54-RNAP. General bEBP structural work explains how ATPase-driven L1/L2 loop movements promote DNA opening and transcription initiation.</td>
+<td>bEBP / σ54 field</td>
+<td>Structural snapshots in bEBP field: partial melting <strong>5–6 bp</strong>, DNA kink ~<strong>30°</strong>, transcription bubble <strong>13 nt</strong></td>
+<td>Gao et al., 2020, https://doi.org/10.3390/biom10030351 (gao2020bacterialenhancerbinding pages 6-8)</td>
+</tr>
+<tr>
+<td>Activated mutant evidence</td>
+<td>A <strong>Q304E</strong> substitution in NorR partially bypasses GAF repression, producing enhancer-independent ATPase activity and NO-independent transcription in vivo, supporting the allosteric model.</td>
+<td>NorR model system / family-level inference</td>
+<td>Q304E active without added NO; Walker B <strong>D286A</strong> suppresses ATPase activity</td>
+<td>Bush et al., 2015, https://doi.org/10.1111/mmi.12844 (bush2015thestructuralbasis pages 3-5, bush2015thestructuralbasis pages 7-9, bush2015thestructuralbasis pages 9-10)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>NorR1 is a <strong>soluble cytoplasmic DNA-binding transcription factor</strong> acting at the <strong>cytoplasmic face of chromosomal / plasmid DNA</strong> and interacting with cytoplasmic <strong>σ54-RNAP</strong>; it is not a membrane or periplasmic protein.</td>
+<td>Inference from function/domain architecture</td>
+<td>No transmembrane role reported; acts on upstream enhancer DNA of norAB</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Bush et al., 2015, https://doi.org/10.1111/mmi.12844 (pohlmann2000anovelno‐responding pages 1-2, bush2015thestructuralbasis pages 1-3)</td>
+</tr>
+<tr>
+<td>Biological pathway</td>
+<td>NorR1 functions in the <strong>nitrosative stress / NO detoxification branch of denitrification</strong>, activating expression of <strong>nitric oxide reductase</strong> so NO can be reduced under low-oxygen / denitrifying conditions.</td>
+<td><em>C. necator</em> H16 and broader nitrogen-oxide metabolism</td>
+<td>Reporter induction observed under anoxia / denitrification conditions</td>
+<td>Pohlmann et al., 2000, https://doi.org/10.1046/j.1365-2958.2000.02157.x; Rodionov et al., 2005, https://doi.org/10.1371/journal.pcbi.0010055 (pohlmann2000anovelno‐responding pages 1-2, pohlmann2000anovelno‐responding pages 9-10, rodionov2005dissimilatorymetabolismof pages 1-2)</td>
+</tr>
+<tr>
+<td>Organism-level application context</td>
+<td><em>C. necator</em> H16 is industrially relevant for <strong>hydrogenase-based bioenergy</strong>, <strong>electrocatalysis</strong>, <strong>CO2-fixing lithoautotrophy</strong>, and <strong>PHA bioplastic production</strong>. These applications make respiratory and redox regulators, including NO/denitrification modules on <strong>pHG1</strong>, relevant for process optimization under oxygen-limited conditions.</td>
+<td><em>C. necator</em> H16 biotechnology</td>
+<td>hoxF up <strong>4.6-fold</strong>, hypF2 <strong>2.2–2.5-fold</strong>, hoxA <strong>~4.4–4.5-fold</strong>; growth rate <strong>0.31 h−1</strong> on fructose vs <strong>0.18 h−1</strong> on glycerol; RNA-seq alignment <strong>98.9–99.15%</strong></td>
+<td>Jugder et al., 2015, https://doi.org/10.1186/s12934-015-0226-4 (jugder2015ananalysisof pages 2-4, jugder2015ananalysisof pages 1-2, jugder2015ananalysisof pages 7-9)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, domain architecture, molecular mechanism, regulon, and biological context of Cupriavidus necator H16 NorR1 (UniProt Q9K4V0). It highlights which findings are directly organism-specific versus inferred from closely studied NorR-family structural work.</em></p>
+<h3 id="references-with-publication-dates-and-urls">References (with publication dates and URLs)</h3>
+<ul>
+<li>Pohlmann A, Cramm R, Schmelz K, Friedrich B. <strong>“A novel NO-responding regulator controls the reduction of nitric oxide in Ralstonia eutropha.”</strong> <em>Molecular Microbiology</em> (Nov <strong>2000</strong>). https://doi.org/10.1046/j.1365-2958.2000.02157.x (pohlmann2000anovelno‐responding pages 1-2, pohlmann2000anovelno‐responding pages 2-2, pohlmann2000anovelno‐responding pages 6-6)</li>
+<li>Büsch A, Pohlmann A, Friedrich B, Cramm R. <strong>“A DNA Region Recognized by the Nitric Oxide-Responsive Transcriptional Activator NorR Is Conserved in β- and γ-Proteobacteria.”</strong> <em>Journal of Bacteriology</em> (Dec <strong>2004</strong>). https://doi.org/10.1128/JB.186.23.7980-7987.2004 (busch2004adnaregion pages 1-1)</li>
+<li>Rodionov DA, Dubchak IL, Arkin AP, Alm EJ, Gelfand MS. <strong>“Dissimilatory Metabolism of Nitrogen Oxides in Bacteria: Comparative Reconstruction of Transcriptional Networks.”</strong> <em>PLoS Computational Biology</em> (Sep <strong>2005</strong>). https://doi.org/10.1371/journal.pcbi.0010055 (rodionov2005dissimilatorymetabolismof pages 1-2)</li>
+<li>Bush M, Ghosh T, Sawicka M, et al. <strong>“The structural basis for enhancer-dependent assembly and activation of the AAA transcriptional activator NorR.”</strong> <em>Molecular Microbiology</em> (Jan <strong>2015</strong>). https://doi.org/10.1111/mmi.12844 (bush2015thestructuralbasis pages 1-3, bush2015thestructuralbasis pages 7-9, bush2015thestructuralbasis pages 10-11)</li>
+<li>Gao F, Danson AE, Ye F, et al. <strong>“Bacterial Enhancer Binding Proteins—AAA+ Proteins in Transcription Activation.”</strong> <em>Biomolecules</em> (Feb <strong>2020</strong>). https://doi.org/10.3390/biom10030351 (gao2020bacterialenhancerbinding pages 6-8)</li>
+<li>Jugder B-E, Chen Z, Ping DTT, et al. <strong>“An analysis of the changes in soluble hydrogenase and global gene expression in Cupriavidus necator (Ralstonia eutropha) H16 grown in heterotrophic diauxic batch culture.”</strong> <em>Microbial Cell Factories</em> (Mar <strong>2015</strong>). https://doi.org/10.1186/s12934-015-0226-4 (jugder2015ananalysisof pages 2-4, jugder2015ananalysisof pages 1-2, jugder2015ananalysisof pages 7-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pohlmann2000anovelno‐responding pages 2-2): Anne Pohlmann, Rainer Cramm, Karin Schmelz, and Bärbel Friedrich. A novel no‐responding regulator controls the reduction of nitric oxide in ralstonia eutropha. Molecular Microbiology, 38:626-638, Nov 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.02157.x, doi:10.1046/j.1365-2958.2000.02157.x. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pohlmann2000anovelno‐responding pages 1-2): Anne Pohlmann, Rainer Cramm, Karin Schmelz, and Bärbel Friedrich. A novel no‐responding regulator controls the reduction of nitric oxide in ralstonia eutropha. Molecular Microbiology, 38:626-638, Nov 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.02157.x, doi:10.1046/j.1365-2958.2000.02157.x. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(busch2004adnaregion pages 1-1): Andrea Büsch, Anne Pohlmann, Bärbel Friedrich, and Rainer Cramm. A dna region recognized by the nitric oxide-responsive transcriptional activator norr is conserved in β- and γ-proteobacteria. Journal of Bacteriology, 186:7980-7987, Dec 2004. URL: https://doi.org/10.1128/jb.186.23.7980-7987.2004, doi:10.1128/jb.186.23.7980-7987.2004. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(busch2004adnaregion pages 5-6): Andrea Büsch, Anne Pohlmann, Bärbel Friedrich, and Rainer Cramm. A dna region recognized by the nitric oxide-responsive transcriptional activator norr is conserved in β- and γ-proteobacteria. Journal of Bacteriology, 186:7980-7987, Dec 2004. URL: https://doi.org/10.1128/jb.186.23.7980-7987.2004, doi:10.1128/jb.186.23.7980-7987.2004. This article has 29 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pohlmann2000anovelno‐responding pages 9-10): Anne Pohlmann, Rainer Cramm, Karin Schmelz, and Bärbel Friedrich. A novel no‐responding regulator controls the reduction of nitric oxide in ralstonia eutropha. Molecular Microbiology, 38:626-638, Nov 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.02157.x, doi:10.1046/j.1365-2958.2000.02157.x. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rodionov2005dissimilatorymetabolismof pages 1-2): Dmitry A Rodionov, Inna L Dubchak, Adam P Arkin, Eric J Alm, and Mikhail S Gelfand. Dissimilatory metabolism of nitrogen oxides in bacteria: comparative reconstruction of transcriptional networks. PLoS Computational Biology, 1:e55, Sep 2005. URL: https://doi.org/10.1371/journal.pcbi.0010055, doi:10.1371/journal.pcbi.0010055. This article has 358 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pohlmann2000anovelno‐responding pages 3-4): Anne Pohlmann, Rainer Cramm, Karin Schmelz, and Bärbel Friedrich. A novel no‐responding regulator controls the reduction of nitric oxide in ralstonia eutropha. Molecular Microbiology, 38:626-638, Nov 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.02157.x, doi:10.1046/j.1365-2958.2000.02157.x. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bush2015thestructuralbasis pages 1-3): Matt Bush, Tamaswati Ghosh, Marta Sawicka, Iain H. Moal, Paul A. Bates, Ray Dixon, and Xiaodong Zhang. The structural basis for enhancer‐dependent assembly and activation of the aaa transcriptional activator norr. Molecular Microbiology, 95:17-30, Jan 2015. URL: https://doi.org/10.1111/mmi.12844, doi:10.1111/mmi.12844. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gao2020bacterialenhancerbinding pages 6-8): Forson Gao, Amy E. Danson, Fuzhou Ye, Milija Jovanovic, Martin Buck, and Xiaodong Zhang. Bacterial enhancer binding proteins—aaa+ proteins in transcription activation. Biomolecules, 10:351, Feb 2020. URL: https://doi.org/10.3390/biom10030351, doi:10.3390/biom10030351. This article has 43 citations.</p>
+</li>
+<li>
+<p>(bush2015thestructuralbasis pages 10-11): Matt Bush, Tamaswati Ghosh, Marta Sawicka, Iain H. Moal, Paul A. Bates, Ray Dixon, and Xiaodong Zhang. The structural basis for enhancer‐dependent assembly and activation of the aaa transcriptional activator norr. Molecular Microbiology, 95:17-30, Jan 2015. URL: https://doi.org/10.1111/mmi.12844, doi:10.1111/mmi.12844. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pohlmann2000anovelno‐responding pages 6-6): Anne Pohlmann, Rainer Cramm, Karin Schmelz, and Bärbel Friedrich. A novel no‐responding regulator controls the reduction of nitric oxide in ralstonia eutropha. Molecular Microbiology, 38:626-638, Nov 2000. URL: https://doi.org/10.1046/j.1365-2958.2000.02157.x, doi:10.1046/j.1365-2958.2000.02157.x. This article has 142 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bush2015thestructuralbasis pages 3-5): Matt Bush, Tamaswati Ghosh, Marta Sawicka, Iain H. Moal, Paul A. Bates, Ray Dixon, and Xiaodong Zhang. The structural basis for enhancer‐dependent assembly and activation of the aaa transcriptional activator norr. Molecular Microbiology, 95:17-30, Jan 2015. URL: https://doi.org/10.1111/mmi.12844, doi:10.1111/mmi.12844. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bush2015thestructuralbasis pages 7-9): Matt Bush, Tamaswati Ghosh, Marta Sawicka, Iain H. Moal, Paul A. Bates, Ray Dixon, and Xiaodong Zhang. The structural basis for enhancer‐dependent assembly and activation of the aaa transcriptional activator norr. Molecular Microbiology, 95:17-30, Jan 2015. URL: https://doi.org/10.1111/mmi.12844, doi:10.1111/mmi.12844. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bush2015thestructuralbasis pages 9-10): Matt Bush, Tamaswati Ghosh, Marta Sawicka, Iain H. Moal, Paul A. Bates, Ray Dixon, and Xiaodong Zhang. The structural basis for enhancer‐dependent assembly and activation of the aaa transcriptional activator norr. Molecular Microbiology, 95:17-30, Jan 2015. URL: https://doi.org/10.1111/mmi.12844, doi:10.1111/mmi.12844. This article has 21 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jugder2015ananalysisof pages 2-4): Bat-Erdene Jugder, Zhiliang Chen, Darren Tan Tek Ping, Helene Lebhar, Jeffrey Welch, and Christopher P Marquis. An analysis of the changes in soluble hydrogenase and global gene expression in cupriavidus necator (ralstonia eutropha) h16 grown in heterotrophic diauxic batch culture. Microbial Cell Factories, Mar 2015. URL: https://doi.org/10.1186/s12934-015-0226-4, doi:10.1186/s12934-015-0226-4. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jugder2015ananalysisof pages 1-2): Bat-Erdene Jugder, Zhiliang Chen, Darren Tan Tek Ping, Helene Lebhar, Jeffrey Welch, and Christopher P Marquis. An analysis of the changes in soluble hydrogenase and global gene expression in cupriavidus necator (ralstonia eutropha) h16 grown in heterotrophic diauxic batch culture. Microbial Cell Factories, Mar 2015. URL: https://doi.org/10.1186/s12934-015-0226-4, doi:10.1186/s12934-015-0226-4. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jugder2015ananalysisof pages 10-11): Bat-Erdene Jugder, Zhiliang Chen, Darren Tan Tek Ping, Helene Lebhar, Jeffrey Welch, and Christopher P Marquis. An analysis of the changes in soluble hydrogenase and global gene expression in cupriavidus necator (ralstonia eutropha) h16 grown in heterotrophic diauxic batch culture. Microbial Cell Factories, Mar 2015. URL: https://doi.org/10.1186/s12934-015-0226-4, doi:10.1186/s12934-015-0226-4. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jugder2015ananalysisof pages 7-9): Bat-Erdene Jugder, Zhiliang Chen, Darren Tan Tek Ping, Helene Lebhar, Jeffrey Welch, and Christopher P Marquis. An analysis of the changes in soluble hydrogenase and global gene expression in cupriavidus necator (ralstonia eutropha) h16 grown in heterotrophic diauxic batch culture. Microbial Cell Factories, Mar 2015. URL: https://doi.org/10.1186/s12934-015-0226-4, doi:10.1186/s12934-015-0226-4. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="norR1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>busch2004adnaregion pages 1-1</li>
+<li>bush2015thestructuralbasis pages 1-3</li>
+<li>gao2020bacterialenhancerbinding pages 6-8</li>
+<li>jugder2015ananalysisof pages 2-4</li>
+<li>rodionov2005dissimilatorymetabolismof pages 1-2</li>
+<li>busch2004adnaregion pages 5-6</li>
+<li>bush2015thestructuralbasis pages 10-11</li>
+<li>bush2015thestructuralbasis pages 3-5</li>
+<li>bush2015thestructuralbasis pages 7-9</li>
+<li>bush2015thestructuralbasis pages 9-10</li>
+<li>jugder2015ananalysisof pages 1-2</li>
+<li>jugder2015ananalysisof pages 10-11</li>
+<li>jugder2015ananalysisof pages 7-9</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.02157.x</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.02157.x;</li>
+<li>https://doi.org/10.1186/s12934-015-0226-4</li>
+<li>https://doi.org/10.3390/biom10030351</li>
+<li>https://doi.org/10.1128/JB.186.23.7980-7987.2004</li>
+<li>https://doi.org/10.1111/mmi.12844</li>
+<li>https://doi.org/10.1128/JB.186.23.7980-7987.2004;</li>
+<li>https://doi.org/10.1371/journal.pcbi.0010055;</li>
+<li>https://doi.org/10.1111/mmi.12844;</li>
+<li>https://doi.org/10.1371/journal.pcbi.0010055</li>
+<li>https://doi.org/10.1046/j.1365-2958.2000.02157.x,</li>
+<li>https://doi.org/10.1128/jb.186.23.7980-7987.2004,</li>
+<li>https://doi.org/10.1371/journal.pcbi.0010055,</li>
+<li>https://doi.org/10.1111/mmi.12844,</li>
+<li>https://doi.org/10.3390/biom10030351,</li>
+<li>https://doi.org/10.1186/s12934-015-0226-4,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(norR1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9K4V0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="norr1-notes">norR1 notes</h1>
+<ul>
+<li>UniProt Q9K4V0 describes NorR1 as required for nitric oxide-induced expression of nitric oxide reductase [file:CUPNH/norR1/norR1-uniprot.txt "FUNCTION: Required for the nitric oxide (NO) induced expression of NO reductase"].</li>
+<li>UniProt records denitrification as regulatory pathway context, not direct catalysis [file:CUPNH/norR1/norR1-uniprot.txt "PATHWAY: Nitrogen metabolism; nitrate reduction (denitrification) [regulation]"].</li>
+<li>The UniPathway GO:0019333 row is therefore marked over-annotated: NorR1 regulates denitrification genes but is not an enzyme in the pathway [GO_REF:0000041; file:CUPNH/norR1/norR1-goa.tsv].</li>
+<li>PMID:11069685 directly supports the Ralstonia NorR regulatory model: norB1 transcription requires rpoN and NorR, NorR responds to NO, and the other denitrification steps are independent of NorR [PMID:11069685 "norB1 gene transcription requires a functional rpoN gene and the regulator NorR"; PMID:11069685 "Transcription activation by NorR responds to the availability of NO"; PMID:11069685 "other nitrogen oxide-reducing steps of the denitrification chain that are independent of NorR"].</li>
+<li>PMID:15667304 supports replacing generic sequence-specific DNA binding with a transcription activator MF: NorR controls the norAB operon in response to NO, binds upstream activator sequence DNA, and site mutations reduce activation [PMID:15667304 "controlled by the sigma(54)-dependent transcriptional activator NorR in response to NO"; PMID:15667304 "binds to a 73 bp region upstream of norA"; PMID:15667304 "80-90% decrease in transcriptional activation"].</li>
+<li>PMID:16193057 is not species-specific to C. necator, but supports evolutionary/family reasoning for NorR mechanism: the regulatory domain senses NO through a non-haem iron center and NO binding stimulates ATPase activity [PMID:16193057 "regulatory domain of NorR contains a mononuclear non-haem iron centre"; PMID:16193057 "Binding of NO stimulates the ATPase activity of NorR"].</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9K4V0
+gene_symbol: norR1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:381666
+  label: Cupriavidus necator (strain ATCC 17699 / DSM 428 / KCTC 22496 / NCIMB 10442 / H16 / Stanier 337)
+description: &gt;-
+  norR1 encodes a nitric oxide-responsive sigma-54-dependent transcriptional
+  activator in Cupriavidus necator H16. The protein has the conserved NorR
+  domain architecture: an N-terminal GAF regulatory region, a central AAA+
+  ATPase domain, and a C-terminal Fis-family helix-turn-helix DNA-binding
+  domain.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      NorR1 contains the conserved sigma-54-interaction/AAA+ ATPase region of
+      bacterial enhancer-binding proteins. ATP binding is plausible, but ATP
+      hydrolysis is the more informative molecular function for the
+      transcriptional activation mechanism.
+    action: MODIFY
+    reason: &gt;-
+      The InterPro support identifies the sigma-54 interaction ATP-binding
+      region, and NorR-family studies show that NO sensing stimulates NorR
+      ATPase activity to activate transcription. Replace the generic binding
+      term with ATP hydrolysis activity when making a positive MF assertion.
+    proposed_replacement_terms:
+    - id: GO:0016887
+      label: ATP hydrolysis activity
+    additional_reference_ids:
+    - PMID:16193057
+    supported_by:
+    - reference_id: file:CUPNH/norR1/norR1-uniprot.txt
+      supporting_text: InterPro; IPR002078; Sigma_54_int.
+    - reference_id: PMID:16193057
+      supporting_text: Binding of NO stimulates the ATPase activity of NorR, enabling the activation of transcription by RNA polymerase.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      NorR1 positively activates NO-responsive transcription of the norAB
+      nitric oxide reductase operon through a sigma-54-dependent promoter.
+    action: MODIFY
+    reason: &gt;-
+      The existing term is correct but too general. Species-specific Ralstonia
+      evidence shows NorR is required for transcriptional activation of norA1/
+      norB1 in response to NO, and promoter-site mutations strongly reduce
+      activation.
+    proposed_replacement_terms:
+    - id: GO:0045893
+      label: positive regulation of DNA-templated transcription
+    additional_reference_ids:
+    - PMID:11069685
+    - PMID:15667304
+    supported_by:
+    - reference_id: PMID:11069685
+      supporting_text: norB1 gene transcription requires a functional rpoN gene and the regulator NorR, a novel member of the NtrC family of response regulators.
+    - reference_id: PMID:15667304
+      supporting_text: norB and the adjacent norA form an operon that is controlled by the sigma(54)-dependent transcriptional activator NorR in response to NO.
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      NorR1 binds regulatory DNA upstream of the nitric oxide reductase operon,
+      but sequence-specific DNA binding alone is an under-specified molecular
+      function for this protein.
+    action: MODIFY
+    reason: &gt;-
+      NorR is an NO-responsive, sigma-54-dependent transcriptional activator.
+      The literature supports both DNA binding to upstream activator sequences
+      and ligand-modulated activation, so GO:0141097 is a better MF endpoint
+      than generic sequence-specific DNA binding.
+    proposed_replacement_terms:
+    - id: GO:0141097
+      label: ligand-modulated transcription activator activity
+    additional_reference_ids:
+    - PMID:15667304
+    - PMID:16193057
+    supported_by:
+    - reference_id: PMID:15667304
+      supporting_text: A NorR derivative containing MalE in place of the N-terminal domain binds to a 73 bp region upstream of norA that includes three copies of the putative upstream activator sequence GGT-(N(7))-ACC.
+    - reference_id: PMID:16193057
+      supporting_text: The NO-responsive activity of NorR raises important questions concerning the mechanism of NO sensing.
+- term:
+    id: GO:0019333
+    label: denitrification pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: &gt;-
+      NorR1 regulates nitric oxide reductase expression, but it is not itself a
+      denitrification enzyme. UniProt explicitly marks the denitrification
+      pathway association as regulation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Species-specific evidence supports a regulatory role limited to
+      NO-responsive nitric oxide reductase transcription. The PMID:11069685
+      abstract states that other nitrogen oxide-reducing steps are independent
+      of NorR, so projecting a direct denitrification-pathway annotation to
+      NorR1 overstates the gene product&#39;s role.
+    additional_reference_ids:
+    - PMID:11069685
+    supported_by:
+    - reference_id: file:CUPNH/norR1/norR1-uniprot.txt
+      supporting_text: &#39;PATHWAY: Nitrogen metabolism; nitrate reduction (denitrification) [regulation].&#39;
+    - reference_id: PMID:11069685
+      supporting_text: This reaction is not strictly co-ordinated on the regulatory level with the other nitrogen oxide-reducing steps of the denitrification chain that are independent of NorR.
+- term:
+    id: GO:0141097
+    label: ligand-modulated transcription activator activity
+  evidence_type: IMP
+  original_reference_id: PMID:11069685
+  review:
+    summary: &gt;-
+      NorR1 is an NO-responsive transcriptional activator of the nitric oxide
+      reductase operon.
+    action: NEW
+    reason: &gt;-
+      This term captures the complete NorR molecular activity better than the
+      separate automated ATP-binding and sequence-specific DNA-binding terms.
+      Ralstonia-specific mutant/reporter evidence establishes NO-responsive
+      transcriptional activation, while broader NorR-family biochemical work
+      explains the ligand-modulated AAA+ activation mechanism.
+    additional_reference_ids:
+    - PMID:15667304
+    - PMID:16193057
+    supported_by:
+    - reference_id: PMID:11069685
+      supporting_text: Transcription activation by NorR responds to the availability of NO.
+    - reference_id: PMID:15667304
+      supporting_text: Mutations altering individual bases of this sequence resulted in an 80-90% decrease in transcriptional activation by wild-type NorR.
+    - reference_id: PMID:16193057
+      supporting_text: Here we show that the regulatory domain of NorR contains a mononuclear non-haem iron centre, which reversibly binds NO.
+    - reference_id: file:CUPNH/norR1/norR1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Falcon synthesis identifies NorR1 as an NO-sensing sigma-54 bacterial
+        enhancer-binding protein with GAF, AAA+ ATPase, and DNA-binding
+        domains, activating norAB transcription rather than catalyzing a
+        denitrification reaction.
+    - reference_id: file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+      supporting_text: &gt;-
+        PTHR32071 family research supports sigma-54 enhancer-binding proteins
+        as conserved AAA+ ATPase transcriptional activators whose specific
+        biological-process wiring depends on N-terminal sensory/regulatory
+        domains.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: PMID:11069685
+  title: A novel NO-responding regulator controls the reduction of nitric oxide in Ralstonia eutropha.
+  findings:
+  - statement: Ralstonia NorR is required for NO-responsive transcription of nitric oxide reductase genes.
+    supporting_text: norB1 gene transcription requires a functional rpoN gene and the regulator NorR, a novel member of the NtrC family of response regulators.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: NorR controls nitric oxide reduction but not the other denitrification reduction steps.
+    supporting_text: This reaction is not strictly co-ordinated on the regulatory level with the other nitrogen oxide-reducing steps of the denitrification chain that are independent of NorR.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- id: PMID:15667304
+  title: Transcriptional regulation of nitric oxide reduction in Ralstonia eutropha H16.
+  findings:
+  - statement: NorR is a sigma-54-dependent transcriptional activator that binds upstream activator sequences at norA.
+    supporting_text: A NorR derivative containing MalE in place of the N-terminal domain binds to a 73 bp region upstream of norA that includes three copies of the putative upstream activator sequence GGT-(N(7))-ACC.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- id: PMID:16193057
+  title: A non-haem iron centre in the transcription factor NorR senses nitric oxide.
+  findings:
+  - statement: NorR-family proteins sense NO through the regulatory domain and couple NO binding to ATPase-dependent transcription activation.
+    supporting_text: Binding of NO stimulates the ATPase activity of NorR, enabling the activation of transcription by RNA polymerase.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- id: file:CUPNH/norR1/norR1-uniprot.txt
+  title: UniProt record for norR1
+  findings:
+  - statement: &gt;-
+      UniProt describes NorR1 as required for NO-induced expression of nitric
+      oxide reductase and lists denitrification as regulatory pathway context.
+- id: file:CUPNH/norR1/norR1-deep-research-falcon.md
+  title: Falcon deep research for norR1
+  findings:
+  - statement: &gt;-
+      Deep research separates organism-specific Ralstonia/Cupriavidus NorR
+      genetics from family-level NorR mechanism and supports treating NorR1 as
+      an NO-responsive sigma-54 transcriptional activator, not a direct
+      denitrification enzyme.
+- id: file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+  title: Falcon family deep research for PTHR32071 sigma-54-dependent transcriptional regulators
+  findings:
+  - statement: &gt;-
+      Family research found that sigma-54 enhancer-binding proteins conserve an
+      AAA+ transcription-activation core but diverge mainly through sensory
+      domains and pathway-specific regulatory inputs, supporting a specific
+      NorR regulatory annotation rather than broad BP propagation.
+core_functions:
+- description: &gt;-
+    Activates sigma-54-dependent nitric oxide reductase transcription in
+    response to nitric oxide through a GAF/AAA+/HTH NorR regulatory architecture.
+  molecular_function:
+    id: GO:0141097
+    label: ligand-modulated transcription activator activity
+  directly_involved_in:
+  - id: GO:0045893
+    label: positive regulation of DNA-templated transcription
+  supported_by:
+  - reference_id: PMID:11069685
+    supporting_text: &gt;-
+      Transcription activation by NorR responds to the availability of NO.
+  - reference_id: PMID:15667304
+    supporting_text: &gt;-
+      norB and the adjacent norA form an operon that is controlled by the
+      sigma(54)-dependent transcriptional activator NorR in response to NO.
+  - reference_id: file:CUPNH/norR1/norR1-uniprot.txt
+    supporting_text: &gt;-
+      FUNCTION: Required for the nitric oxide (NO) induced expression of NO
+      reductase.
+  - reference_id: file:CUPNH/norR1/norR1-deep-research-falcon.md
+    supporting_text: &gt;-
+      Across organism-specific genetics and broader mechanistic work, NorR1 is
+      best annotated as a dedicated NO-sensing bacterial enhancer-binding
+      protein that activates sigma-54-dependent transcription of NO-reduction
+      genes.
+  - reference_id: file:interpro/panther/PTHR32071/PTHR32071-deep-research-falcon.md
+    supporting_text: &gt;-
+      PTHR32071 members share the ATP-dependent sigma-54 activation machinery
+      but differ in regulatory inputs, making ligand-modulated transcription
+      activator activity the appropriate MF framing for NorR.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
