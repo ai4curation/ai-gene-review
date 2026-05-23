@@ -50,3 +50,33 @@ GO:0036503 ERAD pathway is justified because the strongest mechanistic evidence 
 
 - The plasma membrane (`GO:0005886`) call referenced under "Localization Calls" was resolved as `MARK_AS_OVER_ANNOTATED` in PR #317. The PMID:8706661 surface-antigen detection is real but represents a trafficking intermediate / overexpression artifact in transfected cells; later work establishes ER/ERGIC residency as the primary biology, consistent with the cytoplasmic KKXX retrieval motif.
 - The clathrin-coated vesicle (`GO:0030136`) IEA was resolved as `MARK_AS_OVER_ANNOTATED` in the same PR — Ensembl rat transfer with no human-specific support, and BCAP31 traffics via COPI/COPII machinery rather than the clathrin pathway.
+
+## Re-review prompted by geneontology/go-annotation#6385 (2026-05-22)
+
+GO curators raised a PAINT issue (PANTHER:PTN000294723) questioning the
+`involved_in GO:0006888 endoplasmic reticulum to Golgi vesicle-mediated transport`
+IBA on human BCAP31 and its orthologs, plus `GO:0070973 protein localization to ER
+exit site` on the *S. pombe* ortholog SPAC9E9.04. The curator argument is that
+BCAP31 acts *upstream* of the ER exit site as a quality-control / translocation
+chaperone, so the anterograde-transport IBA is an erroneous over-propagation:
+
+- Engagement begins at the earliest folding steps (heavy chain + β2-microglobulin
+  association for MHC class I), far upstream of any exit-site decision.
+- BCAP31 knockout only *delays*, does not abolish, surface class I export.
+- The C-terminal KKXX dilysine motif is a COPI retrieval signal (retention), not
+  an anterograde export signal.
+
+Curator M. Feuermann (GO_Central PAINT) commented (2026-05-21) that the family
+lacked the right terms and recommends MF `GO:0140388 protein translocation
+chaperone activity`; he is re-annotating the family. Curator V. Wood notes the
+core biology is BAP31 interacting with Sec61 translocons and promoting
+retrotranslocation of CFTRΔF508 via the Derlin-1 complex (PMID:18555783).
+
+Actions taken in this review update:
+- `GO:0006888` and `GO:0070973`: `ACCEPT` → `MARK_AS_OVER_ANNOTATED`.
+- `core_functions` entry 1: MF changed `GO:0140597 protein carrier activity` →
+  `GO:0140388 protein translocation chaperone activity`; `directly_involved_in`
+  changed `GO:0006888` → `GO:0036503 ERAD pathway`; "cargo receptor" framing
+  removed in favour of translocon-associated chaperone framing.
+- `description` and several annotation `reason` fields reworded to drop the
+  "cargo receptor" characterization.
