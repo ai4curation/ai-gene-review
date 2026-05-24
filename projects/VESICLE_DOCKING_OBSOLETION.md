@@ -8,7 +8,12 @@ biology to two molecular-function terms:
 
 - **GO:0160321 vesicle docking activity** (proposed MF; placeholder — not yet
   resolvable in OLS as of 2026-05-23) for the literal docking step, and
-- **GO:0099023 vesicle tethering activity** for the upstream tethering step.
+- a **proposed "vesicle tethering activity" MF** for the upstream tethering
+  step. This MF is not yet minted in GO (a prospective placeholder
+  `GO:7770062 vesicle membrane tethering activity` returned 404 from the GO
+  API as of 2026-05-02; see `genes/human/TMF1/TMF1-notes.md:58`). Note that
+  the existing **GO:0099023 vesicle tethering complex** is a cellular-component
+  term, not the MF — it must not be reused as the MF replacement.
 
 The rationale is the same as the parallel
 [ER-PM](ER_PM_TETHERING_OBSOLETION.md),
@@ -47,7 +52,7 @@ here** (see "Related obsoletions" below).
 | positive regulation of vesicle docking | GO:0106022 | (likely retained regulatory BP) |
 | negative regulation of vesicle docking | GO:0106021 | (likely retained regulatory BP) |
 | vesicle docking involved in exocytosis | GO:0006904 | MF: GO:0160321 |
-| synaptic vesicle docking | GO:0016081 | MF: GO:0160321 / GO:0099023 |
+| synaptic vesicle docking | GO:0016081 | MF: GO:0160321 (docking) or the proposed "vesicle tethering activity" MF (not yet minted; see Overview) |
 | dense core granule docking | GO:0061790 | MF: GO:0160321 |
 
 OLS check (2026-05-23): all nine BP terms are still active. The replacement
@@ -104,8 +109,10 @@ of the cleaner candidates for a legitimate transfer onto the new
 docking-activity MF — in contrast to e.g. CaMKIIα, which only *regulates*
 docking. The current review text already notes that "the essential function
 is SNARE assembly rather than tethering per se", so the refresh should
-revisit whether the new MF (GO:0160321 vesicle docking activity) or
-GO:0099023 vesicle tethering activity is the better fit.
+revisit whether the new MF (GO:0160321 vesicle docking activity) or the
+proposed (not-yet-minted) "vesicle tethering activity" MF is the better fit.
+(Note: GO:0099023 vesicle tethering complex is a CC term, not the
+tethering-activity MF, and must not be used as the MF replacement here.)
 
 ## Scope
 
@@ -131,9 +138,10 @@ accessions before starting.
 1. **USO1** (human, UniProt **O60763**) — `genes/human/USO1/`. The
    GO:0048211 IBA row is currently `ACCEPT`; refresh once the obsoletion
    lands. Likely a clean transfer to **GO:0160321 vesicle docking activity**
-   or **GO:0099023 vesicle tethering activity** (p115 is the canonical
-   Golgi tether — see existing notes mentioning GM130/giantin interactions
-   and SNARE-assembly function).
+   or the **proposed "vesicle tethering activity" MF** (not yet minted; see
+   Overview — *not* GO:0099023, which is the CC "vesicle tethering complex").
+   p115 is the canonical Golgi tether — see existing notes mentioning
+   GM130/giantin interactions and SNARE-assembly function.
 2. **Camk2a** (mouse, UniProt **P11798**) — covered by sibling tracker
    [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md);
    listed here only for completeness because it sits under the same
