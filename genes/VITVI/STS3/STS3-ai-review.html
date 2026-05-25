@@ -1,0 +1,3191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STS3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>STS3</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P51071" target="_blank" class="term-link">
+                        P51071
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Vitis vinifera</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "STS3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P51071" data-a="DESCRIPTION: STS3 (Stilbene synthase 3 / Resveratrol synthase 3..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>STS3 (Stilbene synthase 3 / Resveratrol synthase 3 / Trihydroxystilbene synthase 3, EC 2.3.1.95) is a cytosolic type III polyketide synthase of the chalcone/stilbene synthase family in grapevine. It catalyzes the iterative condensation of one molecule of 4-coumaroyl-CoA (p-coumaroyl-CoA) with three molecules of malonyl-CoA, followed by an intramolecular aldol (C2-&gt;C7) cyclization and decarboxylation, to produce trans-resveratrol (3,4&#39;,5-trihydroxystilbene). Resveratrol is the major stilbenoid phytoalexin of grapevine and is antimicrobial. STS3 belongs to the unusually large grapevine STS gene family (~48 genes, &gt;=32 functional), which arose from chalcone synthase (CHS) by convergent evolution; STS and CHS share identical substrates and a common linear tetraketide intermediate but diverge in their cyclization chemistry (STS uses aldol cyclization to form a stilbene; CHS uses Claisen cyclization to form naringenin chalcone). STS3 is the committed enzyme of stilbene/phytoalexin biosynthesis and is transcriptionally induced by biotic and abiotic stress.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006952" target="_blank" class="term-link">
+                                    GO:0006952
+                                </a>
+                            </span>
+                            <span class="term-label">defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0006952" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retired SPKW (keyword2GO) annotation derived from the UniProt keyword &#34;Plant defense&#34; / &#34;Stress response&#34;. STS3 is genuinely defense-associated because its product resveratrol is an antimicrobial phytoalexin, but the protein&#39;s molecular function is a biosynthetic synthase, not a defense effector or pathogen sensor. Annotating the enzyme directly to GO:0006952 &#34;defense response&#34; conflates the downstream protective role of the metabolite with the catalytic function of the enzyme.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. This is a textbook process-conflation / &#34;biosynthetic-enzyme-labelled-with-the-downstream-process&#34; over-annotation: the SPKW pipeline mapped the UniProt &#34;Plant defense&#34; keyword directly onto the enzyme, but STS3 does not itself sense or respond to pathogens. It biosynthesizes trans-resveratrol, a stilbene that happens to be a phytoalexin. The defense-relevant role of STS3 is properly captured by the more specific biosynthetic-process terms GO:0009811 &#34;stilbene biosynthetic process&#34; and GO:0052315 &#34;phytoalexin biosynthetic process&#34; (a child of both secondary metabolite biosynthetic process and toxin biosynthetic process), which convey the defense context without misrepresenting the enzyme as a defense response gene. GO:0006952 is too broad and is the wrong granularity for a committed biosynthetic enzyme. The flag retired:true is retained; GOA was correct to retire the SPKW keyword2GO pipeline for cellular organisms and to drop this annotation. A more accurate replacement BP annotation is suggested below as a NEW entry.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1898048" target="_blank" class="term-link">
+                                        PMID:1898048
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The mechanisms controlling the induction of stilbene synthase and phenylalanine ammonia-lyase (PAL), two putative key regulatory enzymes of the biosynthetic pathway to stilbene phytoalexins</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" target="_blank" class="term-link">
+                                        PMID:22961129
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stilbene synthases (STSs), which catalyze the biosynthesis of the stilbene backbone</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:VITVI/STS3/STS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The best-supported interpretation is that STS3 (P51071) functions as a canonical resveratrol-forming STS participating in inducible phytoalexin biosynthesis rather than a specialized enzyme with proven unique substrate selectivity. In grapevine, trans-resveratrol and derived stilbenoids are widely treated as phytoalexins - defense-associated metabolites whose synthesis is induced by biotic and abiotic stress.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cellular component annotation derived from the UniProt subcellular location vocabulary. Stilbene synthase is a soluble cytosolic enzyme; resveratrol biosynthesis occurs in the cytoplasm where the phenylpropanoid precursor 4-coumaroyl-CoA and malonyl-CoA are available.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt SUBCELLULAR LOCATION (&#34;Cytoplasm&#34;) and with the general biology of type III polyketide synthases, which are soluble cytosolic enzymes. The annotation is appropriately general and accurate. Cytoplasm is a reasonable, conservative location term; a more specific term (cytosol) could be used but is not required.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:VITVI/STS3/STS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Direct immunolocalization and immunogold electron microscopy in young grape plants localized STS protein predominantly to the cytoplasm and cell wall, with additional signal observed in chloroplasts and vacuoles.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad molecular function term assigned by InterPro2GO from the thiolase-like / chalcone-stilbene synthase domain signatures (IPR016039, IPR018088). STS3 is an acyltransferase, so the term is correct but generic.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016746 &#34;acyltransferase activity&#34; is a correct but very high-level grandparent of the precise activity. STS3 has a specifically defined, experimentally characterized activity (trihydroxystilbene synthase activity, GO:0050350, EC 2.3.1.95) that is also annotated on this protein. The broad parent term adds no information beyond the precise term and is an over-annotation relative to what is known. It is not wrong, so it is marked as over-annotated rather than removed; the precise child term GO:0050350 should be retained as the representative MF.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 + 4 CoA</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Molecular function term assigned by InterPro2GO from the type III polyketide synthase signature (IPR011141). This is the direct parent of GO:0050350 &#34;trihydroxystilbene synthase activity&#34;.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016747 is correct (STS3 transfers a malonyl/acyl group, not an amino-acyl group) and is the immediate parent of the precise term GO:0050350, which is also annotated on this protein. Because the precise child term fully captures the activity and EC 2.3.1.95, this broad parent is redundant and represents an over-annotation in terms of specificity. Marked as over-annotated rather than removed because it is taxonomically/biochemically accurate; GO:0050350 should be retained as the core MF.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">EC=2.3.1.95</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050350" target="_blank" class="term-link">
+                                    GO:0050350
+                                </a>
+                            </span>
+                            <span class="term-label">trihydroxystilbene synthase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0050350" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Precise molecular function term: trihydroxystilbene (resveratrol) synthase activity, EC 2.3.1.95. This is the defining catalytic activity of STS3 and matches the UniProt catalytic activity (Rhea:RHEA:11936) exactly: 4-coumaroyl-CoA + 3 malonyl-CoA + 3 H+ = trans-resveratrol + 4 CO2 + 4 CoA.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the correct, maximally specific molecular function for STS3 and is the representative core MF of the gene. It is fully consistent with the UniProt RecName (&#34;Stilbene synthase 3&#34;, &#34;Resveratrol synthase 3&#34;, &#34;Trihydroxystilbene synthase 3&#34;), EC 2.3.1.95, the Rhea reaction, the UniPathway entry, and with functional characterization of grapevine STS genes showing they encode bona fide STS activity. The IEA mapping from EC to GO is appropriate and well-supported.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 + 4 CoA; Xref=Rhea:RHEA:11936</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" target="_blank" class="term-link">
+                                        PMID:22961129
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Functional characterization of nine genes representing most of the STS gene family diversity clearly indicated that these genes do encode for proteins with STS activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:VITVI/STS3/STS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stilbene synthase (STS), also called resveratrol synthase or trihydroxystilbene synthase, is a type III polyketide synthase that forms a stilbene scaffold by condensing one phenylpropanoid-CoA starter with three malonyl-CoA extender units; the canonical reaction is p-coumaroyl-CoA + 3 malonyl-CoA to trans-resveratrol (EC 2.3.1.95).</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009811" target="_blank" class="term-link">
+                                    GO:0009811
+                                </a>
+                            </span>
+                            <span class="term-label">stilbene biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0009811" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> STS3 is the committed enzyme of stilbene biosynthesis: it forms the resveratrol stilbene backbone from a phenylpropanoid starter and malonyl-CoA. There is currently no biological-process annotation for STS3 in the current GOA release (the retired SPKW GO:0006952 &#34;defense response&#34; annotation was the only BP, and it was an over-annotation). GO:0009811 &#34;stilbene biosynthetic process&#34; is the precise and accurate BP, capturing the enzyme&#39;s role without conflating it with the downstream defense function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Proposed to replace the over-broad/over-annotated retired GO:0006952 &#34;defense response&#34; SPKW annotation. GO:0009811 is the precise process for the resveratrol backbone-forming reaction and is directly supported by the UniProt PATHWAY line (&#34;Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis&#34;). The closely related GO:0052315 &#34;phytoalexin biosynthetic process&#34; would additionally and legitimately capture the defense context (it is a child of both secondary metabolite biosynthetic process and toxin biosynthetic process) and could be annotated alongside GO:0009811.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009811" target="_blank" class="term-link">
+                                    stilbene biosynthetic process
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052315" target="_blank" class="term-link">
+                                    phytoalexin biosynthetic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis; 3,4&#39;,5-trihydroxystilbene from trans-4-coumarate: step 2/2.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" target="_blank" class="term-link">
+                                        PMID:22961129
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stilbene synthases (STSs), which catalyze the biosynthesis of the stilbene backbone</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:VITVI/STS3/STS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">STS genes encode the enzyme that performs the terminal committed step to generate resveratrol, positioning STS as a key control point determining whether phenylpropanoid precursors are diverted into stilbenoids versus other branches.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052315" target="_blank" class="term-link">
+                                    GO:0052315
+                                </a>
+                            </span>
+                            <span class="term-label">phytoalexin biosynthetic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P51071" data-a="GO:0052315" data-r="GO_REF:0000120" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Resveratrol synthesized by STS3 is the major stilbenoid phytoalexin of grapevine. GO:0052315 &#34;phytoalexin biosynthetic process&#34; captures the defense-relevant biological context of STS3 accurately, as a biosynthetic-process term (it is a child of both GO:0044550 secondary metabolite biosynthetic process and GO:0009403 toxin biosynthetic process) rather than as a defense-effector term.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Proposed alongside GO:0009811 as the appropriate replacement for the retired, over-annotated GO:0006952 &#34;defense response&#34; SPKW annotation. It conveys that the stilbene product is a defense compound (phytoalexin) without misrepresenting the enzyme as a pathogen-sensing or defense-response effector. Supported by the UniProt PATHWAY line (&#34;Phytoalexin biosynthesis&#34;) and by the consistent literature description of resveratrol/stilbenes as antimicrobial phytoalexins induced by biotic stress.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    UniProt:P51071
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis; 3,4&#39;,5-trihydroxystilbene from trans-4-coumarate: step 2/2.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23116673" target="_blank" class="term-link">
+                                        PMID:23116673
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Stilbenic compounds are natural phytoalexins that have antimicrobial activities in plant defense against pathogens. Stilbene synthase (STS) is the key enzyme that catalyzes the biosynthesis of stilbenic compounds</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:VITVI/STS3/STS3-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In grapevine, trans-resveratrol and derived stilbenoids are widely treated as phytoalexins - defense-associated metabolites whose synthesis is induced by biotic and abiotic stress. Regulation studies and stress-induction experiments support this defense-associated role by showing strong inducibility of STS expression and resveratrol accumulation under stress conditions.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Type III polyketide synthase that catalyzes trihydroxystilbene (resveratrol) synthase activity: it iteratively condenses 4-coumaroyl-CoA with three molecules of malonyl-CoA and performs an aldol (C2-&gt;C7) cyclization with decarboxylation to produce trans-resveratrol, the committed step of stilbene phytoalexin biosynthesis in grapevine.</h3>
+                <span class="vote-buttons" data-g="P51071" data-a="FUNCTION: Type III polyketide synthase that catalyzes trihyd..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050350" target="_blank" class="term-link">
+                            trihydroxystilbene synthase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009811" target="_blank" class="term-link">
+                                stilbene biosynthetic process
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052315" target="_blank" class="term-link">
+                                phytoalexin biosynthetic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Substrates:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57355" target="_blank" class="term-link">
+                                4-coumaroyl-CoA
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI:57384" target="_blank" class="term-link">
+                                malonyl-CoA
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            UniProt:P51071
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 + 4 CoA; Xref=Rhea:RHEA:11936, ... EC=2.3.1.95;</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15380179" target="_blank" class="term-link">
+                                PMID:15380179
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Stilbene synthase (STS) and chalcone synthase (CHS) each catalyze the formation of a tetraketide intermediate from a CoA-tethered phenylpropanoid starter and three molecules of malonyl-CoA, but use different cyclization mechanisms</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:VITVI/STS3/STS3-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">STS3 (VvSTS3) encodes a type III polyketide synthase (stilbene synthase/resveratrol synthase) that catalyzes the committed step in the stilbenoid branch of the phenylpropanoid pathway, producing trans-resveratrol, a major grapevine phytoalexin involved in stress/defense responses.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO mapping of the chalcone/stilbene synthase and type III polyketide synthase domain signatures supplied the broad acyltransferase-activity molecular-function annotations reviewed in this file.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Mapping of the UniProt subcellular location &#34;Cytoplasm&#34; supplied the cytoplasm cellular-component annotation reviewed in this file.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined multi-method IEA annotation supplied the precise trihydroxystilbene synthase activity (GO:0050350, EC 2.3.1.95) molecular-function annotation reviewed in this file.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:VITVI/STS3/STS3-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon / Edison Scientific) on Vitis vinifera STS3 (P51071) - Stilbene synthase 3 / Resveratrol synthase 3</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS3 (VvSTS3) is a type III polyketide synthase (stilbene/resveratrol synthase, EC 2.3.1.95) that catalyzes the committed step of the stilbenoid branch of the phenylpropanoid pathway, condensing one p-coumaroyl-CoA starter with three malonyl-CoA extenders to form trans-resveratrol.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">trans-Resveratrol and derived stilbenoids are treated as phytoalexins - defense-associated metabolites whose synthesis is strongly induced by biotic and abiotic stress (e.g., UV-C induced resveratrol accumulation ~196x over control at 16 h, with parallel biphasic induction of STS mRNA and protein); the defense role is a property of the metabolite product, while the enzyme itself performs a biosynthetic synthase function.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS belongs to a large diversified grapevine multigene family; reviews emphasize that clear experimental evidence for distinct substrate specificities among individual grape STS paralogs remains limited, and no 2024 primary paper directly re-characterizes VvSTS3/P51071 biochemistry.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunolocalization in young grape plants placed STS protein predominantly in the cytoplasm and cell wall, with additional signal in chloroplasts and vacuoles and tissue enrichment in phloem, consistent with a soluble cytosolic enzyme.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS family expression is coordinated by subgroup 2 R2R3-MYB (MYB14/MYB15) and WRKY transcription factors that reprogram carbon flux toward stilbenoid biosynthesis; VvSTS3 has been used as an engineered resveratrol-production module in heterologous plant cell systems.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        UniProt:P51071
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry THS3_VITVI (Stilbene synthase 3, Vitis vinifera)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS3 catalyzes 4-coumaroyl-CoA + 3 malonyl-CoA + 3 H+ = trans-resveratrol + 4 CO2 + 4 CoA (EC 2.3.1.95, Rhea:RHEA:11936); it is a cytoplasmic homodimer of the chalcone/stilbene synthase (thiolase-like) family, induced by stress.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1898048" target="_blank" class="term-link">
+                            PMID:1898048
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Coordinate- and elicitor-dependent expression of stilbene synthase and phenylalanine ammonia-lyase genes in Vitis cv. Optima.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Stilbene synthase and PAL are key enzymes of the biosynthetic pathway to stilbene phytoalexins; their mRNAs are co-induced within 1 h of fungal cell-wall elicitor treatment of grape cell cultures.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" target="_blank" class="term-link">
+                            PMID:22961129
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structural, functional, and evolutionary analysis of the unusually large stilbene synthase gene family in grapevine.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The grapevine genome contains an unusually large STS gene family (48 STS genes, &gt;=32 potentially functional); STS evolved from CHS several times independently, and characterized grapevine STS genes encode bona fide STS activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15380179" target="_blank" class="term-link">
+                            PMID:15380179
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">An aldol switch discovered in stilbene synthases mediates cyclization specificity of type III polyketide synthases.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS and CHS use the same phenylpropanoid starter and three malonyl-CoA to form a common tetraketide intermediate, then use different cyclization mechanisms; an &#34;aldol switch&#34; in STS directs aldol cyclization to form the stilbene scaffold.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10426957" target="_blank" class="term-link">
+                            PMID:10426957
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure of chalcone synthase and the molecular basis of plant polyketide biosynthesis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CHS condenses one p-coumaroyl-CoA and three malonyl-CoA into a polyketide intermediate that cyclizes; the CHS-resveratrol complex shows how the related stilbene synthase uses the same substrates and an alternate cyclization pathway.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23116673" target="_blank" class="term-link">
+                            PMID:23116673
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcriptional expression of Stilbene synthase genes are regulated developmentally and differentially in response to powdery mildew in Norton and Cabernet Sauvignon grapevine.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS is the key enzyme of stilbenic phytoalexin biosynthesis; individual grapevine STS genes are transcriptionally induced by powdery mildew infection and regulated developmentally.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15309535" target="_blank" class="term-link">
+                            PMID:15309535
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of the grapevine stilbene synthase gene VST1 in papaya provides increased resistance against diseases caused by Phytophthora palmivora.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Resveratrol (1 mM) inhibits mycelial growth of Phytophthora palmivora in vitro; heterologous expression of a grapevine STS gene increases pathogen resistance in papaya.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15359598" target="_blank" class="term-link">
+                            PMID:15359598
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of the stilbene synthase (StSy) gene from grapevine in transgenic white poplar results in high accumulation of the antioxidant resveratrol glucosides.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Grapevine STS expressed in white poplar produces resveratrol glucosides, but accumulation of the phytoalexin did not increase rust resistance, showing the STS enzyme is one biosynthetic input rather than a complete defense program.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31531782" target="_blank" class="term-link">
+                            PMID:31531782
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Expression of stilbene synthase VqSTS6 from wild Chinese Vitis quinquangularis in grapevine enhances resveratrol production and powdery mildew resistance.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">STS expression and stilbenoid levels increase in response to powdery mildew infection; overexpression of an STS gene raises stilbenoid accumulation and disease resistance in grapevine.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Among the ~48 grapevine STS paralogs, do individual members (such as STS3/P51071) have distinct substrate preferences, kinetic properties, or product profiles, or are they functionally redundant?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P51071" data-a="Q: Among the ~48 grapevine STS paralogs, do individua..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is STS3 (VIT_16s0100g01030) expressed and stress-inducible in planta, and in which tissues, given that P51071 evidence is currently only at transcript level (PE 2)?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P51071" data-a="Q: Is STS3 (VIT_16s0100g01030) expressed and stress-i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Recombinantly express and purify STS3 (P51071) and assay trihydroxystilbene synthase activity in vitro with 4-coumaroyl-CoA and malonyl-CoA, confirming trans-resveratrol production by LC-MS and measuring kinetic parameters; test alternative phenylpropanoid-CoA starters to define substrate scope.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P51071" data-a="EXPERIMENT: Recombinantly express and purify STS3 (P51071) and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Determine the crystal structure of STS3 (or AlphaFold-guided mutagenesis of the aldol-switch/FGPG loop residues) to confirm the structural basis of aldol versus Claisen cyclization specificity relative to grapevine chalcone synthase.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P51071" data-a="EXPERIMENT: Determine the crystal structure of STS3 (or AlphaF..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify STS3-specific transcript and protein levels and resveratrol accumulation in grapevine tissues challenged with powdery mildew (Erysiphe necator) or treated with UV/elicitors, to establish the stress-inducible expression profile of this specific paralog.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="P51071" data-a="EXPERIMENT: Quantify STS3-specific transcript and protein leve..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(STS3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P51071" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **Vitis vinifera STS3** (UniProt **P51071**; locus **VIT_16s0100g01030**) — Stilbene synthase 3 / Resveratrol synthase 3 (EC **2.3.1.95**)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">30 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T14:01:29.560951</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="STS3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-vitis-vinifera-sts3-uniprot-p51071-locus-vit_16s0100g01030-stilbene-synthase-3-resveratrol-synthase-3-ec-23195">Research Report: Functional Annotation of <strong>Vitis vinifera STS3</strong> (UniProt <strong>P51071</strong>; locus <strong>VIT_16s0100g01030</strong>) — Stilbene synthase 3 / Resveratrol synthase 3 (EC <strong>2.3.1.95</strong>)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p><strong>STS3 (VvSTS3)</strong> encodes a <strong>type III polyketide synthase (stilbene synthase/resveratrol synthase)</strong> that catalyzes the committed step in the <strong>stilbenoid branch</strong> of the phenylpropanoid pathway, producing <strong>trans-resveratrol</strong>, a major grapevine phytoalexin involved in stress/defense responses. The enzyme is strongly <strong>inducible by stress (e.g., UV-C)</strong>, and STS gene-family expression is coordinated by <strong>MYB</strong> and <strong>WRKY</strong> transcription factors that reprogram carbon flux into stilbenoid biosynthesis. Evidence from immunolocalization places STS protein largely in the <strong>cytoplasm and cell wall</strong>, with signal also detected in <strong>chloroplasts and vacuoles</strong>, and enriched in <strong>phloem tissues</strong>. STS3 has been implemented as an engineering part for <strong>extracellular resveratrol production</strong> in heterologous plant cell cultures and as a controlled “resveratrol source” in systems investigating <strong>resveratrol export/transport</strong>. (wang2010distributionofresveratrol pages 4-6, valletta2021impactofenvironmental pages 2-6, vannozzi2018combinatorialregulationof pages 1-4, orduna2022directregulationof pages 12-13, hidalgo2017silybummarianumcell pages 7-10, martinezmarquez2023thegrapevineabc pages 22-26)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h2>
+<h3 id="11-geneprotein-identity-verification-critical-disambiguation">1.1 Gene/protein identity verification (critical disambiguation)</h3>
+<p>The symbol <strong>STS3</strong> is used in grapevine literature to denote <strong>Vitis vinifera stilbene synthase 3 (VvSTS3)</strong>. This is supported by studies that explicitly use <strong>VvSTS3</strong> as a transgene and report resveratrol production attributable to the introduced gene, including (i) stable expression of a <strong>1179 bp VvSTS3 coding region</strong> in <em>Silybum marianum</em> cells and (ii) modular constructs such as <strong>pHYH::VvSTS3</strong> and <strong>pDGB-VvSTS3</strong> used in grapevine cell assays. These sources align with the UniProt target description (stilbene/resveratrol synthase; type III PKS), supporting that the relevant “STS3” in this evidence corpus is the grapevine stilbene synthase rather than an unrelated gene sharing the STS3 symbol in other organisms. (hidalgo2017silybummarianumcell pages 7-10, martinezmarquez2023thegrapevineabc pages 22-26)</p>
+<h3 id="12-enzymatic-function-ec-23195-and-reaction-definition">1.2 Enzymatic function (EC 2.3.1.95) and reaction definition</h3>
+<p>Stilbene synthase (STS), also called <strong>resveratrol synthase</strong> or <strong>trihydroxystilbene synthase</strong>, is a <strong>type III polyketide synthase</strong> (PKS) that forms a stilbene scaffold by condensing <strong>one phenylpropanoid-CoA starter</strong> with <strong>three malonyl-CoA extender units</strong>. For grapevine-type “resveratrol synthases,” the canonical reaction is:</p>
+<ul>
+<li><strong>p-coumaroyl-CoA + 3 malonyl-CoA → trans-resveratrol</strong> (EC <strong>2.3.1.95</strong>)</li>
+</ul>
+<p>This is the core biochemical definition of STS activity used in recent summaries of stilbene biosynthesis. (valletta2021impactofenvironmental pages 2-6)</p>
+<h3 id="13-substrate-specificity-what-is-and-is-not-established">1.3 Substrate specificity (what is and is not established)</h3>
+<p>A comprehensive review notes that grapevine has a large STS multigene family and that while paralogs may differ, <strong>clear experimental evidence demonstrating distinct substrate specificities among grape STS paralogs remains limited</strong>. The same review highlights proposals for alternative products (e.g., possible piceatannol formation from caffeoyl-CoA), but emphasizes that the dedicated enzyme(s) for such alternative routes are not firmly identified, motivating caution when assigning paralog-specific substrate preferences without direct biochemical assays. (dubrovina2017regulationofstilbene pages 2-4)</p>
+<h2 id="2-biological-role-and-pathway-context">2) Biological role and pathway context</h2>
+<h3 id="21-role-in-phenylpropanoidstilbenoid-metabolism">2.1 Role in phenylpropanoid/stilbenoid metabolism</h3>
+<p>STS genes encode the enzyme that performs the <strong>terminal committed step</strong> to generate <strong>resveratrol</strong>, positioning STS as a key control point determining whether phenylpropanoid precursors are diverted into <strong>stilbenoids</strong> versus other branches (e.g., flavonoids via chalcone synthase). (dubrovina2017regulationofstilbene pages 2-4, chialva2018differentialexpressionpatterns pages 1-2)</p>
+<h3 id="22-defense-biology-phytoalexin-concept">2.2 Defense biology (phytoalexin concept)</h3>
+<p>In grapevine, <strong>trans-resveratrol and derived stilbenoids</strong> are widely treated as <strong>phytoalexins</strong>—defense-associated metabolites whose synthesis is induced by biotic and abiotic stress. Regulation studies and stress-induction experiments support this defense-associated role by showing strong inducibility of STS expression and resveratrol accumulation under stress conditions. (wang2010distributionofresveratrol pages 4-6, vannozzi2018combinatorialregulationof pages 1-4, valletta2021impactofenvironmental pages 2-6)</p>
+<h2 id="3-subcellular-and-tissue-localization-where-sts3-functions">3) Subcellular and tissue localization (where STS3 functions)</h2>
+<p>Direct immunolocalization and immunogold electron microscopy in young grape plants localized STS protein predominantly to the <strong>cytoplasm and cell wall</strong>, with additional signal observed in <strong>chloroplasts and vacuoles</strong>. Tissue-level localization showed STS signal in multiple organs and highlighted enrichment in <strong>phloem tissues</strong>, consistent with a model in which resveratrol biosynthesis is positioned in tissues relevant to defense and/or transport interfaces. (Wang et al., 2010, <em>Plant Physiology and Biochemistry</em>, published Feb 2010; https://doi.org/10.1016/j.plaphy.2009.12.002) (wang2010distributionofresveratrol pages 4-6)</p>
+<h2 id="4-regulation-and-control-of-sts3sts-family-expression">4) Regulation and control of STS3/STS family expression</h2>
+<h3 id="41-stress-and-elicitor-inducibility">4.1 Stress and elicitor inducibility</h3>
+<p>STS and resveratrol are strongly inducible by <strong>UV-C</strong>, with a time-resolved response. In grape leaves, UV-C exposure induced resveratrol accumulation beginning by <strong>8 h</strong> and reaching peaks at approximately <strong>196.43×</strong> (16 h) and <strong>180.93×</strong> (24 h) relative to control, tracking biphasic induction patterns of <strong>STS mRNA and STS protein</strong>. This provides quantitative evidence that STS induction can be rapid and dramatic under abiotic stress. (Wang et al., 2010; https://doi.org/10.1016/j.plaphy.2009.12.002) (wang2010distributionofresveratrol pages 4-6)</p>
+<h3 id="42-transcription-factor-control-myb-and-wrky-modules-expert-level-consensus">4.2 Transcription factor control: MYB and WRKY modules (expert-level consensus)</h3>
+<p>Regulatory work supports a framework where <strong>subgroup 2 R2R3-MYB transcription factors</strong> (notably <strong>MYB14/MYB15</strong>, and also MYB13) act as central regulators of stilbenoid metabolism, directly binding and regulating numerous STS family genes and also binding upstream pathway steps (shikimate and early phenylpropanoid genes), consistent with “push” control that increases precursor supply while activating STS expression. (Orduña et al., 2022, <em>The Plant Journal</em>, published Mar 2022; https://doi.org/10.1111/tpj.15686) (orduna2022directregulationof pages 12-13)</p>
+<p>Complementing this, promoter-activation and network analyses show that <strong>WRKY transcription factors</strong> can activate STS promoters either alone or in combination with MYB regulators, revealing <strong>combinatorial control</strong> and STS-promoter specificity within the family. (Vannozzi et al., 2018, <em>Plant and Cell Physiology</em>, published May 2018; https://doi.org/10.1093/pcp/pcy045) (vannozzi2018combinatorialregulationof pages 1-4)</p>
+<h3 id="43-regulatory-region-diversity-within-the-sts-gene-family">4.3 Regulatory region diversity within the STS gene family</h3>
+<p>Promoter analyses of grapevine STS genes indicate that <strong>regulatory divergence in promoter regions</strong> contributes to differential inducibility across closely related STS paralogs, consistent with the idea that the family has diversified to respond to different stimuli/tissues. Elicitor treatments (including methyl jasmonate and cyclodextrin-related treatments) are described as drivers of STS expression changes in cell culture contexts. (Chialva et al., 2018, <em>Plant Molecular Biology Reporter</em>, published Mar 2018; https://doi.org/10.1007/s11105-018-1073-3) (chialva2018differentialexpressionpatterns pages 1-2)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5) Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2023-sts3-as-an-engineered-resveratrol-source-for-transport-biology">5.1 2023: STS3 as an engineered “resveratrol source” for transport biology</h3>
+<p>A 2023 preprint used a modular transcriptional unit <strong>pHYH::VvSTS3</strong> (also referenced as <strong>pDGB-VvSTS3</strong>) in grapevine cell systems as a controllable source of trans-resveratrol to test export mechanisms, connecting STS3-driven synthesis to characterization of a candidate transporter (VvABCB15) implicated in trans-resveratrol export. This represents a recent shift from focusing solely on biosynthesis to studying <strong>biosynthesis + transport</strong> as an integrated functional module. (Martínez-Márquez et al., 2023, bioRxiv, posted Oct 2023; https://doi.org/10.1101/2023.10.20.563313) (martinezmarquez2023thegrapevineabc pages 13-16, martinezmarquez2023thegrapevineabc pages 22-26)</p>
+<h3 id="52-2024-evidence-status-in-the-retrieved-corpus">5.2 2024: evidence status in the retrieved corpus</h3>
+<p>Within the currently retrieved full-text set, no 2024 peer-reviewed primary paper was captured that directly re-characterizes <strong>VvSTS3/P51071</strong> itself (sequence-level or biochemical kinetics). The strongest “latest” item directly invoking VvSTS3 constructs in functional experiments is the 2023 bioRxiv work. (martinezmarquez2023thegrapevineabc pages 13-16, martinezmarquez2023thegrapevineabc pages 22-26)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h2>
+<h3 id="61-heterologous-production-of-trans-resveratrol-bioprocess-implementation">6.1 Heterologous production of trans-resveratrol (bioprocess implementation)</h3>
+<p>A clear real-world/biotechnology implementation is stable transformation of <em>Silybum marianum</em> cell cultures with <strong>Vitis vinifera STS3 (VvSTS3)</strong>. The engineered line produced <strong>extracellular</strong> trans-resveratrol upon elicitation (not detected in biomass), supporting a strategy for production and recovery from culture media. (Hidalgo et al., 2017, <em>Engineering in Life Sciences</em>, published Jun 2017; https://doi.org/10.1002/elsc.201600241) (hidalgo2017silybummarianumcell pages 7-10)</p>
+<h3 id="62-engineering-resveratrol-export-as-a-coupled-phenotype">6.2 Engineering resveratrol export as a coupled phenotype</h3>
+<p>The 2023 STS3 + transporter study reports an approximately <strong>1.9-fold enhancement</strong> in a trans-resveratrol transport/export readout when the transporter (VvABCB15) is expressed in an STS3 production context, supporting the applied concept that production traits can be improved by engineering transport/secretion alongside biosynthesis. (Martínez-Márquez et al., 2023; https://doi.org/10.1101/2023.10.20.563313) (martinezmarquez2023thegrapevineabc pages 13-16)</p>
+<h2 id="7-quantitative-statistics-and-data-points-from-retrieved-studies">7) Quantitative statistics and data points (from retrieved studies)</h2>
+<ul>
+<li><strong>UV-C inducibility in grape leaves:</strong> resveratrol peaks at ~<strong>196.43×</strong> (16 h) and ~<strong>180.93×</strong> (24 h) over control; STS mRNA and protein show parallel biphasic induction. (Wang et al., 2010; https://doi.org/10.1016/j.plaphy.2009.12.002) (wang2010distributionofresveratrol pages 4-6)</li>
+<li><strong>Heterologous extracellular production:</strong> cyclodextrin (30 mM) elicitation yields up to ~<strong>12 mg/L</strong> trans-resveratrol at <strong>76 h</strong> in VvSTS3-transgenic <em>Silybum marianum</em> cell cultures; MeJA did not increase yield under tested conditions, and necrosis occurred after ~1 week. (Hidalgo et al., 2017; https://doi.org/10.1002/elsc.201600241) (hidalgo2017silybummarianumcell pages 7-10)</li>
+<li><strong>Transport-coupled improvement:</strong> co-expression context suggests ~<strong>1.9×</strong> enhancement in trans-resveratrol transport/export readout in an STS3 production system. (Martínez-Márquez et al., 2023; https://doi.org/10.1101/2023.10.20.563313) (martinezmarquez2023thegrapevineabc pages 13-16)</li>
+</ul>
+<h2 id="8-expert-interpretation-and-authoritative-analysis-what-the-literature-supports">8) Expert interpretation and authoritative analysis (what the literature supports)</h2>
+<h3 id="81-sts3-functional-annotation-confidence">8.1 STS3 functional annotation confidence</h3>
+<p>Across primary and review sources, STS enzymes are consistently defined as the committed step generating the resveratrol scaffold from p-coumaroyl-CoA and malonyl-CoA units, and grapevine STS genes are treated as a diversified multigene family deployed for defense- and development-linked responses. The best-supported interpretation is that <strong>STS3 (P51071) functions as a canonical resveratrol-forming STS</strong> participating in inducible phytoalexin biosynthesis rather than a specialized enzyme with proven unique substrate selectivity. (valletta2021impactofenvironmental pages 2-6, dubrovina2017regulationofstilbene pages 2-4)</p>
+<h3 id="82-regulatory-logic">8.2 Regulatory logic</h3>
+<p>The combined MYB/WRKY promoter-control literature supports a mechanistic view that grapevine can “rewire” phenylpropanoid flux toward stilbenoids via transcription factors that simultaneously: (i) activate many STS genes, and (ii) bind upstream pathway genes supplying precursors, with WRKY factors providing promoter specificity and combinatorial modulation. This is consistent with systems-level regulation of specialized metabolism rather than single-gene control. (vannozzi2018combinatorialregulationof pages 1-4, orduna2022directregulationof pages 12-13)</p>
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<p>The following table compiles the most directly supported claims for STS3 functional annotation, including URLs and publication years.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key evidence/summary</th>
+<th>Best sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity / synonyms</td>
+<td>The target is Vitis vinifera stilbene synthase 3, commonly written as VvSTS3 or STS3, within the grapevine STS multigene family. Direct linkage of VvSTS3 to a grapevine stilbene synthase is supported by a 1179 bp VvSTS3 coding region used in heterologous-expression work and by later construct-based studies using pHYH::VvSTS3 and pDGB-VvSTS3. 2017: https://doi.org/10.1002/elsc.201600241; 2023: https://doi.org/10.1101/2023.10.20.563313</td>
+<td>(hidalgo2017silybummarianumcell pages 7-10, martinezmarquez2023thegrapevineabc pages 22-26)</td>
+</tr>
+<tr>
+<td>Reaction &amp; substrates</td>
+<td>STS, also called resveratrol synthase, is a type III polyketide synthase assigned EC 2.3.1.95. It forms the stilbene skeleton from one cinnamoyl-type CoA ester plus three malonyl-CoA molecules; in grapevine the canonical reaction is p-coumaroyl-CoA plus 3 malonyl-CoA to trans-resveratrol, and current reviews note no clear experimental proof of paralog-specific substrate differences among grape STSs. 2017: https://doi.org/10.1007/s00425-017-2730-8; 2021: https://doi.org/10.3390/plants10010090</td>
+<td>(valletta2021impactofenvironmental pages 2-6, dubrovina2017regulationofstilbene pages 2-4)</td>
+</tr>
+<tr>
+<td>Pathway role</td>
+<td>STS is the terminal committed enzyme of the stilbenoid branch of the phenylpropanoid pathway and produces trans-resveratrol, a principal grapevine stilbene phytoalexin. Regulatory studies further indicate that MYB factors activating STS genes also bind upstream shikimate and early phenylpropanoid genes, consistent with coordinated flux control toward stilbenoid biosynthesis. 2017: https://doi.org/10.1007/s00425-017-2730-8; 2022: https://doi.org/10.1111/tpj.15686</td>
+<td>(dubrovina2017regulationofstilbene pages 2-4, orduna2022directregulationof pages 12-13)</td>
+</tr>
+<tr>
+<td>Regulation</td>
+<td>Grapevine STS genes are inducible by stress and elicitors including UV-C, methyl jasmonate, and cyclodextrin-related treatments. Experimental regulatory evidence shows VviMYB14 and VviMYB15 activate STS promoters, WRKY factors can activate specific STS promoters alone or with MYB14, and VvWRKY8 represses stilbene synthase genes through interaction with MYB14. 2018: https://doi.org/10.1093/pcp/pcy045; 2022: https://doi.org/10.1111/tpj.15686; 2018: https://doi.org/10.1007/s11105-018-1073-3</td>
+<td>(vannozzi2018combinatorialregulationof pages 1-4, orduna2022directregulationof pages 12-13, chialva2018differentialexpressionpatterns pages 1-2)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Immunolocalization in young grape plants placed STS protein in the cytoplasm and cell wall, with signal also observed in chloroplasts and vacuoles, and tissue-level enrichment in phloem. These data support a defense-associated localization pattern in tissues where stilbene accumulation is relevant. 2010: https://doi.org/10.1016/j.plaphy.2009.12.002</td>
+<td>(wang2010distributionofresveratrol pages 4-6)</td>
+</tr>
+<tr>
+<td>Applications / implementation</td>
+<td>VvSTS3 has been used as a functional resveratrol-production module in heterologous plant cell systems and transient grapevine cell assays. Stable expression in Silybum marianum enabled extracellular trans-resveratrol production after elicitation, and 2023 transport studies combined pHYH::VvSTS3 with VvABCB15 to test trans-resveratrol export from grapevine cells. 2017: https://doi.org/10.1002/elsc.201600241; 2023: https://doi.org/10.1101/2023.10.20.563313</td>
+<td>(hidalgo2017silybummarianumcell pages 7-10, martinezmarquez2023thegrapevineabc pages 13-16, martinezmarquez2023thegrapevineabc pages 22-26)</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>In grape leaves, UV-C caused resveratrol accumulation from 8 h onward, peaking at about 196.43-fold and 180.93-fold over control at 16 h and 24 h, respectively, alongside biphasic STS mRNA and protein induction. In VvSTS3-expressing Silybum marianum cultures, 30 mM cyclodextrin elicitation yielded about 12 mg/L trans-resveratrol at 76 h, and 2023 transporter assays reported an approximately 1.9-fold enhancement in transported or extracellular trans-resveratrol relative to controls. 2010: https://doi.org/10.1016/j.plaphy.2009.12.002; 2017: https://doi.org/10.1002/elsc.201600241; 2023: https://doi.org/10.1101/2023.10.20.563313</td>
+<td>(wang2010distributionofresveratrol pages 4-6, hidalgo2017silybummarianumcell pages 7-10, martinezmarquez2023thegrapevineabc pages 13-16)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the best-supported functional annotation points for Vitis vinifera STS3 (UniProt P51071), including identity, biochemical role, regulation, localization, applications, and quantitative evidence. It only includes claims supported by the retrieved evidence snippets and cites the corresponding context IDs.</em></p>
+<h2 id="limitations-of-this-report-evidence-gaps">Limitations of this report (evidence gaps)</h2>
+<ul>
+<li><strong>STS3-specific biochemistry:</strong> The retrieved corpus did not include STS3 (P51071) enzyme kinetics (Km/kcat) or direct in vitro substrate panel data specific to this exact isoform; current sources emphasize that paralog-specific differences are generally not well proven without direct assays. (dubrovina2017regulationofstilbene pages 2-4)</li>
+<li><strong>2024 STS3-specific primary literature:</strong> No 2024 paper directly focused on VvSTS3/P51071 functional characterization was captured in the retrieved full text; the closest recent construct-based functional use is 2023. (martinezmarquez2023thegrapevineabc pages 13-16, martinezmarquez2023thegrapevineabc pages 22-26)</li>
+<li><strong>Figures/tables:</strong> Image extraction from the retrieved documents failed in this environment; therefore, no figure/table crops could be provided as visual citations.</li>
+</ul>
+<h2 id="key-references-with-publication-dates-and-urls">Key references (with publication dates and URLs)</h2>
+<ul>
+<li>Wang W. et al. (Feb 2010). <em>Plant Physiology and Biochemistry</em>. “Distribution of resveratrol and stilbene synthase… and the effect of UV-C…” https://doi.org/10.1016/j.plaphy.2009.12.002 (wang2010distributionofresveratrol pages 4-6)</li>
+<li>Dubrovina A.S., Kiselev K.V. (Jul 2017). <em>Planta</em>. “Regulation of stilbene biosynthesis in plants.” https://doi.org/10.1007/s00425-017-2730-8 (dubrovina2017regulationofstilbene pages 2-4)</li>
+<li>Vannozzi A. et al. (May 2018). <em>Plant and Cell Physiology</em>. “Combinatorial regulation of stilbene synthase genes by WRKY and MYB…” https://doi.org/10.1093/pcp/pcy045 (vannozzi2018combinatorialregulationof pages 1-4)</li>
+<li>Chialva C. et al. (Mar 2018). <em>Plant Molecular Biology Reporter</em>. “Differential expression patterns within the grapevine STS gene family…” https://doi.org/10.1007/s11105-018-1073-3 (chialva2018differentialexpressionpatterns pages 1-2)</li>
+<li>Orduña L. et al. (Mar 2022). <em>The Plant Journal</em>. “Direct regulation of shikimate, early phenylpropanoid, and stilbenoid pathways…” https://doi.org/10.1111/tpj.15686 (orduna2022directregulationof pages 12-13)</li>
+<li>Hidalgo D. et al. (Jun 2017). <em>Engineering in Life Sciences</em>. “Silybum marianum cell cultures stably transformed with Vitis vinifera STS accumulate t-resveratrol…” https://doi.org/10.1002/elsc.201600241 (hidalgo2017silybummarianumcell pages 7-10)</li>
+<li>Martínez‑Márquez A. et al. (Oct 2023). bioRxiv preprint. “The grapevine ABC transporter… is trans‑resveratrol transporter…” https://doi.org/10.1101/2023.10.20.563313 (martinezmarquez2023thegrapevineabc pages 13-16, martinezmarquez2023thegrapevineabc pages 22-26)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(wang2010distributionofresveratrol pages 4-6): Wei Wang, Ke Tang, Hao-Ru Yang, Peng-Fei Wen, Ping Zhang, Hui-Ling Wang, and Wei-Dong Huang. Distribution of resveratrol and stilbene synthase in young grape plants (vitis vinifera l. cv. cabernet sauvignon) and the effect of uv-c on its accumulation. Plant physiology and biochemistry : PPB, 48 2-3:142-52, Feb 2010. URL: https://doi.org/10.1016/j.plaphy.2009.12.002, doi:10.1016/j.plaphy.2009.12.002. This article has 240 citations.</p>
+</li>
+<li>
+<p>(valletta2021impactofenvironmental pages 2-6): Alessio Valletta, Lorenzo Maria Iozia, and Francesca Leonelli. Impact of environmental factors on stilbene biosynthesis. Plants, 10:90, Jan 2021. URL: https://doi.org/10.3390/plants10010090, doi:10.3390/plants10010090. This article has 196 citations.</p>
+</li>
+<li>
+<p>(vannozzi2018combinatorialregulationof pages 1-4): Alessandro Vannozzi, Darren Chern Jan Wong, Janine Hï¿½ll, Ibrahim Hmmam, Josï¿½ Tomï¿½s Matus, Jochen Bogs, Tobias Ziegler, Ian Dry, Gianni Barcaccia, and Margherita Lucchin. Combinatorial regulation of stilbene synthase genes by wrky and myb transcription factors in grapevine (vitis vinifera l.). Plant and Cell Physiology, 59:1043–1059, May 2018. URL: https://doi.org/10.1093/pcp/pcy045, doi:10.1093/pcp/pcy045. This article has 154 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(orduna2022directregulationof pages 12-13): Luis Orduña, Miaomiao Li, David Navarro‐Payá, Chen Zhang, Antonio Santiago, Pablo Romero, Živa Ramšak, Gabriele Magon, Janine Höll, Patrick Merz, Kristina Gruden, Alessandro Vannozzi, Dario Cantu, Jochen Bogs, Darren C. J. Wong, Shao‐shan Carol Huang, and José Tomás Matus. Direct regulation of shikimate, early phenylpropanoid, and stilbenoid pathways by subgroup 2 <scp>r2r3‐mybs</scp> in grapevine. The Plant Journal, 110:529-547, Mar 2022. URL: https://doi.org/10.1111/tpj.15686, doi:10.1111/tpj.15686. This article has 56 citations.</p>
+</li>
+<li>
+<p>(hidalgo2017silybummarianumcell pages 7-10): Diego Hidalgo, Ascensión Martínez‐Márquez, Rosa Cusidó, Roque Bru‐Martínez, Javier Palazón, and Purificación Corchete. Silybum marianum cell cultures stably transformed with vitis vinifera stilbene synthase accumulate t‐resveratrol in the extracellular medium after elicitation with methyl jasmonate or methylated β‐cyclodextrins. Engineering in Life Sciences, 17:686-694, Jun 2017. URL: https://doi.org/10.1002/elsc.201600241, doi:10.1002/elsc.201600241. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinezmarquez2023thegrapevineabc pages 22-26): A. Martínez-Márquez, V. Martins, S. Sellés-Marchart, H. Gerós, P. Corchete, and R. Bru-Martínez. The grapevine abc transporter b family member 15 (vvabcb15) is trans-resveratrol transporter out of grapevine cells. BioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.20.563313, doi:10.1101/2023.10.20.563313. This article has 5 citations.</p>
+</li>
+<li>
+<p>(dubrovina2017regulationofstilbene pages 2-4): A. S. Dubrovina and K. V. Kiselev. Regulation of stilbene biosynthesis in plants. Planta, 246:597-623, Jul 2017. URL: https://doi.org/10.1007/s00425-017-2730-8, doi:10.1007/s00425-017-2730-8. This article has 220 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chialva2018differentialexpressionpatterns pages 1-2): Constanza Chialva, Claudio Muñoz, María Miccono, Estefanía Eichler, Luciano Calderón, Humberto Prieto, and Diego Lijavetzky. Differential expression patterns within the grapevine stilbene synthase gene family revealed through their regulatory regions. Plant Molecular Biology Reporter, 36:225-238, Mar 2018. URL: https://doi.org/10.1007/s11105-018-1073-3, doi:10.1007/s11105-018-1073-3. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinezmarquez2023thegrapevineabc pages 13-16): A. Martínez-Márquez, V. Martins, S. Sellés-Marchart, H. Gerós, P. Corchete, and R. Bru-Martínez. The grapevine abc transporter b family member 15 (vvabcb15) is trans-resveratrol transporter out of grapevine cells. BioRxiv, Oct 2023. URL: https://doi.org/10.1101/2023.10.20.563313, doi:10.1101/2023.10.20.563313. This article has 5 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="STS3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>valletta2021impactofenvironmental pages 2-6</li>
+<li>dubrovina2017regulationofstilbene pages 2-4</li>
+<li>wang2010distributionofresveratrol pages 4-6</li>
+<li>orduna2022directregulationof pages 12-13</li>
+<li>vannozzi2018combinatorialregulationof pages 1-4</li>
+<li>chialva2018differentialexpressionpatterns pages 1-2</li>
+<li>hidalgo2017silybummarianumcell pages 7-10</li>
+<li>martinezmarquez2023thegrapevineabc pages 13-16</li>
+<li>martinezmarquez2023thegrapevineabc pages 22-26</li>
+<li>https://doi.org/10.1016/j.plaphy.2009.12.002</li>
+<li>https://doi.org/10.1111/tpj.15686</li>
+<li>https://doi.org/10.1093/pcp/pcy045</li>
+<li>https://doi.org/10.1007/s11105-018-1073-3</li>
+<li>https://doi.org/10.1101/2023.10.20.563313</li>
+<li>https://doi.org/10.1002/elsc.201600241</li>
+<li>https://doi.org/10.1002/elsc.201600241;</li>
+<li>https://doi.org/10.1007/s00425-017-2730-8;</li>
+<li>https://doi.org/10.3390/plants10010090</li>
+<li>https://doi.org/10.1093/pcp/pcy045;</li>
+<li>https://doi.org/10.1111/tpj.15686;</li>
+<li>https://doi.org/10.1016/j.plaphy.2009.12.002;</li>
+<li>https://doi.org/10.1007/s00425-017-2730-8</li>
+<li>https://doi.org/10.1016/j.plaphy.2009.12.002,</li>
+<li>https://doi.org/10.3390/plants10010090,</li>
+<li>https://doi.org/10.1093/pcp/pcy045,</li>
+<li>https://doi.org/10.1111/tpj.15686,</li>
+<li>https://doi.org/10.1002/elsc.201600241,</li>
+<li>https://doi.org/10.1101/2023.10.20.563313,</li>
+<li>https://doi.org/10.1007/s00425-017-2730-8,</li>
+<li>https://doi.org/10.1007/s11105-018-1073-3,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(STS3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P51071" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sts3-vitis-vinifera-research-notes">STS3 (Vitis vinifera) — research notes</h1>
+<p>UniProt: <strong>P51071</strong> (THS3_VITVI). Stilbene synthase 3 / Resveratrol synthase 3 /<br />
+Trihydroxystilbene synthase 3 (StSy 3). EC 2.3.1.95. AltName PSV368.<br />
+OrderedLocusNames VIT_16s0100g01030 (chromosome 16). 392 aa, ~42.8 kDa.</p>
+<h2 id="summary-of-gene-function">Summary of gene function</h2>
+<p>STS3 is a <strong>type III polyketide synthase (PKS III)</strong> of the chalcone/stilbene synthase<br />
+family. It catalyzes the iterative condensation of one molecule of <em>p</em>-coumaroyl-CoA<br />
+(4-coumaroyl-CoA) with three molecules of malonyl-CoA, followed by an intramolecular<br />
+aldol cyclization and decarboxylation, to produce <strong>trans-resveratrol</strong><br />
+(3,4',5-trihydroxystilbene), the major stilbenoid <strong>phytoalexin</strong> of grapevine.</p>
+<p>UniProt catalytic activity (Rhea:RHEA:11936):<br />
+<code>4-coumaroyl-CoA + 3 malonyl-CoA + 3 H+ = trans-resveratrol + 4 CO2 + 4 CoA</code> (EC 2.3.1.95).<br />
+UniProt PATHWAY: "Phytoalexin biosynthesis; 3,4',5-trihydroxystilbene biosynthesis;<br />
+3,4',5-trihydroxystilbene from trans-4-coumarate: step 2/2."<br />
+UniProt SUBUNIT: homodimer. SUBCELLULAR LOCATION: Cytoplasm. INDUCTION: by stress.<br />
+UniProt FUNCTION line: "Mediates resistance to pathogens which are sensitive to<br />
+stilbenes" (ECO:0000250, i.e. inferred by similarity, not direct evidence for STS3).</p>
+<h2 id="type-iii-pks-mechanism-relationship-to-chalcone-synthase-chs">Type III PKS mechanism — relationship to chalcone synthase (CHS)</h2>
+<p>STS and CHS are paralogous type III PKS enzymes. They use <strong>the same substrates</strong><br />
+(<em>p</em>-coumaroyl-CoA + 3 malonyl-CoA) and build <strong>the same linear tetraketide<br />
+intermediate</strong> via a single active-site Cys-His-Asn catalytic triad (the Cys is the<br />
+acyl carrier nucleophile; in STS3 the conserved active-site residue is annotated at<br />
+position 164, ECO:0000255 PROSITE-ProRule:PRU10023).</p>
+<p>The enzymes diverge only at the <strong>cyclization step</strong>:<br />
+- CHS performs a <strong>C6→C1 Claisen condensation</strong> giving naringenin chalcone (a flavonoid<br />
+  precursor).<br />
+- STS performs an alternative <strong>C2→C7 aldol condensation</strong> plus decarboxylation giving<br />
+  the stilbene backbone of resveratrol.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/10426957" title="It produces chalcone by condensing one p-coumaroyl- and three malonyl-coenzyme A thioesters into a polyketide reaction intermediate that cyclizes... The structure of CHS complexed with resveratrol also suggests how stilbene synthase, a related enzyme, uses the same substrates and an alternate cyclization pathway to form resveratrol.">PMID:10426957</a></p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/15380179" title="Stilbene synthase (STS) and chalcone synthase (CHS) each catalyze the formation of a tetraketide intermediate from a CoA-tethered phenylpropanoid starter and three molecules of malonyl-CoA, but use different cyclization mechanisms to produce distinct chemical scaffolds for a variety of plant natural products... electronic effects rather than steric factors balance competing cyclization specificities in CHS and STS.">PMID:15380179</a> — this is the "aldol switch" study; an "aldol switch" hydrogen-bonding<br />
+network (the "thioesterase-like" pocket) in STS reorients the terminal carbonyl to<br />
+favor aldol over Claisen cyclization.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/10926848" title="Chalcone synthase (CHS) and stilbene synthase (STS) catalyse condensation reactions of p-coumaroyl-CoA and three C2 units from malonyl-CoA up to a common tetraketide intermediate but then catalyse different cyclization reactions to produce naringenin chalcone and resveratrol respectively... the G372FGPG loop in CHS and STS contribute to a determination of the outcome during cyclization reactions.">PMID:10926848</a><br />
+Note: STS3 contains the FGPG loop (sequence ...LFGFGPGLTIE... near residues 367–377).</p>
+<p>STS arose from CHS by convergent evolution multiple independent times across<br />
+stilbene-producing lineages <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" title="Stilbene synthases (STSs)... seem to have evolved from chalcone synthases (CHSs) several times independently in stilbene-producing plants.">PMID:22961129</a>.</p>
+<h2 id="the-sts-gene-family-in-grapevine">The STS gene family in grapevine</h2>
+<p>Unlike most stilbene-producing plants where STS forms small families of 2–5 paralogs,<br />
+grapevine has an <strong>unusually large STS gene family</strong>. Reannotation of the PN40024<br />
+reference genome yielded <strong>48 STS genes, ≥32 potentially functional</strong>, all encoding<br />
+proteins with bona fide STS activity <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" title="Our reannotation of the STS and CHS gene families yielded 48 STS genes, including at least 32 potentially functional ones. Functional characterization of nine genes representing most of the STS gene family diversity clearly indicated that these genes do encode for proteins with STS activity.">PMID:22961129</a>. STS3 (VIT_16s0100g01030, chromosome 16) is one member of this family;<br />
+the family is dominated by purifying selection with no strong evidence of neofunctional<br />
+divergence <a href="https://pubmed.ncbi.nlm.nih.gov/22961129" title="both STS and CHS evolution are dominated by purifying selection, with no evidence for strong selection for new functions among STS genes">PMID:22961129</a>.</p>
+<p>The historically best-characterized grapevine STS gene is <em>Vst1</em> (also called StSy);<br />
+"STS3" / <em>PSV368</em> / pSV21–pSV25 are early-isolated grape STS cDNAs. The original<br />
+P51071 sequence comes from a stress-/elicitor-induced grape (cv. Optima) cDNA library<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/1898048" title="Several independent cDNA clones for PAL and stilbene synthase were isolated from a cDNA library of fungal cell wall-induced grape cells... The stilbene synthase cDNA sequence of pSV21 predicted a protein of 392 amino acids and Mr 42,791.">PMID:1898048</a>.</p>
+<h2 id="phytoalexin-biology-and-defense-response">Phytoalexin biology and "defense response"</h2>
+<p>Resveratrol and its derivatives (piceids, viniferins, pterostilbene) are <strong>stilbenic<br />
+phytoalexins</strong> — antimicrobial secondary metabolites synthesized de novo by the plant<br />
+in response to biotic and abiotic stress.</p>
+<ul>
+<li>STS expression is <strong>elicitor- and stress-inducible</strong>: STS and PAL (phenylalanine<br />
+  ammonia-lyase) transcripts are co-induced within 1 h of fungal cell-wall elicitor<br />
+  treatment of grape cell cultures <a href="https://pubmed.ncbi.nlm.nih.gov/1898048" title="Both PAL and stilbene synthase mRNA...   were induced within 1 h of addition of fungal cell wall preparations to the cell   cultures, rose to a maximum by the sixth hour.">PMID:1898048</a>.</li>
+<li>STS transcripts and stilbenoid content increase upon <strong>powdery mildew</strong> (Erysiphe /<br />
+  Uncinula necator) infection [PMID:23116673 "transcripts of selected STS genes<br />
+  increased significantly in Cabernet Sauvignon leaves at 24 and 48 h post inoculation<br />
+  with PM spores"; PMID:31531782 "the levels of STS expression and stilbenoids<br />
+  increased in response to powdery mildew infection"].</li>
+<li>Resveratrol is directly antimicrobial: 1.0 mM resveratrol inhibits mycelial growth of<br />
+<em>Phytophthora palmivora</em> in vitro <a href="https://pubmed.ncbi.nlm.nih.gov/15309535" title="resveratrol at 1.0 mM inhibited   mycelium growth of P. palmivora in vitro">PMID:15309535</a>.</li>
+<li><strong>Heterologous transfer confers disease resistance</strong>: expressing grapevine STS genes<br />
+  (Vst1) in non-stilbene plants (papaya, tobacco, etc.) raises stilbene content and<br />
+  increases pathogen resistance <a href="https://pubmed.ncbi.nlm.nih.gov/15309535" title="the transformed papaya lines exhibited   increased resistance to P. palmivora">PMID:15309535</a>. But this is not universal — transgenic white<br />
+  poplar accumulated resveratrol glucosides yet showed <strong>no increased rust resistance</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15359598" title="no increased resistance against the pathogen Melampsora pulcherrima...   was observed">PMID:15359598</a>, showing that the STS enzyme itself is one biosynthetic input, not the<br />
+  whole defense program.</li>
+<li>STS expression is governed by defense-associated transcription factors, notably<br />
+<strong>MYB14/MYB15</strong>, downstream of oxidative burst, Ca2+ influx, MAPK and jasmonate<br />
+  signaling <a href="https://pubmed.ncbi.nlm.nih.gov/26842984" title="a RboH-dependent oxidative burst, calcium influx, a MAPK   cascade, and jasmonate activated the MYB14 promoter">PMID:26842984</a>.</li>
+</ul>
+<h3 id="key-curation-point-defense-response-go0006952-is-process-conflation">Key curation point — "defense response" (GO:0006952) is process-conflation</h3>
+<p>STS3's <strong>molecular function is a biosynthetic synthase</strong> (trihydroxystilbene synthase).<br />
+Its <em>product</em> (resveratrol) is antimicrobial, so the gene is <strong>defense-associated</strong>, but<br />
+"defense response" (GO:0006952) as a biological-process annotation conflates the<br />
+downstream protective role of the metabolite with the catalytic activity of the enzyme.<br />
+The enzyme does not itself sense pathogens or execute a defense response; it<br />
+biosynthesizes a stilbene that happens to be a phytoalexin. The accurate biological<br />
+process is <strong>stilbene biosynthetic process (GO:0009811)</strong> and/or <strong>phytoalexin<br />
+biosynthetic process (GO:0052315)</strong>. GO:0052315 "phytoalexin biosynthetic process" is a<br />
+child of both <em>secondary metabolite biosynthetic process (GO:0044550)</em> and <em>toxin<br />
+biosynthetic process (GO:0009403)</em>, and it captures the defense context far more<br />
+precisely than the generic GO:0006952 without misrepresenting the enzyme as a defense<br />
+effector. This is the classic "biosynthetic-enzyme-labelled-with-the-downstream-process"<br />
+over-annotation pattern.</p>
+<h2 id="go-term-reference-verified-via-ols">GO term reference (verified via OLS)</h2>
+<ul>
+<li>GO:0050350 trihydroxystilbene synthase activity — "Catalysis of the reaction: 3<br />
+  malonyl-CoA + 4-coumaroyl-CoA = 4 CoA + 3,4',5-trihydroxy-stilbene + 4 CO2." Direct<br />
+  parent: GO:0016747. This is the precise MF for STS3 and matches EC 2.3.1.95 and<br />
+  Rhea:11936 exactly.</li>
+<li>GO:0016747 acyltransferase activity, transferring groups other than amino-acyl groups<br />
+  — parent of GO:0050350.</li>
+<li>GO:0016746 acyltransferase activity — grandparent of GO:0050350.</li>
+<li>GO:0009811 stilbene biosynthetic process — "formation of stilbenes, a class of<br />
+  polyketide compounds formed from cinnamic acid and three molecules of malonyl CoA."<br />
+  Precise BP for STS3.</li>
+<li>GO:0052315 phytoalexin biosynthetic process — child of GO:0044550 (secondary<br />
+  metabolite biosynthetic process) and GO:0009403 (toxin biosynthetic process).</li>
+<li>GO:0044550 secondary metabolite biosynthetic process — broader BP.</li>
+<li>GO:0006952 defense response — the retired SPKW annotation; over-broad / process-<br />
+  conflation for a biosynthetic enzyme.</li>
+<li>GO:0005737 cytoplasm — consistent with UniProt SUBCELLULAR LOCATION.</li>
+</ul>
+<h2 id="provenance-notes">Provenance notes</h2>
+<ul>
+<li>All four directly cited primary PMIDs (1898048, 22961129, 15380179, 10426957) are<br />
+  cached abstract-only (no PMC full text); supporting quotes are from the abstracts.</li>
+<li>PMID:23116673, PMID:31531782, PMID:15309535, PMID:15359598, PMID:26842984 used for<br />
+  context (phytoalexin/defense biology); abstracts retrieved via PubMed.</li>
+<li>Bibliographic data retrieved from PubMed.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P51071
+gene_symbol: STS3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:29760
+  label: Vitis vinifera
+description: &gt;-
+  STS3 (Stilbene synthase 3 / Resveratrol synthase 3 / Trihydroxystilbene synthase 3,
+  EC 2.3.1.95) is a cytosolic type III polyketide synthase of the chalcone/stilbene
+  synthase family in grapevine. It catalyzes the iterative condensation of one molecule
+  of 4-coumaroyl-CoA (p-coumaroyl-CoA) with three molecules of malonyl-CoA, followed by
+  an intramolecular aldol (C2-&gt;C7) cyclization and decarboxylation, to produce
+  trans-resveratrol (3,4&#39;,5-trihydroxystilbene). Resveratrol is the major stilbenoid
+  phytoalexin of grapevine and is antimicrobial. STS3 belongs to the unusually large
+  grapevine STS gene family (~48 genes, &gt;=32 functional), which arose from chalcone
+  synthase (CHS) by convergent evolution; STS and CHS share identical substrates and a
+  common linear tetraketide intermediate but diverge in their cyclization chemistry
+  (STS uses aldol cyclization to form a stilbene; CHS uses Claisen cyclization to form
+  naringenin chalcone). STS3 is the committed enzyme of stilbene/phytoalexin
+  biosynthesis and is transcriptionally induced by biotic and abiotic stress.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED
+# from the current (2026) GOA release. Reviewed retrospectively; retired: true.
+- term:
+    id: GO:0006952
+    label: defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;-
+      Retired SPKW (keyword2GO) annotation derived from the UniProt keyword &#34;Plant
+      defense&#34; / &#34;Stress response&#34;. STS3 is genuinely defense-associated because its
+      product resveratrol is an antimicrobial phytoalexin, but the protein&#39;s molecular
+      function is a biosynthetic synthase, not a defense effector or pathogen sensor.
+      Annotating the enzyme directly to GO:0006952 &#34;defense response&#34; conflates the
+      downstream protective role of the metabolite with the catalytic function of the
+      enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GOA&#39;s removal of this annotation was JUSTIFIED. This is a textbook
+      process-conflation / &#34;biosynthetic-enzyme-labelled-with-the-downstream-process&#34;
+      over-annotation: the SPKW pipeline mapped the UniProt &#34;Plant defense&#34; keyword
+      directly onto the enzyme, but STS3 does not itself sense or respond to pathogens.
+      It biosynthesizes trans-resveratrol, a stilbene that happens to be a phytoalexin.
+      The defense-relevant role of STS3 is properly captured by the more specific
+      biosynthetic-process terms GO:0009811 &#34;stilbene biosynthetic process&#34; and
+      GO:0052315 &#34;phytoalexin biosynthetic process&#34; (a child of both secondary
+      metabolite biosynthetic process and toxin biosynthetic process), which convey the
+      defense context without misrepresenting the enzyme as a defense response gene.
+      GO:0006952 is too broad and is the wrong granularity for a committed biosynthetic
+      enzyme. The flag retired:true is retained; GOA was correct to retire the SPKW
+      keyword2GO pipeline for cellular organisms and to drop this annotation. A more
+      accurate replacement BP annotation is suggested below as a NEW entry.
+    supported_by:
+    - reference_id: PMID:1898048
+      supporting_text: &gt;-
+        The mechanisms controlling the induction of stilbene synthase and phenylalanine
+        ammonia-lyase (PAL), two putative key regulatory enzymes of the biosynthetic
+        pathway to stilbene phytoalexins
+      full_text_unavailable: true
+    - reference_id: PMID:22961129
+      supporting_text: &gt;-
+        Stilbene synthases (STSs), which catalyze the biosynthesis of the stilbene
+        backbone
+      full_text_unavailable: true
+    - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+      supporting_text: &gt;-
+        The best-supported interpretation is that STS3 (P51071) functions as a canonical
+        resveratrol-forming STS participating in inducible phytoalexin biosynthesis
+        rather than a specialized enzyme with proven unique substrate selectivity. In
+        grapevine, trans-resveratrol and derived stilbenoids are widely treated as
+        phytoalexins - defense-associated metabolites whose synthesis is induced by
+        biotic and abiotic stress.
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Cellular component annotation derived from the UniProt subcellular location
+      vocabulary. Stilbene synthase is a soluble cytosolic enzyme; resveratrol
+      biosynthesis occurs in the cytoplasm where the phenylpropanoid precursor
+      4-coumaroyl-CoA and malonyl-CoA are available.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the UniProt SUBCELLULAR LOCATION (&#34;Cytoplasm&#34;) and with the
+      general biology of type III polyketide synthases, which are soluble cytosolic
+      enzymes. The annotation is appropriately general and accurate. Cytoplasm is a
+      reasonable, conservative location term; a more specific term (cytosol) could be
+      used but is not required.
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm.&#39;
+    - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+      supporting_text: &gt;-
+        Direct immunolocalization and immunogold electron microscopy in young grape
+        plants localized STS protein predominantly to the cytoplasm and cell wall, with
+        additional signal observed in chloroplasts and vacuoles.
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Broad molecular function term assigned by InterPro2GO from the thiolase-like /
+      chalcone-stilbene synthase domain signatures (IPR016039, IPR018088). STS3 is an
+      acyltransferase, so the term is correct but generic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0016746 &#34;acyltransferase activity&#34; is a correct but very high-level grandparent
+      of the precise activity. STS3 has a specifically defined, experimentally
+      characterized activity (trihydroxystilbene synthase activity, GO:0050350, EC
+      2.3.1.95) that is also annotated on this protein. The broad parent term adds no
+      information beyond the precise term and is an over-annotation relative to what is
+      known. It is not wrong, so it is marked as over-annotated rather than removed; the
+      precise child term GO:0050350 should be retained as the representative MF.
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &gt;-
+        Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 +
+        4 CoA
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Molecular function term assigned by InterPro2GO from the type III polyketide
+      synthase signature (IPR011141). This is the direct parent of GO:0050350
+      &#34;trihydroxystilbene synthase activity&#34;.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0016747 is correct (STS3 transfers a malonyl/acyl group, not an amino-acyl
+      group) and is the immediate parent of the precise term GO:0050350, which is also
+      annotated on this protein. Because the precise child term fully captures the
+      activity and EC 2.3.1.95, this broad parent is redundant and represents an
+      over-annotation in terms of specificity. Marked as over-annotated rather than
+      removed because it is taxonomically/biochemically accurate; GO:0050350 should be
+      retained as the core MF.
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &#39;EC=2.3.1.95&#39;
+- term:
+    id: GO:0050350
+    label: trihydroxystilbene synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Precise molecular function term: trihydroxystilbene (resveratrol) synthase
+      activity, EC 2.3.1.95. This is the defining catalytic activity of STS3 and matches
+      the UniProt catalytic activity (Rhea:RHEA:11936) exactly: 4-coumaroyl-CoA + 3
+      malonyl-CoA + 3 H+ = trans-resveratrol + 4 CO2 + 4 CoA.
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct, maximally specific molecular function for STS3 and is the
+      representative core MF of the gene. It is fully consistent with the UniProt
+      RecName (&#34;Stilbene synthase 3&#34;, &#34;Resveratrol synthase 3&#34;, &#34;Trihydroxystilbene
+      synthase 3&#34;), EC 2.3.1.95, the Rhea reaction, the UniPathway entry, and with
+      functional characterization of grapevine STS genes showing they encode bona fide
+      STS activity. The IEA mapping from EC to GO is appropriate and well-supported.
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &gt;-
+        Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 +
+        4 CoA; Xref=Rhea:RHEA:11936
+    - reference_id: PMID:22961129
+      supporting_text: &gt;-
+        Functional characterization of nine genes representing most of the STS gene
+        family diversity clearly indicated that these genes do encode for proteins with
+        STS activity
+      full_text_unavailable: true
+    - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+      supporting_text: &gt;-
+        Stilbene synthase (STS), also called resveratrol synthase or trihydroxystilbene
+        synthase, is a type III polyketide synthase that forms a stilbene scaffold by
+        condensing one phenylpropanoid-CoA starter with three malonyl-CoA extender
+        units; the canonical reaction is p-coumaroyl-CoA + 3 malonyl-CoA to
+        trans-resveratrol (EC 2.3.1.95).
+# --- Suggested NEW annotation (BP not currently captured) ---
+- term:
+    id: GO:0009811
+    label: stilbene biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      STS3 is the committed enzyme of stilbene biosynthesis: it forms the resveratrol
+      stilbene backbone from a phenylpropanoid starter and malonyl-CoA. There is
+      currently no biological-process annotation for STS3 in the current GOA release
+      (the retired SPKW GO:0006952 &#34;defense response&#34; annotation was the only BP, and it
+      was an over-annotation). GO:0009811 &#34;stilbene biosynthetic process&#34; is the precise
+      and accurate BP, capturing the enzyme&#39;s role without conflating it with the
+      downstream defense function.
+    action: NEW
+    reason: &gt;-
+      Proposed to replace the over-broad/over-annotated retired GO:0006952 &#34;defense
+      response&#34; SPKW annotation. GO:0009811 is the precise process for the resveratrol
+      backbone-forming reaction and is directly supported by the UniProt PATHWAY line
+      (&#34;Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis&#34;). The closely
+      related GO:0052315 &#34;phytoalexin biosynthetic process&#34; would additionally and
+      legitimately capture the defense context (it is a child of both secondary
+      metabolite biosynthetic process and toxin biosynthetic process) and could be
+      annotated alongside GO:0009811.
+    proposed_replacement_terms:
+    - id: GO:0009811
+      label: stilbene biosynthetic process
+    - id: GO:0052315
+      label: phytoalexin biosynthetic process
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &gt;-
+        PATHWAY: Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis;
+        3,4&#39;,5-trihydroxystilbene from trans-4-coumarate: step 2/2.
+    - reference_id: PMID:22961129
+      supporting_text: &gt;-
+        Stilbene synthases (STSs), which catalyze the biosynthesis of the stilbene
+        backbone
+      full_text_unavailable: true
+    - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+      supporting_text: &gt;-
+        STS genes encode the enzyme that performs the terminal committed step to
+        generate resveratrol, positioning STS as a key control point determining
+        whether phenylpropanoid precursors are diverted into stilbenoids versus other
+        branches.
+- term:
+    id: GO:0052315
+    label: phytoalexin biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      Resveratrol synthesized by STS3 is the major stilbenoid phytoalexin of grapevine.
+      GO:0052315 &#34;phytoalexin biosynthetic process&#34; captures the defense-relevant
+      biological context of STS3 accurately, as a biosynthetic-process term (it is a
+      child of both GO:0044550 secondary metabolite biosynthetic process and GO:0009403
+      toxin biosynthetic process) rather than as a defense-effector term.
+    action: NEW
+    reason: &gt;-
+      Proposed alongside GO:0009811 as the appropriate replacement for the retired,
+      over-annotated GO:0006952 &#34;defense response&#34; SPKW annotation. It conveys that the
+      stilbene product is a defense compound (phytoalexin) without misrepresenting the
+      enzyme as a pathogen-sensing or defense-response effector. Supported by the UniProt
+      PATHWAY line (&#34;Phytoalexin biosynthesis&#34;) and by the consistent literature
+      description of resveratrol/stilbenes as antimicrobial phytoalexins induced by
+      biotic stress.
+    supported_by:
+    - reference_id: UniProt:P51071
+      supporting_text: &gt;-
+        PATHWAY: Phytoalexin biosynthesis; 3,4&#39;,5-trihydroxystilbene biosynthesis;
+        3,4&#39;,5-trihydroxystilbene from trans-4-coumarate: step 2/2.
+    - reference_id: PMID:23116673
+      supporting_text: &gt;-
+        Stilbenic compounds are natural phytoalexins that have antimicrobial activities
+        in plant defense against pathogens. Stilbene synthase (STS) is the key enzyme
+        that catalyzes the biosynthesis of stilbenic compounds
+      full_text_unavailable: true
+    - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+      supporting_text: &gt;-
+        In grapevine, trans-resveratrol and derived stilbenoids are widely treated as
+        phytoalexins - defense-associated metabolites whose synthesis is induced by
+        biotic and abiotic stress. Regulation studies and stress-induction experiments
+        support this defense-associated role by showing strong inducibility of STS
+        expression and resveratrol accumulation under stress conditions.
+core_functions:
+- description: &gt;-
+    Type III polyketide synthase that catalyzes trihydroxystilbene (resveratrol)
+    synthase activity: it iteratively condenses 4-coumaroyl-CoA with three molecules of
+    malonyl-CoA and performs an aldol (C2-&gt;C7) cyclization with decarboxylation to
+    produce trans-resveratrol, the committed step of stilbene phytoalexin biosynthesis
+    in grapevine.
+  molecular_function:
+    id: GO:0050350
+    label: trihydroxystilbene synthase activity
+  directly_involved_in:
+  - id: GO:0009811
+    label: stilbene biosynthetic process
+  - id: GO:0052315
+    label: phytoalexin biosynthetic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  substrates:
+  - id: CHEBI:57355
+    label: 4-coumaroyl-CoA
+  - id: CHEBI:57384
+    label: malonyl-CoA
+  supported_by:
+  - reference_id: UniProt:P51071
+    supporting_text: &gt;-
+      Reaction=4-coumaroyl-CoA + 3 malonyl-CoA + 3 H(+) = trans-resveratrol + 4 CO2 + 4
+      CoA; Xref=Rhea:RHEA:11936, ... EC=2.3.1.95;
+  - reference_id: PMID:15380179
+    supporting_text: &gt;-
+      Stilbene synthase (STS) and chalcone synthase (CHS) each catalyze the formation of
+      a tetraketide intermediate from a CoA-tethered phenylpropanoid starter and three
+      molecules of malonyl-CoA, but use different cyclization mechanisms
+    full_text_unavailable: true
+  - reference_id: file:VITVI/STS3/STS3-deep-research-falcon.md
+    supporting_text: &gt;-
+      STS3 (VvSTS3) encodes a type III polyketide synthase (stilbene synthase/resveratrol
+      synthase) that catalyzes the committed step in the stilbenoid branch of the
+      phenylpropanoid pathway, producing trans-resveratrol, a major grapevine
+      phytoalexin involved in stress/defense responses.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro2GO mapping of the chalcone/stilbene synthase and type III
+      polyketide synthase domain signatures supplied the broad acyltransferase-activity
+      molecular-function annotations reviewed in this file.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA
+      retired the keyword2GO pipeline for cellular organisms.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: Mapping of the UniProt subcellular location &#34;Cytoplasm&#34; supplied the
+      cytoplasm cellular-component annotation reviewed in this file.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined multi-method IEA annotation supplied the precise trihydroxystilbene
+      synthase activity (GO:0050350, EC 2.3.1.95) molecular-function annotation reviewed
+      in this file.
+- id: file:VITVI/STS3/STS3-deep-research-falcon.md
+  title: Deep research report (falcon / Edison Scientific) on Vitis vinifera STS3
+    (P51071) - Stilbene synthase 3 / Resveratrol synthase 3
+  findings:
+  - statement: STS3 (VvSTS3) is a type III polyketide synthase (stilbene/resveratrol
+      synthase, EC 2.3.1.95) that catalyzes the committed step of the stilbenoid branch
+      of the phenylpropanoid pathway, condensing one p-coumaroyl-CoA starter with three
+      malonyl-CoA extenders to form trans-resveratrol.
+  - statement: trans-Resveratrol and derived stilbenoids are treated as phytoalexins -
+      defense-associated metabolites whose synthesis is strongly induced by biotic and
+      abiotic stress (e.g., UV-C induced resveratrol accumulation ~196x over control at
+      16 h, with parallel biphasic induction of STS mRNA and protein); the defense role
+      is a property of the metabolite product, while the enzyme itself performs a
+      biosynthetic synthase function.
+  - statement: STS belongs to a large diversified grapevine multigene family; reviews
+      emphasize that clear experimental evidence for distinct substrate specificities
+      among individual grape STS paralogs remains limited, and no 2024 primary paper
+      directly re-characterizes VvSTS3/P51071 biochemistry.
+  - statement: Immunolocalization in young grape plants placed STS protein predominantly
+      in the cytoplasm and cell wall, with additional signal in chloroplasts and
+      vacuoles and tissue enrichment in phloem, consistent with a soluble cytosolic
+      enzyme.
+  - statement: STS family expression is coordinated by subgroup 2 R2R3-MYB (MYB14/MYB15)
+      and WRKY transcription factors that reprogram carbon flux toward stilbenoid
+      biosynthesis; VvSTS3 has been used as an engineered resveratrol-production module
+      in heterologous plant cell systems.
+- id: UniProt:P51071
+  title: UniProtKB entry THS3_VITVI (Stilbene synthase 3, Vitis vinifera)
+  findings:
+  - statement: STS3 catalyzes 4-coumaroyl-CoA + 3 malonyl-CoA + 3 H+ = trans-resveratrol
+      + 4 CO2 + 4 CoA (EC 2.3.1.95, Rhea:RHEA:11936); it is a cytoplasmic homodimer of
+      the chalcone/stilbene synthase (thiolase-like) family, induced by stress.
+    reference_section_type: OTHER
+- id: PMID:1898048
+  title: Coordinate- and elicitor-dependent expression of stilbene synthase and
+    phenylalanine ammonia-lyase genes in Vitis cv. Optima.
+  findings:
+  - statement: Stilbene synthase and PAL are key enzymes of the biosynthetic pathway to
+      stilbene phytoalexins; their mRNAs are co-induced within 1 h of fungal cell-wall
+      elicitor treatment of grape cell cultures.
+    reference_section_type: ABSTRACT
+- id: PMID:22961129
+  title: Structural, functional, and evolutionary analysis of the unusually large
+    stilbene synthase gene family in grapevine.
+  findings:
+  - statement: The grapevine genome contains an unusually large STS gene family (48 STS
+      genes, &gt;=32 potentially functional); STS evolved from CHS several times
+      independently, and characterized grapevine STS genes encode bona fide STS
+      activity.
+    reference_section_type: ABSTRACT
+- id: PMID:15380179
+  title: An aldol switch discovered in stilbene synthases mediates cyclization
+    specificity of type III polyketide synthases.
+  findings:
+  - statement: STS and CHS use the same phenylpropanoid starter and three malonyl-CoA to
+      form a common tetraketide intermediate, then use different cyclization mechanisms;
+      an &#34;aldol switch&#34; in STS directs aldol cyclization to form the stilbene scaffold.
+    reference_section_type: ABSTRACT
+- id: PMID:10426957
+  title: Structure of chalcone synthase and the molecular basis of plant polyketide
+    biosynthesis.
+  findings:
+  - statement: CHS condenses one p-coumaroyl-CoA and three malonyl-CoA into a polyketide
+      intermediate that cyclizes; the CHS-resveratrol complex shows how the related
+      stilbene synthase uses the same substrates and an alternate cyclization pathway.
+    reference_section_type: ABSTRACT
+- id: PMID:23116673
+  title: Transcriptional expression of Stilbene synthase genes are regulated
+    developmentally and differentially in response to powdery mildew in Norton and
+    Cabernet Sauvignon grapevine.
+  findings:
+  - statement: STS is the key enzyme of stilbenic phytoalexin biosynthesis; individual
+      grapevine STS genes are transcriptionally induced by powdery mildew infection and
+      regulated developmentally.
+    reference_section_type: ABSTRACT
+- id: PMID:15309535
+  title: Expression of the grapevine stilbene synthase gene VST1 in papaya provides
+    increased resistance against diseases caused by Phytophthora palmivora.
+  findings:
+  - statement: Resveratrol (1 mM) inhibits mycelial growth of Phytophthora palmivora in
+      vitro; heterologous expression of a grapevine STS gene increases pathogen
+      resistance in papaya.
+    reference_section_type: ABSTRACT
+- id: PMID:15359598
+  title: Expression of the stilbene synthase (StSy) gene from grapevine in transgenic
+    white poplar results in high accumulation of the antioxidant resveratrol glucosides.
+  findings:
+  - statement: Grapevine STS expressed in white poplar produces resveratrol glucosides,
+      but accumulation of the phytoalexin did not increase rust resistance, showing the
+      STS enzyme is one biosynthetic input rather than a complete defense program.
+    reference_section_type: ABSTRACT
+- id: PMID:31531782
+  title: Expression of stilbene synthase VqSTS6 from wild Chinese Vitis quinquangularis
+    in grapevine enhances resveratrol production and powdery mildew resistance.
+  findings:
+  - statement: STS expression and stilbenoid levels increase in response to powdery
+      mildew infection; overexpression of an STS gene raises stilbenoid accumulation and
+      disease resistance in grapevine.
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Among the ~48 grapevine STS paralogs, do individual members (such as STS3/P51071)
+    have distinct substrate preferences, kinetic properties, or product profiles, or are
+    they functionally redundant?
+- question: &gt;-
+    Is STS3 (VIT_16s0100g01030) expressed and stress-inducible in planta, and in which
+    tissues, given that P51071 evidence is currently only at transcript level (PE 2)?
+suggested_experiments:
+- description: &gt;-
+    Recombinantly express and purify STS3 (P51071) and assay trihydroxystilbene synthase
+    activity in vitro with 4-coumaroyl-CoA and malonyl-CoA, confirming trans-resveratrol
+    production by LC-MS and measuring kinetic parameters; test alternative
+    phenylpropanoid-CoA starters to define substrate scope.
+- description: &gt;-
+    Determine the crystal structure of STS3 (or AlphaFold-guided mutagenesis of the
+    aldol-switch/FGPG loop residues) to confirm the structural basis of aldol versus
+    Claisen cyclization specificity relative to grapevine chalcone synthase.
+- description: &gt;-
+    Quantify STS3-specific transcript and protein levels and resveratrol accumulation in
+    grapevine tissues challenged with powdery mildew (Erysiphe necator) or treated with
+    UV/elicitors, to establish the stress-inducible expression profile of this specific
+    paralog.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

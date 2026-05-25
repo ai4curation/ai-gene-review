@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CASP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/C5YAP3" target="_blank" class="term-link">
+                        C5YAP3
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Sorghum bicolor</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CASP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="C5YAP3" data-a="DESCRIPTION: SbCASP1 (Casparian strip membrane protein 1) is a ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SbCASP1 (Casparian strip membrane protein 1) is a sorghum member of the CASP (CAsparian Strip membrane domain Protein) family, a plant-specific clade of the four-transmembrane-span MARVEL-domain protein superfamily. CASP proteins are small (here 229 aa) tetraspan integral plasma-membrane proteins that self-assemble into the Casparian Strip Membrane Domain (CSD), a highly stable, immobile plasma-membrane scaffold occupying a ring-like band around root endodermal cells. By forming this scaffold, CASPs recruit and correctly position the lignin-polymerization machinery — the peroxidase PER64, the NADPH oxidase RBOHF and the dirigent-like protein ESB1 — that deposits the lignified Casparian strip, a localized cell wall modification of the root endodermis. The Casparian strip acts as an extracellular (apoplastic) diffusion barrier, the &#34;plant tight junction&#34; that controls selective nutrient and water uptake into the vascular cylinder. The CASP family was discovered and characterized in Arabidopsis (CASP1-CASP5; Roppolo et al. 2011, 2014); the rice ortholog OsCASP1 is also experimentally characterized and shows the same scaffold-and-recruit mechanism in a grass. SbCASP1 belongs to the bona-fide CASP subfamily (PANTHER PTHR36488:SF11) and its function is inferred by orthology, with strong support from the conservation of the four-TM topology, the CASP-diagnostic first extracellular loop, and demonstrated Casparian-strip function across Poaceae.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Casparian strip membrane domain</h3>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="Casparian strip membrane domain" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> A specialized, highly stable subdomain of the root endodermal plasma membrane, occupied by a scaffold of CASP-family tetraspan proteins, that marks and determines the position of the Casparian strip cell wall modification.</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO currently has no cellular-component term for the plasma-membrane subdomain in which CASP proteins reside. The literature consistently distinguishes the &#34;Casparian strip membrane domain (CSD)&#34; — a plasma-membrane domain — from the &#34;Casparian strip&#34; itself (the cell wall lignin band, GO:0048226). A dedicated CC term would allow CASP-family proteins to be annotated to their precise localization rather than the generic GO:0005886 plasma membrane.</p>
+            
+
+            
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                    plasma membrane
+                </a>
+            </p>
+            
+
+            
+
+            
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+                
+                <li>
+                    
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                        PMID:21593871
+                    </a>
+                    
+                    
+                    : These &#39;CASPs&#39; (Casparian strip membrane domain proteins) specifically mark a membrane domain that predicts the formation of Casparian strips.
+                    
+                </li>
+                
+            </ul>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="C5YAP3" data-a="GO:0071555" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retired SwissProt-keyword-derived (SPKW) annotation mapping the UniProt keyword &#34;Cell wall biogenesis/degradation&#34; (KW-0961, present in the SbCASP1 entry) to GO:0071555 &#34;cell wall organization&#34;. This annotation captures genuine, plant-specific biology: CASP proteins organize the formation of a specific localized cell wall structure, the lignified Casparian strip.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The biology behind this annotation is correct and informative, not an over-annotation. CASP proteins are the founding molecular factors of Casparian strip formation: they self-assemble into a plasma-membrane scaffold that recruits the lignin-polymerization machinery depositing the Casparian strip, a localized cell wall modification of the root endodermis [PMID:21593871, PMID:24920445]. Genetic loss of CASP function produces &#34;disorganized Casparian strips&#34; [PMID:21593871], i.e. defective cell wall organization, and the UniProt FUNCTION text for SbCASP1 itself states it &#34;Regulates membrane-cell wall junctions and localized cell wall deposition&#34; and is &#34;Required for ... the subsequent formation of Casparian strips, a cell wall modification of the root endodermis&#34;. Therefore GOA&#39;s removal of this SPKW annotation is a genuine loss of correct information — this gene exemplifies the &#34;unique-but-correct, informative, plant-specific&#34; category of SPKW annotation. However, GO:0071555 &#34;cell wall organization&#34; is broad. A more specific and more accurate term is now available: GO:0160073 &#34;Casparian strip assembly&#34;, which exactly describes the CASP-mediated process. The recommended curation outcome is therefore not deletion but MODIFY to the specific term, preserving the biology at the correct granularity. (The retired: true flag is retained per the retrospective-review protocol; it records that GOA removed the SPKW annotation, while this review documents that the removal discarded correct biology that should be re-captured with GO:0160073.)
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0160073" target="_blank" class="term-link">
+                                    Casparian strip assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                                        PMID:21593871
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CASP double mutants display disorganized Casparian strips, demonstrating a role for CASPs in structuring and localizing this cell wall modification.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                                        PMID:24920445
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are four-membrane-span proteins that mediate the deposition of Casparian strips in the endodermis by recruiting the lignin polymerization machinery.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SbCASP1 is therefore most likely a plasma membrane structural organizer that helps establish a localized lignin impregnation in the endodermal anticlinal wall (Casparian strip), shaping solute flow into the stele.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="C5YAP3" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location-derived annotation from the UniProt &#34;Cell membrane&#34; location of SbCASP1. CASP proteins are tetraspan integral plasma-membrane proteins; the SbCASP1 entry has four predicted transmembrane helices and is annotated &#34;Cell membrane; Multi-pass membrane protein&#34;.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported. CASP proteins are integral plasma-membrane proteins: the SbCASP1 UniProt record predicts four transmembrane helices (TRANSMEM 68-88, 116-136, 158-178, 206-226) and annotates &#34;Cell membrane; Multi-pass membrane protein&#34;. Experimentally, Arabidopsis CASP1 marks a plasma-membrane domain (the Casparian strip membrane domain) and rice OsCASP1 forms its scaffold complex in the plasma membrane [PMID:21593871, PMID:37653341]. GO:0005886 &#34;plasma membrane&#34; is generic relative to the CASP-specific localization (the restricted ring-shaped Casparian strip membrane domain noted in the UniProt SUBCELLULAR LOCATION text), but GO has no distinct cellular-component term for the plasma-membrane subdomain itself (GO:0048226 &#34;Casparian strip&#34; denotes the cell wall region, not the membrane domain). The annotation is accurate at the available granularity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                                        PMID:21593871
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">These &#39;CASPs&#39; (Casparian strip membrane domain proteins) specifically mark a membrane domain that predicts the formation of Casparian strips.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37653341" target="_blank" class="term-link">
+                                        PMID:37653341
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The GAPLESS protein forms a tight complex with OsCASP1 in the plasma membrane, thereby mediating the CS-CSD junction.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CASPs have cytosolic N- and C-termini ... SbCASP1 is predicted/expected to be plasma-membrane localized and enriched at the endodermal CSD, consistent with sorghum SbCASP4 plasma-membrane localization and Casparian-strip region expression.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Self-assembly into the Casparian Strip Membrane Domain (CSD), a stable, immobile tetraspan-protein scaffold in a ring-like band of the root endodermal plasma membrane, via homo- and hetero-oligomerization with other CASP proteins.</h3>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="FUNCTION: Self-assembly into the Casparian Strip Membrane Do..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                                PMID:21593871
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CASP1 displays numerous features required for a constituent of a plant junctional complex: it forms complexes with other CASPs; it becomes immobile upon localization; and it sediments like a large polymer.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                                PMID:24920445
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CASPs show high stability in their membrane domain, which presents all the hallmarks of a membrane scaffold.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">CASPs are described as a membrane scaffold/fence at the CSD ... their membrane domain is unusually stable, consistent with a membrane scaffold/fence that defines a restricted domain (CSD).</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Organization and localized assembly of the Casparian strip, a lignified cell wall modification of the root endodermis, by recruiting and correctly positioning the lignin-polymerization machinery (peroxidase PER64, NADPH oxidase RBOHF, dirigent-like ESB1) at the CSD.</h3>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="FUNCTION: Organization and localized assembly of the Caspari..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                                PMID:24920445
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are four-membrane-span proteins that mediate the deposition of Casparian strips in the endodermis by recruiting the lignin polymerization machinery.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26124109" target="_blank" class="term-link">
+                                PMID:26124109
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Localized CASPs recruit Peroxidase 64 (PER64), a Respiratory Burst Oxidase Homolog F, and Enhanced Suberin 1 (ESB1), a dirigent-like protein, to assemble the lignin polymerization machinery.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23940370" target="_blank" class="term-link">
+                                PMID:23940370
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Casparian strip domain proteins (CASPs) correctly position this biosynthetic machinery by forming a protein scaffold in the plasma membrane at the site where the Casparian strip forms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">A recent 2024 synthesis further describes CASPs as localizing to the CS membrane domain and recruiting enzymes implicated in lignin polymerization and strip assembly, including RBOHF, ESB1, PER64, and UCC1.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Establishment of the root endodermal apoplastic diffusion barrier (the &#34;plant tight junction&#34;), enabling selective nutrient and water uptake and contributing to nutrient homeostasis and stress resistance.</h3>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="FUNCTION: Establishment of the root endodermal apoplastic di..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                                PMID:21593871
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Its defining features are the Casparian strips, belts of specialized cell wall material that generate an extracellular diffusion barrier.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36600916" target="_blank" class="term-link">
+                                PMID:36600916
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Our findings suggest that OsCASP1 could play an important role in nutrient homeostasis and adaptation to the growth environment.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">SbCASP1 ... contributes to the endodermal apoplastic diffusion barrier and influences ion/water movement into the stele. ... the endodermal diffusion barrier influences Na+ exclusion (salt tolerance) and selective nutrient uptake/homeostasis.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The SbCASP1 UniProt entry annotates subcellular location &#34;Cell membrane; Multi-pass membrane protein&#34;, with four predicted transmembrane helices, mapping to GO:0005886 plasma membrane.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21593871" target="_blank" class="term-link">
+                            PMID:21593871
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A novel protein family mediates Casparian strip formation in the endodermis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASPs (Casparian strip membrane domain proteins) are transmembrane proteins that mark a plasma-membrane domain predicting Casparian strip formation; CASP1 forms complexes with other CASPs, becomes immobile upon localization, and sediments as a large polymer — the hallmarks of a membrane scaffold.</div>
+                        
+                        <div class="finding-text">"These &#39;CASPs&#39; (Casparian strip membrane domain proteins) specifically mark a membrane domain that predicts the formation of Casparian strips. CASP1 displays numerous features required for a constituent of a plant junctional complex: it forms complexes with other CASPs; it becomes immobile upon localization; and it sediments like a large polymer."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASP double mutants display disorganized Casparian strips, showing CASPs structure and localize this cell wall modification.</div>
+                        
+                        <div class="finding-text">"CASP double mutants display disorganized Casparian strips, demonstrating a role for CASPs in structuring and localizing this cell wall modification."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24920445" target="_blank" class="term-link">
+                            PMID:24920445
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Functional and Evolutionary Analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN Family.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASPs are four-membrane-span proteins that mediate deposition of Casparian strips in the endodermis by recruiting the lignin polymerization machinery; the CASP membrane domain has all the hallmarks of a membrane scaffold.</div>
+                        
+                        <div class="finding-text">"CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are four-membrane-span proteins that mediate the deposition of Casparian strips in the endodermis by recruiting the lignin polymerization machinery. CASPs show high stability in their membrane domain, which presents all the hallmarks of a membrane scaffold."</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The broader CASP-like family is found across all land plants and green algae; non-plant homologs are MARVEL-family proteins. This is the family/ nomenclature reference cited in the SbCASP1 UniProt entry.</div>
+                        
+                        <div class="finding-text">"CASPLs were found in all major divisions of land plants as well as in green algae; homologs outside of the plant kingdom were identified as members of the MARVEL protein family."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23940370" target="_blank" class="term-link">
+                            PMID:23940370
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dirigent domain-containing protein is part of the machinery required for formation of the lignin-based Casparian strip in the root.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Casparian strip is composed of lignin polymerized by a NADPH oxidase and peroxidases; CASPs position this biosynthetic machinery by forming a plasma-membrane scaffold at the Casparian strip formation site.</div>
+                        
+                        <div class="finding-text">"This junction is composed of lignin that is polymerized by oxidative coupling of monolignols through the action of a NADPH oxidase and peroxidases. Casparian strip domain proteins (CASPs) correctly position this biosynthetic machinery by forming a protein scaffold in the plasma membrane at the site where the Casparian strip forms."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26124109" target="_blank" class="term-link">
+                            PMID:26124109
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The MYB36 transcription factor orchestrates Casparian strip formation.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localized CASPs recruit Peroxidase 64 (PER64), the NADPH oxidase RBOHF and the dirigent-like protein ESB1 to assemble the lignin polymerization machinery; the Casparian strip is a fine lignified band in the endodermal cell wall.</div>
+                        
+                        <div class="finding-text">"Localized CASPs recruit Peroxidase 64 (PER64), a Respiratory Burst Oxidase Homolog F, and Enhanced Suberin 1 (ESB1), a dirigent-like protein, to assemble the lignin polymerization machinery."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21735349" target="_blank" class="term-link">
+                            PMID:21735349
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The endodermis - development and differentiation of the plant&#39;s inner skin.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The Casparian strip is the defining cell wall modification of the differentiated endodermis; CASPs localize precisely to a plasma-membrane domain underneath the Casparian strip, and the endodermis blocks apoplastic diffusion.</div>
+                        
+                        <div class="finding-text">"The recent isolation of a novel protein family, the CASPs, that localizes precisely to a domain of the plasma membrane underneath the CS represents an excellent point of entry to explore CS function and formation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36600916" target="_blank" class="term-link">
+                            PMID:36600916
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Rice OsCASP1 orchestrates Casparian strip formation and suberin deposition in small lateral roots to maintain nutrient homeostasis.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In rice (a grass, like sorghum), CASPs form a transmembrane scaffold to recruit lignin biosynthetic enzymes for Casparian strip formation; loss of OsCASP1 delays Casparian strip formation and causes uneven lignin deposition, disrupting nutrient homeostasis.</div>
+                        
+                        <div class="finding-text">"Casparian strip membrane domain proteins (CASPs) form a transmembrane scaffold to recruit lignin biosynthetic enzymes for Casparian strip (CS) formation."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37653341" target="_blank" class="term-link">
+                            PMID:37653341
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A new family of proteins is required for tethering of Casparian strip membrane domain and nutrient homoeostasis in rice.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In rice, OsCASP1 is a core component of the Casparian strip-Casparian strip membrane domain (CS-CSD) junctional complex, forming a tight complex with GAPLESS proteins that tether the plasma membrane to the Casparian strip.</div>
+                        
+                        <div class="finding-text">"The GAPLESS protein forms a tight complex with OsCASP1 in the plasma membrane, thereby mediating the CS-CSD junction."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SORBI/CASP1/CASP1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep-research report — Functional annotation of Sorghum bicolor CASP1 (UniProt C5YAP3; Sb06g033470)</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No primary publication directly assaying SbCASP1 (C5YAP3 / Sb06g033470) was retrieved; functional annotation rests on conserved CASP-family mechanism plus direct experimental evidence from closely related cereal CASP homologs (sorghum SbCASP4, sorghum SbCASP-LP1C1, rice OsCASP1) and Arabidopsis CASP research. SbCASP1 is most parsimoniously a CSD-localizing four-transmembrane scaffold protein, with function assigned by orthology.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASP-family proteins are four-transmembrane-span integral plasma-membrane proteins with cytosolic N- and C-termini that accumulate at the Casparian strip membrane domain (CSD), a specialized plasma-membrane region of root endodermal cells; sorghum SbCASP4 was experimentally localized to the plasma membrane and expressed in endodermal/Casparian-strip regions.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The best-supported molecular role of CASP-family proteins is organizational rather than enzymatic — a stable membrane scaffold/fence that defines the CSD and recruits the lignin-polymerization machinery (RBOHF, ESB1, PER64, UCC1) to build the Casparian strip, a localized lignified cell wall modification of the endodermis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CASP-mediated barrier assembly is transcriptionally activated by MYB36 (which directly induces CASP1, ESB1, PER64) and is monitored by the CIF1/2-SGN3-SGN1 (SCHENGEN) surveillance pathway that triggers compensatory lignification/suberization when barrier defects are detected.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cereal CASP-family genes (sorghum SbCASP4, SbCASP-LP1C1; rice OsCASP1) provide direct experimental evidence that strengthening the root apoplastic barrier improves salt exclusion, ion homeostasis and selective mineral uptake, supporting the inferred role of SbCASP1 in the endodermal diffusion barrier and nutrient homeostasis.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SbCASP1 expression endodermis-specific in sorghum roots, and is it induced by abiotic stresses such as salt or drought, as reported for rice OsCASP1?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="Q: Is SbCASP1 expression endodermis-specific in sorgh..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does sorghum, like rice, additionally form Casparian strips/suberin barriers in the exodermis or sclerenchyma, and does SbCASP1 contribute there?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="Q: Does sorghum, like rice, additionally form Caspari..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which sorghum peroxidases, RBOH NADPH oxidase, and dirigent-like proteins constitute the lignin-polymerization machinery recruited by SbCASP1?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="Q: Which sorghum peroxidases, RBOH NADPH oxidase, and..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate sorghum Sbcasp1 loss-of-function (CRISPR) mutants and assess Casparian strip integrity (lignin staining, apoplastic tracer penetration) and ionomic / nutrient-homeostasis phenotypes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SbCASP1 is required for proper Casparian strip formation and the endodermal apoplastic diffusion barrier in sorghum roots.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: reverse genetics / phenotypic analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="EXPERIMENT: Generate sorghum Sbcasp1 loss-of-function (CRISPR)..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express a fluorescently tagged SbCASP1 in sorghum roots to confirm localization to a ring-shaped Casparian strip membrane domain in the endodermis.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SbCASP1 localizes to a restricted ring-shaped plasma-membrane domain coinciding with the Casparian strip.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: fluorescence microscopy / live imaging</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="EXPERIMENT: Express a fluorescently tagged SbCASP1 in sorghum ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Test SbCASP1 homo- and hetero-oligomerization with other sorghum CASPs (e.g. SbCASP2) by co-immunoprecipitation or split-fluorophore assays, and assess membrane-domain immobility by FRAP.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SbCASP1 forms a stable, immobile oligomeric membrane scaffold with other CASP proteins.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: protein interaction / FRAP</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="EXPERIMENT: Test SbCASP1 homo- and hetero-oligomerization with..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Functionally complement an Arabidopsis casp1 casp3 mutant with SbCASP1 to test cross-species conservation of Casparian strip organizing activity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SbCASP1 can substitute for Arabidopsis CASP1 in organizing Casparian strip formation.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: cross-species complementation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="C5YAP3" data-a="EXPERIMENT: Functionally complement an Arabidopsis casp1 casp3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CASP1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5YAP3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">22 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T14:08:13.940419</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CASP1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-sorghum-bicolor-casp1-uniprot-c5yap3-sb06g033470-casparian-strip-membrane-protein-1-sbcasp1">Research Report: Functional annotation of Sorghum bicolor CASP1 (UniProt C5YAP3; Sb06g033470; “Casparian strip membrane protein 1”, SbCASP1)</h2>
+<h3 id="executive-summary-identity-verified-evidence-constraints">Executive summary (identity verified; evidence constraints)</h3>
+<p>The target protein is <strong>SbCASP1</strong>, annotated in UniProt as <strong>Casparian strip membrane protein 1</strong> from <strong>Sorghum bicolor</strong> (UniProt accession <strong>C5YAP3</strong>; locus <strong>Sb06g033470</strong>) and belonging to the <strong>CASP/CASPL (Casparian strip membrane domain protein) family</strong> (user-supplied UniProt context). In the retrievable literature corpus for this run, I did <strong>not</strong> obtain a primary publication that explicitly mentions <strong>C5YAP3</strong> or <strong>Sb06g033470</strong>; thus, <strong>SbCASP1 functional statements below are primarily inferred from conserved CASP-family mechanisms</strong>, and are supported by direct experimental evidence from <strong>closely related cereal CASP homologs</strong> (notably sorghum <strong>SbCASP4</strong> and sorghum <strong>SbCASP‑LP1C1</strong>) and from <strong>Arabidopsis/rice CASP research</strong> (direct evidence for family function). This approach avoids a common ambiguity where “CASP1” could refer to unrelated genes in other kingdoms; here it is clearly plant <strong>Casparian strip membrane domain protein</strong> literature. (xue2024comparativeanalysisof pages 18-19, wei2021sbcasp4improvessalt pages 1-2)</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key takeaway</th>
+<th>Species/context</th>
+<th>Evidence type (direct vs inference)</th>
+<th>Publication (authors, year)</th>
+<th>URL/DOI</th>
+<th>Citation ID(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity &amp; limitations</td>
+<td>The target is <strong>Sorghum bicolor CASP-family protein CASP1</strong> from UniProt <strong>C5YAP3 / Sb06g033470</strong>, but <strong>no direct primary literature for SbCASP1/C5YAP3 was retrieved</strong> in the available corpus. Functional annotation therefore should be restricted to <strong>CASP-family inference</strong> plus cereal/sorghum homolog evidence, avoiding unrelated non-plant “CASP1” genes.</td>
+<td>Sorghum bicolor; family-level annotation constrained by missing direct paper on C5YAP3</td>
+<td>Direct for limitation; inference for function</td>
+<td>Xue et al., 2024; Wei et al., 2021</td>
+<td>https://doi.org/10.3390/ijms25189858 ; https://doi.org/10.1007/s00425-021-03731-z</td>
+<td>(xue2024comparativeanalysisof pages 18-19, wei2021sbcasp4improvessalt pages 1-2)</td>
+</tr>
+<tr>
+<td>CASP/CASPL definitions and domains</td>
+<td>CASPs are <strong>Casparian strip membrane domain proteins</strong>; CASPLs are the broader related family. Family identification in recent plant comparative work uses <strong>DUF588 / PF04535</strong>; evolutionary analyses link CASPLs to <strong>MARVEL-like</strong> proteins/domains.</td>
+<td>Arabidopsis, rice, plant-wide evolutionary context</td>
+<td>Inference for SbCASP1 from conserved family/domain membership</td>
+<td>Roppolo et al., 2014; Xue et al., 2024</td>
+<td>https://doi.org/10.1104/pp.114.239137 ; https://doi.org/10.3390/ijms25189858</td>
+<td>(roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 14-17, xue2024comparativeanalysisof pages 1-2)</td>
+</tr>
+<tr>
+<td>Topology and localization</td>
+<td>CASPs are <strong>four-transmembrane-span</strong> proteins with <strong>cytosolic N- and C-termini</strong>. They accumulate in the <strong>Casparian strip membrane domain (CSD)</strong>, a specialized plasma-membrane domain of root endodermal cells; sorghum SbCASP4 is likewise plasma-membrane localized and expressed in endodermis/Casparian-strip region.</td>
+<td>Arabidopsis foundational mechanism; sorghum homolog support</td>
+<td>Inference for SbCASP1 from family; direct for sorghum homolog SbCASP4</td>
+<td>Roppolo et al., 2014; Wei et al., 2021</td>
+<td>https://doi.org/10.1104/pp.114.239137 ; https://doi.org/10.1007/s00425-021-03731-z</td>
+<td>(roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1, wei2021sbcasp4improvessalt pages 3-6, wei2021sbcasp4improvessalt pages 6-9, wei2021sbcasp4improvessalt pages 12-13)</td>
+</tr>
+<tr>
+<td>Mechanistic role</td>
+<td>CASPs function as a <strong>stable membrane scaffold/fence</strong> that helps define the CSD and <strong>recruits lignin polymerization machinery</strong> for Casparian strip formation. Recent synthesis notes recruitment/organization of <strong>RBOHF, ESB1, PER64, UCC1</strong> and related enzymes required for endodermal lignification and diffusion-barrier formation.</td>
+<td>Root endodermis / Casparian strip</td>
+<td>Inference for SbCASP1 from conserved mechanism</td>
+<td>Roppolo et al., 2014; Xue et al., 2024; Wang et al., 2020</td>
+<td>https://doi.org/10.1104/pp.114.239137 ; https://doi.org/10.3390/ijms25189858 ; https://doi.org/10.1186/s12864-020-6723-9</td>
+<td>(roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1, xue2024comparativeanalysisof pages 1-2, wang2020casparianstripmembrane pages 1-2)</td>
+</tr>
+<tr>
+<td>Regulation/signaling</td>
+<td>CASP-mediated barrier assembly is regulated by <strong>MYB36</strong> and monitored by the <strong>CIF1/2–SGN3–SGN1 (SCHENGEN)</strong> pathway. MYB36 activates <strong>CASP1, ESB1, PER64</strong> and related genes; SGN signaling senses barrier defects and promotes compensatory lignification/suberization.</td>
+<td>Mainly Arabidopsis; broadly conserved endodermal barrier pathway</td>
+<td>Inference for SbCASP1 from conserved pathway; direct support from sorghum homolog response signatures</td>
+<td>Manzano et al., 2025; Xue et al., 2024; Wei et al., 2021</td>
+<td>https://doi.org/10.1101/2022.10.20.513117 ; https://doi.org/10.3390/ijms25189858 ; https://doi.org/10.1007/s00425-021-03731-z</td>
+<td>(manzano2025regulationandfunction pages 1-3, xue2024comparativeanalysisof pages 1-2, wei2021sbcasp4improvessalt pages 9-12)</td>
+</tr>
+<tr>
+<td>Cereal/sorghum functional evidence</td>
+<td><strong>SbCASP4</strong> from sweet sorghum improved salt exclusion by strengthening the root apoplastic barrier; transgenic lines had <strong>higher salinity threshold (125 mM NaCl)</strong> than WT (<strong>115 mM</strong>) and <strong>casp5 mutant (94 mM)</strong>. A 2023 sorghum study reported <strong>SbCASP-LP1C1</strong> similarly improves salt exclusion/barrier function. In rice, <strong>OsCASP1</strong> is implicated in Casparian strip formation, selective mineral uptake, and nutrient-stress responses.</td>
+<td>Sorghum and rice cereals</td>
+<td>Direct for SbCASP4 and SbCASP-LP1C1/OsCASP evidence; inference to SbCASP1 orthologous function</td>
+<td>Wei et al., 2021; Liu et al., 2023; Xue et al., 2024</td>
+<td>https://doi.org/10.1007/s00425-021-03731-z ; https://doi.org/10.1007/s11103-022-01312-6 ; https://doi.org/10.3390/ijms25189858</td>
+<td>(wei2021sbcasp4improvessalt pages 6-9, liu2023sbcasplp1c1improvessalt pages 1-2, xue2024comparativeanalysisof pages 13-15, xue2024comparativeanalysisof pages 17-18)</td>
+</tr>
+<tr>
+<td>Application/statistics</td>
+<td>CASP-family genes are plausible <strong>targets for engineering root diffusion barriers</strong> to improve salt tolerance and ion homeostasis in crops. Quantitative support includes sorghum-homolog transgenics with improved salinity thresholds and a global estimate of <strong>~1.125 billion hectares of salinized land</strong>, underscoring agricultural relevance.</td>
+<td>Crop improvement / abiotic stress adaptation</td>
+<td>Application inference supported by direct transgenic and review-style comparative evidence</td>
+<td>Liu et al., 2023; Wei et al., 2021; Xue et al., 2024</td>
+<td>https://doi.org/10.1007/s11103-022-01312-6 ; https://doi.org/10.1007/s00425-021-03731-z ; https://doi.org/10.3390/ijms25189858</td>
+<td>(liu2023sbcasplp1c1improvessalt pages 1-2, wei2021sbcasp4improvessalt pages 6-9, xue2024comparativeanalysisof pages 13-15)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest available evidence for annotating Sorghum bicolor CASP1 (UniProt C5YAP3) while clearly separating direct sorghum evidence from family-based inference. It highlights domain identity, topology, localization, mechanism, regulatory pathways, and cereal application relevance with citation IDs for traceability.</em></p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h3>
+<h4 id="11-casparian-strip-and-the-casparian-strip-membrane-domain-csd">1.1 Casparian strip and the Casparian strip membrane domain (CSD)</h4>
+<p>The <strong>Casparian strip (CS)</strong> is a localized cell-wall lignin barrier in the root endodermis that restricts <strong>apoplastic diffusion</strong> into the stele; at the plasma membrane adjacent to the CS, plants form a specialized membrane region termed the <strong>Casparian strip membrane domain (CSD)</strong>. CASP proteins accumulate in this domain and are a defining molecular feature of CSD organization. (roppolo2014functionalandevolutionary pages 1-2)</p>
+<h4 id="12-casp-proteins-including-casp1-definition-topology-and-membrane-scaffold-concept">1.2 CASP proteins (including CASP1): definition, topology, and “membrane scaffold” concept</h4>
+<p>CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are described as <strong>four-transmembrane (4TM) proteins</strong> that mediate CS deposition by <strong>recruiting lignin polymerization machinery</strong>, and their membrane domain is unusually stable, consistent with a <strong>membrane scaffold/fence</strong> that defines a restricted domain (CSD). CASPs have <strong>cytosolic N- and C-termini</strong>, with a short intracellular loop, and show <strong>very low turnover</strong> once localized to the CSD; they are initially present more broadly but become restricted to the CSD. (roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 12-13)</p>
+<p>Given that SbCASP1 (C5YAP3) is annotated as a CASP-family member (UniProt context) and CASPs share conserved 4TM architecture, the most parsimonious functional definition for SbCASP1 is that it is a <strong>CSD-localizing 4TM scaffold protein</strong> involved in endodermal barrier formation (inference supported by family mechanism). (roppolo2014functionalandevolutionary pages 1-2)</p>
+<h4 id="13-caspcaspl-domains-pf04535duf588-and-relationship-to-marvel-proteins">1.3 CASP/CASPL domains: PF04535/DUF588 and relationship to MARVEL proteins</h4>
+<p>Recent gene-family identification work in rice and Arabidopsis uses a hidden Markov model for <strong>DUF588 (PF04535)</strong> to define CASP family members, consistent with the CASP/CASPL domain assignment in UniProt/InterPro for SbCASP1. (xue2024comparativeanalysisof pages 1-2)</p>
+<p>Evolutionary analysis indicates that CASP-like proteins (CASPLs) occur across land plants and green algae, and homologs outside plants map to the <strong>MARVEL</strong> protein family; some sequences are annotated as MARVEL-like (InterPro) and comparative analyses explicitly connect plant CASPLs with MARVEL domains (Pfam PF01284). (roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 14-17)</p>
+<h3 id="2-molecular-function-biological-process-and-subcellular-localization-of-sbcasp1-best-supported-annotation">2. Molecular function, biological process, and subcellular localization of SbCASP1 (best-supported annotation)</h3>
+<h4 id="21-likely-molecular-function-scaffold-to-organize-lignin-polymerization-at-the-casparian-strip">2.1 Likely molecular function: scaffold to organize lignin polymerization at the Casparian strip</h4>
+<p>The best-supported primary molecular role for CASP-family proteins is <strong>organizational rather than enzymatic</strong>: CASPs are described as a <strong>membrane scaffold/fence</strong> at the CSD that <strong>recruits/coordinates the lignin polymerization machinery</strong> for CS formation. (roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1)</p>
+<p>A recent 2024 synthesis further describes CASPs as localizing to the CS membrane domain and recruiting enzymes implicated in lignin polymerization and strip assembly, including <strong>RBOHF, ESB1, PER64, and UCC1</strong>. (xue2024comparativeanalysisof pages 1-2)</p>
+<p><strong>Implication for SbCASP1:</strong> SbCASP1 is therefore most likely a <strong>plasma membrane structural organizer</strong> that helps establish a localized lignin impregnation in the endodermal anticlinal wall (Casparian strip), shaping solute flow into the stele (inference from family mechanism). (roppolo2014functionalandevolutionary pages 1-2, xue2024comparativeanalysisof pages 1-2)</p>
+<h4 id="22-subcellular-localization-plasma-membrane-enrichment-at-the-casparian-strip-domain-csd">2.2 Subcellular localization: plasma membrane; enrichment at the Casparian strip domain (CSD)</h4>
+<p>CASP-family proteins are membrane proteins; sorghum homolog evidence supports plasma membrane/Casparian strip association. In sweet sorghum, <strong>SbCASP4</strong> (a sorghum CASP homolog) was experimentally localized to the <strong>plasma membrane</strong> and expressed in root endodermal/Casparian-strip regions via in situ hybridization and reporter constructs; in Arabidopsis, SbCASP4-GFP showed enrichment in endodermal cells, especially the Casparian strip. (wei2021sbcasp4improvessalt pages 3-6, wei2021sbcasp4improvessalt pages 6-9, wei2021sbcasp4improvessalt pages 9-12)</p>
+<p><strong>Implication for SbCASP1:</strong> given shared CASP family topology and CSD targeting behavior, SbCASP1 is most likely a <strong>plasma membrane protein enriched at the CSD in root endodermal cells</strong> (inference supported by foundational CASP localization behavior and sorghum homolog experiments). (roppolo2014functionalandevolutionary pages 1-2, wei2021sbcasp4improvessalt pages 9-12)</p>
+<h4 id="23-pathway-context-endodermal-differentiation-and-barrier-surveillance-signaling">2.3 Pathway context: endodermal differentiation and barrier surveillance signaling</h4>
+<p>A key transcriptional regulator of endodermal barrier formation is <strong>MYB36</strong>, which activates CASP-related genes (including <strong>CASP1</strong>) and other CS polymerization components (e.g., PER64, ESB1). (manzano2025regulationandfunction pages 1-3)</p>
+<p>CASP-mediated barrier formation is monitored by the <strong>CIF peptide–SGN receptor/kinase pathway</strong> (“SCHENGEN” surveillance): comparative and mechanistic syntheses emphasize CIF1/2 peptide signaling through <strong>SGN3</strong> and <strong>SGN1</strong> to ensure barrier integrity and to trigger compensatory lignification/suberization when defects are detected. (manzano2025regulationandfunction pages 1-3, xue2024comparativeanalysisof pages 1-2)</p>
+<p>In a sorghum-homolog transgenic context, SbCASP4 expression correlated with elevated expression of <strong>AtMYB36</strong> and barrier-related genes including <strong>AtSGN1</strong> under salt stress, consistent with CASP proteins functioning within/alongside this regulatory network rather than as classic ion transporters. (wei2021sbcasp4improvessalt pages 9-12)</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3. Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-2024-comparative-genomics-and-stressnutrient-responsive-casp-biology-in-cereals">3.1 2024: comparative genomics and stress/nutrient-responsive CASP biology in cereals</h4>
+<p>A 2024 comparative analysis in <strong>rice (Oryza sativa)</strong> and <strong>Arabidopsis</strong> expanded CASP family catalogs using the <strong>PF04535 (DUF588)</strong> model and reported that most CASP genes are <strong>highly expressed in roots/endodermis</strong> and respond to abiotic stresses. The study highlights crop-relevant phenotypes previously reported for <strong>OsCASP1</strong>, including roles in CS formation and mineral/nutrient homeostasis (e.g., altered tolerance to ion deficiencies), and it presents nutrient-deficiency responsive expression patterns with statistical testing (Student’s t-test; <strong>p &lt; 0.01</strong>, ***p &lt; 0.001). (xue2024comparativeanalysisof pages 13-15, xue2024comparativeanalysisof pages 17-18)</p>
+<p>This supports a current view that CASP-family proteins are not only developmental barrier components but also participate in <strong>adaptive remodeling</strong> of root diffusion barriers under nutrient and stress conditions—an important framing for crop functional annotation. (xue2024comparativeanalysisof pages 13-15)</p>
+<h4 id="32-2023-sorghum-casp-like-protein-engineering-for-salt-exclusion-directly-relevant-to-sorghum-casp-function">3.2 2023: sorghum CASP-like protein engineering for salt exclusion (directly relevant to sorghum CASP function)</h4>
+<p>A 2023 study reported that a sweet sorghum CASP-like protein (<strong>SbCASP‑LP1C1</strong>) can <strong>improve salt exclusion by enhancing the root apoplastic barrier</strong> when expressed in Arabidopsis, reducing Na+ accumulation and decreasing stele permeability to propidium iodide under salinity. The same study framed these results in an application context for crop salt tolerance improvement and cited global salinization pressure (~<strong>1.125 billion hectares</strong> of salinized land). (liu2023sbcasplp1c1improvessalt pages 1-2)</p>
+<p>Although this is not SbCASP1 (C5YAP3), it provides <strong>direct, recent (2023) sorghum CASP-family functional evidence</strong> supporting the inference that sorghum CASP proteins can be leveraged to strengthen endodermal/apoplastic barriers. (liu2023sbcasplp1c1improvessalt pages 1-2)</p>
+<h3 id="4-current-applications-and-real-world-implementations">4. Current applications and real-world implementations</h3>
+<h4 id="41-transgenicheterologous-expression-as-a-proof-of-concept-implementation">4.1 Transgenic/heterologous expression as a proof-of-concept implementation</h4>
+<p>A clear real-world implementation pattern in this literature is <strong>engineering/expressing CASP-family genes</strong> to modulate the root apoplastic barrier and thereby improve salt tolerance.</p>
+<p>In sorghum-derived gene experiments, <strong>SbCASP4</strong> expressed in Arabidopsis increased salt tolerance and salt exclusion phenotypes under <strong>50 mM NaCl</strong>, with multiple physiological readouts including ion accumulation, reactive oxygen species (ROS) measures, and propidium iodide exclusion from the stele (barrier integrity). (wei2021sbcasp4improvessalt pages 9-12)</p>
+<p>In addition, SbCASP4 overexpression yielded a higher computed <strong>salinity threshold</strong> (external NaCl concentration reducing fresh weight to 50%) of <strong>125 mM NaCl</strong> compared with <strong>115 mM</strong> for wild type and <strong>94 mM</strong> for a casp5 mutant, providing a quantitative metric for barrier-mediated salt tolerance improvement. (wei2021sbcasp4improvessalt pages 6-9)</p>
+<h4 id="42-crop-improvement-rationale-barrier-traits-affect-ion-homeostasis-and-stress-resilience">4.2 Crop improvement rationale: barrier traits affect ion homeostasis and stress resilience</h4>
+<p>The agricultural rationale is that the endodermal diffusion barrier influences <strong>Na+ exclusion</strong> (salt tolerance) and <strong>selective nutrient uptake/homeostasis</strong>. The 2024 rice/Arabidopsis CASP family analysis explicitly connects CASP genes (including OsCASP1 evidence cited therein) to selective mineral uptake and nutrient stress phenotypes, supporting the notion that tuning CASP-mediated barriers can shape ion homeostasis in crops. (xue2024comparativeanalysisof pages 17-18, xue2024comparativeanalysisof pages 13-15)</p>
+<h3 id="5-expert-opinions-and-analysis-from-authoritative-sources">5. Expert opinions and analysis from authoritative sources</h3>
+<p>Authoritative mechanistic interpretation from Roppolo et al. (Plant Physiology, 2014) is that CASPs form a <strong>high-stability membrane scaffold</strong> and mediate Casparian strip deposition by <strong>recruiting lignin polymerization machinery</strong>, a framing that remains central to the field’s current understanding and underpins functional annotation of CASP1 orthologs in non-model plants. (roppolo2014functionalandevolutionary pages 1-2, roppolo2014functionalandevolutionary pages 1-1)</p>
+<p>A 2024 comparative analysis (IJMS) synthesizes this model into a broader crop context, emphasizing that CASPs are pivotal for CS formation and are implicated in environmental stress responses and nutrient-related phenotypes, motivating continued functional investigation in cereals. (xue2024comparativeanalysisof pages 1-2, xue2024comparativeanalysisof pages 13-15)</p>
+<h3 id="6-relevant-statistics-and-data-recent-or-most-directly-available">6. Relevant statistics and data (recent or most directly available)</h3>
+<h4 id="61-quantitative-phenotype-data-for-sorghum-casp-homolog-function">6.1 Quantitative phenotype data for sorghum CASP homolog function</h4>
+<p>In SbCASP4 heterologous-expression experiments in Arabidopsis under salt stress, reported quantitative outcomes include:<br />
+- <strong>Salinity threshold</strong>: WT <strong>115 mM</strong>, casp5 mutant <strong>94 mM</strong>, SbCASP4-OE <strong>125 mM NaCl</strong> (threshold defined as the NaCl concentration that reduces fresh weight to 50% of control). (wei2021sbcasp4improvessalt pages 6-9)<br />
+- Experimental and statistical context: NaCl treatment at <strong>50 mM for 5 days</strong>, ion assays reported as means ± SD with <strong>n=3</strong>, and significance evaluated by Duncan’s multiple range test at <strong>P=0.05</strong>. (wei2021sbcasp4improvessalt pages 9-12)</p>
+<h4 id="62-global-salinity-pressure-motivating-applications">6.2 Global salinity pressure motivating applications</h4>
+<p>A 2023 sorghum CASP-like study contextualized the application by citing <strong>~1.125 billion hectares of salinized land</strong> globally, underscoring the importance of salt-exclusion strategies and root-barrier engineering. (liu2023sbcasplp1c1improvessalt pages 1-2)</p>
+<h3 id="7-functional-annotation-for-sbcasp1-c5yap3-best-supported-statements-with-explicit-evidence-level">7. Functional annotation for SbCASP1 (C5YAP3): best-supported statements (with explicit evidence level)</h3>
+<p><strong>Most defensible primary function (inference from conserved CASP mechanism):</strong><br />
+SbCASP1 (C5YAP3) is most likely a <strong>4TM plasma membrane scaffold protein</strong> that localizes to the <strong>Casparian strip membrane domain (CSD)</strong> in root endodermal cells, where it helps organize a membrane microdomain and <strong>recruits/positions lignin polymerization machinery</strong> to build the Casparian strip, thereby contributing to the <strong>endodermal apoplastic diffusion barrier</strong> and influencing ion/water movement into the stele. (roppolo2014functionalandevolutionary pages 1-2, xue2024comparativeanalysisof pages 1-2)</p>
+<p><strong>Localization (inference supported by sorghum homolog direct evidence):</strong><br />
+SbCASP1 is predicted/expected to be <strong>plasma-membrane localized</strong> and enriched at the endodermal CSD, consistent with sorghum SbCASP4 plasma-membrane localization and Casparian-strip region expression. (wei2021sbcasp4improvessalt pages 3-6, wei2021sbcasp4improvessalt pages 6-9)</p>
+<p><strong>Pathway/regulation (inference from conserved endodermal programs):</strong><br />
+SbCASP1 likely acts downstream of endodermal differentiation regulators such as <strong>MYB36</strong> and within barrier integrity/surveillance signaling involving <strong>CIF peptides and SGN kinases</strong>, which coordinate lignification/suberization responses to barrier defects. (manzano2025regulationandfunction pages 1-3, xue2024comparativeanalysisof pages 1-2)</p>
+<h3 id="8-key-gaps-and-recommendations-for-definitive-sbcasp1-annotation">8. Key gaps and recommendations for definitive SbCASP1 annotation</h3>
+<p>Because no retrieved primary paper directly assays <strong>SbCASP1 (C5YAP3; Sb06g033470)</strong>, the following would be most decisive for upgrading inference to direct evidence:<br />
+- Root cell-type expression (endodermis specificity) and developmental timing in sorghum.<br />
+- Subcellular localization (SbCASP1-GFP) to confirm CSD targeting.<br />
+- Genetic perturbation (CRISPR knockout/knockdown) and assays of Casparian strip integrity (e.g., PI exclusion), lignin deposition, and ion homeostasis.</p>
+<h3 id="references-urls-and-publication-dates">References (URLs and publication dates)</h3>
+<ul>
+<li>Roppolo D. et al. <strong>2014-06</strong>. <em>Plant Physiology</em>. “Functional and Evolutionary Analysis of the CASPARIAN STRIP MEMBRANE DOMAIN PROTEIN Family”. https://doi.org/10.1104/pp.114.239137 (roppolo2014functionalandevolutionary pages 1-2)</li>
+<li>Xue B. et al. <strong>2024-09</strong>. <em>International Journal of Molecular Sciences</em>. “Comparative Analysis of Casparian Strip Membrane Domain Protein Family in Oryza sativa (L.) and Arabidopsis thaliana (L.)”. https://doi.org/10.3390/ijms25189858 (xue2024comparativeanalysisof pages 1-2)</li>
+<li>Liu L. et al. <strong>2023-11</strong>. <em>Plant Molecular Biology</em>. “Sbcasp-lp1c1 improves salt exclusion by enhancing the root apoplastic barrier”. https://doi.org/10.1007/s11103-022-01312-6 (liu2023sbcasplp1c1improvessalt pages 1-2)</li>
+<li>Wei X. et al. <strong>2021-09</strong>. <em>Planta</em>. “SbCASP4 improves salt exclusion by enhancing the root apoplastic barrier”. https://doi.org/10.1007/s00425-021-03731-z (wei2021sbcasp4improvessalt pages 6-9)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(xue2024comparativeanalysisof pages 18-19): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(wei2021sbcasp4improvessalt pages 1-2): Xiaocen Wei, Lili Liu, Chaoxia Lu, Fang Yuan, Guoliang Han, and Baoshan Wang. Sbcasp4 improves salt exclusion by enhancing the root apoplastic barrier. Planta, Sep 2021. URL: https://doi.org/10.1007/s00425-021-03731-z, doi:10.1007/s00425-021-03731-z. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 1-2): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 134 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 14-17): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 134 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 1-2): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 1-1): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 134 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2021sbcasp4improvessalt pages 3-6): Xiaocen Wei, Lili Liu, Chaoxia Lu, Fang Yuan, Guoliang Han, and Baoshan Wang. Sbcasp4 improves salt exclusion by enhancing the root apoplastic barrier. Planta, Sep 2021. URL: https://doi.org/10.1007/s00425-021-03731-z, doi:10.1007/s00425-021-03731-z. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2021sbcasp4improvessalt pages 6-9): Xiaocen Wei, Lili Liu, Chaoxia Lu, Fang Yuan, Guoliang Han, and Baoshan Wang. Sbcasp4 improves salt exclusion by enhancing the root apoplastic barrier. Planta, Sep 2021. URL: https://doi.org/10.1007/s00425-021-03731-z, doi:10.1007/s00425-021-03731-z. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2021sbcasp4improvessalt pages 12-13): Xiaocen Wei, Lili Liu, Chaoxia Lu, Fang Yuan, Guoliang Han, and Baoshan Wang. Sbcasp4 improves salt exclusion by enhancing the root apoplastic barrier. Planta, Sep 2021. URL: https://doi.org/10.1007/s00425-021-03731-z, doi:10.1007/s00425-021-03731-z. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2020casparianstripmembrane pages 1-2): Xiaoyang Wang, Yuanming Zhang, Liyuan Wang, Zhaoe Pan, Shoupu He, Qiong Gao, Baojun Chen, Wenfang Gong, and Xiongming Du. Casparian strip membrane domain proteins in gossypium arboreum: genome-wide identification and negative regulation of lateral root growth. BMC Genomics, May 2020. URL: https://doi.org/10.1186/s12864-020-6723-9, doi:10.1186/s12864-020-6723-9. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manzano2025regulationandfunction pages 1-3): Concepcion Manzano, Kevin W. Morimoto, Lidor Shaar-Moshe, G. Alex Mason, Alex Cantó-Pastor, Mona Gouran, Damien De Bellis, Robertas Ursache, Kaisa Kajala, Neelima Sinha, Julia Bailey-Serres, Niko Geldner, J Carlos del Pozo, and Siobhan M. Brady. Regulation and function of a polarly localized lignin barrier in the exodermis. Nature Plants, 11:118-130, Oct 2025. URL: https://doi.org/10.1101/2022.10.20.513117, doi:10.1101/2022.10.20.513117. This article has 45 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2021sbcasp4improvessalt pages 9-12): Xiaocen Wei, Lili Liu, Chaoxia Lu, Fang Yuan, Guoliang Han, and Baoshan Wang. Sbcasp4 improves salt exclusion by enhancing the root apoplastic barrier. Planta, Sep 2021. URL: https://doi.org/10.1007/s00425-021-03731-z, doi:10.1007/s00425-021-03731-z. This article has 24 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2023sbcasplp1c1improvessalt pages 1-2): Lili Liu, Xiaocen Wei, Zhen Yang, Fang Yuan, Guoliang Han, Jianrong Guo, and Baoshan Wang. Sbcasp-lp1c1 improves salt exclusion by enhancing the root apoplastic barrier. Plant Molecular Biology, 111:73-88, Nov 2023. URL: https://doi.org/10.1007/s11103-022-01312-6, doi:10.1007/s11103-022-01312-6. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 13-15): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(xue2024comparativeanalysisof pages 17-18): Baoping Xue, Zicong Liang, Yue Liu, Dongyang Li, Peng Cao, and Chang Liu. Comparative analysis of casparian strip membrane domain protein family in oryza sativa (l.) and arabidopsis thaliana (l.). International Journal of Molecular Sciences, 25:9858, Sep 2024. URL: https://doi.org/10.3390/ijms25189858, doi:10.3390/ijms25189858. This article has 5 citations.</p>
+</li>
+<li>
+<p>(roppolo2014functionalandevolutionary pages 12-13): Daniele Roppolo, Brigitte Boeckmann, Alexandre Pfister, Emmanuel Boutet, Maria C. Rubio, Valérie Dénervaud-Tendon, Joop E.M. Vermeer, Jacqueline Gheyselinck, Ioannis Xenarios, and Niko Geldner. Functional and evolutionary analysis of the casparian strip membrane domain protein family. Plant Physiology, 165:1709-1722, Jun 2014. URL: https://doi.org/10.1104/pp.114.239137, doi:10.1104/pp.114.239137. This article has 134 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CASP1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>roppolo2014functionalandevolutionary pages 1-2</li>
+<li>xue2024comparativeanalysisof pages 1-2</li>
+<li>manzano2025regulationandfunction pages 1-3</li>
+<li>xue2024comparativeanalysisof pages 13-15</li>
+<li>xue2024comparativeanalysisof pages 18-19</li>
+<li>roppolo2014functionalandevolutionary pages 14-17</li>
+<li>roppolo2014functionalandevolutionary pages 1-1</li>
+<li>wang2020casparianstripmembrane pages 1-2</li>
+<li>xue2024comparativeanalysisof pages 17-18</li>
+<li>roppolo2014functionalandevolutionary pages 12-13</li>
+<li>https://doi.org/10.3390/ijms25189858</li>
+<li>https://doi.org/10.1007/s00425-021-03731-z</li>
+<li>https://doi.org/10.1104/pp.114.239137</li>
+<li>https://doi.org/10.1186/s12864-020-6723-9</li>
+<li>https://doi.org/10.1101/2022.10.20.513117</li>
+<li>https://doi.org/10.1007/s11103-022-01312-6</li>
+<li>https://doi.org/10.3390/ijms25189858,</li>
+<li>https://doi.org/10.1007/s00425-021-03731-z,</li>
+<li>https://doi.org/10.1104/pp.114.239137,</li>
+<li>https://doi.org/10.1186/s12864-020-6723-9,</li>
+<li>https://doi.org/10.1101/2022.10.20.513117,</li>
+<li>https://doi.org/10.1007/s11103-022-01312-6,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CASP1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="C5YAP3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="casp1-sorghum-bicolor-research-notes">CASP1 (Sorghum bicolor) — Research Notes</h1>
+<p>UniProt: <strong>C5YAP3</strong> (CASP1_SORBI) — "Casparian strip membrane protein 1" / SbCASP1<br />
+Ordered locus: Sb06g033470 / SORBI_3006G273300 ; Chromosome 6 ; 229 aa<br />
+PANTHER: PTHR36488:SF11 ("CASP-LIKE PROTEIN" — the bona fide CASP subfamily, with CASP1-5/CASP1-6 type members)<br />
+Pfam: PF04535 (CASP_dom) ; InterPro: IPR006702 (CASP_dom), IPR006459 (CASP/CASPL)</p>
+<h2 id="summary-hypothesis-under-evaluation">Summary / hypothesis under evaluation</h2>
+<p>SbCASP1 is a sorghum member of the CASP (CAsparian Strip membrane domain Protein)<br />
+family. CASPs are four-transmembrane-span MARVEL-domain plasma-membrane proteins. They<br />
+self-assemble into the Casparian Strip Membrane Domain (CSD), a stable, immobile<br />
+plasma-membrane scaffold in root endodermal cells. The CSD recruits and positions the<br />
+lignin-polymerization machinery (peroxidase PER64, the NADPH oxidase RBOHF, the<br />
+dirigent-like protein ESB1) that locally deposits the lignified Casparian strip — a<br />
+ring-like cell wall modification forming the root apoplastic diffusion barrier.</p>
+<p>Direct experimental characterization (CASP1-CASP5) is in Arabidopsis; the rice ortholog<br />
+OsCASP1 is also characterized. SbCASP1 function is inferred by orthology (UniProt<br />
+"By similarity"), but the inference is strong: family-wide conservation of the four-TM<br />
+topology, the membrane-scaffold behaviour, and the Casparian-strip role in grasses.</p>
+<h2 id="casp-family-discovery-and-function">CASP family discovery and function</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21593871" title="These 'CASPs' (Casparian strip membrane domain proteins) specifically mark a membrane domain that predicts the formation of Casparian strips.">PMID:21593871</a> — Roppolo et al.<br />
+2011 Nature identified the CASP family (CASP1-5 in Arabidopsis) as the first molecular<br />
+factors establishing a plasma-membrane and extracellular diffusion barrier in plants.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21593871" title="CASP1 displays numerous features required for a constituent of a plant junctional complex: it forms complexes with other CASPs; it becomes immobile upon localization; and it sediments like a large polymer.">PMID:21593871</a> — CASP1 behaves as a membrane<br />
+scaffold: forms homo/hetero-complexes, becomes immobile, sediments as a large polymer.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21593871" title="CASP double mutants display disorganized Casparian strips, demonstrating a role for CASPs in structuring and localizing this cell wall modification.">PMID:21593871</a> — Genetic<br />
+loss of function: casp1 casp3 double mutants have disorganized Casparian strips. This is<br />
+the key evidence that CASPs <em>organize</em> a specific cell wall structure.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24920445" title="CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are four-membrane-span proteins that mediate the deposition of Casparian strips in the endodermis by recruiting the lignin polymerization machinery.">PMID:24920445</a> — Roppolo et al. 2014 Plant Physiol. CASPs are<br />
+4-TM proteins; they mediate Casparian strip deposition by recruiting the lignin<br />
+polymerization machinery.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24920445" title="CASPs show high stability in their membrane domain, which presents all the hallmarks of a membrane scaffold.">PMID:24920445</a> — The CASP membrane domain is a stable scaffold.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24920445" title="CASPLs were found in all major divisions of land plants as well as in green algae; homologs outside of the plant kingdom were identified as members of the MARVEL protein family.">PMID:24920445</a> — The broader CASP-like (CASPL) family is pan-plant and even in<br />
+green algae; outside plants the homologs are MARVEL-domain proteins. This places CASP in<br />
+the MARVEL tetraspan superfamily.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24920445" title="The CASP first extracellular loop was found conserved in euphyllophytes but absent in plants lacking Casparian strips.">PMID:24920445</a> — The first extracellular loop is<br />
+conserved specifically in euphyllophytes (which have Casparian strips). This is an<br />
+evolutionary correlate of Casparian-strip-forming capacity, relevant to the bona-fide<br />
+CASP subfamily (SF11) that SbCASP1 belongs to.</p>
+<h2 id="the-lignin-polymerization-machinery-recruited-by-casps">The lignin-polymerization machinery recruited by CASPs</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/23940370" title="Casparian strips span the cell wall of adjacent endodermal cells to form a tight junction that blocks extracellular diffusion across the endodermis. This junction is composed of lignin that is polymerized by oxidative coupling of monolignols through the action of a NADPH oxidase and peroxidases. Casparian strip domain proteins (CASPs) correctly position this biosynthetic machinery by forming a protein scaffold in the plasma membrane at the site where the Casparian strip forms.">PMID:23940370</a> — Hosmani et al. 2013<br />
+PNAS: the Casparian strip is lignin; CASPs position the lignin-biosynthetic machinery<br />
+(NADPH oxidase + peroxidases). ESB1 (dirigent-like) is part of this machinery and is<br />
+localized to the Casparian strip in a CASP-dependent manner.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26124109" title="Casparian strip formation is initiated by the localization of the Casparian strip domain proteins (CASPs) in the plasma membrane, at the site where the Casparian strip will form. Localized CASPs recruit Peroxidase 64 (PER64), a Respiratory Burst Oxidase Homolog F, and Enhanced Suberin 1 (ESB1), a dirigent-like protein, to assemble the lignin polymerization machinery.">PMID:26124109</a> — Kamiya et al. 2015 PNAS: explicit list<br />
+of recruited components (PER64 peroxidase, RBOHF NADPH oxidase, ESB1 dirigent). The<br />
+transcription factor MYB36 directly regulates CASP1, PER64 and ESB1.</p>
+<h2 id="the-casparian-strip-and-the-endodermal-diffusion-barrier">The Casparian strip and the endodermal diffusion barrier</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21735349" title="A differentiated endodermal cell can be defined by the presence of the 'Casparian strip' (CS), a cell wall modification described first by Robert Caspary in 1865.">PMID:21735349</a> — Alassimone et al. 2011 review: the Casparian strip is the defining cell wall<br />
+modification of the differentiated endodermis.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21735349" title="free diffusion via the apoplast in vascular plants is blocked at the level of the endodermis ... The recent isolation of a novel protein family, the CASPs, that localizes precisely to a domain of the plasma membrane underneath the CS">PMID:21735349</a> — CASPs<br />
+localize to a plasma-membrane domain directly underneath the Casparian strip; the<br />
+endodermis blocks apoplastic diffusion.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/21593871" title="Its defining features are the Casparian strips, belts of specialized cell wall material that generate an extracellular diffusion barrier.">PMID:21593871</a> — Casparian strips are<br />
+belts/rings of specialized cell wall material forming the apoplastic diffusion barrier.</p>
+<p>The Casparian strip GO cellular-component term is <strong>GO:0048226</strong> "Casparian strip"<br />
+(a cellular anatomical structure). The biological-process term <strong>GO:0160073</strong><br />
+"Casparian strip assembly" exists ("The aggregation, arrangement and bonding together of<br />
+a set of components to form a Casparian strip") — this is the precise process term for<br />
+what CASP proteins do.</p>
+<h2 id="casp-conservation-in-grasses-sorghum">CASP conservation in grasses / sorghum</h2>
+<p>The PANTHER family PTHR36488 has 6602 members across 1073 taxa, all land plants/algae.<br />
+The bona-fide CASP subfamily SF11 ("CASP-LIKE PROTEIN") includes named Casparian strip<br />
+membrane proteins from rice, grape, sorghum, etc. SbCASP1 (C5YAP3, Sb06g033470) is in<br />
+SF11. Sorghum has multiple SF11 members: SbCASP1 (C5YAP3) and SbCASP2 (C5YLC9,<br />
+Sb07g000300), plus CASP4 (C5Y9U6) in the broader CASP-like SF12, mirroring the<br />
+Arabidopsis CASP1-5 / rice OsCASP1-2 expansion.</p>
+<p>[PMID:24920445 GENE FAMILY / NOMENCLATURE — cited in the SbCASP1 UniProt entry as the<br />
+reference for the CASP family and SbCASP1 nomenclature] — Roppolo et al. 2014 is the<br />
+phylogenetic/nomenclature study that named CASP-family members across plant genomes,<br />
+including the sorghum SbCASP genes.</p>
+<h3 id="direct-grass-evidence-rice-oscasp1">Direct grass evidence — rice OsCASP1</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/36600916" title="Casparian strip membrane domain proteins (CASPs) form a transmembrane scaffold to recruit lignin biosynthetic enzymes for Casparian strip (CS) formation.">PMID:36600916</a> —<br />
+Yang et al. 2022: the CASP scaffold-and-recruit mechanism holds in rice (a grass /<br />
+Poaceae, like sorghum).</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/36600916" title="Rice CASP1 is highly similar to AtCASPs ... The loss of OsCASP1 function alters the expression of the genes involved in suberin biosynthesis and the deposition of suberin in the endodermis and sclerenchyma and leads to delayed CS formation and uneven lignin deposition in SLRs.">PMID:36600916</a> — OsCASP1 loss-of-function delays Casparian strip formation<br />
+and causes uneven lignin deposition; functional CASP role is conserved in grasses.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/36600916" title="Our findings suggest that OsCASP1 could play an important role in nutrient homeostasis and adaptation to the growth environment.">PMID:36600916</a> — Grass CASP1<br />
+contributes to nutrient homeostasis via the endodermal barrier.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/37653341" title="A plant-type tight junction, the Casparian strip (CS)-Casparian strip membrane domain (CSD) that seals the paracellular space between adjacent endodermal cells ... The GAPLESS protein forms a tight complex with OsCASP1 in the plasma membrane, thereby mediating the CS-CSD junction.">PMID:37653341</a> — Song et al. 2023 Nat Plants: in rice, OsCASP1<br />
+is a core component of the CS-CSD junctional complex; a new GAPLESS protein family<br />
+tethers the plasma membrane to the Casparian strip via OsCASP1. Confirms OsCASP1 is the<br />
+grass CASP scaffold protein and that the CSD/Casparian-strip tight-junction biology is<br />
+conserved in Poaceae.</p>
+<h2 id="assessment-of-the-retired-spkw-annotation-go0071555-cell-wall-organization">Assessment of the retired SPKW annotation (GO:0071555 cell wall organization)</h2>
+<p>The retired SwissProt-keyword-derived annotation maps the UniProt keyword<br />
+"Cell wall biogenesis/degradation" (KW-0961, present in the SbCASP1 entry) to<br />
+GO:0071555 "cell wall organization".</p>
+<p>This is <strong>biologically correct and informative</strong>: CASP proteins organize the formation of<br />
+a specific, localized cell wall structure (the lignified Casparian strip). The UniProt<br />
+FUNCTION text for SbCASP1 itself states it "Regulates membrane-cell wall junctions and<br />
+localized cell wall deposition" and is "Required for ... the subsequent formation of<br />
+Casparian strips, a cell wall modification of the root endodermis". Experimentally,<br />
+Arabidopsis casp double mutants have "disorganized Casparian strips" <a href="https://pubmed.ncbi.nlm.nih.gov/21593871">PMID:21593871</a> —<br />
+i.e. loss of CASP disrupts cell wall organization. So GO:0071555 captures genuine biology<br />
+and GOA's removal of this SPKW annotation is a <strong>loss of correct information</strong>.</p>
+<p>However, GO:0071555 is broad. A <strong>more specific and more accurate</strong> term is available:<br />
+- <strong>GO:0160073 "Casparian strip assembly"</strong> — exact process; precise MODIFY target.<br />
+- GO:0009664 "plant-type cell wall organization" — also more specific (cellulose/pectin<br />
+  plant cell wall) and a child of GO:0071555.</p>
+<p>Recommended action for the retired SPKW annotation: <strong>MODIFY</strong> to GO:0160073 (Casparian<br />
+strip assembly), retaining <code>retired: true</code>. GOA's <em>removal</em> was not the ideal outcome —<br />
+the keyword carried real, plant-specific biology — but the original broad term GO:0071555<br />
+was suboptimal; the correct response is to replace it with the specific term, not delete<br />
+the biology. This gene exemplifies the "unique-but-correct, informative, plant-specific"<br />
+category of SPKW annotations.</p>
+<h2 id="subcellular-location-go0005886-plasma-membrane">Subcellular location (GO:0005886 plasma membrane)</h2>
+<p>UniProt SUBCELLULAR LOCATION: "Cell membrane; Multi-pass membrane protein. Note=Very<br />
+restricted localization following a belt shape within the plasma membrane which coincides<br />
+with the position of the Casparian strip membrane domain in the root endodermis." The<br />
+four predicted TRANSMEM helices (FT 68-88, 116-136, 158-178, 206-226) confirm a tetraspan<br />
+plasma-membrane protein. CASP1 in Arabidopsis localizes to the plasma membrane (the CSD)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21593871">PMID:21593871</a>. GO:0005886 "plasma membrane" is correct but generic; a more precise term<br />
+is GO:1990877 "Casparian strip" / the CSD-specific component — see below.</p>
+<p>OLS check: GO:0048226 "Casparian strip" is a cellular_component (cellular anatomical<br />
+structure). There is no separate GO CC term for the "Casparian strip membrane domain"<br />
+distinct from the plasma membrane; the CSD is a plasma-membrane subdomain. GO:0005886<br />
+plasma membrane is therefore the appropriate (if generic) CC; ACCEPT.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: C5YAP3
+gene_symbol: CASP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4558
+  label: Sorghum bicolor
+description: &gt;-
+  SbCASP1 (Casparian strip membrane protein 1) is a sorghum member of the CASP
+  (CAsparian Strip membrane domain Protein) family, a plant-specific clade of the
+  four-transmembrane-span MARVEL-domain protein superfamily. CASP proteins are
+  small (here 229 aa) tetraspan integral plasma-membrane proteins that self-assemble
+  into the Casparian Strip Membrane Domain (CSD), a highly stable, immobile
+  plasma-membrane scaffold occupying a ring-like band around root endodermal cells.
+  By forming this scaffold, CASPs recruit and correctly position the
+  lignin-polymerization machinery — the peroxidase PER64, the NADPH oxidase RBOHF
+  and the dirigent-like protein ESB1 — that deposits the lignified Casparian strip,
+  a localized cell wall modification of the root endodermis. The Casparian strip
+  acts as an extracellular (apoplastic) diffusion barrier, the &#34;plant tight
+  junction&#34; that controls selective nutrient and water uptake into the vascular
+  cylinder. The CASP family was discovered and characterized in Arabidopsis
+  (CASP1-CASP5; Roppolo et al. 2011, 2014); the rice ortholog OsCASP1 is also
+  experimentally characterized and shows the same scaffold-and-recruit mechanism in
+  a grass. SbCASP1 belongs to the bona-fide CASP subfamily (PANTHER PTHR36488:SF11)
+  and its function is inferred by orthology, with strong support from the
+  conservation of the four-TM topology, the CASP-diagnostic first extracellular
+  loop, and demonstrated Casparian-strip function across Poaceae.
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA
+      retired the keyword2GO pipeline for cellular organisms.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: The SbCASP1 UniProt entry annotates subcellular location &#34;Cell membrane;
+      Multi-pass membrane protein&#34;, with four predicted transmembrane helices,
+      mapping to GO:0005886 plasma membrane.
+- id: PMID:21593871
+  title: A novel protein family mediates Casparian strip formation in the endodermis.
+  findings:
+  - statement: CASPs (Casparian strip membrane domain proteins) are transmembrane
+      proteins that mark a plasma-membrane domain predicting Casparian strip formation;
+      CASP1 forms complexes with other CASPs, becomes immobile upon localization, and
+      sediments as a large polymer — the hallmarks of a membrane scaffold.
+    supporting_text: &#34;These &#39;CASPs&#39; (Casparian strip membrane domain proteins)
+      specifically mark a membrane domain that predicts the formation of Casparian
+      strips. CASP1 displays numerous features required for a constituent of a plant
+      junctional complex: it forms complexes with other CASPs; it becomes immobile
+      upon localization; and it sediments like a large polymer.&#34;
+  - statement: CASP double mutants display disorganized Casparian strips, showing
+      CASPs structure and localize this cell wall modification.
+    supporting_text: &#34;CASP double mutants display disorganized Casparian strips,
+      demonstrating a role for CASPs in structuring and localizing this cell wall
+      modification.&#34;
+- id: PMID:24920445
+  title: Functional and Evolutionary Analysis of the CASPARIAN STRIP MEMBRANE DOMAIN
+    PROTEIN Family.
+  findings:
+  - statement: CASPs are four-membrane-span proteins that mediate deposition of
+      Casparian strips in the endodermis by recruiting the lignin polymerization
+      machinery; the CASP membrane domain has all the hallmarks of a membrane scaffold.
+    supporting_text: &#34;CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are
+      four-membrane-span proteins that mediate the deposition of Casparian strips in
+      the endodermis by recruiting the lignin polymerization machinery. CASPs show
+      high stability in their membrane domain, which presents all the hallmarks of a
+      membrane scaffold.&#34;
+  - statement: The broader CASP-like family is found across all land plants and green
+      algae; non-plant homologs are MARVEL-family proteins. This is the family/
+      nomenclature reference cited in the SbCASP1 UniProt entry.
+    supporting_text: &#34;CASPLs were found in all major divisions of land plants as well
+      as in green algae; homologs outside of the plant kingdom were identified as
+      members of the MARVEL protein family.&#34;
+- id: PMID:23940370
+  title: Dirigent domain-containing protein is part of the machinery required for
+    formation of the lignin-based Casparian strip in the root.
+  findings:
+  - statement: The Casparian strip is composed of lignin polymerized by a NADPH
+      oxidase and peroxidases; CASPs position this biosynthetic machinery by forming
+      a plasma-membrane scaffold at the Casparian strip formation site.
+    supporting_text: &#34;This junction is composed of lignin that is polymerized by
+      oxidative coupling of monolignols through the action of a NADPH oxidase and
+      peroxidases. Casparian strip domain proteins (CASPs) correctly position this
+      biosynthetic machinery by forming a protein scaffold in the plasma membrane at
+      the site where the Casparian strip forms.&#34;
+- id: PMID:26124109
+  title: The MYB36 transcription factor orchestrates Casparian strip formation.
+  findings:
+  - statement: Localized CASPs recruit Peroxidase 64 (PER64), the NADPH oxidase
+      RBOHF and the dirigent-like protein ESB1 to assemble the lignin polymerization
+      machinery; the Casparian strip is a fine lignified band in the endodermal cell
+      wall.
+    supporting_text: &#34;Localized CASPs recruit Peroxidase 64 (PER64), a Respiratory
+      Burst Oxidase Homolog F, and Enhanced Suberin 1 (ESB1), a dirigent-like
+      protein, to assemble the lignin polymerization machinery.&#34;
+- id: PMID:21735349
+  title: The endodermis - development and differentiation of the plant&#39;s inner skin.
+  findings:
+  - statement: The Casparian strip is the defining cell wall modification of the
+      differentiated endodermis; CASPs localize precisely to a plasma-membrane domain
+      underneath the Casparian strip, and the endodermis blocks apoplastic diffusion.
+    supporting_text: &#34;The recent isolation of a novel protein family, the CASPs, that
+      localizes precisely to a domain of the plasma membrane underneath the CS
+      represents an excellent point of entry to explore CS function and formation.&#34;
+- id: PMID:36600916
+  title: Rice OsCASP1 orchestrates Casparian strip formation and suberin deposition
+    in small lateral roots to maintain nutrient homeostasis.
+  findings:
+  - statement: In rice (a grass, like sorghum), CASPs form a transmembrane scaffold
+      to recruit lignin biosynthetic enzymes for Casparian strip formation; loss of
+      OsCASP1 delays Casparian strip formation and causes uneven lignin deposition,
+      disrupting nutrient homeostasis.
+    supporting_text: &#34;Casparian strip membrane domain proteins (CASPs) form a
+      transmembrane scaffold to recruit lignin biosynthetic enzymes for Casparian
+      strip (CS) formation.&#34;
+- id: PMID:37653341
+  title: A new family of proteins is required for tethering of Casparian strip
+    membrane domain and nutrient homoeostasis in rice.
+  findings:
+  - statement: In rice, OsCASP1 is a core component of the Casparian strip-Casparian
+      strip membrane domain (CS-CSD) junctional complex, forming a tight complex with
+      GAPLESS proteins that tether the plasma membrane to the Casparian strip.
+    supporting_text: &#34;The GAPLESS protein forms a tight complex with OsCASP1 in the
+      plasma membrane, thereby mediating the CS-CSD junction.&#34;
+- id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+  title: Falcon deep-research report — Functional annotation of Sorghum bicolor
+    CASP1 (UniProt C5YAP3; Sb06g033470)
+  findings:
+  - statement: No primary publication directly assaying SbCASP1 (C5YAP3 / Sb06g033470)
+      was retrieved; functional annotation rests on conserved CASP-family mechanism
+      plus direct experimental evidence from closely related cereal CASP homologs
+      (sorghum SbCASP4, sorghum SbCASP-LP1C1, rice OsCASP1) and Arabidopsis CASP
+      research. SbCASP1 is most parsimoniously a CSD-localizing four-transmembrane
+      scaffold protein, with function assigned by orthology.
+  - statement: CASP-family proteins are four-transmembrane-span integral plasma-membrane
+      proteins with cytosolic N- and C-termini that accumulate at the Casparian strip
+      membrane domain (CSD), a specialized plasma-membrane region of root endodermal
+      cells; sorghum SbCASP4 was experimentally localized to the plasma membrane and
+      expressed in endodermal/Casparian-strip regions.
+  - statement: The best-supported molecular role of CASP-family proteins is
+      organizational rather than enzymatic — a stable membrane scaffold/fence that
+      defines the CSD and recruits the lignin-polymerization machinery (RBOHF, ESB1,
+      PER64, UCC1) to build the Casparian strip, a localized lignified cell wall
+      modification of the endodermis.
+  - statement: CASP-mediated barrier assembly is transcriptionally activated by MYB36
+      (which directly induces CASP1, ESB1, PER64) and is monitored by the CIF1/2-SGN3-SGN1
+      (SCHENGEN) surveillance pathway that triggers compensatory lignification/suberization
+      when barrier defects are detected.
+  - statement: Cereal CASP-family genes (sorghum SbCASP4, SbCASP-LP1C1; rice OsCASP1)
+      provide direct experimental evidence that strengthening the root apoplastic
+      barrier improves salt exclusion, ion homeostasis and selective mineral uptake,
+      supporting the inferred role of SbCASP1 in the endodermal diffusion barrier and
+      nutrient homeostasis.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED
+# from the current (2026) GOA release. Reviewed retrospectively; retired: true.
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;-
+      Retired SwissProt-keyword-derived (SPKW) annotation mapping the UniProt
+      keyword &#34;Cell wall biogenesis/degradation&#34; (KW-0961, present in the SbCASP1
+      entry) to GO:0071555 &#34;cell wall organization&#34;. This annotation captures
+      genuine, plant-specific biology: CASP proteins organize the formation of a
+      specific localized cell wall structure, the lignified Casparian strip.
+    action: MODIFY
+    reason: &gt;-
+      The biology behind this annotation is correct and informative, not an
+      over-annotation. CASP proteins are the founding molecular factors of
+      Casparian strip formation: they self-assemble into a plasma-membrane scaffold
+      that recruits the lignin-polymerization machinery depositing the Casparian
+      strip, a localized cell wall modification of the root endodermis
+      [PMID:21593871, PMID:24920445]. Genetic loss of CASP function produces
+      &#34;disorganized Casparian strips&#34; [PMID:21593871], i.e. defective cell wall
+      organization, and the UniProt FUNCTION text for SbCASP1 itself states it
+      &#34;Regulates membrane-cell wall junctions and localized cell wall deposition&#34;
+      and is &#34;Required for ... the subsequent formation of Casparian strips, a cell
+      wall modification of the root endodermis&#34;. Therefore GOA&#39;s removal of this
+      SPKW annotation is a genuine loss of correct information — this gene
+      exemplifies the &#34;unique-but-correct, informative, plant-specific&#34; category of
+      SPKW annotation. However, GO:0071555 &#34;cell wall organization&#34; is broad. A more
+      specific and more accurate term is now available: GO:0160073 &#34;Casparian strip
+      assembly&#34;, which exactly describes the CASP-mediated process. The recommended
+      curation outcome is therefore not deletion but MODIFY to the specific term,
+      preserving the biology at the correct granularity. (The retired: true flag is
+      retained per the retrospective-review protocol; it records that GOA removed
+      the SPKW annotation, while this review documents that the removal discarded
+      correct biology that should be re-captured with GO:0160073.)
+    proposed_replacement_terms:
+    - id: GO:0160073
+      label: Casparian strip assembly
+    supported_by:
+    - reference_id: PMID:21593871
+      supporting_text: &#34;CASP double mutants display disorganized Casparian strips,
+        demonstrating a role for CASPs in structuring and localizing this cell wall
+        modification.&#34;
+    - reference_id: PMID:24920445
+      supporting_text: &#34;CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are
+        four-membrane-span proteins that mediate the deposition of Casparian strips
+        in the endodermis by recruiting the lignin polymerization machinery.&#34;
+    - reference_id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+      supporting_text: &#34;SbCASP1 is therefore most likely a plasma membrane structural
+        organizer that helps establish a localized lignin impregnation in the
+        endodermal anticlinal wall (Casparian strip), shaping solute flow into the
+        stele.&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Subcellular-location-derived annotation from the UniProt &#34;Cell membrane&#34;
+      location of SbCASP1. CASP proteins are tetraspan integral plasma-membrane
+      proteins; the SbCASP1 entry has four predicted transmembrane helices and is
+      annotated &#34;Cell membrane; Multi-pass membrane protein&#34;.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and well supported. CASP proteins are integral plasma-membrane
+      proteins: the SbCASP1 UniProt record predicts four transmembrane helices
+      (TRANSMEM 68-88, 116-136, 158-178, 206-226) and annotates &#34;Cell membrane;
+      Multi-pass membrane protein&#34;. Experimentally, Arabidopsis CASP1 marks a
+      plasma-membrane domain (the Casparian strip membrane domain) and rice OsCASP1
+      forms its scaffold complex in the plasma membrane [PMID:21593871,
+      PMID:37653341]. GO:0005886 &#34;plasma membrane&#34; is generic relative to the
+      CASP-specific localization (the restricted ring-shaped Casparian strip
+      membrane domain noted in the UniProt SUBCELLULAR LOCATION text), but GO has no
+      distinct cellular-component term for the plasma-membrane subdomain itself
+      (GO:0048226 &#34;Casparian strip&#34; denotes the cell wall region, not the membrane
+      domain). The annotation is accurate at the available granularity.
+    supported_by:
+    - reference_id: PMID:21593871
+      supporting_text: &#34;These &#39;CASPs&#39; (Casparian strip membrane domain proteins)
+        specifically mark a membrane domain that predicts the formation of Casparian
+        strips.&#34;
+    - reference_id: PMID:37653341
+      supporting_text: &#34;The GAPLESS protein forms a tight complex with OsCASP1 in the
+        plasma membrane, thereby mediating the CS-CSD junction.&#34;
+    - reference_id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+      supporting_text: &#34;CASPs have cytosolic N- and C-termini ... SbCASP1 is
+        predicted/expected to be plasma-membrane localized and enriched at the
+        endodermal CSD, consistent with sorghum SbCASP4 plasma-membrane localization
+        and Casparian-strip region expression.&#34;
+core_functions:
+- description: &gt;-
+    Self-assembly into the Casparian Strip Membrane Domain (CSD), a stable, immobile
+    tetraspan-protein scaffold in a ring-like band of the root endodermal plasma
+    membrane, via homo- and hetero-oligomerization with other CASP proteins.
+  supported_by:
+  - reference_id: PMID:21593871
+    supporting_text: &#34;CASP1 displays numerous features required for a constituent of
+      a plant junctional complex: it forms complexes with other CASPs; it becomes
+      immobile upon localization; and it sediments like a large polymer.&#34;
+  - reference_id: PMID:24920445
+    supporting_text: &#34;CASPs show high stability in their membrane domain, which
+      presents all the hallmarks of a membrane scaffold.&#34;
+  - reference_id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+    supporting_text: &#34;CASPs are described as a membrane scaffold/fence at the CSD ...
+      their membrane domain is unusually stable, consistent with a membrane
+      scaffold/fence that defines a restricted domain (CSD).&#34;
+- description: &gt;-
+    Organization and localized assembly of the Casparian strip, a lignified cell
+    wall modification of the root endodermis, by recruiting and correctly
+    positioning the lignin-polymerization machinery (peroxidase PER64, NADPH oxidase
+    RBOHF, dirigent-like ESB1) at the CSD.
+  supported_by:
+  - reference_id: PMID:24920445
+    supporting_text: &#34;CASPARIAN STRIP MEMBRANE DOMAIN PROTEINS (CASPs) are
+      four-membrane-span proteins that mediate the deposition of Casparian strips in
+      the endodermis by recruiting the lignin polymerization machinery.&#34;
+  - reference_id: PMID:26124109
+    supporting_text: &#34;Localized CASPs recruit Peroxidase 64 (PER64), a Respiratory
+      Burst Oxidase Homolog F, and Enhanced Suberin 1 (ESB1), a dirigent-like
+      protein, to assemble the lignin polymerization machinery.&#34;
+  - reference_id: PMID:23940370
+    supporting_text: &#34;Casparian strip domain proteins (CASPs) correctly position this
+      biosynthetic machinery by forming a protein scaffold in the plasma membrane at
+      the site where the Casparian strip forms.&#34;
+  - reference_id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+    supporting_text: &#34;A recent 2024 synthesis further describes CASPs as localizing
+      to the CS membrane domain and recruiting enzymes implicated in lignin
+      polymerization and strip assembly, including RBOHF, ESB1, PER64, and UCC1.&#34;
+- description: &gt;-
+    Establishment of the root endodermal apoplastic diffusion barrier (the &#34;plant
+    tight junction&#34;), enabling selective nutrient and water uptake and contributing
+    to nutrient homeostasis and stress resistance.
+  supported_by:
+  - reference_id: PMID:21593871
+    supporting_text: &#34;Its defining features are the Casparian strips, belts of
+      specialized cell wall material that generate an extracellular diffusion
+      barrier.&#34;
+  - reference_id: PMID:36600916
+    supporting_text: &#34;Our findings suggest that OsCASP1 could play an important role
+      in nutrient homeostasis and adaptation to the growth environment.&#34;
+  - reference_id: file:SORBI/CASP1/CASP1-deep-research-falcon.md
+    supporting_text: &#34;SbCASP1 ... contributes to the endodermal apoplastic diffusion
+      barrier and influences ion/water movement into the stele. ... the endodermal
+      diffusion barrier influences Na+ exclusion (salt tolerance) and selective
+      nutrient uptake/homeostasis.&#34;
+proposed_new_terms:
+- proposed_name: Casparian strip membrane domain
+  proposed_definition: &gt;-
+    A specialized, highly stable subdomain of the root endodermal plasma membrane,
+    occupied by a scaffold of CASP-family tetraspan proteins, that marks and
+    determines the position of the Casparian strip cell wall modification.
+  justification: &gt;-
+    GO currently has no cellular-component term for the plasma-membrane subdomain in
+    which CASP proteins reside. The literature consistently distinguishes the
+    &#34;Casparian strip membrane domain (CSD)&#34; — a plasma-membrane domain — from the
+    &#34;Casparian strip&#34; itself (the cell wall lignin band, GO:0048226). A dedicated CC
+    term would allow CASP-family proteins to be annotated to their precise
+    localization rather than the generic GO:0005886 plasma membrane.
+  proposed_parent:
+    id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:21593871
+    supporting_text: &#34;These &#39;CASPs&#39; (Casparian strip membrane domain proteins)
+      specifically mark a membrane domain that predicts the formation of Casparian
+      strips.&#34;
+suggested_questions:
+- question: Is SbCASP1 expression endodermis-specific in sorghum roots, and is it
+    induced by abiotic stresses such as salt or drought, as reported for rice OsCASP1?
+- question: Does sorghum, like rice, additionally form Casparian strips/suberin
+    barriers in the exodermis or sclerenchyma, and does SbCASP1 contribute there?
+- question: Which sorghum peroxidases, RBOH NADPH oxidase, and dirigent-like proteins
+    constitute the lignin-polymerization machinery recruited by SbCASP1?
+suggested_experiments:
+- description: Generate sorghum Sbcasp1 loss-of-function (CRISPR) mutants and assess
+    Casparian strip integrity (lignin staining, apoplastic tracer penetration) and
+    ionomic / nutrient-homeostasis phenotypes.
+  hypothesis: SbCASP1 is required for proper Casparian strip formation and the
+    endodermal apoplastic diffusion barrier in sorghum roots.
+  experiment_type: reverse genetics / phenotypic analysis
+- description: Express a fluorescently tagged SbCASP1 in sorghum roots to confirm
+    localization to a ring-shaped Casparian strip membrane domain in the endodermis.
+  hypothesis: SbCASP1 localizes to a restricted ring-shaped plasma-membrane domain
+    coinciding with the Casparian strip.
+  experiment_type: fluorescence microscopy / live imaging
+- description: Test SbCASP1 homo- and hetero-oligomerization with other sorghum CASPs
+    (e.g. SbCASP2) by co-immunoprecipitation or split-fluorophore assays, and assess
+    membrane-domain immobility by FRAP.
+  hypothesis: SbCASP1 forms a stable, immobile oligomeric membrane scaffold with
+    other CASP proteins.
+  experiment_type: protein interaction / FRAP
+- description: Functionally complement an Arabidopsis casp1 casp3 mutant with SbCASP1
+    to test cross-species conservation of Casparian strip organizing activity.
+  hypothesis: SbCASP1 can substitute for Arabidopsis CASP1 in organizing Casparian
+    strip formation.
+  experiment_type: cross-species complementation
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
