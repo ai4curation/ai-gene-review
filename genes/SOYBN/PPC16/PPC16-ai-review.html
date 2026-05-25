@@ -1,0 +1,3355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPC16 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PPC16</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q02909" target="_blank" class="term-link">
+                        Q02909
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Glycine max</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PPC16";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q02909" data-a="DESCRIPTION: PPC16 (Q02909, CAPP1_SOYBN) is the cytosolic house..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PPC16 (Q02909, CAPP1_SOYBN) is the cytosolic housekeeping (anaplerotic) phosphoenolpyruvate carboxylase (PEPC; EC 4.1.1.31) of soybean (Glycine max), a C3 legume. It is a plant-type PEPC (PTPC): a ~110 kDa, 967-residue polypeptide that assembles into a homotetrameric Class-1 PEPC and is regulated by light-reversible N-terminal (Ser-11) phosphorylation and by allosteric effectors. The enzyme catalyses the irreversible beta-carboxylation of phosphoenolpyruvate (PEP) with bicarbonate to form oxaloacetate (OAA) plus phosphate. Its core biological role is anaplerotic: it replenishes the C4-dicarboxylic-acid intermediates (oxaloacetate, malate) of the tricarboxylic acid cycle that are drained for biosynthesis, nitrogen assimilation, amino-acid synthesis, cellular pH/charge balance and organic-acid accumulation. PPC16 is the ubiquitously expressed housekeeping isozyme, with mRNA present at similar levels in leaf, stem, root and developing seed. It is explicitly a C3-type PEPC and is distinct from the dedicated C4/CAM photosynthetic PEPC isozymes found in C4 and CAM plants; because soybean is a C3 plant it has no C4-type photosynthetic CO2-fixation machinery, and PPC16 has no role in photosynthesis or in autotrophic carbon fixation.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015979" target="_blank" class="term-link">
+                                    GO:0015979
+                                </a>
+                            </span>
+                            <span class="term-label">photosynthesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0015979" data-r="GO_REF:0000043" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Keyword-derived (SPKW, GO_REF:0000043) annotation that existed in the Sept 2025 GOA snapshot and was removed from the current GOA release. It originates solely from the UniProt keyword &#34;Photosynthesis&#34;, which is applied across the whole PEPC family because the family is famous for its C4/CAM photosynthetic CO2-fixation role. PPC16/Q02909 is the housekeeping (anaplerotic) PEPC isozyme of soybean, a C3 plant; it has no role in photosynthesis.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED; it was a family-level, pathway-context over-annotation, not a correct annotation that was lost. GO:0015979 (photosynthesis) is defined as light-driven synthesis of organic compounds from CO2. Soybean is a C3 plant, and the original cloning paper states this protein is a &#34;C3-type&#34; PEPC that does not resemble C4/CAM photosynthetic isoforms; it is the ubiquitously expressed housekeeping isozyme. The light-driven CO2-fixing role of PEPC is restricted to the dedicated C4/CAM isozymes, which evolved separately from non-photosynthetic C3 progenitors. The housekeeping C3 PEPC performs anaplerotic carboxylation, not photosynthesis. Keeping retired: true; this is correctly removed.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                                        PMID:1450389
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The soybean encoded protein tends to resemble other &#39;C3-type&#39; PEPC proteins more closely than those implicated in C4 or crassulacean acid metabolism.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                                        PMID:1450389
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">A full-length cDNA encoding a subunit of phosphoenolpyruvate carboxylase (PEPC) was isolated from a developing seed expression library of the C3 plant Glycine max.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                        PMID:21524275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The critical role of PEPC in assimilating atmospheric CO(2) during C(4) and Crassulacean acid metabolism photosynthesis has been studied extensively. PEPC also fulfils a broad spectrum of non-photosynthetic functions, particularly the anaplerotic replenishment of tricarboxylic acid cycle intermediates consumed during biosynthesis and nitrogen assimilation.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The soybean gene gmppc16 was cloned as a full-length PEPC cDNA from a developing-seed library. The authors conclude the encoded PEPC resembles other &#39;C3-type/housekeeping&#39; PEPCs more than C4/CAM PEPCs. ... Soybean-specific primary data support that gmppc16 fits precisely into this &#39;housekeeping/anaplerotic&#39; category via broad expression and C3-type sequence similarity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation from the PEPC phylogenetic group (PANTHER PTHR30523). Plant-type PEPCs are cytosolic Class-1 enzymes, and UniProt records the subcellular location of Q02909 as Cytoplasm. The cytosolic localization is a conserved, well-established property of this enzyme class.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with UniProt&#39;s curated subcellular location (Cytoplasm) and with the established biology of plant-type PEPCs as cytosolic homotetramers. IBA is appropriate and the term is at the right level of specificity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                        PMID:21524275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTPC genes encode ~110-kDa polypeptides containing conserved serine-phosphorylation and lysine-mono-ubiquitination sites, and typically exist as homotetrameric Class-1 PEPCs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation derived from the UniProtKB subcellular-location vocabulary mapping (UniProt records &#34;Cytoplasm&#34; for Q02909). This is correct but less specific than the cytosol annotation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt subcellular location and with the IBA cytosol annotation. The term is broader than cytosol (GO:0005829) but not incorrect; an IEA being broader than an experimentally/phylogenetically supported finer term is acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                        PMID:21524275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTPC genes encode ~110-kDa polypeptides containing conserved serine-phosphorylation and lysine-mono-ubiquitination sites, and typically exist as homotetrameric Class-1 PEPCs.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006099" target="_blank" class="term-link">
+                                    GO:0006099
+                                </a>
+                            </span>
+                            <span class="term-label">tricarboxylic acid cycle</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0006099" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation mapping the PEPC InterPro signatures (IPR021135, IPR022805) to the tricarboxylic acid cycle. PEPC is not one of the eight enzymes of the TCA cycle; it is an anaplerotic enzyme that supplies oxaloacetate to the cycle from PEP. The mapping conflates anaplerosis with cycle membership.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The TCA cycle (GO:0006099) is defined as the cyclic oxidation of acetyl-CoA via citrate, isocitrate, 2-oxoglutarate, succinyl-CoA, succinate, fumarate, malate and oxaloacetate. PEPC catalyses none of these steps; it is the canonical ANAPLEROTIC enzyme that replenishes TCA-cycle C4 intermediates consumed by biosynthesis and N assimilation. Annotating PEPC as involved_in the TCA cycle is too coarse and asserts cycle membership it does not have. A biologically accurate replacement is oxaloacetate metabolic process (GO:0006107), which captures PEPC&#39;s role in producing the OAA that feeds the cycle without asserting that the protein is part of the cycle.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006107" target="_blank" class="term-link">
+                                    oxaloacetate metabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                        PMID:21524275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PEPC also fulfils a broad spectrum of non-photosynthetic functions, particularly the anaplerotic replenishment of tricarboxylic acid cycle intermediates consumed during biosynthesis and nitrogen assimilation.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                                        PMID:1450389
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Through the carboxylation of phosphoenolpyruvate (PEP) it forms oxaloacetate, a four-carbon dicarboxylic acid source for the tricarboxylic acid cycle. [paraphrasing the UniProt FUNCTION text drawn from this entry&#39;s primary reference]</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008964" target="_blank" class="term-link">
+                                    GO:0008964
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoenolpyruvate carboxylase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0008964" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (combined automated methods; ARBA/InterPro/RHEA/EC) for the catalytic activity of the enzyme. This directly matches the UniProt CATALYTIC ACTIVITY entry (oxaloacetate + phosphate = phosphoenolpyruvate + hydrogencarbonate; RHEA:28370; EC 4.1.1.31) and is the core molecular function of the protein.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the defining, core molecular function of PPC16. The annotation matches the curated catalytic activity, the EC number, the Rhea reaction, and the PEPCase type 1 family assignment in UniProt. The active-site residues His-172 and Lys-602 are annotated in UniProt, consistent with canonical PEPC catalysis.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                        PMID:21524275
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">PEPC [PEP (phosphoenolpyruvate) carboxylase] is a tightly controlled enzyme located at the core of plant C-metabolism that catalyses the irreversible beta-carboxylation of PEP to form oxaloacetate and Pi.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015977" target="_blank" class="term-link">
+                                    GO:0015977
+                                </a>
+                            </span>
+                            <span class="term-label">carbon fixation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q02909" data-a="GO:0015977" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation (IPR021135, IPR022805) and UniProt keyword &#34;Carbon dioxide fixation&#34; mapping the PEPC family to carbon fixation. GO:0015977 is an autotrophic concept: all of its subtypes are autotrophic CO2-fixation pathways (C4 photosynthesis, CAM photosynthesis, reductive TCA cycle, acetyl-CoA pathway, 3-hydroxypropionate cycle). The housekeeping C3 PEPC does not perform autotrophic carbon fixation.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0015977 (carbon fixation) is defined as a metabolic process in which carbon (usually from CO2) is incorporated into organic compounds, usually carbohydrates; every child term is an autotrophic, net-carbon-gain pathway. Housekeeping PEPC carboxylates PEP to oxaloacetate for anaplerosis; it does not produce carbohydrate and does not perform autotrophic carbon fixation. As with the retired photosynthesis annotation, this is a family-level keyword/InterPro over-annotation: the carbon-fixing role of PEPC belongs to the dedicated C4/CAM photosynthetic isozymes, not to the C3 housekeeping isozyme. The biologically accurate process term is oxaloacetate metabolic process (GO:0006107), reflecting the anaplerotic carboxylation that produces OAA.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006107" target="_blank" class="term-link">
+                                    oxaloacetate metabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                                        PMID:1450389
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">The soybean encoded protein tends to resemble other &#39;C3-type&#39; PEPC proteins more closely than those implicated in C4 or crassulacean acid metabolism.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36309625" target="_blank" class="term-link">
+                                        PMID:36309625
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">all the genes of the C4 photosynthetic pathway are present in C3 plants, although they are involved in diverse non-photosynthetic functions. Non-photosynthetic isoforms of carbonic anhydrase (CA), phosphoenolpyruvate carboxylase (PEPC), malate dehydrogenase (MDH) ... catalyze reactions that are essential for major plant metabolism pathways, such as the tricarboxylic acid (TCA) cycle, maintenance of cellular pH, uptake of nutrients and their assimilation.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PPC16 catalyses the irreversible beta-carboxylation of phosphoenolpyruvate with bicarbonate to form oxaloacetate plus phosphate (EC 4.1.1.31). This is the defining molecular activity of the protein and matches the curated UniProt catalytic activity and Rhea reaction RHEA:28370.
+</h3>
+                <span class="vote-buttons" data-g="Q02909" data-a="FUNCTION: PPC16 catalyses the irreversible beta-carboxylatio..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008964" target="_blank" class="term-link">
+                            phosphoenolpyruvate carboxylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006107" target="_blank" class="term-link">
+                                oxaloacetate metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                PMID:21524275
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">PEPC [PEP (phosphoenolpyruvate) carboxylase] is a tightly controlled enzyme located at the core of plant C-metabolism that catalyses the irreversible beta-carboxylation of PEP to form oxaloacetate and Pi.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                                PMID:1450389
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">A full-length cDNA encoding a subunit of phosphoenolpyruvate carboxylase (PEPC) was isolated from a developing seed expression library of the C3 plant Glycine max.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Plant phosphoenolpyruvate carboxylase (PEPC; EC 4.1.1.31) catalyzes the beta-carboxylation of phosphoenolpyruvate (PEP) using bicarbonate: PEP + HCO3- -&gt; oxaloacetate (OAA) + Pi. This reaction is described as highly exergonic and effectively irreversible under physiological conditions.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the soybean housekeeping (anaplerotic) plant-type PEPC, PPC16 produces oxaloacetate that replenishes the C4-dicarboxylic-acid intermediates of the tricarboxylic acid cycle consumed by biosynthesis and nitrogen assimilation. This anaplerotic role is its core biological function and is distinct from the autotrophic CO2-fixation performed by dedicated C4/CAM photosynthetic PEPC isozymes.
+</h3>
+                <span class="vote-buttons" data-g="Q02909" data-a="FUNCTION: As the soybean housekeeping (anaplerotic) plant-ty..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008964" target="_blank" class="term-link">
+                            phosphoenolpyruvate carboxylase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006107" target="_blank" class="term-link">
+                                oxaloacetate metabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                                PMID:21524275
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">PEPC also fulfils a broad spectrum of non-photosynthetic functions, particularly the anaplerotic replenishment of tricarboxylic acid cycle intermediates consumed during biosynthesis and nitrogen assimilation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36309625" target="_blank" class="term-link">
+                                PMID:36309625
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Non-photosynthetic isoforms of carbonic anhydrase (CA), phosphoenolpyruvate carboxylase (PEPC), malate dehydrogenase (MDH) ... catalyze reactions that are essential for major plant metabolism pathways, such as the tricarboxylic acid (TCA) cycle, maintenance of cellular pH, uptake of nutrients and their assimilation.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In C3/nonphotosynthetic tissues, PEPC serves an anaplerotic role, replenishing TCA intermediates, supporting malate production, carbon-nitrogen balance, and legume nodule metabolism. ... Soybean-specific primary data support that gmppc16 fits precisely into this &#39;housekeeping/anaplerotic&#39; category via broad expression and C3-type sequence similarity.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO mapped the PEPC InterPro signatures (IPR021135, IPR022805) to tricarboxylic acid cycle and carbon fixation; both mappings are too coarse for the anaplerotic housekeeping isozyme and are recommended for modification to oxaloacetate metabolic process.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The SPKW &#34;photosynthesis&#34; annotation for PPC16 derived from the family-level UniProt keyword &#34;Photosynthesis&#34;; its removal by GOA was justified because soybean is a C3 plant and PPC16 is the non-photosynthetic housekeeping PEPC isozyme.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">IBA annotation from the PEPC phylogenetic group correctly assigns cytosolic localization, consistent with plant-type PEPCs being cytosolic Class-1 homotetramers.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular-location mapping assigned cytoplasm, consistent with the curated UniProt location and with the IBA cytosol annotation.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods (ARBA, InterPro, RHEA, EC) correctly assigned phosphoenolpyruvate carboxylase activity, the core molecular function of the protein.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1450389" target="_blank" class="term-link">
+                            PMID:1450389
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">cDNA sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The PEPC cDNA was isolated from soybean, explicitly described as a C3 plant.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The encoded protein resembles C3-type PEPC proteins, not the C4 or CAM photosynthetic isoforms.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The PEPC mRNA is present at similar levels in leaf, stem, root and developing seed, a ubiquitous housekeeping expression pattern.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Two potential start codons exist and the protein may be subject to regulation by protein kinase (consistent with the conserved N-terminal phosphoserine site).
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21524275" target="_blank" class="term-link">
+                            PMID:21524275
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The remarkable diversity of plant PEPC (phosphoenolpyruvate carboxylase); recent insights into the physiological functions and post-translational controls of non-photosynthetic PEPCs.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PEPC catalyses the irreversible beta-carboxylation of PEP to form oxaloacetate and Pi and sits at the core of plant carbon metabolism.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Beyond the C4/CAM photosynthetic role, PEPC fulfils non-photosynthetic functions, particularly anaplerotic replenishment of TCA-cycle intermediates consumed during biosynthesis and nitrogen assimilation.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Plant genomes encode several plant-type PEPCs (PTPCs, ~110 kDa, homotetrameric Class-1 PEPCs with conserved serine-phosphorylation sites) plus a distantly related bacterial-type PEPC (BTPC); PPC16/Q02909 is a PTPC.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36309625" target="_blank" class="term-link">
+                            PMID:36309625
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Role of C4 photosynthetic enzyme isoforms in C3 plants and their potential applications in improving agronomic traits in crops.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">All genes of the C4 photosynthetic pathway are present in C3 plants but the C3 isoforms perform diverse non-photosynthetic functions.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Non-photosynthetic PEPC isoforms support major metabolic pathways including the TCA cycle, cellular pH maintenance, and nutrient uptake/assimilation.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29240945" target="_blank" class="term-link">
+                            PMID:29240945
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Transcript profiling indicates a widespread role for bacterial-type phosphoenolpyruvate carboxylase in malate-accumulating sink tissues.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Plant genomes encode several plant-type PEPC (PTPC) isozymes plus a distantly related bacterial-type PEPC (BTPC); the two are separate genes.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">PEPC in biosynthetically active sink tissues maintains rapid anaplerotic PEP carboxylation and respiratory CO2 refixation rather than autotrophic carbon fixation.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10938812" target="_blank" class="term-link">
+                            PMID:10938812
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Weather and nodule mediated variations in delta 13C and delta 15N values in field-grown soybean (Glycine max L.) with special interest in the analyses of xylem fluids.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">In field-grown soybean, the contribution of PEPC-mediated CO2 fixation in root nodules to whole-plant carbon incorporation was not significant, consistent with an anaplerotic rather than net autotrophic carbon-fixing role for PEPC.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep research report (falcon / Edison Scientific Literature) on soybean PPC16 (Q02909) phosphoenolpyruvate carboxylase.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Soybean primary literature (Sugimoto et al. 1992) cloned gmppc16 as a full-length PEPC cDNA from a developing-seed library and concluded the encoded protein resembles C3-type/housekeeping PEPCs more than C4/CAM photosynthetic forms; the report confirms PPC16 is the broadly expressed housekeeping isozyme of a C3 plant with no photosynthetic role.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">gmppc16 mRNA was detected by Northern blot at similar levels in leaf, stem, root and developing seed, supporting a constitutive housekeeping rather than tissue-specialized expression pattern.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The report places the housekeeping/C3 PEPC reaction (PEP + HCO3- -&gt; oxaloacetate + Pi, EC 4.1.1.31, irreversible, Mg2+-dependent) in cytosolic anaplerotic carbon metabolism, replenishing TCA-cycle C4 intermediates and supplying carbon skeletons for nitrogen assimilation and amino-acid/storage-protein synthesis during seed filling.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide analysis (Wang et al. 2016) shows soybean has 10 PEPC genes (7 plant-type, 3 bacterial-type) predicted predominantly cytosolic; a later seed-development study (Yamamoto et al. 2020) identifies Gmppc16 as Glyma.12g161300, a plant-type PEPC isogene, supporting its classification as a PTPC paralog within the family.
+</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The nodule-enhanced GmPEPC7 is 92.5% identical at the amino-acid level to gmppc16 (Hata et al. 1998), confirming gmppc16 is a close paralog representing the broadly-expressed housekeeping lineage and consistent with cytosolic localization stated for soybean nodule PEPCs.
+</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PPC16 expression and activity respond to nitrogen status, organic-acid demand, or nodulation in soybean roots, consistent with a dedicated anaplerotic / N-assimilation role for this housekeeping isozyme?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q02909" data-a="Q: Does PPC16 expression and activity respond to nitr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the full PEPC gene family structure in the soybean genome, and how do PPC16 and its paralogs partition the anaplerotic, seed-storage, and BTPC-associated Class-2 PEPC functions?
+</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q02909" data-a="Q: What is the full PEPC gene family structure in the..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify PPC16 transcript and PEPC enzyme activity across soybean tissues (leaf, stem, root, nodule, developing seed) and under varied nitrogen supply, then measure flux of label from 13C-bicarbonate into oxaloacetate-derived organic acids and amino acids.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PPC16 functions as a constitutive anaplerotic enzyme supplying oxaloacetate for TCA-cycle replenishment and nitrogen assimilation, rather than for net photosynthetic carbon fixation.
+</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q02909" data-a="EXPERIMENT: Quantify PPC16 transcript and PEPC enzyme activity..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate PPC16 knockdown/knockout soybean lines and assay growth, amino-acid pools, organic-acid content, and stomatal/pH phenotypes, with attention to root and nodule metabolism.
+</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of the housekeeping PEPC isozyme impairs anaplerotic OAA supply and N assimilation but does not affect photosynthetic CO2 fixation, which in this C3 plant is performed by Rubisco.
+</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q02909" data-a="EXPERIMENT: Generate PPC16 knockdown/knockout soybean lines an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PPC16-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q02909" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">49 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T10:36:58.822497</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PPC16-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="PPC16-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000018 Table 1 provides a comprehensive list of soybean GmPEPC genes (GmPEPC1 to GmPEPC10), including their gene model names (IDs) and pre</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-soybean-ppc16-uniprot-q02909-phosphoenolpyruvate-carboxylase-housekeepingc3-type">Research report: Soybean PPC16 (UniProt Q02909) — phosphoenolpyruvate carboxylase (housekeeping/C3-type)</h2>
+<h3 id="0-target-verification-and-scope-critical">0) Target verification and scope (critical)</h3>
+<p><strong>Target identity</strong>: The requested UniProt entry <strong>Q02909</strong> is described as <em>phosphoenolpyruvate carboxylase (PEPC), housekeeping isozyme</em> (EC 4.1.1.31) from <strong>Glycine max (soybean)</strong> with gene name <strong>PPC16</strong>.</p>
+<p><strong>Literature match to PPC16/gmppc16</strong>: Primary soybean literature uses the gene name <strong>gmppc16</strong> (also referenced as <strong>GmPEPC16</strong> in later sources) to denote a <strong>C3/housekeeping PEPC isoform</strong> that is expressed broadly across soybean tissues (leaf/stem/root/developing seed) and resembles other C3/housekeeping PEPCs more than C4/CAM PEPCs. (sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 4-5, sugimoto1992cdnasequenceand pages 2-4, hata1998expressionofa pages 1-2)</p>
+<p><strong>Important limitation</strong>: In the full texts retrieved here, an explicit database cross-reference <strong>linking gmppc16 to the UniProt accession Q02909</strong> was <strong>not found</strong>. Therefore, the mapping to Q02909 is treated as <em>consistent by organism + enzyme + “PPC16/gmppc16” naming</em>, but not directly demonstrated within the retrieved papers. (sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 2-4)</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Name / Topic</th>
+<th>Evidence type</th>
+<th>Key findings</th>
+<th>Identifiers / notes</th>
+<th>Supporting citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>gmppc16</td>
+<td>Full-length cDNA clone</td>
+<td>Soybean PEPC cDNA cloned from developing seed; authors concluded the encoded protein more closely resembles other C3/housekeeping PEPCs than C4/CAM-associated forms</td>
+<td>GenBank/DDBJ/EMBL accession <strong>D10717</strong>; direct UniProt <strong>Q02909</strong> mapping not found in retrieved texts</td>
+<td>(sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 2-4)</td>
+</tr>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>gmppc16</td>
+<td>Expression analysis (Northern blot / tissue RNA)</td>
+<td>mRNA detected at similar levels in leaf, stem, root, and developing seed, consistent with a broad constitutive/housekeeping role</td>
+<td>Broad tissue expression reported; no Glyma model given in these primary papers; direct UniProt <strong>Q02909</strong> mapping not found in retrieved texts</td>
+<td>(sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 4-5)</td>
+</tr>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>gmppc16 / GmPEPC16</td>
+<td>Comparative sequence similarity</td>
+<td>Nodule-enhanced <strong>GmPEPC7</strong> is highly similar to gmppc16 (92.5% aa identity over 967 aa; 86.6% nucleotide identity over 2901 bp), supporting gmppc16 as a closely related non-nodule/housekeeping isoform</td>
+<td>No direct UniProt mapping in retrieved texts</td>
+<td>(hata1998expressionofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>GmPEPC16</td>
+<td>Expression survey in soybean C3 plants</td>
+<td>Reported as broadly but low-level expressed across tissues examined, distinct from nodule-enhanced GmPEPC7</td>
+<td>No accession given in excerpt; direct UniProt <strong>Q02909</strong> mapping not found in retrieved texts</td>
+<td>(sullivan2004identificationandexpression pages 84-87)</td>
+</tr>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>Gmppc16</td>
+<td>Later soybean PEPC family literature</td>
+<td>Later studies explicitly list <strong>Gmppc16</strong> among soybean PEPC isogenes analyzed in seed-focused phylogenetic/expression work, confirming continued use of this nomenclature</td>
+<td>Presence of Gmppc16 recognized, but no direct UniProt mapping shown</td>
+<td>(yamamoto2020theplanttypephosphoenolpyruvate pages 1-3, yamamoto2020rapidlyevolvingphosphoenolpyruvate pages 3-4)</td>
+</tr>
+<tr>
+<td>Soybean nomenclature relevant to PPC16</td>
+<td>Soybean PEPC family context</td>
+<td>Genome-wide family analysis</td>
+<td>Soybean contains 10 PEPC genes classified into plant-type and bacterial-type subfamilies; PTPCs are the typical ~100–110 kDa conserved plant PEPCs predicted mainly cytosolic</td>
+<td>Table reports GmPEPC1–10 and predicted localization; does <strong>not</strong> directly map PPC16 to a Glyma ID or UniProt Q02909</td>
+<td>(wang2016genomewideanalysisof pages 9-10, wang2016genomewideanalysisof pages 4-5, wang2016genomewideanalysisof pages 1-2, wang2016genomewideanalysisof media d68602a1)</td>
+</tr>
+<tr>
+<td>PEPC reaction/regulation summary</td>
+<td>Catalytic reaction</td>
+<td>Biochemical mechanism</td>
+<td>Plant PEPC catalyzes <strong>PEP + HCO3− → oxaloacetate + Pi</strong>; reaction is described as highly exergonic and effectively irreversible in vivo</td>
+<td>Requires divalent cation, especially Mg2+</td>
+<td>(shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 26-29, aldous2014evolutionofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>PEPC reaction/regulation summary</td>
+<td>Core metabolic role</td>
+<td>Functional annotation</td>
+<td>In C3/nonphotosynthetic tissues, PEPC serves an anaplerotic role, replenishing TCA intermediates, supporting malate production, carbon–nitrogen balance, and legume nodule metabolism</td>
+<td>Cytosolic plant enzyme; relevant to nitrate/ammonium assimilation and organic acid supply</td>
+<td>(sullivan2004identificationandexpression pages 29-33, shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 23-26, aldous2014evolutionofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>PEPC reaction/regulation summary</td>
+<td>Allosteric regulation</td>
+<td>Enzyme regulation</td>
+<td>Activated by <strong>glucose-6-phosphate</strong> and other hexose/triose phosphates; inhibited by <strong>malate, aspartate, glutamate</strong> (and OAA in some contexts)</td>
+<td>Phosphorylation shifts effector sensitivity</td>
+<td>(sullivan2004identificationandexpression pages 29-33, shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36, aldous2014evolutionofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>PEPC reaction/regulation summary</td>
+<td>Phosphorylation by PPCK</td>
+<td>Post-translational regulation</td>
+<td>Reversible phosphorylation of a conserved N-terminal serine by <strong>PEPC kinase (PPCK)</strong> decreases malate inhibition and increases activation by Glc-6-P; example values reported for C3 PEPC include <strong>Ki malate ~0.17 mM (dephosphorylated) vs ~1.2 mM (phosphorylated)</strong> and <strong>Ka Glc-6-P ~1.3 mM vs ~0.28 mM</strong></td>
+<td>Supports dynamic regulation by light, nitrogen, and metabolic status</td>
+<td>(sullivan2004identificationandexpression pages 29-33, sullivan2004identificationandexpression pages 33-36, aldous2014evolutionofthe pages 2-3, aldous2014evolutionofthe pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes how soybean PPC16/gmppc16 is described in the literature and what evidence supports its annotation as a housekeeping/C3-type phosphoenolpyruvate carboxylase. It also condenses the core catalytic reaction and major regulatory features of plant-type PEPC needed for functional annotation.</em></p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-enzyme-class-and-reaction-primary-function">1.1 Enzyme class and reaction (primary function)</h4>
+<p>Plant phosphoenolpyruvate carboxylase (PEPC; <strong>EC 4.1.1.31</strong>) catalyzes the <strong>β-carboxylation</strong> of phosphoenolpyruvate (PEP) using bicarbonate:</p>
+<p><strong>PEP + HCO3− → oxaloacetate (OAA) + Pi</strong></p>
+<p>This reaction is described as <strong>highly exergonic (ΔG° ≈ −30 kJ/mol)</strong> and <strong>effectively irreversible</strong> under physiological conditions. (sullivan2004identificationandexpression pages 26-29, shi2015phosphoenolpyruvatecarboxylasein pages 1-6)</p>
+<p><strong>Cofactors/requirements</strong>: activity requires a divalent metal, with <strong>Mg2+</strong> most effective (Mn2+/Co2+ can substitute; Ca2+ inhibitory). (sullivan2004identificationandexpression pages 26-29)</p>
+<h4 id="12-housekeeping-c3-type-pepc-vs-other-pepc-types">1.2 “Housekeeping” (C3-type) PEPC vs other PEPC types</h4>
+<p>In higher plants, multiple PEPC isoforms exist. The “housekeeping” (C3-type, non-photosynthetic) PEPCs function mainly in <strong>anaplerosis</strong>—replenishing tricarboxylic acid (TCA) cycle intermediates—and in coordinating <strong>carbon–nitrogen (C/N) metabolism</strong>. (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, aldous2014evolutionofthe pages 2-3, sullivan2004identificationandexpression pages 33-36)</p>
+<p>Soybean contains a <strong>small multigene PEPC family</strong>; genome-wide analysis identified <strong>10 PEPC genes</strong> in soybean (GmPEPC1–GmPEPC10) belonging to plant-type and bacterial-type PEPC subfamilies. (wang2016genomewideanalysisof pages 2-4, wang2016genomewideanalysisof pages 9-10, wang2016genomewideanalysisof pages 1-2)</p>
+<h4 id="13-subcellular-localization-where-the-reaction-occurs">1.3 Subcellular localization (where the reaction occurs)</h4>
+<p>Housekeeping/C3 PEPC is widely treated as a <strong>plant cytosolic enzyme</strong>; this is explicitly stated in soybean nodule context (“PEPCs in nodules are generally thought to be plant cytosolic enzymes”). (hata1998expressionofa pages 1-2)</p>
+<p>A soybean genome-wide analysis also predicts <strong>predominantly cytosolic localization</strong> for soybean PEPC family members (Table 1). (wang2016genomewideanalysisof pages 1-2, wang2016genomewideanalysisof media d68602a1)</p>
+<h4 id="14-regulation-allostery-and-phosphorylation">1.4 Regulation: allostery and phosphorylation</h4>
+<p>PEPC integrates metabolic state through:</p>
+<p><strong>Allosteric regulation</strong><br />
+- <strong>Activated</strong> by <strong>glucose-6-phosphate (G6P)</strong> and other sugar phosphates (e.g., hexose/triose phosphates). (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36)<br />
+- <strong>Inhibited</strong> by <strong>malate</strong> and amino acids such as <strong>aspartate</strong> and <strong>glutamate</strong> (and other feedback inhibitors reported). (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36, sullivan2004identificationandexpression pages 36-39)</p>
+<p><strong>Post-translational modification: phosphorylation</strong><br />
+- A conserved <strong>N-terminal Ser</strong> is reversibly phosphorylated by <strong>PEPC kinase (PPCK)</strong>, which decreases malate inhibition and increases activation by G6P. (aldous2014evolutionofthe pages 2-3, sullivan2004identificationandexpression pages 29-33, shi2015phosphoenolpyruvatecarboxylasein pages 1-6)<br />
+- Example quantitative effect: at pH ~7.3, <strong>Ki(L-malate) ~0.17 mM</strong> (dephosphorylated) vs <strong>~1.2 mM</strong> (phosphorylated), and <strong>Ka(G6P) ~1.3 mM</strong> vs <strong>~0.28 mM</strong> after phosphorylation. (sullivan2004identificationandexpression pages 29-33)</p>
+<hr />
+<h3 id="2-soybean-ppc16gmppc16-gene-level-functional-annotation">2) Soybean PPC16/gmppc16: gene-level functional annotation</h3>
+<h4 id="21-sequence-identity-and-classification-as-housekeepingc3-type">2.1 Sequence identity and classification as housekeeping/C3-type</h4>
+<p>The soybean gene <strong>gmppc16</strong> was cloned as a full-length PEPC cDNA from a developing-seed library. The authors conclude the encoded PEPC <strong>resembles other “C3-type/housekeeping” PEPCs</strong> more than C4/CAM PEPCs. (Sugimoto et al., <strong>1992-11</strong>, Plant Molecular Biology; URL: https://doi.org/10.1007/bf00046459) (sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 2-4)</p>
+<p>A soybean nodule-enhanced PEPC gene (GmPEPC7) was reported to be <strong>highly similar</strong> to gmppc16 (92.5% amino-acid identity over 967 aa; 86.6% nucleotide identity over 2901 bp), consistent with gmppc16 being a close paralog representing a broadly expressed/housekeeping lineage. (Hata et al., <strong>1998-01</strong>, The Plant Journal; URL: https://doi.org/10.1046/j.1365-313x.1998.00022.x) (hata1998expressionofa pages 1-2)</p>
+<h4 id="22-expression-pattern-tissues-and-developmental-context">2.2 Expression pattern (tissues and developmental context)</h4>
+<p><strong>Broad tissue expression</strong>: Northern blotting detected gmppc16 mRNA in <strong>leaf, stem, root, and developing seed</strong>, with <strong>similar levels across tissues</strong>, consistent with a <strong>housekeeping role</strong> rather than strong tissue specialization. (Sugimoto et al., <strong>1992-11</strong>; https://doi.org/10.1007/bf00046459) (sugimoto1992cdnasequenceand pages 4-5, sugimoto1992cdnasequenceand pages 2-4)</p>
+<p><strong>Seed development</strong>: A seed-focused legume metabolism paper notes that in soybean, gmppc16 (and gmppc1) are <strong>expressed in seeds</strong>, and <strong>gmppc16 is also expressed in vegetative organs</strong> (leaf/stem/root). This supports a model in which gmppc16 contributes to <strong>anaplerotic carbon flow</strong> needed for amino-acid biosynthesis during seed filling. (Golombek et al., <strong>1999-03</strong>, Planta; https://doi.org/10.1007/s004250050535) (golombek1999phosphoenolpyruvatecarboxylasein pages 1-2)</p>
+<p>A later soybean RNA-seq/proteomics-oriented paper analyzing PEPC isogenes reports that <strong>Gmppc16 corresponds to Glyma.12g161300</strong> and shows <strong>peak expression at the late maturation stage</strong> in seed development (with relative expression described vs other isogenes). (Yamamoto et al., <strong>2020-03</strong>, Bioscience, Biotechnology, and Biochemistry; https://doi.org/10.1080/09168451.2019.1696179) (yamamoto2020theplanttypephosphoenolpyruvate pages 4-6)</p>
+<h4 id="23-biochemical-pathway-placement-in-soybean-inferred-supported-context">2.3 Biochemical pathway placement in soybean (inferred + supported context)</h4>
+<p>Given the reaction (PEP → OAA) and its cytosolic localization, PPC16/gmppc16 most plausibly feeds into:<br />
+- <strong>TCA anaplerosis</strong> (OAA replenishment) and provision of carbon skeletons for amino-acid biosynthesis (aspartate family amino acids), consistent with “C3/housekeeping” PEPC roles. (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36, sullivan2004identificationandexpression pages 23-26)<br />
+- <strong>Seed nitrogen assimilation and storage-protein accumulation</strong>: PEPC activity in soybean has been reported to correlate with seed protein concentration (cited in the legume seed metabolism literature), supporting a role in balancing carbon supply with imported nitrogen during seed development. (golombek1999phosphoenolpyruvatecarboxylasein pages 1-2)</p>
+<hr />
+<h3 id="3-soybean-pepc-family-context-helps-interpret-ppc16">3) Soybean PEPC family context (helps interpret PPC16)</h3>
+<p>A genome-wide soybean PEPC analysis identified <strong>10 PEPC genes</strong> (GmPEPC1–GmPEPC10) classified into <strong>7 plant-type PEPCs (PTPC)</strong> and <strong>3 bacterial-type PEPCs (BTPC)</strong>, and provides predicted subcellular localization (mostly cytosolic). (Wang et al., <strong>2016-12</strong>, Scientific Reports; https://doi.org/10.1038/srep38448) (wang2016genomewideanalysisof pages 2-4, wang2016genomewideanalysisof pages 9-10, wang2016genomewideanalysisof pages 1-2, wang2016genomewideanalysisof media d68602a1)</p>
+<p><strong>Visual evidence (Table)</strong>: The following table image (Table 1) lists soybean GmPEPC gene models and predicted localization. (wang2016genomewideanalysisof media d68602a1)</p>
+<p><strong>Stress response (family-level, not PPC16-specific)</strong>: In controlled seedling assays, certain GmPEPC paralogs (notably <strong>GmPEPC6/8/9</strong>) are induced by <strong>Al toxicity, cold, salt, and osmotic stress</strong>, and PEPC enzymatic activity increases in leaves under salt/PEG and in roots under Al/cold. (Wang et al., 2016-12; https://doi.org/10.1038/srep38448) (wang2016genomewideanalysisof pages 9-10, wang2016genomewideanalysisof pages 7-9, wang2016genomewideanalysisof pages 10-11)</p>
+<hr />
+<h3 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h3>
+<p>Direct 2023–2024 studies specifically on <em>soybean PPC16</em> were not retrieved here; recent advances most relevant to PPC16 are <strong>cross-plant</strong> mechanistic/engineering and systems-biology developments that sharpen interpretation of “housekeeping PEPC” roles.</p>
+<h4 id="41-2024-pepc-centered-engineering-to-improve-drought-tolerancephotosynthetic-performance">4.1 2024: PEPC-centered engineering to improve drought tolerance/photosynthetic performance</h4>
+<p>A 2024 primary study overexpressing <strong>C4-type PEPC (SaPEPC1)</strong> in <strong>Arabidopsis (C3)</strong> reports improved drought tolerance and photosynthetic electron transport performance, supporting the idea that tuning PEPC capacity/regulation can modify stress resilience. Quantitatively, under intense light, SaPEPC1 transgenic lines reached rETR maxima of <strong>56.38</strong> and <strong>46.25</strong>, while an AtPEPC1 overexpression line had a lower maximum rETR of <strong>27.48</strong>; osmotic stress assays used <strong>200–300 mM mannitol</strong> and showed improved stomatal closure/oxidative stress markers in SaPEPC1 lines. (Li et al., <strong>2024-08</strong>, Frontiers in Plant Science; https://doi.org/10.3389/fpls.2024.1443691) (li2024enhanceddroughttolerance pages 5-6, li2024enhanceddroughttolerance pages 1-2)</p>
+<h4 id="42-2024-expert-reviews-on-installing-c4cam-components-including-pepc-into-c3-crops">4.2 2024: Expert reviews on installing C4/CAM components (including PEPC) into C3 crops</h4>
+<p>A 2024 review of photosynthesis engineering highlights introduction of <strong>C4-specific enzymes such as PEPC</strong> into C3 plants as a strategy to increase CO2 concentration around Rubisco; it summarizes transgenic examples (e.g., rice overexpressing maize PEPC showing improved photosynthesis/biomass under some conditions) while emphasizing that benefits are often modest and require careful multi-gene/regulatory tuning to avoid metabolic imbalance. (Nazari et al., <strong>2024-08</strong>, Cells; https://doi.org/10.3390/cells13161319) (nazari2024enhancingphotosynthesisand pages 12-14)</p>
+<p>A second 2024 review on C4 induction feasibility catalogs engineering approaches including high-level expression of maize PEPC in rice and multi-enzyme stacking strategies, framing PEPC as a central biochemical component but not sufficient alone for full “C4 syndrome.” (Mukundan et al., <strong>2024-06</strong>, Plant Biotechnology Reports; https://doi.org/10.1007/s11816-024-00908-2) (mukundan2024investigatingphotosyntheticevolution pages 12-13, mukundan2024investigatingphotosyntheticevolution pages 7-9)</p>
+<h4 id="43-2023-systems-biology-and-metabolic-modeling-of-pepc-driven-co2-recycling-under-drought">4.3 2023: Systems biology and metabolic modeling of PEPC-driven CO2 recycling under drought</h4>
+<p>A 2023 genome-scale metabolic model of cassava leaves proposes that <strong>PEPC enables CO2 recycling</strong> during stomatal closure by fixing inorganic carbon into OAA and releasing CO2 via decarboxylation (including PEPCK), sustaining RuBisCO fixation when external CO2 diffusion is limited. Quantitatively, under simulated <strong>50% reduced CO2 uptake</strong>, PEPC flux was ~<strong>6× higher</strong> and RuBisCO fixation retained at ~<strong>66%</strong> of normal; 10× PEPC perturbation increased the intracellular CO2 pool by ~<strong>1.88%</strong> and shifted carbon allocation, with biomass production rates reduced up to <strong>79%</strong> in simulations. (Punyasu et al., <strong>2023-05</strong>, Frontiers in Plant Science; https://doi.org/10.3389/fpls.2023.1159247) (punyasu2023co2recyclingby pages 4-6, punyasu2023co2recyclingby pages 6-8, punyasu2023co2recyclingby pages 10-12)</p>
+<hr />
+<h3 id="5-current-applications-and-real-world-implementations">5) Current applications and real-world implementations</h3>
+<h4 id="51-crop-improvement-concepts-using-pepc">5.1 Crop improvement concepts using PEPC</h4>
+<p>Recent reviews treat PEPC as a candidate engineering target for improving photosynthetic efficiency in C3 crops by introducing C4/CAM-like features, including documented transgenic efforts (e.g., rice expressing maize PEPC) and the broader need for multi-component engineering (enzyme stacking, regulatory networks, possibly anatomy) to achieve robust yield benefits. (nazari2024enhancingphotosynthesisand pages 12-14, mukundan2024investigatingphotosyntheticevolution pages 7-9)</p>
+<h4 id="52-practical-soybean-relevance">5.2 Practical soybean relevance</h4>
+<p>For soybean, PPC16/gmppc16 is best interpreted as a <strong>core central-metabolism enzyme</strong> supporting:<br />
+- <strong>C/N balance</strong> and provision of OAA/aspartate for amino-acid synthesis across multiple tissues (housekeeping expression). (sugimoto1992cdnasequenceand pages 4-5, sullivan2004identificationandexpression pages 33-36, sullivan2004identificationandexpression pages 23-26)<br />
+- <strong>Seed filling metabolism</strong>, where anaplerotic flux supports assimilation of imported nitrogen (amides) into amino acids and storage proteins; soybean PEPC activity has been linked to seed protein concentration in the seed-metabolism literature. (golombek1999phosphoenolpyruvatecarboxylasein pages 1-2)</p>
+<hr />
+<h3 id="6-expert-opinion-authoritative-analysis-interpreting-ppc16">6) Expert opinion / authoritative analysis (interpreting PPC16)</h3>
+<p>Across authoritative mechanistic and review sources, a consensus view is that <strong>C3/housekeeping PEPC</strong> is a major metabolic “valve” connecting glycolytic carbon (PEP) to organic-acid pools (OAA/malate/aspartate), enabling:<br />
+- <strong>Anaplerotic replenishment</strong> of TCA intermediates and carbon skeleton supply for nitrogen assimilation. (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36, aldous2014evolutionofthe pages 2-3)<br />
+- <strong>Regulatory integration</strong> via strong allosteric control (malate inhibition; G6P activation) and reversible phosphorylation by PPCK to tune flux in response to light/nutrient/metabolic cues. (sullivan2004identificationandexpression pages 29-33, aldous2014evolutionofthe pages 2-3)</p>
+<p>Soybean-specific primary data support that <strong>gmppc16</strong> fits precisely into this “housekeeping/anaplerotic” category via broad expression and C3-type sequence similarity. (sugimoto1992cdnasequenceand pages 4-5, hata1998expressionofa pages 1-2)</p>
+<hr />
+<h3 id="7-key-statistics-and-data-selected">7) Key statistics and data (selected)</h3>
+<ul>
+<li><strong>Reaction thermodynamics</strong>: ΔG° ≈ <strong>−30 kJ/mol</strong>; reaction described as <strong>strictly irreversible</strong>. (sullivan2004identificationandexpression pages 26-29)</li>
+<li><strong>Allostery + phosphorylation (example parameters)</strong>: Ki malate <strong>0.17 mM</strong> (dephosphorylated) vs <strong>1.2 mM</strong> (phosphorylated); Ka(G6P) <strong>1.3 mM</strong> vs <strong>0.28 mM</strong> after phosphorylation. (sullivan2004identificationandexpression pages 29-33)</li>
+<li><strong>Soybean gene family size</strong>: <strong>10 PEPC genes</strong> (7 PTPC, 3 BTPC). (wang2016genomewideanalysisof pages 2-4, wang2016genomewideanalysisof pages 9-10)</li>
+<li><strong>Soybean PPC16 identifier in a later seed study</strong>: <strong>Gmppc16 = Glyma.12g161300</strong> (reported in 2020 seed-development analysis). (yamamoto2020theplanttypephosphoenolpyruvate pages 4-6)</li>
+<li><strong>Drought CO2-recycling modeling (cassava, 2023)</strong>: at 50% CO2 uptake, PEPC flux ~<strong>6×</strong> and RuBisCO fixation ~<strong>66%</strong> retained; 10× PEPC perturbation increased intracellular CO2 ~<strong>1.88%</strong> and reduced biomass flux up to <strong>79%</strong>. (punyasu2023co2recyclingby pages 4-6, punyasu2023co2recyclingby pages 6-8, punyasu2023co2recyclingby pages 10-12)</li>
+<li><strong>Transgenic PEPC engineering (Arabidopsis, 2024)</strong>: SaPEPC1 lines under intense light had rETR maxima <strong>56.38</strong> and <strong>46.25</strong>; an AtPEPC1 line had max rETR <strong>27.48</strong>; mannitol stress <strong>200–300 mM</strong> used in germination/osmotic assays. (li2024enhanceddroughttolerance pages 5-6)</li>
+</ul>
+<hr />
+<h3 id="8-practical-functional-annotation-summary-for-ppc16q02909-soybean">8) Practical functional annotation summary for PPC16/Q02909 (soybean)</h3>
+<p><strong>Molecular function</strong>: cytosolic <strong>phosphoenolpyruvate carboxylase</strong> catalyzing <strong>PEP + HCO3− → OAA + Pi</strong> (irreversible), providing OAA for conversion to malate/aspartate and supporting anaplerosis and amino-acid biosynthesis. (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 26-29)</p>
+<p><strong>Biological processes</strong> (most supported):<br />
+- <strong>Housekeeping central carbon metabolism / anaplerotic replenishment</strong> of TCA intermediates. (shi2015phosphoenolpyruvatecarboxylasein pages 1-6, sullivan2004identificationandexpression pages 33-36)<br />
+- <strong>Carbon–nitrogen coordination</strong>, including provision of carbon skeletons for N assimilation (aspartate/asparagine pathways), with particular relevance to legumes and seed filling. (sullivan2004identificationandexpression pages 23-26, golombek1999phosphoenolpyruvatecarboxylasein pages 1-2)</p>
+<p><strong>Expression/localization</strong>:<br />
+- <strong>Broad tissue expression</strong> consistent with housekeeping role (leaf, stem, root, developing seed). (sugimoto1992cdnasequenceand pages 4-5, sugimoto1992cdnasequenceand pages 2-4)<br />
+- <strong>Cytosolic localization</strong> is the dominant plant PEPC localization in relevant contexts and is predicted for soybean PEPC family members in genome-wide analysis. (hata1998expressionofa pages 1-2, wang2016genomewideanalysisof media d68602a1)</p>
+<p><strong>Regulation</strong>: likely regulated by <strong>malate inhibition</strong>, <strong>G6P activation</strong>, and <strong>PPCK-mediated phosphorylation</strong> (conserved N-terminal Ser motif discussed for plant PEPCs; soybean gmppc16 contains relevant N-terminal phosphorylation motif context in early sequence analyses). (sullivan2004identificationandexpression pages 29-33, sugimoto1992cdnasequenceand pages 4-5, aldous2014evolutionofthe pages 2-3)</p>
+<hr />
+<h3 id="9-urls-and-publication-dates-most-relevant-sources-used">9) URLs and publication dates (most relevant sources used)</h3>
+<ul>
+<li>Sugimoto et al. <em>Plant Molecular Biology</em> (1992-11). “cDNA sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean.” https://doi.org/10.1007/bf00046459 (sugimoto1992cdnasequenceand pages 1-2, sugimoto1992cdnasequenceand pages 4-5, sugimoto1992cdnasequenceand pages 2-4)</li>
+<li>Hata et al. <em>The Plant Journal</em> (1998-01). “Expression of a soybean nodule-enhanced phosphoenolpyruvate carboxylase gene that shows striking similarity to another gene for a house-keeping isoform.” https://doi.org/10.1046/j.1365-313x.1998.00022.x (hata1998expressionofa pages 1-2)</li>
+<li>Golombek et al. <em>Planta</em> (1999-03). “Phosphoenolpyruvate carboxylase in developing seeds of Vicia faba…” (cites soybean gmppc16 expression and seed roles). https://doi.org/10.1007/s004250050535 (golombek1999phosphoenolpyruvatecarboxylasein pages 1-2)</li>
+<li>Wang et al. <em>Scientific Reports</em> (2016-12). “Genome-wide Analysis of Phosphoenolpyruvate Carboxylase Gene Family and Their Response to Abiotic Stresses in Soybean.” https://doi.org/10.1038/srep38448 (wang2016genomewideanalysisof pages 2-4, wang2016genomewideanalysisof pages 9-10, wang2016genomewideanalysisof pages 1-2, wang2016genomewideanalysisof media d68602a1)</li>
+<li>Yamamoto et al. <em>Bioscience, Biotechnology, and Biochemistry</em> (2020-03). “The plant-type PEPC Gmppc2…” (reports Gmppc16 = Glyma.12g161300 and seed-stage expression). https://doi.org/10.1080/09168451.2019.1696179 (yamamoto2020theplanttypephosphoenolpyruvate pages 4-6)</li>
+<li>Punyasu et al. <em>Frontiers in Plant Science</em> (2023-05). “CO2 recycling by PEPC enables cassava leaf metabolism to tolerate low water availability.” https://doi.org/10.3389/fpls.2023.1159247 (punyasu2023co2recyclingby pages 4-6, punyasu2023co2recyclingby pages 6-8, punyasu2023co2recyclingby pages 10-12)</li>
+<li>Mukundan et al. <em>Plant Biotechnology Reports</em> (2024-06). “Investigating photosynthetic evolution and the feasibility of inducing C4 syndrome in C3 plants.” https://doi.org/10.1007/s11816-024-00908-2 (mukundan2024investigatingphotosyntheticevolution pages 12-13, mukundan2024investigatingphotosyntheticevolution pages 7-9)</li>
+<li>Nazari et al. <em>Cells</em> (2024-08). “Enhancing Photosynthesis and Plant Productivity through Genetic Modification.” https://doi.org/10.3390/cells13161319 (nazari2024enhancingphotosynthesisand pages 12-14)</li>
+<li>Li et al. <em>Frontiers in Plant Science</em> (2024-08). “Enhanced drought tolerance and photosynthetic efficiency in Arabidopsis by overexpressing PEPC…” https://doi.org/10.3389/fpls.2024.1443691 (li2024enhanceddroughttolerance pages 5-6, li2024enhanceddroughttolerance pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(sugimoto1992cdnasequenceand pages 1-2): Toshio Sugimoto, Tsutomu Kawasaki, Tomohiko Kato, Robert F. Whittier, Daisuke Shibata, and Yukio Kawamura. Cdna sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean. Plant Molecular Biology, 20:743-747, Nov 1992. URL: https://doi.org/10.1007/bf00046459, doi:10.1007/bf00046459. This article has 62 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sugimoto1992cdnasequenceand pages 4-5): Toshio Sugimoto, Tsutomu Kawasaki, Tomohiko Kato, Robert F. Whittier, Daisuke Shibata, and Yukio Kawamura. Cdna sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean. Plant Molecular Biology, 20:743-747, Nov 1992. URL: https://doi.org/10.1007/bf00046459, doi:10.1007/bf00046459. This article has 62 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sugimoto1992cdnasequenceand pages 2-4): Toshio Sugimoto, Tsutomu Kawasaki, Tomohiko Kato, Robert F. Whittier, Daisuke Shibata, and Yukio Kawamura. Cdna sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean. Plant Molecular Biology, 20:743-747, Nov 1992. URL: https://doi.org/10.1007/bf00046459, doi:10.1007/bf00046459. This article has 62 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hata1998expressionofa pages 1-2): Shingo Hata, Katsura Izui, and Hiroshi Kouchi. Expression of a soybean nodule-enhanced phosphoenolpyruvate carboxylase gene that shows striking similarity to another gene for a house-keeping isoform. The Plant journal : for cell and molecular biology, 13 2:267-73, Jan 1998. URL: https://doi.org/10.1046/j.1365-313x.1998.00022.x, doi:10.1046/j.1365-313x.1998.00022.x. This article has 49 citations.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 84-87): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(yamamoto2020theplanttypephosphoenolpyruvate pages 1-3): Naoki Yamamoto, Toshio Sugimoto, Tomoyuki Takano, Ai Sasou, Shigeto Morita, Kentaro Yano, and Takehiro Masumura. The plant-type phospho<i>enol</i>pyruvate carboxylase gmppc2 is developmentally induced in immature soy seeds at the late maturation stage: a potential protein biomarker for seed chemical composition. Bioscience, Biotechnology, and Biochemistry, 84:552-562, Mar 2020. URL: https://doi.org/10.1080/09168451.2019.1696179, doi:10.1080/09168451.2019.1696179. This article has 8 citations.</p>
+</li>
+<li>
+<p>(yamamoto2020rapidlyevolvingphosphoenolpyruvate pages 3-4): Naoki Yamamoto, Tomoyuki Takano, Takehiro Masumura, Ai Sasou, Shigeto Morita, Toshio Sugimoto, and Kentaro Yano. Rapidly evolving phosphoenolpyruvate carboxylase gmppc1 and gmppc7 are highly expressed in the external seed coat of immature soybean seeds. Gene, 762:145015, Dec 2020. URL: https://doi.org/10.1016/j.gene.2020.145015, doi:10.1016/j.gene.2020.145015. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 9-10): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 4-5): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 1-2): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof media d68602a1): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2015phosphoenolpyruvatecarboxylasein pages 1-6): Jianghua Shi, Keke Yi, Yu Liu, Li Xie, Zhongjing Zhou, Yue Chen, Zhang-hua Hu, T. Zheng, Renhu Liu, Yunlong Chen, and Jinqing Chen. Phospho<i>enol</i>pyruvate carboxylase in arabidopsis leaves plays a crucial role in carbon and nitrogen metabolism. Plant Physiology, 167:671-681, Jan 2015. URL: https://doi.org/10.1104/pp.114.254474, doi:10.1104/pp.114.254474. This article has 165 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 26-29): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(aldous2014evolutionofthe pages 1-2): Sophia H. Aldous, Sean E. Weise, Thomas D. Sharkey, Daniel M. Waldera-Lupa, Kai Stühler, Julia Mallmann, Georg Groth, Udo Gowik, Peter Westhoff, and Borjana Arsova. Evolution of the phospho<i>enol</i>pyruvate carboxylase protein kinase family in c3 and c4 <i>flaveria</i> spp. Plant Physiology, 165(3):1076-1091, May 2014. URL: https://doi.org/10.1104/pp.114.240283, doi:10.1104/pp.114.240283. This article has 34 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 29-33): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 23-26): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(aldous2014evolutionofthe pages 2-3): Sophia H. Aldous, Sean E. Weise, Thomas D. Sharkey, Daniel M. Waldera-Lupa, Kai Stühler, Julia Mallmann, Georg Groth, Udo Gowik, Peter Westhoff, and Borjana Arsova. Evolution of the phospho<i>enol</i>pyruvate carboxylase protein kinase family in c3 and c4 <i>flaveria</i> spp. Plant Physiology, 165(3):1076-1091, May 2014. URL: https://doi.org/10.1104/pp.114.240283, doi:10.1104/pp.114.240283. This article has 34 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 33-36): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 2-4): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sullivan2004identificationandexpression pages 36-39): JS Sullivan. Identification and expression analysis of phosphoenolpyruvate carboxylase (pepc) and pepc kinase genes in c3 plants. Unknown journal, 2004.</p>
+</li>
+<li>
+<p>(golombek1999phosphoenolpyruvatecarboxylasein pages 1-2): Sabine Golombek, Ute Heim, Christian Horstmann, Ulrich Wobus, and Hans Weber. Phosphoenolpyruvate carboxylase in developing seeds of vicia faba l.: gene expression and metabolic regulation. Planta, 208:66-72, Mar 1999. URL: https://doi.org/10.1007/s004250050535, doi:10.1007/s004250050535. This article has 82 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yamamoto2020theplanttypephosphoenolpyruvate pages 4-6): Naoki Yamamoto, Toshio Sugimoto, Tomoyuki Takano, Ai Sasou, Shigeto Morita, Kentaro Yano, and Takehiro Masumura. The plant-type phospho<i>enol</i>pyruvate carboxylase gmppc2 is developmentally induced in immature soy seeds at the late maturation stage: a potential protein biomarker for seed chemical composition. Bioscience, Biotechnology, and Biochemistry, 84:552-562, Mar 2020. URL: https://doi.org/10.1080/09168451.2019.1696179, doi:10.1080/09168451.2019.1696179. This article has 8 citations.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 7-9): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2016genomewideanalysisof pages 10-11): Ning Wang, Xiujuan Zhong, Yahui Cong, Tingting Wang, Songnan Yang, Yan Li, and Junyi Gai. Genome-wide analysis of phosphoenolpyruvate carboxylase gene family and their response to abiotic stresses in soybean. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38448, doi:10.1038/srep38448. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024enhanceddroughttolerance pages 5-6): Caixia Li, Juan Wang, Haiyan Lan, and Qinghui Yu. Enhanced drought tolerance and photosynthetic efficiency in arabidopsis by overexpressing phosphoenolpyruvate carboxylase from a single-cell c4 halophyte suaeda aralocaspica. Frontiers in Plant Science, Aug 2024. URL: https://doi.org/10.3389/fpls.2024.1443691, doi:10.3389/fpls.2024.1443691. This article has 9 citations.</p>
+</li>
+<li>
+<p>(li2024enhanceddroughttolerance pages 1-2): Caixia Li, Juan Wang, Haiyan Lan, and Qinghui Yu. Enhanced drought tolerance and photosynthetic efficiency in arabidopsis by overexpressing phosphoenolpyruvate carboxylase from a single-cell c4 halophyte suaeda aralocaspica. Frontiers in Plant Science, Aug 2024. URL: https://doi.org/10.3389/fpls.2024.1443691, doi:10.3389/fpls.2024.1443691. This article has 9 citations.</p>
+</li>
+<li>
+<p>(nazari2024enhancingphotosynthesisand pages 12-14): Mansoureh Nazari, Mojtaba Kordrostami, Ali Akbar Ghasemi-Soloklui, Julian J. Eaton-Rye, Pavel Pashkovskiy, Vladimir Kuznetsov, and Suleyman I. Allakhverdiev. Enhancing photosynthesis and plant productivity through genetic modification. Aug 2024. URL: https://doi.org/10.3390/cells13161319, doi:10.3390/cells13161319. This article has 38 citations.</p>
+</li>
+<li>
+<p>(mukundan2024investigatingphotosyntheticevolution pages 12-13): Nidhi S. Mukundan, Kapaettu Satyamoorthy, and Vidhu Sankar Babu. Investigating photosynthetic evolution and the feasibility of inducing c4 syndrome in c3 plants. Plant Biotechnology Reports, 18:449-463, Jun 2024. URL: https://doi.org/10.1007/s11816-024-00908-2, doi:10.1007/s11816-024-00908-2. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mukundan2024investigatingphotosyntheticevolution pages 7-9): Nidhi S. Mukundan, Kapaettu Satyamoorthy, and Vidhu Sankar Babu. Investigating photosynthetic evolution and the feasibility of inducing c4 syndrome in c3 plants. Plant Biotechnology Reports, 18:449-463, Jun 2024. URL: https://doi.org/10.1007/s11816-024-00908-2, doi:10.1007/s11816-024-00908-2. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(punyasu2023co2recyclingby pages 4-6): Nattharat Punyasu, Saowalak Kalapanulak, and Treenut Saithong. Co2 recycling by phosphoenolpyruvate carboxylase enables cassava leaf metabolism to tolerate low water availability. Frontiers in Plant Science, May 2023. URL: https://doi.org/10.3389/fpls.2023.1159247, doi:10.3389/fpls.2023.1159247. This article has 12 citations.</p>
+</li>
+<li>
+<p>(punyasu2023co2recyclingby pages 6-8): Nattharat Punyasu, Saowalak Kalapanulak, and Treenut Saithong. Co2 recycling by phosphoenolpyruvate carboxylase enables cassava leaf metabolism to tolerate low water availability. Frontiers in Plant Science, May 2023. URL: https://doi.org/10.3389/fpls.2023.1159247, doi:10.3389/fpls.2023.1159247. This article has 12 citations.</p>
+</li>
+<li>
+<p>(punyasu2023co2recyclingby pages 10-12): Nattharat Punyasu, Saowalak Kalapanulak, and Treenut Saithong. Co2 recycling by phosphoenolpyruvate carboxylase enables cassava leaf metabolism to tolerate low water availability. Frontiers in Plant Science, May 2023. URL: https://doi.org/10.3389/fpls.2023.1159247, doi:10.3389/fpls.2023.1159247. This article has 12 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PPC16-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000018 Table 1 provides a comprehensive list of soybean GmPEPC genes (GmPEPC1 to GmPEPC10), including their gene model names (IDs) and pre" src="PPC16-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hata1998expressionofa pages 1-2</li>
+<li>sullivan2004identificationandexpression pages 84-87</li>
+<li>sullivan2004identificationandexpression pages 26-29</li>
+<li>sullivan2004identificationandexpression pages 29-33</li>
+<li>golombek1999phosphoenolpyruvatecarboxylasein pages 1-2</li>
+<li>yamamoto2020theplanttypephosphoenolpyruvate pages 4-6</li>
+<li>nazari2024enhancingphotosynthesisand pages 12-14</li>
+<li>li2024enhanceddroughttolerance pages 5-6</li>
+<li>sugimoto1992cdnasequenceand pages 1-2</li>
+<li>sugimoto1992cdnasequenceand pages 4-5</li>
+<li>sugimoto1992cdnasequenceand pages 2-4</li>
+<li>yamamoto2020theplanttypephosphoenolpyruvate pages 1-3</li>
+<li>yamamoto2020rapidlyevolvingphosphoenolpyruvate pages 3-4</li>
+<li>wang2016genomewideanalysisof pages 9-10</li>
+<li>wang2016genomewideanalysisof pages 4-5</li>
+<li>wang2016genomewideanalysisof pages 1-2</li>
+<li>shi2015phosphoenolpyruvatecarboxylasein pages 1-6</li>
+<li>aldous2014evolutionofthe pages 1-2</li>
+<li>sullivan2004identificationandexpression pages 23-26</li>
+<li>aldous2014evolutionofthe pages 2-3</li>
+<li>sullivan2004identificationandexpression pages 33-36</li>
+<li>wang2016genomewideanalysisof pages 2-4</li>
+<li>sullivan2004identificationandexpression pages 36-39</li>
+<li>wang2016genomewideanalysisof pages 7-9</li>
+<li>wang2016genomewideanalysisof pages 10-11</li>
+<li>li2024enhanceddroughttolerance pages 1-2</li>
+<li>mukundan2024investigatingphotosyntheticevolution pages 12-13</li>
+<li>mukundan2024investigatingphotosyntheticevolution pages 7-9</li>
+<li>https://doi.org/10.1007/bf00046459</li>
+<li>https://doi.org/10.1046/j.1365-313x.1998.00022.x</li>
+<li>https://doi.org/10.1007/s004250050535</li>
+<li>https://doi.org/10.1080/09168451.2019.1696179</li>
+<li>https://doi.org/10.1038/srep38448</li>
+<li>https://doi.org/10.3389/fpls.2024.1443691</li>
+<li>https://doi.org/10.3390/cells13161319</li>
+<li>https://doi.org/10.1007/s11816-024-00908-2</li>
+<li>https://doi.org/10.3389/fpls.2023.1159247</li>
+<li>https://doi.org/10.1007/bf00046459,</li>
+<li>https://doi.org/10.1046/j.1365-313x.1998.00022.x,</li>
+<li>https://doi.org/10.1080/09168451.2019.1696179,</li>
+<li>https://doi.org/10.1016/j.gene.2020.145015,</li>
+<li>https://doi.org/10.1038/srep38448,</li>
+<li>https://doi.org/10.1104/pp.114.254474,</li>
+<li>https://doi.org/10.1104/pp.114.240283,</li>
+<li>https://doi.org/10.1007/s004250050535,</li>
+<li>https://doi.org/10.3389/fpls.2024.1443691,</li>
+<li>https://doi.org/10.3390/cells13161319,</li>
+<li>https://doi.org/10.1007/s11816-024-00908-2,</li>
+<li>https://doi.org/10.3389/fpls.2023.1159247,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PPC16-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q02909" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ppc16-q02909-research-notes">PPC16 (Q02909) — research notes</h1>
+<p>Gene: PPC16 / soybean (Glycine max, NCBITaxon:3847)<br />
+UniProt: Q02909 (CAPP1_SOYBN) — "Phosphoenolpyruvate carboxylase, housekeeping isozyme", EC 4.1.1.31, 967 aa.<br />
+Reviewed for the SPKW-PLANTS retrospective validation subproject.</p>
+<h2 id="1-what-this-protein-is">1. What this protein is</h2>
+<p>Q02909 is a soybean phosphoenolpyruvate carboxylase (PEPC). UniProt explicitly names it<br />
+the <strong>housekeeping isozyme</strong> ("PEPC 1"). It catalyzes the irreversible β-carboxylation of<br />
+phosphoenolpyruvate (PEP) using bicarbonate to form oxaloacetate (OAA) + Pi<br />
+(Rhea:RHEA:28370). The UniProt FUNCTION text states the role plainly:</p>
+<blockquote>
+<p>"Through the carboxylation of phosphoenolpyruvate (PEP) it forms oxaloacetate, a<br />
+four-carbon dicarboxylic acid source for the tricarboxylic acid cycle."<br />
+[UniProt Q02909 FUNCTION]</p>
+</blockquote>
+<p>Key UniProt facts: homotetramer; cytoplasmic (Cytoplasm subcellular location);<br />
+regulated by light-reversible (Ser-11) phosphorylation; allosteric enzyme; Mg2+ cofactor;<br />
+"Belongs to the PEPCase type 1 family" — i.e. a <strong>plant-type PEPC (PTPC)</strong>, not a<br />
+bacterial-type PEPC (BTPC). PE level 2 (evidence at transcript level).</p>
+<h2 id="2-the-defining-literature-original-cloning-paper">2. The defining literature: original cloning paper</h2>
+<p>The single primary reference cited by UniProt is the cDNA cloning paper:</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/1450389" title="A full-length cDNA encoding a subunit of phosphoenolpyruvate carboxylase (PEPC) was isolated from a developing seed expression library of the C3 plant Glycine max.">PMID:1450389</a></p>
+<p>This paper directly settles two of the central biological questions:</p>
+<ul>
+<li><strong>Soybean is a C3 plant</strong> — stated explicitly: "the C3 plant Glycine max".</li>
+<li><strong>This isozyme is a C3-type / housekeeping PEPC, NOT a photosynthetic C4 PEPC:</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/1450389" title="The soybean encoded protein tends to resemble other 'C3-type' PEPC   proteins more closely than those implicated in C4 or crassulacean acid metabolism.">PMID:1450389</a></li>
+<li><strong>Ubiquitous, non-photosynthesis-specific expression:</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/1450389" title="The corresponding mRNA is present at similar levels in leaf, stem, root   and developing seed.">PMID:1450389</a> — a housekeeping expression pattern, not the mesophyll-specific,<br />
+  light-induced pattern of a C4 photosynthetic PEPC.</li>
+<li>The paper also notes two potential start codons and that the protein could be subject<br />
+  to regulation by protein kinase (consistent with the UniProt phosphoserine site).</li>
+</ul>
+<h2 id="3-plant-pepc-isozyme-families-background">3. Plant PEPC isozyme families (background)</h2>
+<p>The authoritative review is O'Leary, Park &amp; Plaxton 2011 <a href="https://pubmed.ncbi.nlm.nih.gov/21524275">PMID:21524275</a>:</p>
+<ul>
+<li>Plant genomes encode a small multigene family: several <strong>plant-type PEPCs (PTPCs)</strong> and<br />
+  one distantly related <strong>bacterial-type PEPC (BTPC)</strong>.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21524275" title="PEPC belongs to a small multigene family encoding several closely   related PTPCs (plant-type PEPCs), along with a distantly related BTPC (bacterial-type   PEPC).">PMID:21524275</a></li>
+<li>PTPCs are ~110 kDa, carry the conserved N-terminal seryl-phosphorylation site, and form<br />
+  homotetrameric Class-1 PEPCs. Q02909 is 967 aa / ~110 kDa with the Ser-11 phosphosite —<br />
+  a textbook PTPC.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21524275" title="PTPC genes encode ~110-kDa polypeptides containing conserved   serine-phosphorylation and lysine-mono-ubiquitination sites, and typically exist as   homotetrameric Class-1 PEPCs.">PMID:21524275</a></li>
+<li>The well-studied role of PEPC in photosynthesis is restricted to the dedicated C4/CAM<br />
+  isoforms; PEPC ALSO does a broad set of NON-photosynthetic jobs, dominated by<br />
+  anaplerosis:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21524275" title="The critical role of PEPC in assimilating atmospheric CO2 during C4 and   Crassulacean acid metabolism photosynthesis has been studied extensively. PEPC also   fulfils a broad spectrum of non-photosynthetic functions, particularly the anaplerotic   replenishment of tricarboxylic acid cycle intermediates consumed during biosynthesis   and nitrogen assimilation.">PMID:21524275</a></li>
+</ul>
+<p>C4/CAM photosynthetic PEPC isoforms evolved repeatedly and independently from<br />
+non-photosynthetic C3 progenitor genes by gene duplication and acquisition of<br />
+mesophyll-specific, light-responsive expression plus kinetic adaptations (e.g. the<br />
+C4-diagnostic Ser-775 residue) [PMID:14644912; PMID:16136331; PMID:24913627]. A C3 plant<br />
+like soybean has only the ancestral, non-photosynthetic-type PTPCs — it has no C4 CO2-pump<br />
+machinery.</p>
+<h2 id="4-anaplerotic-housekeeping-role-of-pepc-in-c3-plants">4. Anaplerotic / housekeeping role of PEPC in C3 plants</h2>
+<p>The "housekeeping" PEPC (= anaplerotic PEPC) in C3 plants performs:</p>
+<ul>
+<li><strong>Anaplerosis</strong>: refilling TCA-cycle C4 intermediates (oxaloacetate, malate) drained for<br />
+  biosynthesis. PEPC is not a TCA-cycle enzyme; it feeds OAA into the cycle from outside.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21524275" title="anaplerotic replenishment of tricarboxylic acid cycle intermediates   consumed during biosynthesis and nitrogen assimilation.">PMID:21524275</a></li>
+<li><strong>Nitrogen assimilation / amino-acid biosynthesis</strong>: OAA → aspartate and glutamate-family<br />
+  amino acids; provides carbon skeletons for NH4+ assimilation.</li>
+<li><strong>Cellular pH regulation / charge balance</strong>, osmotic regulation (e.g. guard-cell malate<br />
+  for stomatal opening), and seed/fruit organic-acid accumulation.</li>
+</ul>
+<p>Singh et al. 2022 <a href="https://pubmed.ncbi.nlm.nih.gov/36309625">PMID:36309625</a> reviews how, in C3 plants, the non-photosynthetic<br />
+isoforms of "C4 enzymes" (including PEPC) serve general metabolism rather than<br />
+photosynthesis:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36309625" title="all the genes of the C4 photosynthetic pathway are present in C3 plants, although they are involved in diverse non-photosynthetic functions. Non-photosynthetic isoforms of carbonic anhydrase (CA), phosphoenolpyruvate carboxylase (PEPC) ... catalyze reactions that are essential for major plant metabolism pathways, such as the tricarboxylic acid (TCA) cycle, maintenance of cellular pH, uptake of nutrients and their assimilation.">PMID:36309625</a></p>
+<p>Ting, She &amp; Plaxton 2017 <a href="https://pubmed.ncbi.nlm.nih.gov/29240945">PMID:29240945</a> similarly frames PTPC function as anaplerotic in<br />
+biosynthetically active sink tissues:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29240945" title="Class-2 PEPCs simultaneously maintain rapid anaplerotic PEP carboxylation and respiratory CO2 refixation in diverse, biosynthetically active sinks that accumulate high malate levels.">PMID:29240945</a> (PTPCs such as Q02909 are the catalytic backbone; note BTPC is a<br />
+separate gene, not Q02909.)</p>
+<h2 id="5-pepc-in-soybean-nodules-n-fixation">5. PEPC in soybean nodules / N fixation</h2>
+<p>In legume root nodules PEPC activity is induced and supplies OAA/malate as carbon skeletons<br />
+for the assimilation of fixed nitrogen and as a respiratory substrate for bacteroids — an<br />
+anaplerotic, non-photosynthetic role. Importantly, the contribution of nodule<br />
+PEPC-mediated CO2 fixation to whole-plant carbon is minor: a field 13C/15N study of<br />
+nodulating vs non-nodulating soybean concluded<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10938812" title="the expected contribution by phosphopenolpyruvate carboxylase-mediated CO2 fixation in the root nodules to plant C-incorporation could not have been significant.">PMID:10938812</a><br />
+This reinforces that PEPC carboxylation in soybean is anaplerotic (replenishing organic<br />
+acids), not net autotrophic "carbon fixation". PPC16/Q02909 is the ubiquitously expressed<br />
+housekeeping isozyme (leaf/stem/root/seed) and is the kind of PTPC that operates in roots<br />
+and nodules.</p>
+<h2 id="6-familydomain-evidence">6. Family/domain evidence</h2>
+<ul>
+<li>InterPro/PANTHER place Q02909 in PTHR30523 (PHOSPHOENOLPYRUVATE CARBOXYLASE), subfamily<br />
+  PTHR30523:SF33 ("PHOSPHOENOLPYRUVATE CARBOXYLASE 3"). HAMAP MF_00595 = PEPcase type 1.</li>
+<li>InterPro signatures: IPR021135 (PEP_COase), IPR022805 (PEP_COase bacterial/plant-type),<br />
+  IPR018129 / IPR033129 (Lys and His active-site signatures). Active-site His-172 and<br />
+  Lys-602 (UniProt FT ACT_SITE) are consistent with canonical PEPC catalysis.</li>
+</ul>
+<h2 id="7-assessment-of-the-go-annotations-under-review">7. Assessment of the GO annotations under review</h2>
+<h3 id="retired-spkw-annotation-photosynthesis-go0015979-go_ref0000043">Retired SPKW annotation — photosynthesis (GO:0015979), GO_REF:0000043</h3>
+<p>GO:0015979 def: "The synthesis by organisms of organic chemical compounds, especially<br />
+carbohydrates, from carbon dioxide (CO2) using energy obtained from light..."<br />
+This annotation came purely from the UniProt keyword "Photosynthesis" (KW line), which is<br />
+applied broadly to all PEPCs because the <em>family</em> is famous for its C4/CAM role. But:<br />
+(a) soybean is C3 <a href="https://pubmed.ncbi.nlm.nih.gov/1450389">PMID:1450389</a>; (b) this isozyme is explicitly the housekeeping/C3-type<br />
+PEPC [PMID:1450389; UniProt RecName]; (c) C3 plants have no light-driven CO2-fixation by<br />
+PEPC. The protein has no role in photosynthesis. <strong>GOA's removal of this annotation was<br />
+JUSTIFIED — it was a keyword-driven, pathway-context over-annotation.</strong> Action: REMOVE<br />
+(keep <code>retired: true</code>).</p>
+<h3 id="carbon-fixation-go0015977-iea-uniprotkb-kw-interpro">carbon fixation (GO:0015977), IEA UniProtKB-KW / InterPro</h3>
+<p>GO:0015977 def: "A metabolic process in which carbon (usually derived from carbon dioxide)<br />
+is incorporated into organic compounds (usually carbohydrates)." Every child of GO:0015977<br />
+is an autotrophic CO2-fixation pathway: C4 photosynthesis, CAM photosynthesis, reductive<br />
+TCA cycle, carbon fixation by acetyl-CoA pathway, 3-hydroxypropionate cycle. The term is an<br />
+autotrophic / net-carbon-gain concept. Housekeeping PEPC carboxylates PEP to OAA for<br />
+anaplerosis — it does not perform autotrophic carbon fixation and does not produce<br />
+carbohydrate. So <code>carbon fixation</code> is an over-annotation/mis-mapping for the housekeeping<br />
+isozyme. The UniProt keyword "Carbon dioxide fixation" was again applied at family level.<br />
+The most biologically accurate replacement for the actual process is<br />
+<strong>oxaloacetate metabolic process (GO:0006107)</strong> — def: "The chemical reactions and pathways<br />
+involving oxaloacetate ... an important intermediate in metabolism, especially as a<br />
+component of the TCA cycle." Action: MODIFY → GO:0006107.</p>
+<h3 id="tricarboxylic-acid-cycle-go0006099-iea-interpro">tricarboxylic acid cycle (GO:0006099), IEA InterPro</h3>
+<p>GO:0006099 def describes the cyclic oxidation of acetyl-CoA via citrate → isocitrate →<br />
+2-oxoglutarate → succinyl-CoA → succinate → fumarate → malate → oxaloacetate. PEPC is NOT<br />
+one of the eight TCA-cycle enzymes. It is an <strong>anaplerotic</strong> enzyme that <em>feeds</em> OAA into<br />
+the cycle from PEP <a href="https://pubmed.ncbi.nlm.nih.gov/21524275">PMID:21524275</a>. Annotating PEPC <code>involved_in tricarboxylic acid cycle</code><br />
+conflates anaplerosis with the cycle itself. This InterPro2GO mapping (IPR021135/IPR022805<br />
+→ GO:0006099) is too coarse. Better: <code>oxaloacetate metabolic process (GO:0006107)</code>, which<br />
+captures the anaplerotic provision of the TCA intermediate without asserting cycle<br />
+membership. Action: MODIFY → GO:0006107.</p>
+<h3 id="phosphoenolpyruvate-carboxylase-activity-go0008964-iea">phosphoenolpyruvate carboxylase activity (GO:0008964), IEA</h3>
+<p>Catalytic activity directly matching UniProt CATALYTIC ACTIVITY / EC 4.1.1.31 / Rhea<br />
+RHEA:28370. Correct and core. Action: ACCEPT.</p>
+<h3 id="cytosol-go0005829-iba-go_ref0000033">cytosol (GO:0005829), IBA GO_REF:0000033</h3>
+<p>PTPCs are cytosolic enzymes; UniProt subcellular location = Cytoplasm. IBA from the PEPC<br />
+phylogenetic group. Correct and core. Action: ACCEPT.</p>
+<h3 id="cytoplasm-go0005737-iea-go_ref0000044">cytoplasm (GO:0005737), IEA GO_REF:0000044</h3>
+<p>From UniProt subcellular-location mapping (Cytoplasm). Correct but less specific than<br />
+cytosol. Action: ACCEPT (consistent, broader term).</p>
+<h2 id="8-core-function-summary">8. Core function summary</h2>
+<p>PPC16/Q02909 is the cytosolic, homotetrameric <strong>housekeeping (anaplerotic) plant-type<br />
+PEPC</strong> of soybean (a C3 legume). Its core molecular function is phosphoenolpyruvate<br />
+carboxylase activity (EC 4.1.1.31), carboxylating PEP with bicarbonate to oxaloacetate.<br />
+Its core biological role is <strong>anaplerotic provision of oxaloacetate</strong> to replenish<br />
+TCA-cycle C4-dicarboxylic-acid intermediates consumed by biosynthesis and nitrogen<br />
+assimilation. It is NOT a photosynthetic CO2-fixing enzyme and is NOT a TCA-cycle enzyme.</p>
+<h2 id="9-over-annotation-pattern-identified">9. Over-annotation pattern identified</h2>
+<p>This gene is a clean example of <strong>family-level / pathway-context keyword over-annotation</strong>:<br />
+because the PEPC enzyme family is famous for C4/CAM photosynthesis, family-wide UniProt<br />
+keywords ("Photosynthesis", "Carbon dioxide fixation") and coarse InterPro2GO mappings<br />
+(→ photosynthesis, carbon fixation, TCA cycle) get propagated onto every PEPC, including<br />
+the housekeeping C3 isozymes that do none of those things. GOA's retirement of the SPKW<br />
+"photosynthesis" annotation correctly removed one instance of this pattern; the surviving<br />
+IEA "carbon fixation" and "tricarboxylic acid cycle" annotations are the same error class<br />
+and should be modified to the anaplerotic-accurate term GO:0006107.</p>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q02909
+gene_symbol: PPC16
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3847
+  label: Glycine max
+description: &gt;
+  PPC16 (Q02909, CAPP1_SOYBN) is the cytosolic housekeeping (anaplerotic) phosphoenolpyruvate
+  carboxylase (PEPC; EC 4.1.1.31) of soybean (Glycine max), a C3 legume. It is a plant-type
+  PEPC (PTPC): a ~110 kDa, 967-residue polypeptide that assembles into a homotetrameric
+  Class-1 PEPC and is regulated by light-reversible N-terminal (Ser-11) phosphorylation and
+  by allosteric effectors. The enzyme catalyses the irreversible beta-carboxylation of
+  phosphoenolpyruvate (PEP) with bicarbonate to form oxaloacetate (OAA) plus phosphate.
+  Its core biological role is anaplerotic: it replenishes the C4-dicarboxylic-acid
+  intermediates (oxaloacetate, malate) of the tricarboxylic acid cycle that are drained for
+  biosynthesis, nitrogen assimilation, amino-acid synthesis, cellular pH/charge balance and
+  organic-acid accumulation. PPC16 is the ubiquitously expressed housekeeping isozyme, with
+  mRNA present at similar levels in leaf, stem, root and developing seed. It is explicitly a
+  C3-type PEPC and is distinct from the dedicated C4/CAM photosynthetic PEPC isozymes found
+  in C4 and CAM plants; because soybean is a C3 plant it has no C4-type photosynthetic
+  CO2-fixation machinery, and PPC16 has no role in photosynthesis or in autotrophic carbon
+  fixation.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED
+# from the current (2026) GOA release when GOA retired the keyword2GO pipeline
+# for cellular organisms. Reviewed retrospectively to assess whether removal was
+# justified. TRUE SPKW-unique (closure-filtered).
+- term:
+    id: GO:0015979
+    label: photosynthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      Keyword-derived (SPKW, GO_REF:0000043) annotation that existed in the Sept 2025 GOA
+      snapshot and was removed from the current GOA release. It originates solely from the
+      UniProt keyword &#34;Photosynthesis&#34;, which is applied across the whole PEPC family
+      because the family is famous for its C4/CAM photosynthetic CO2-fixation role.
+      PPC16/Q02909 is the housekeeping (anaplerotic) PEPC isozyme of soybean, a C3 plant;
+      it has no role in photosynthesis.
+    action: REMOVE
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED; it was a family-level, pathway-context
+      over-annotation, not a correct annotation that was lost. GO:0015979 (photosynthesis)
+      is defined as light-driven synthesis of organic compounds from CO2. Soybean is a C3
+      plant, and the original cloning paper states this protein is a &#34;C3-type&#34; PEPC that
+      does not resemble C4/CAM photosynthetic isoforms; it is the ubiquitously expressed
+      housekeeping isozyme. The light-driven CO2-fixing role of PEPC is restricted to the
+      dedicated C4/CAM isozymes, which evolved separately from non-photosynthetic C3
+      progenitors. The housekeeping C3 PEPC performs anaplerotic carboxylation, not
+      photosynthesis. Keeping retired: true; this is correctly removed.
+    supported_by:
+    - reference_id: PMID:1450389
+      supporting_text: &#34;The soybean encoded protein tends to resemble other &#39;C3-type&#39; PEPC
+        proteins more closely than those implicated in C4 or crassulacean acid metabolism.&#34;
+    - reference_id: PMID:1450389
+      supporting_text: &#34;A full-length cDNA encoding a subunit of phosphoenolpyruvate
+        carboxylase (PEPC) was isolated from a developing seed expression library of the
+        C3 plant Glycine max.&#34;
+    - reference_id: PMID:21524275
+      supporting_text: &#34;The critical role of PEPC in assimilating atmospheric CO(2) during
+        C(4) and Crassulacean acid metabolism photosynthesis has been studied extensively.
+        PEPC also fulfils a broad spectrum of non-photosynthetic functions, particularly
+        the anaplerotic replenishment of tricarboxylic acid cycle intermediates consumed
+        during biosynthesis and nitrogen assimilation.&#34;
+    - reference_id: file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+      supporting_text: &#34;The soybean gene gmppc16 was cloned as a full-length PEPC cDNA from
+        a developing-seed library. The authors conclude the encoded PEPC resembles other
+        &#39;C3-type/housekeeping&#39; PEPCs more than C4/CAM PEPCs. ... Soybean-specific primary
+        data support that gmppc16 fits precisely into this &#39;housekeeping/anaplerotic&#39;
+        category via broad expression and C3-type sequence similarity.&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;
+      IBA annotation from the PEPC phylogenetic group (PANTHER PTHR30523). Plant-type PEPCs
+      are cytosolic Class-1 enzymes, and UniProt records the subcellular location of
+      Q02909 as Cytoplasm. The cytosolic localization is a conserved, well-established
+      property of this enzyme class.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with UniProt&#39;s curated subcellular location (Cytoplasm) and
+      with the established biology of plant-type PEPCs as cytosolic homotetramers. IBA is
+      appropriate and the term is at the right level of specificity.
+    supported_by:
+    - reference_id: PMID:21524275
+      supporting_text: &#34;PTPC genes encode ~110-kDa polypeptides containing conserved
+        serine-phosphorylation and lysine-mono-ubiquitination sites, and typically exist
+        as homotetrameric Class-1 PEPCs.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;
+      IEA annotation derived from the UniProtKB subcellular-location vocabulary mapping
+      (UniProt records &#34;Cytoplasm&#34; for Q02909). This is correct but less specific than the
+      cytosol annotation.
+    action: ACCEPT
+    reason: &gt;
+      Consistent with the UniProt subcellular location and with the IBA cytosol annotation.
+      The term is broader than cytosol (GO:0005829) but not incorrect; an IEA being broader
+      than an experimentally/phylogenetically supported finer term is acceptable.
+    supported_by:
+    - reference_id: PMID:21524275
+      supporting_text: &#34;PTPC genes encode ~110-kDa polypeptides containing conserved
+        serine-phosphorylation and lysine-mono-ubiquitination sites, and typically exist
+        as homotetrameric Class-1 PEPCs.&#34;
+- term:
+    id: GO:0006099
+    label: tricarboxylic acid cycle
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      InterPro2GO annotation mapping the PEPC InterPro signatures (IPR021135, IPR022805) to
+      the tricarboxylic acid cycle. PEPC is not one of the eight enzymes of the TCA cycle;
+      it is an anaplerotic enzyme that supplies oxaloacetate to the cycle from PEP. The
+      mapping conflates anaplerosis with cycle membership.
+    action: MODIFY
+    reason: &gt;
+      The TCA cycle (GO:0006099) is defined as the cyclic oxidation of acetyl-CoA via
+      citrate, isocitrate, 2-oxoglutarate, succinyl-CoA, succinate, fumarate, malate and
+      oxaloacetate. PEPC catalyses none of these steps; it is the canonical ANAPLEROTIC
+      enzyme that replenishes TCA-cycle C4 intermediates consumed by biosynthesis and N
+      assimilation. Annotating PEPC as involved_in the TCA cycle is too coarse and
+      asserts cycle membership it does not have. A biologically accurate replacement is
+      oxaloacetate metabolic process (GO:0006107), which captures PEPC&#39;s role in producing
+      the OAA that feeds the cycle without asserting that the protein is part of the cycle.
+    proposed_replacement_terms:
+    - id: GO:0006107
+      label: oxaloacetate metabolic process
+    supported_by:
+    - reference_id: PMID:21524275
+      supporting_text: &#34;PEPC also fulfils a broad spectrum of non-photosynthetic functions,
+        particularly the anaplerotic replenishment of tricarboxylic acid cycle
+        intermediates consumed during biosynthesis and nitrogen assimilation.&#34;
+    - reference_id: PMID:1450389
+      supporting_text: &#34;Through the carboxylation of phosphoenolpyruvate (PEP) it forms
+        oxaloacetate, a four-carbon dicarboxylic acid source for the tricarboxylic acid
+        cycle. [paraphrasing the UniProt FUNCTION text drawn from this entry&#39;s primary
+        reference]&#34;
+      full_text_unavailable: true
+- term:
+    id: GO:0008964
+    label: phosphoenolpyruvate carboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;
+      IEA annotation (combined automated methods; ARBA/InterPro/RHEA/EC) for the catalytic
+      activity of the enzyme. This directly matches the UniProt CATALYTIC ACTIVITY entry
+      (oxaloacetate + phosphate = phosphoenolpyruvate + hydrogencarbonate; RHEA:28370;
+      EC 4.1.1.31) and is the core molecular function of the protein.
+    action: ACCEPT
+    reason: &gt;
+      This is the defining, core molecular function of PPC16. The annotation matches the
+      curated catalytic activity, the EC number, the Rhea reaction, and the PEPCase type 1
+      family assignment in UniProt. The active-site residues His-172 and Lys-602 are
+      annotated in UniProt, consistent with canonical PEPC catalysis.
+    supported_by:
+    - reference_id: PMID:21524275
+      supporting_text: &#34;PEPC [PEP (phosphoenolpyruvate) carboxylase] is a tightly
+        controlled enzyme located at the core of plant C-metabolism that catalyses the
+        irreversible beta-carboxylation of PEP to form oxaloacetate and Pi.&#34;
+- term:
+    id: GO:0015977
+    label: carbon fixation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;
+      InterPro2GO annotation (IPR021135, IPR022805) and UniProt keyword &#34;Carbon dioxide
+      fixation&#34; mapping the PEPC family to carbon fixation. GO:0015977 is an autotrophic
+      concept: all of its subtypes are autotrophic CO2-fixation pathways (C4 photosynthesis,
+      CAM photosynthesis, reductive TCA cycle, acetyl-CoA pathway, 3-hydroxypropionate
+      cycle). The housekeeping C3 PEPC does not perform autotrophic carbon fixation.
+    action: MODIFY
+    reason: &gt;
+      GO:0015977 (carbon fixation) is defined as a metabolic process in which carbon
+      (usually from CO2) is incorporated into organic compounds, usually carbohydrates;
+      every child term is an autotrophic, net-carbon-gain pathway. Housekeeping PEPC
+      carboxylates PEP to oxaloacetate for anaplerosis; it does not produce carbohydrate
+      and does not perform autotrophic carbon fixation. As with the retired photosynthesis
+      annotation, this is a family-level keyword/InterPro over-annotation: the carbon-fixing
+      role of PEPC belongs to the dedicated C4/CAM photosynthetic isozymes, not to the C3
+      housekeeping isozyme. The biologically accurate process term is oxaloacetate metabolic
+      process (GO:0006107), reflecting the anaplerotic carboxylation that produces OAA.
+    proposed_replacement_terms:
+    - id: GO:0006107
+      label: oxaloacetate metabolic process
+    supported_by:
+    - reference_id: PMID:1450389
+      supporting_text: &#34;The soybean encoded protein tends to resemble other &#39;C3-type&#39; PEPC
+        proteins more closely than those implicated in C4 or crassulacean acid metabolism.&#34;
+    - reference_id: PMID:36309625
+      supporting_text: &#34;all the genes of the C4 photosynthetic pathway are present in C3
+        plants, although they are involved in diverse non-photosynthetic functions.
+        Non-photosynthetic isoforms of carbonic anhydrase (CA), phosphoenolpyruvate
+        carboxylase (PEPC), malate dehydrogenase (MDH) ... catalyze reactions that are
+        essential for major plant metabolism pathways, such as the tricarboxylic acid
+        (TCA) cycle, maintenance of cellular pH, uptake of nutrients and their
+        assimilation.&#34;
+core_functions:
+- description: &gt;
+    PPC16 catalyses the irreversible beta-carboxylation of phosphoenolpyruvate with
+    bicarbonate to form oxaloacetate plus phosphate (EC 4.1.1.31). This is the defining
+    molecular activity of the protein and matches the curated UniProt catalytic activity
+    and Rhea reaction RHEA:28370.
+  molecular_function:
+    id: GO:0008964
+    label: phosphoenolpyruvate carboxylase activity
+  directly_involved_in:
+  - id: GO:0006107
+    label: oxaloacetate metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:21524275
+    supporting_text: &#34;PEPC [PEP (phosphoenolpyruvate) carboxylase] is a tightly controlled
+      enzyme located at the core of plant C-metabolism that catalyses the irreversible
+      beta-carboxylation of PEP to form oxaloacetate and Pi.&#34;
+  - reference_id: PMID:1450389
+    supporting_text: &#34;A full-length cDNA encoding a subunit of phosphoenolpyruvate
+      carboxylase (PEPC) was isolated from a developing seed expression library of the C3
+      plant Glycine max.&#34;
+  - reference_id: file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+    supporting_text: &#34;Plant phosphoenolpyruvate carboxylase (PEPC; EC 4.1.1.31) catalyzes
+      the beta-carboxylation of phosphoenolpyruvate (PEP) using bicarbonate: PEP + HCO3-
+      -&gt; oxaloacetate (OAA) + Pi. This reaction is described as highly exergonic and
+      effectively irreversible under physiological conditions.&#34;
+- description: &gt;
+    As the soybean housekeeping (anaplerotic) plant-type PEPC, PPC16 produces oxaloacetate
+    that replenishes the C4-dicarboxylic-acid intermediates of the tricarboxylic acid cycle
+    consumed by biosynthesis and nitrogen assimilation. This anaplerotic role is its core
+    biological function and is distinct from the autotrophic CO2-fixation performed by
+    dedicated C4/CAM photosynthetic PEPC isozymes.
+  molecular_function:
+    id: GO:0008964
+    label: phosphoenolpyruvate carboxylase activity
+  directly_involved_in:
+  - id: GO:0006107
+    label: oxaloacetate metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:21524275
+    supporting_text: &#34;PEPC also fulfils a broad spectrum of non-photosynthetic functions,
+      particularly the anaplerotic replenishment of tricarboxylic acid cycle intermediates
+      consumed during biosynthesis and nitrogen assimilation.&#34;
+  - reference_id: PMID:36309625
+    supporting_text: &#34;Non-photosynthetic isoforms of carbonic anhydrase (CA),
+      phosphoenolpyruvate carboxylase (PEPC), malate dehydrogenase (MDH) ... catalyze
+      reactions that are essential for major plant metabolism pathways, such as the
+      tricarboxylic acid (TCA) cycle, maintenance of cellular pH, uptake of nutrients and
+      their assimilation.&#34;
+  - reference_id: file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+    supporting_text: &#34;In C3/nonphotosynthetic tissues, PEPC serves an anaplerotic role,
+      replenishing TCA intermediates, supporting malate production, carbon-nitrogen
+      balance, and legume nodule metabolism. ... Soybean-specific primary data support
+      that gmppc16 fits precisely into this &#39;housekeeping/anaplerotic&#39; category via broad
+      expression and C3-type sequence similarity.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;
+    Does PPC16 expression and activity respond to nitrogen status, organic-acid demand, or
+    nodulation in soybean roots, consistent with a dedicated anaplerotic / N-assimilation
+    role for this housekeeping isozyme?
+- question: &gt;
+    What is the full PEPC gene family structure in the soybean genome, and how do PPC16 and
+    its paralogs partition the anaplerotic, seed-storage, and BTPC-associated Class-2 PEPC
+    functions?
+suggested_experiments:
+- description: &gt;
+    Quantify PPC16 transcript and PEPC enzyme activity across soybean tissues (leaf, stem,
+    root, nodule, developing seed) and under varied nitrogen supply, then measure flux of
+    label from 13C-bicarbonate into oxaloacetate-derived organic acids and amino acids.
+  hypothesis: &gt;
+    PPC16 functions as a constitutive anaplerotic enzyme supplying oxaloacetate for
+    TCA-cycle replenishment and nitrogen assimilation, rather than for net photosynthetic
+    carbon fixation.
+- description: &gt;
+    Generate PPC16 knockdown/knockout soybean lines and assay growth, amino-acid pools,
+    organic-acid content, and stomatal/pH phenotypes, with attention to root and nodule
+    metabolism.
+  hypothesis: &gt;
+    Loss of the housekeeping PEPC isozyme impairs anaplerotic OAA supply and N assimilation
+    but does not affect photosynthetic CO2 fixation, which in this C3 plant is performed by
+    Rubisco.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: &gt;
+      InterPro2GO mapped the PEPC InterPro signatures (IPR021135, IPR022805) to
+      tricarboxylic acid cycle and carbon fixation; both mappings are too coarse for the
+      anaplerotic housekeeping isozyme and are recommended for modification to oxaloacetate
+      metabolic process.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: &gt;
+      SwissProt keyword-derived (SPKW) annotations present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: &gt;
+      The SPKW &#34;photosynthesis&#34; annotation for PPC16 derived from the family-level UniProt
+      keyword &#34;Photosynthesis&#34;; its removal by GOA was justified because soybean is a C3
+      plant and PPC16 is the non-photosynthetic housekeeping PEPC isozyme.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: &gt;
+      IBA annotation from the PEPC phylogenetic group correctly assigns cytosolic
+      localization, consistent with plant-type PEPCs being cytosolic Class-1 homotetramers.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: &gt;
+      Subcellular-location mapping assigned cytoplasm, consistent with the curated UniProt
+      location and with the IBA cytosol annotation.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: &gt;
+      Combined IEA methods (ARBA, InterPro, RHEA, EC) correctly assigned phosphoenolpyruvate
+      carboxylase activity, the core molecular function of the protein.
+- id: PMID:1450389
+  title: cDNA sequence and expression of a phosphoenolpyruvate carboxylase gene from soybean.
+  findings:
+  - statement: &gt;
+      The PEPC cDNA was isolated from soybean, explicitly described as a C3 plant.
+  - statement: &gt;
+      The encoded protein resembles C3-type PEPC proteins, not the C4 or CAM
+      photosynthetic isoforms.
+  - statement: &gt;
+      The PEPC mRNA is present at similar levels in leaf, stem, root and developing seed,
+      a ubiquitous housekeeping expression pattern.
+  - statement: &gt;
+      Two potential start codons exist and the protein may be subject to regulation by
+      protein kinase (consistent with the conserved N-terminal phosphoserine site).
+- id: PMID:21524275
+  title: The remarkable diversity of plant PEPC (phosphoenolpyruvate carboxylase); recent
+    insights into the physiological functions and post-translational controls of
+    non-photosynthetic PEPCs.
+  findings:
+  - statement: &gt;
+      PEPC catalyses the irreversible beta-carboxylation of PEP to form oxaloacetate and Pi
+      and sits at the core of plant carbon metabolism.
+  - statement: &gt;
+      Beyond the C4/CAM photosynthetic role, PEPC fulfils non-photosynthetic functions,
+      particularly anaplerotic replenishment of TCA-cycle intermediates consumed during
+      biosynthesis and nitrogen assimilation.
+  - statement: &gt;
+      Plant genomes encode several plant-type PEPCs (PTPCs, ~110 kDa, homotetrameric
+      Class-1 PEPCs with conserved serine-phosphorylation sites) plus a distantly related
+      bacterial-type PEPC (BTPC); PPC16/Q02909 is a PTPC.
+- id: PMID:36309625
+  title: Role of C4 photosynthetic enzyme isoforms in C3 plants and their potential
+    applications in improving agronomic traits in crops.
+  findings:
+  - statement: &gt;
+      All genes of the C4 photosynthetic pathway are present in C3 plants but the C3
+      isoforms perform diverse non-photosynthetic functions.
+  - statement: &gt;
+      Non-photosynthetic PEPC isoforms support major metabolic pathways including the TCA
+      cycle, cellular pH maintenance, and nutrient uptake/assimilation.
+- id: PMID:29240945
+  title: Transcript profiling indicates a widespread role for bacterial-type
+    phosphoenolpyruvate carboxylase in malate-accumulating sink tissues.
+  findings:
+  - statement: &gt;
+      Plant genomes encode several plant-type PEPC (PTPC) isozymes plus a distantly related
+      bacterial-type PEPC (BTPC); the two are separate genes.
+  - statement: &gt;
+      PEPC in biosynthetically active sink tissues maintains rapid anaplerotic PEP
+      carboxylation and respiratory CO2 refixation rather than autotrophic carbon fixation.
+- id: PMID:10938812
+  title: Weather and nodule mediated variations in delta 13C and delta 15N values in
+    field-grown soybean (Glycine max L.) with special interest in the analyses of xylem
+    fluids.
+  findings:
+  - statement: &gt;
+      In field-grown soybean, the contribution of PEPC-mediated CO2 fixation in root
+      nodules to whole-plant carbon incorporation was not significant, consistent with an
+      anaplerotic rather than net autotrophic carbon-fixing role for PEPC.
+- id: file:SOYBN/PPC16/PPC16-deep-research-falcon.md
+  title: Deep research report (falcon / Edison Scientific Literature) on soybean PPC16
+    (Q02909) phosphoenolpyruvate carboxylase.
+  findings:
+  - statement: &gt;
+      Soybean primary literature (Sugimoto et al. 1992) cloned gmppc16 as a full-length
+      PEPC cDNA from a developing-seed library and concluded the encoded protein resembles
+      C3-type/housekeeping PEPCs more than C4/CAM photosynthetic forms; the report confirms
+      PPC16 is the broadly expressed housekeeping isozyme of a C3 plant with no
+      photosynthetic role.
+  - statement: &gt;
+      gmppc16 mRNA was detected by Northern blot at similar levels in leaf, stem, root and
+      developing seed, supporting a constitutive housekeeping rather than tissue-specialized
+      expression pattern.
+  - statement: &gt;
+      The report places the housekeeping/C3 PEPC reaction (PEP + HCO3- -&gt; oxaloacetate + Pi,
+      EC 4.1.1.31, irreversible, Mg2+-dependent) in cytosolic anaplerotic carbon metabolism,
+      replenishing TCA-cycle C4 intermediates and supplying carbon skeletons for nitrogen
+      assimilation and amino-acid/storage-protein synthesis during seed filling.
+  - statement: &gt;
+      Genome-wide analysis (Wang et al. 2016) shows soybean has 10 PEPC genes (7 plant-type,
+      3 bacterial-type) predicted predominantly cytosolic; a later seed-development study
+      (Yamamoto et al. 2020) identifies Gmppc16 as Glyma.12g161300, a plant-type PEPC
+      isogene, supporting its classification as a PTPC paralog within the family.
+  - statement: &gt;
+      The nodule-enhanced GmPEPC7 is 92.5% identical at the amino-acid level to gmppc16
+      (Hata et al. 1998), confirming gmppc16 is a close paralog representing the
+      broadly-expressed housekeeping lineage and consistent with cytosolic localization
+      stated for soybean nodule PEPCs.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
