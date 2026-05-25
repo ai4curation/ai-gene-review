@@ -27,10 +27,10 @@ This project is the **parent tracker** for the upstream
 [geneontology/go-annotation#6379](https://github.com/geneontology/go-annotation/issues/6379)
 annotation-review issue, which covers the whole BP subtree. The
 [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
-tracker handles one sibling sub-issue (#6415, GO:0099148); a parallel
-[`go-annotation#6375`](https://github.com/geneontology/go-annotation/issues/6375)
-covers the related vesicle-tethering obsoletions and is **not yet tracked
-here** (see "Related obsoletions" below).
+tracker handles one sibling sub-issue (#6415, GO:0099148); the parallel
+[`VESICLE_TETHERING_OBSOLETION`](VESICLE_TETHERING_OBSOLETION.md) tracker
+covers the related vesicle-tethering obsoletions (#6375, GO:0099022 and
+children).
 
 ## Upstream tickets
 
@@ -208,12 +208,10 @@ The vesicle docking obsoletion in #6379 is part of a coordinated cluster of
 "BP-tether/docking → MF binding activity" obsoletions. The other items in
 the cluster:
 
-- **[go-annotation#6375 vesicle tethering and children](https://github.com/geneontology/go-annotation/issues/6375)**
-  — sibling obsoletion (GO:0099022 vesicle tethering and 4 children).
-  **Not yet tracked here** as a separate project — would naturally pair
-  with this one given how often the same gene gets both a tethering and a
-  docking annotation. Recommend a follow-up project file if a maintainer
-  picks it up.
+- [`VESICLE_TETHERING_OBSOLETION`](VESICLE_TETHERING_OBSOLETION.md) — sibling
+  obsoletion (GO:0099022 vesicle tethering and 4 children, #6375). Pairs
+  with this tracker — same genes often get both a tethering and a docking
+  annotation (e.g. EXOC4 appears as a Tier 2 candidate in both).
 - [`CILIARY_BASAL_BODY_DOCKING_OBSOLETION`](CILIARY_BASAL_BODY_DOCKING_OBSOLETION.md)
   — sibling obsoletion (GO:0097711, #6405).
 - [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
