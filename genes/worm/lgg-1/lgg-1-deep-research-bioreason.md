@@ -1,0 +1,42 @@
+# BioReason Chat Export
+*Exported on March 22, 2026 at 01:16 AM*
+
+---
+
+**Organism:** Caenorhabditis elegans
+
+**Sequence:**
+```
+MKWAYKEENNFEKRRAEGDKIRRKYPDRIPVIVEKAPKSKLHDLDKKKYLVPSDLTVGQFYFLIRKRIQLRPEDALFFFVNNVIPQTMTTMGQLYQDHHEEDLFLYIAYSDESVYGGEVEKKE
+```
+
+### Thinking Trace
+The architecture begins with IPR029071 (Ubiquitin-like domain superfamily, residues 1–116), a β-grasp fold that creates a rigid scaffold for covalent or noncovalent modifier interactions. Nested almost completely across the same span is IPR004241 (Autophagy protein Atg8 ubiquitin-like family, residues 2–117), which specifies this ubiquitin-like scaffold as an autophagy-dedicated module rather than a canonical ubiquitin. This tandem assignment—an overarching ubiquitin-like superfamily signature refined by an autophagy-specific family—establishes a conjugation-competent platform that undergoes C-terminal processing and lipidation. The Ubl architecture causes high-affinity binding to short linear motifs and conjugation machinery, thereby enforcing selective assemblies rather than broad catalysis.
+
+From this fold, the molecular function resolves as a multivalent adaptor that binds other proteins. The Atg8-type Ubl surface presents hydrophobic patches and a conserved groove that capture AIM/LIR motifs in cargo receptors and conjugation factors, aligning with GO:0005515 (molecular function: protein binding). The absence of catalytic residues and the dominance of interaction-prone β-strands reinforce a binding-centric role.
+
+This interaction-driven chemistry feeds directly into autophagic pathways. The Atg8-family signature dictates a conjugation cycle in which the C-terminus is proteolytically matured and then covalently attached to phosphatidylethanolamine on forming autophagosomal membranes. That lipidation step nucleates and stabilizes autophagosome biogenesis, cargo selection, and vesicle closure. These causal links place the protein squarely in GO:0006914 (autophagy) and specifically in autophagosome assembly and turnover pathways.
+
+Cellular placement follows from the conjugation mechanism. Lipidation anchors the protein on autophagic membranes derived from intracellular vesicular trafficking systems, situating it within intracellular membrane-bounded organelles and vesicles. This supports GO:0042995 (cellular component: intracellular) and aligns with the experimentally grounded subcellular designation of cytoplasmic vesicles and intracellular membranes. The lipid-anchored state further implies residency at autophagosome and endolysosomal vesicular surfaces.
+
+Mechanistically, the protein operates as a membrane-tethered scaffold that captures LIR-motif cargo receptors and the autophagy conjugation cascade. It likely engages E1/E2-like enzymes and adaptors that drive its lipidation, and it recruits coat and sorting factors that sculpt autophagosomal membranes. Consequently, I hypothesize interactions with the autophagy conjugation machinery and membrane-organizing modules, enabling efficient cargo sequestration and delivery to lysosomal compartments.
+
+### Functional Summary
+An autophagy-dedicated ubiquitin-like adaptor that assembles and stabilizes autophagosome membranes in nematode cells. It undergoes C-terminal maturation and becomes lipid-anchored to intracellular vesicular membranes, where it binds short linear motifs in cargo receptors and conjugation factors. Through this membrane-tethered scaffolding activity, it promotes selective cargo capture and vesicle biogenesis within the intracellular vesicle system that drives autophagic flux.
+
+### UniProt Summary
+Involved in autophagic vesicle formation.
+
+### InterPro Domains
+- **Ubiquitin-like domain superfamily** (`IPR029071`, homologous_superfamily) — residues 1-116
+- **Autophagy protein Atg8 ubiquitin-like** (`IPR004241`, family) — residues 2-117
+
+### GO Terms
+**Molecular Function:** molecular_function (`GO:0003674`), binding (`GO:0005488`), protein binding (`GO:0005515`)
+
+**Biological Process:** biological_process (`GO:0008150`), metabolic process (`GO:0008152`), positive regulation of biological process (`GO:0048518`), regulation of biological process (`GO:0050789`), multicellular organismal process (`GO:0032501`), biological regulation (`GO:0065007`), response to stimulus (`GO:0050896`), developmental process (`GO:0032502`), cellular process (`GO:0009987`), response to abiotic stimulus (`GO:0009628`), anatomical structure development (`GO:0048856`), multicellular organism development (`GO:0007275`), determination of adult lifespan (`GO:0008340`), response to chemical (`GO:0042221`), regulation of metabolic process (`GO:0019222`), cellular component organization or biogenesis (`GO:0071840`), catabolic process (`GO:0009056`), post-embryonic development (`GO:0009791`), cellular metabolic process (`GO:0044237`), cell death (`GO:0008219`), regulation of cellular process (`GO:0050794`), positive regulation of metabolic process (`GO:0009893`), cellular response to stimulus (`GO:0051716`), response to stress (`GO:0006950`), process utilizing autophagic mechanism (`GO:0061919`), positive regulation of cellular process (`GO:0048522`), response to temperature stimulus (`GO:0009266`), positive regulation of cell death (`GO:0010942`), programmed cell death (`GO:0012501`), response to wounding (`GO:0009611`), cellular catabolic process (`GO:0044248`), response to toxic substance (`GO:0009636`), positive regulation of cellular component organization (`GO:0051130`), positive regulation of cellular component biogenesis (`GO:0044089`), autophagy (`GO:0006914`), regulation of cellular component biogenesis (`GO:0044087`), response to heat (`GO:0009408`), regulation of catabolic process (`GO:0009894`), regulation of cell death (`GO:0010941`), positive regulation of cellular metabolic process (`GO:0031325`), cellular response to chemical stimulus (`GO:0070887`), regulation of cellular metabolic process (`GO:0031323`), cellular component organization (`GO:0016043`), larval development (`GO:0002164`), regulation of cellular component organization (`GO:0051128`), positive regulation of catabolic process (`GO:0009896`), endomembrane system organization (`GO:0010256`), positive regulation of necrotic cell death (`GO:0010940`), regulation of autophagy (`GO:0010506`), regulation of organelle assembly (`GO:1902115`), regulation of necrotic cell death (`GO:0010939`), macroautophagy (`GO:0016236`), wound healing (`GO:0042060`), cellular response to toxic substance (`GO:0097237`), positive regulation of autophagy (`GO:0010508`), positive regulation of organelle assembly (`GO:1902117`), regulation of organelle organization (`GO:0033043`), positive regulation of cellular catabolic process (`GO:0031331`), regulation of cellular catabolic process (`GO:0031329`), nematode larval development (`GO:0002119`), positive regulation of organelle organization (`GO:0010638`), membrane organization (`GO:0061024`), positive regulation of autophagosome assembly (`GO:2000786`), plasma membrane repair (`GO:0001778`), regulation of macroautophagy (`GO:0016241`), positive regulation of vacuole organization (`GO:0044090`), regulation of vacuole organization (`GO:0044088`), regulation of autophagosome assembly (`GO:2000785`), dauer larval development (`GO:0040024`), plasma membrane organization (`GO:0007009`), positive regulation of macroautophagy (`GO:0016239`)
+
+**Cellular Component:** cellular_component (`GO:0005575`), cellular anatomical entity (`GO:0110165`), intracellular anatomical structure (`GO:0005622`), organelle (`GO:0043226`), intracellular (`GO:0042995`), membrane (`GO:0016020`), cell body (`GO:0044297`), envelope (`GO:0031975`), somatodendritic compartment (`GO:0036477`), cytoplasm (`GO:0005737`), organelle membrane (`GO:0031090`), organelle envelope (`GO:0031967`), plasma membrane bounded cell projection (`GO:0120025`), intracellular organelle (`GO:0043229`), outer membrane (`GO:0019867`), neuronal cell body (`GO:0043025`), vacuole (`GO:0005773`), mitochondrion (`GO:0005739`), membrane-bounded organelle (`GO:0043227`), mitochondrial envelope (`GO:0005740`), intracellular membrane-bounded organelle (`GO:0043231`), bounding membrane of organelle (`GO:0098588`), neuron projection (`GO:0043005`), autophagosome (`GO:0005776`), organelle outer membrane (`GO:0031968`), vacuolar membrane (`GO:0005774`), mitochondrial membrane (`GO:0031966`), mitochondrial outer membrane (`GO:0005741`), autophagosome membrane (`GO:0000421`), nucleus (`GO:0005634`)
+
+---
+*Generated by [BioReason](https://bioreason.net)*

@@ -9,9 +9,12 @@ on:
       - 'src/ai_gene_review/schema/**'
       - 'src/ai_gene_review/templates/**'
       - 'src/ai_gene_review/render.py'
-      - 'src/ai_gene_review/export.py'
+      - 'src/ai_gene_review/export/**'
       - 'src/ai_gene_review/browser/**'
+      - 'src/ai_gene_review/tools/minify_linkml_browser_data.py'
       - 'projects/*.md'
+      - 'project.justfile'
+      - '.github/workflows/generate-pages.yaml'
   workflow_dispatch:
     inputs:
       force:
@@ -32,17 +35,43 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
+      - name: Close stale regeneration PRs
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+        shell: bash
+        run: |
+          mapfile -t stale_prs < <(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --search 'is:open author:app/github-actions Regenerate pages and browser app' \
+              --json number,createdAt \
+              --limit 100 \
+              --jq '.[] | select((now - (.createdAt | fromdateiso8601)) >= 3600) | .number'
+          )
+
+          if [ "${#stale_prs[@]}" -eq 0 ]; then
+            echo "No stale regeneration PRs to close."
+            exit 0
+          fi
+
+          for pr_number in "${stale_prs[@]}"; do
+            echo "Closing stale regeneration PR #$pr_number"
+            gh pr close "$pr_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --comment "Superseded by a newer automated pages regeneration run."
+          done
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.12"
 
@@ -52,8 +81,36 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Validate all gene reviews
-        run: just validate-all
+      - name: Get changed files
+        id: changed
+        run: |
+          # Get YAML files changed in the triggering commit(s)
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'genes/**/*-ai-review.yaml' 'rules/**/*-review.yaml' 2>/dev/null || echo "")
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "Changed YAML files: $(echo "$CHANGED" | grep -c '.' || echo 0)"
+
+      - name: Validate changed gene reviews
+        run: |
+          ERRORS=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            [ ! -f "$f" ] && continue
+            if [[ "$f" == genes/*/*/*-ai-review.yaml ]]; then
+              ORG=$(echo "$f" | cut -d/ -f2)
+              GENE=$(echo "$f" | cut -d/ -f3)
+              echo "=== Validating $ORG/$GENE ==="
+              if ! just validate "$ORG" "$GENE"; then
+                ERRORS=$((ERRORS + 1))
+              fi
+            fi
+          done <<< "${{ steps.changed.outputs.files }}"
+          if [ $ERRORS -gt 0 ]; then
+            echo "❌ $ERRORS validation errors"
+            exit 1
+          fi
+          echo "✅ All changed files valid"
 
       - name: Render all gene review HTML pages
         run: just render-all
@@ -67,77 +124,152 @@ jobs:
       - name: Check for changes
         id: check-changes
         run: |
-          if git diff --quiet genes/ app/ pages/ reports/; then
+          if git diff --quiet \
+            genes/ \
+            app/index.html \
+            app/data.js \
+            app/schema.js \
+            pages/ \
+            reports/; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
             echo "Changed files:"
-            git diff --stat genes/ app/ pages/ reports/
+            git diff --stat \
+              genes/ \
+              app/index.html \
+              app/data.js \
+              app/schema.js \
+              pages/ \
+              reports/
           fi
 
-      - name: Create Pull Request
+      - name: Compute regeneration metadata
         if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: pr-metadata
+        shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          BRANCH_NAME="generate-pages-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$BRANCH_NAME"
-
-          git add genes/**/*.html app/ pages/ reports/
-
           GENE_COUNT=$(find genes -name '*-ai-review.yaml' | wc -l | tr -d ' ')
           HTML_COUNT=$(find genes -name '*-ai-review.html' | wc -l | tr -d ' ')
           PROJECT_COUNT=$(find pages/projects -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 
+          {
+            echo "branch=auto/generate-pages"
+            echo "gene_count=$GENE_COUNT"
+            echo "html_count=$HTML_COUNT"
+            echo "project_count=$PROJECT_COUNT"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create or update regeneration PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH_NAME="${{ steps.pr-metadata.outputs.branch }}"
+          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
+          git checkout -B "$BRANCH_NAME"
+
+          git add \
+            genes/ \
+            app/index.html \
+            app/data.js \
+            app/schema.js \
+            pages/ \
+            reports/
+
           git commit -m "$(cat <<EOF
-          Regenerate pages, browser app, and reports
+            Regenerate pages, browser app, and reports
 
-          - $HTML_COUNT gene review HTML pages (from $GENE_COUNT YAML reviews)
-          - $PROJECT_COUNT project pages
-          - Browser app data.js
-          - Validation report
+            - ${{ steps.pr-metadata.outputs.html_count }} gene review HTML pages (from ${{ steps.pr-metadata.outputs.gene_count }} YAML reviews)
+            - ${{ steps.pr-metadata.outputs.project_count }} project pages
+            - Browser app data.js
+            - Validation report
 
-          Triggered by changes to gene reviews or templates.
+            Triggered by changes to gene reviews or templates.
           EOF
           )"
 
-          git push origin "$BRANCH_NAME"
+          git push --force-with-lease origin "$BRANCH_NAME"
+
+          PR_BODY="$(mktemp)"
+          {
+            echo "## Summary"
+            echo
+            echo "Automated regeneration of static assets after gene review or template changes."
+            echo
+            echo "## Generated Assets"
+            echo
+            echo "| Asset | Count/Status |"
+            echo "|-------|--------------|"
+            echo "| Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |"
+            echo "| Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |"
+            echo "| Project pages | ${{ steps.pr-metadata.outputs.project_count }} |"
+            echo "| Browser app (data.js) | Updated |"
+            echo "| Validation report | Updated |"
+            echo
+            echo "## Trigger"
+            echo
+            echo "This PR was triggered by changes to:"
+            echo "- genes/**/*.yaml - gene review data files"
+            echo "- src/ai_gene_review/schema/** - LinkML schema files"
+            echo "- src/ai_gene_review/templates/** - Jinja2 templates"
+            echo "- src/ai_gene_review/render.py - rendering code"
+            echo "- src/ai_gene_review/export/** - export code"
+            echo "- src/ai_gene_review/browser/** - browser app assets"
+            echo "- src/ai_gene_review/tools/minify_linkml_browser_data.py - browser data compaction"
+            echo "- projects/*.md - project definitions"
+            echo "- project.justfile - just recipes used by CI"
+            echo "- .github/workflows/generate-pages.yaml - workflow definition"
+            echo
+            echo "## Review"
+            echo
+            echo "- [ ] Spot-check a few gene review HTML pages render correctly"
+            echo "- [ ] Verify browser app loads and filters work"
+            echo "- [ ] Check validation report for new issues"
+          } > "$PR_BODY"
+
+          EXISTING_PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$EXISTING_PR_NUMBER" ]; then
+            gh api \
+              --method PATCH \
+              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
+              -f body="$(cat "$PR_BODY")" \
+              >/dev/null
+            echo "Updated existing regeneration PR #$EXISTING_PR_NUMBER."
+            exit 0
+          fi
 
           gh pr create \
-            --title "Regenerate pages and browser app ($(date +%Y-%m-%d))" \
-            --body "$(cat <<EOF
-          ## Summary
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --draft \
+            --title "Regenerate pages and browser app" \
+            --body-file "$PR_BODY"
 
-          Automated regeneration of static assets after gene review or template changes.
+          CREATED_PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --state open \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
 
-          ## Generated Assets
+          if [ -z "$CREATED_PR_NUMBER" ]; then
+            echo "Failed to resolve created regeneration PR number for $BRANCH_NAME."
+            echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
+            exit 1
+          fi
 
-          | Asset | Count/Status |
-          |-------|--------------|
-          | Gene review YAML files | $GENE_COUNT |
-          | Gene review HTML pages | $HTML_COUNT |
-          | Project pages | $PROJECT_COUNT |
-          | Browser app (data.js) | Updated |
-          | Validation report | Updated |
-
-          ## Trigger
-
-          This PR was triggered by changes to:
-          - \`genes/**/*.yaml\` - gene review data files
-          - \`src/ai_gene_review/schema/**\` - LinkML schema files
-          - \`src/ai_gene_review/templates/**\` - Jinja2 templates
-          - \`src/ai_gene_review/render.py\` - rendering code
-          - \`src/ai_gene_review/export.py\` - export code
-          - \`src/ai_gene_review/browser/**\` - browser app assets
-          - \`projects/*.md\` - project definitions
-
-          ## Review
-
-          - [ ] Spot-check a few gene review HTML pages render correctly
-          - [ ] Verify browser app loads and filters work
-          - [ ] Check validation report for new issues
-          EOF
-          )"
+          echo "Created regeneration PR #$CREATED_PR_NUMBER."

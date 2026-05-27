@@ -1,0 +1,2552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ttgC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ttgC</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N32" target="_blank" class="term-link">
+                        Q88N32
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_1384</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ttgC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N32" data-a="DESCRIPTION: ttgC encodes a 484-aa outer membrane lipoprotein o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ttgC encodes a 484-aa outer membrane lipoprotein of the outer membrane factor (OMF) family that serves as the outer membrane channel of RND-type efflux systems in Pseudomonas putida KT2440. UniProt and comparative genomics place it in the TtgABC efflux pump, while genetic and regulatory studies in KT2440 link ttgABC/TtgC to phenol responses, stress phenotypes, and antibiotic-resistant regulatory mutants. More recent work indicates that TtgC can also be shared by the ParXY/TtgC efflux system in multidrug-resistant P. putida isolates. The strongest conservative functional summary is therefore an outer membrane efflux transporter component contributing to transmembrane export of toxic compounds, including antibiotics and aromatic solvent-related stresses, with exact substrate preference depending on regulatory and pump context.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                    GO:0009279
+                                </a>
+                            </span>
+                            <span class="term-label">cell outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N32" data-a="GO:0009279" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept. TtgC is an OMF-family outer membrane lipoprotein, and UniProt explicitly places it in the cell outer membrane. This is the most specific supported localization among the current GOA terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The reviewed UniProt entry describes TtgC as a probable efflux pump outer membrane protein with cell-outer-membrane localization and lipid anchoring, which matches the expected architecture of tripartite RND efflux systems.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell outer membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015562" target="_blank" class="term-link">
+                                    GO:0015562
+                                </a>
+                            </span>
+                            <span class="term-label">efflux transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N32" data-a="GO:0015562" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept. The best-supported molecular function for TtgC is participation in efflux transport across the cell envelope as the outer membrane channel of RND transporter systems.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Multiple lines of evidence support efflux function in KT2440. TtgABC is described as the major multidrug efflux pump in KT2440, ttgC abundance rises during phenol stress, and TtgC can also partner with ParXY in multidrug-resistant P. putida strains. Although the exact substrate range is context dependent, efflux transporter activity is the correct core molecular-function summary.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Probable outer membrane component of the TtgABC efflux pump with unknown specificity.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                                        PMID:24907323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">ttgA, ttgB, and ttgC, which code for the major multidrug efflux pump TtgABC in P. putida KT2440</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32840000" target="_blank" class="term-link">
+                                        PMID:32840000
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">TtgABC and ParXY/TtgC are both under the positive control of a two-component system, PpeRS</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The gene ttgC in Pseudomonas putida KT2440 encodes the outer membrane factor (OMF) of the tripartite RND efflux pump TtgABC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N32" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation is too generic. TtgC localizes specifically to the cell outer membrane, so the broader parent term membrane adds little value.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0016020 is a high-level parent term that is superseded here by the more informative and better supported GO:0009279 cell outer membrane.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cell outer membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N32" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent transporter term is directionally correct but redundant once the more specific efflux transporter activity annotation is retained.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The available evidence specifically supports export/efflux rather than generic transmembrane transporter activity, so GO:0015562 is the more informative annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                                        PMID:24907323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">major multidrug efflux pump TtgABC</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N32" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept. Even though the substrate spectrum is broader than a single antibiotic or solvent term, TtgC is clearly involved in transmembrane export processes mediated by RND efflux systems.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> KT2440 data connect ttgC/TtgABC to phenol adaptation, antibiotic resistance, and multidrug efflux. The broad biological-process term is conservative but justified until a single substrate-specific process can be supported without over-annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In a KT2440-isogenic background (PaW85), genetic inactivation of **ttgABC/ttgC** produced an initially counterintuitive phenotype: disruption of the pump **enhanced phenol tolerance**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                                        PMID:24907323
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">demonstrated the involvement of efflux pump TtgABC in the stress resistance and biofilm formation phenotypes of the ECF-10 mutant strain</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In KT2440 MDR evolution/selection experiments, **PpeRS** is described as a positive regulator controlling **both TtgABC and ParXY/TtgC**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the primary biological role of the TtgABC/TtgC system is detoxification and intrinsic resistance against multiple compound classes, including antibiotics, aromatic hydrocarbons/solvents, and specialized metabolites</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Outer membrane efflux transporter activity as the OMF channel of RND efflux systems, primarily TtgABC and in some multidrug-resistant contexts ParXY/TtgC. TtgC contributes to toxic-compound tolerance and stress responses through increased efflux capacity when ttgABC is induced or derepressed.</h3>
+                <span class="vote-buttons" data-g="Q88N32" data-a="FUNCTION: Outer membrane efflux transporter activity as the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015562" target="_blank" class="term-link">
+                            efflux transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                transmembrane transport
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009279" target="_blank" class="term-link">
+                                cell outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ttgC/ttgC-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Probable outer membrane component of the TtgABC efflux pump with unknown specificity.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                                PMID:24907323
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">ttgA, ttgB, and ttgC, which code for the major multidrug efflux pump TtgABC in P. putida KT2440</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32840000" target="_blank" class="term-link">
+                                PMID:32840000
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">In addition to TtgABC, mutants of the second type such as HPG-5 were found to upregulate a novel RND pump, dubbed ParXY/TtgC</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In a KT2440-isogenic background (PaW85), genetic inactivation of **ttgABC/ttgC** produced an initially counterintuitive phenotype: disruption of the pump **enhanced phenol tolerance**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                                PMID:24907323
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">demonstrated the involvement of efflux pump TtgABC in the stress resistance and biofilm formation phenotypes of the ECF-10 mutant strain</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">In KT2440 MDR evolution/selection experiments, **PpeRS** is described as a positive regulator controlling **both TtgABC and ParXY/TtgC**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO supplies family/domain-based automated annotations that require curator review against the specific TtgC outer-membrane factor context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular-location mapping provides automated cellular-component annotations based on reviewed-entry localization vocabulary.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ttgC/ttgC-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB reviewed entry for probable efflux pump outer membrane protein TtgC</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies Q88N32 as the probable outer-membrane component of the TtgABC efflux pump with outer-membrane and lipid-anchor features.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12743835" target="_blank" class="term-link">
+                            PMID:12743835
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Comparative genomic analysis of solvent extrusion pumps in Pseudomonas strains exhibiting different degrees of solvent tolerance.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Comparative genomic analysis places TtgABC among solvent-extrusion pumps in Pseudomonas.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24907323" target="_blank" class="term-link">
+                            PMID:24907323
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Knockout of extracytoplasmic function sigma factor ECF-10 affects stress resistance and biofilm formation in Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The KT2440 ECF-10 study describes ttgABC as a major multidrug efflux pump affected by stress-regulatory perturbation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32840000" target="_blank" class="term-link">
+                            PMID:32840000
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Coordinate overexpression of two RND efflux systems, ParXY and TtgABC, is responsible for multidrug resistance in Pseudomonas putida.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Multidrug-resistant P. putida data show TtgC can participate in TtgABC-associated efflux and multidrug resistance.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for ttgC in Pseudomonas putida KT2440</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon synthesis identifies TtgC as the TtgABC outer-membrane factor and highlights context-dependent substrate and pump pairing.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the physiologically dominant substrates of TtgC under native KT2440 growth conditions: antibiotics, aromatic solvents, phenolic compounds, or a broader toxic-compound spectrum?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Ramos JL, Overhage J, Jeannot K</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N32" data-a="Q: What are the physiologically dominant substrates o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which regulatory and environmental conditions does TtgC function with TtgAB versus the ParXY pump in P. putida KT2440 and related strains?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Overhage J, Jeannot K</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N32" data-a="Q: Under which regulatory and environmental condition..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Construct clean ttgC, ttgABC, and parXY mutants plus defined complementation strains and quantify susceptibility to phenol, toluene, quinolones, beta-lactams, chloramphenicol, and aminoglycosides.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TtgC is required for efficient export of multiple toxic compounds, but the relative contribution of TtgABC versus ParXY/TtgC depends on the stress condition and regulatory state.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N32" data-a="EXPERIMENT: Construct clean ttgC, ttgABC, and parXY mutants pl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure intracellular accumulation and efflux kinetics of fluorescent or radiolabeled antibiotics and aromatic compounds in wild type, ttgR mutants, ppeRS-activated backgrounds, and ttgC knockouts.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Derepression of ttgABC or coordinated activation of ttgABC and parXY will lower intracellular substrate accumulation in a TtgC-dependent manner.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88N32" data-a="EXPERIMENT: Measure intracellular accumulation and efflux kine..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttgC-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N32" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Functional Annotation of **ttgC** (UniProt Q88N32; locus **PP_1384**) in *Pseudomonas putida* KT2440</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">32 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-03-21T14:07:39.202130</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-functional-annotation-of-ttgc-uniprot-q88n32-locus-pp_1384-in-pseudomonas-putida-kt2440">Research Report: Functional Annotation of <strong>ttgC</strong> (UniProt Q88N32; locus <strong>PP_1384</strong>) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The gene <strong>ttgC</strong> in <em>Pseudomonas putida</em> KT2440 (UniProt <strong>Q88N32</strong>, locus <strong>PP_1384</strong>) encodes the <strong>outer membrane factor (OMF)</strong>—a TolC/OprM-like outer membrane channel—of the <strong>tripartite RND efflux pump TtgABC</strong>. In this complex, TtgC forms the <strong>outer membrane conduit</strong> that cooperates with the inner-membrane RND transporter (TtgB) and the periplasmic adaptor/membrane-fusion protein (TtgA) to expel chemically diverse toxicants directly to the extracellular milieu. Functional evidence indicates that the <strong>primary biological role</strong> of the TtgABC/TtgC system is <strong>detoxification and intrinsic resistance</strong> against multiple compound classes, including <strong>antibiotics</strong>, <strong>aromatic hydrocarbons/solvents</strong>, and <strong>specialized metabolites</strong> such as <strong>bipyridyl-family chelators</strong>; the system also participates in physiological stress responses relevant to growth in chemically challenging environments. (puja2020coordinateoverexpressionof pages 1-2, henriquez2020resistancetobipyridyls pages 3-5)</p>
+<h2 id="1-key-concepts-and-definitions-current-understanding">1. Key concepts and definitions (current understanding)</h2>
+<h3 id="11-tripartite-rnd-efflux-pumps-and-the-role-of-the-omf">1.1 Tripartite RND efflux pumps and the role of the OMF</h3>
+<p>Gram-negative bacteria frequently use <strong>tripartite efflux pumps</strong> that span both membranes. These systems consist of (i) an <strong>inner-membrane RND transporter</strong>, (ii) a <strong>periplasmic adaptor (membrane fusion protein)</strong>, and (iii) an <strong>outer membrane factor/channel</strong> that forms the terminal exit duct through the outer membrane. Within <strong>TtgABC</strong>, <strong>TtgC</strong> is the OMF/channel component, enabling export from the cell envelope to the exterior and functionally analogous to OprM/TolC-family channels in other bacteria. (puja2020coordinateoverexpressionof pages 1-2, daniels2009adaptivedrugresistance pages 2-4)</p>
+<h3 id="12-substrate-specificity-in-rndomf-systems">1.2 Substrate “specificity” in RND/OMF systems</h3>
+<p>RND systems are typically <strong>polyspecific</strong> rather than narrowly substrate-specific; the outer membrane channel (OMF) is often a shared or semi-shared conduit whose compatibility with different adaptors and transporters can enable <strong>networked efflux architectures</strong>. In KT2440, recent evidence supports this network view by indicating that other RND systems (e.g., ParXY) may <strong>utilize TtgC</strong> as an outer-membrane channel. (stein2023therndefflux pages 2-5)</p>
+<h2 id="2-verified-geneprotein-identity-and-cellular-localization">2. Verified gene/protein identity and cellular localization</h2>
+<h3 id="21-identity-confirmation-in-kt2440">2.1 Identity confirmation in KT2440</h3>
+<p>Multiple KT2440-focused sources explicitly define <strong>TtgABC</strong> as an operon encoding <strong>TtgA (adaptor/MFP)</strong>, <strong>TtgB (inner membrane RND transporter)</strong>, and <strong>TtgC (outer membrane channel/factor)</strong>, directly matching the UniProt description for Q88N32 as an OMF-family efflux outer membrane protein. (puja2020coordinateoverexpressionof pages 1-2, stein2023navigatingpyoverdineand pages 31-34)</p>
+<h3 id="22-subcellular-localization">2.2 Subcellular localization</h3>
+<p>TtgC is an <strong>outer membrane</strong> component of a cell-envelope–spanning efflux assembly. In a KT2440-isogenic strain used for phenotypic genetics, <strong>ttgC</strong> is annotated as a “multidrug/solvent RND outer membrane protein (OM)” consistent with an OMF localization and function. (putrins2010theimpactof pages 4-5)</p>
+<h2 id="3-functional-role-detoxificationexport-and-resistance-phenotypes">3. Functional role: detoxification/export and resistance phenotypes</h2>
+<h3 id="31-antibiotic-resistance-intrinsic-and-adaptive">3.1 Antibiotic resistance (intrinsic and adaptive)</h3>
+<p><strong>TtgABC</strong> is a major determinant of intrinsic antibiotic tolerance in KT2440, consistent with a central detoxification role. In particular, experimental work mapping antibiotic resistance determinants concluded that a large portion of the <strong>ampicillin resistance phenotype</strong> could be attributed to the <strong>ttgABC-encoded pump</strong> (with ttgA deletion used as a functional proxy for loss of the whole system). (martinez‐garcia2011engineeringmultiplegenomic pages 8-9)</p>
+<p>Quantitative antibiotic data from KT2440 mutant analysis show that deletion of the pump adaptor can drastically change susceptibility patterns, with MIC shifts reported to range from <strong>10- to 1000-fold</strong> depending on drug and mutant background, and plating assays indicating survival at high antibiotic concentrations depends strongly on the presence of TtgABC. For example, on <strong>100 mg/mL ampicillin</strong>, wild-type survivors occurred at ~<strong>10⁻⁶</strong> frequency, while ΔttgA strains showed ~<strong>10⁻⁹</strong>. (martinez‐garcia2011engineeringmultiplegenomic pages 8-9)</p>
+<p>Beyond intrinsic resistance, adaptive/selected mutants can overexpress TtgABC through changes in the local repressor <strong>TtgR</strong>, producing multidrug resistance (MDR). Clinical/laboratory MDR mutants with <strong>ttgR alterations</strong> show <strong>3.8–5.4×</strong> overexpression of ttgA (as a readout of pump derepression) and associated increased antibiotic resistance; allelic replacement of the ttgR variants into KT2440 reproduced the MDR phenotype, supporting causality. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<h3 id="32-aromatic-hydrocarbonssolvents-and-solvent-tolerance">3.2 Aromatic hydrocarbons/solvents and solvent tolerance</h3>
+<p>TtgABC is widely described as a solvent/aromatic detoxification system in <em>P. putida</em> strains. In KT2440, deleting ttgA reduces fitness under solvent challenge: exposure to toluene vapors caused ~<strong>40% reduction in growth efficiency</strong> in mutants lacking ttgA, consistent with the pump’s role in envelope detoxification of hydrophobic compounds (with TtgC as the required outer membrane exit duct). (martinez‐garcia2011engineeringmultiplegenomic pages 6-8)</p>
+<p>More detailed mechanistic/quantitative solvent shock phenotypes have been characterized in the closely related strain DOT-T1E: sudden exposure to 0.3% toluene yields survival of only ~<strong>1 in 10,000</strong> cells unless preadapted (then <strong>50–100%</strong> survive), and TtgABC contributes to solvent extrusion and solvent tolerance in such contexts. While this is not KT2440-specific, KT2440 and DOT-T1E TtgABC proteins are reported to be &gt;99% identical, supporting transferability of qualitative function. (daniels2009adaptivedrugresistance pages 2-4, putrins2010theimpactof pages 5-6)</p>
+<h3 id="33-bipyridyl-family-chelators-a-native-physiological-role-in-soil-contexts">3.3 Bipyridyl-family chelators: a native physiological role in soil contexts</h3>
+<p>A key KT2440-focused finding is that TtgABC contributes to resistance against <strong>2,2′-bipyridyl (Bip)</strong> and related natural bipyridyl derivatives, supporting the hypothesis that detoxification of such chelators is a <strong>native ecological function</strong>.</p>
+<p>Experimentally, 0.5 mM Bip alone or 20 μg/mL PAβN (RND inhibitor) alone did not significantly inhibit growth, but their combination did, implicating RND efflux in protection. A <strong>ttgB deletion</strong> grew significantly slower than wild type in 0.5 mM Bip, and complementation restored growth. Expression of ttgB was induced by Bip exposure by ~<strong>7-fold</strong> (qRT-PCR). These findings are consistent with TtgC being essential to the functional efflux pathway, even though the experiments focused on the inner-membrane component. (henriquez2020resistancetobipyridyls pages 3-5)</p>
+<h3 id="34-phenol-tolerance-counterintuitive-phenotype-and-envelope-stress-interplay">3.4 Phenol tolerance: counterintuitive phenotype and envelope stress interplay</h3>
+<p>In a KT2440-isogenic background (PaW85), genetic inactivation of <strong>ttgABC/ttgC</strong> produced an initially counterintuitive phenotype: disruption of the pump <strong>enhanced phenol tolerance</strong> (in both wild-type and colR mutant backgrounds), and phenol tolerance effects were evident in <strong>growing cells</strong> but not under starvation. (putrins2010theimpactof pages 1-2, putrins2010theimpactof pages 5-6)</p>
+<p>Quantitative details include: phenol-tolerant derivatives appeared at ~<strong>10⁻⁴ mutants per cell</strong> during plating; exposure to <strong>50 mM phenol for 30 min</strong> reduced viability by ~<strong>4 orders of magnitude</strong> across strains; and β-galactosidase release assays indicated substantial cell lysis/leakiness changes in specific genetic backgrounds (e.g., ~15% release on glucose and ~30% with 1 mM phenol in colR mutants). (putrins2010theimpactof pages 4-5, putrins2010theimpactof pages 5-6)</p>
+<p>These data indicate that TtgABC (and by extension TtgC) can influence phenol responses through growth-state-dependent envelope physiology—possibly reflecting tradeoffs between efflux activity, membrane status, and cell division control rather than simple detoxification.</p>
+<h2 id="4-regulation-and-pathway-context">4. Regulation and pathway context</h2>
+<h3 id="41-local-control-by-the-drug-binding-repressor-ttgr">4.1 Local control by the drug-binding repressor TtgR</h3>
+<p>The <strong>TtgR</strong> regulator is a local transcriptional repressor controlling <strong>ttgABC</strong>, and its derepression can be induced by antibiotics in DOT-T1E (antibiotic-dependent induction). This provides a mechanistic basis for substrate-responsive efflux activation and explains why ttgR loss-of-function or altered-effector-binding variants yield MDR via TtgABC overexpression. (teran2003antibioticdependentinductionof pages 1-2, puja2020coordinateoverexpressionof pages 1-2)</p>
+<h3 id="42-systems-level-regulation-ppers-and-colrs">4.2 Systems-level regulation: PpeRS and ColRS</h3>
+<p>In KT2440 MDR evolution/selection experiments, <strong>PpeRS</strong> is described as a positive regulator controlling <strong>both TtgABC and ParXY/TtgC</strong>, indicating that efflux capacity is integrated into broader stress-response regulatory circuits. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<p>Phenol stress genetics support interaction between <strong>ColRS</strong> envelope stress signaling and the TtgABC pump: inactivation of TtgABC enhanced phenol tolerance but did not rescue the glucose-dependent autolysis phenotype of colR mutants, suggesting <strong>distinct stress pathways</strong>. (putrins2010theimpactof pages 1-2, putrins2010theimpactof pages 5-6)</p>
+<h2 id="5-recent-developments-prioritizing-20232024">5. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="51-2023-efflux-network-model-and-shared-use-of-ttgc">5.1 2023: efflux network model and shared use of TtgC</h3>
+<p>Stein et al. (Dec 2023) provide evidence supporting the idea that RND systems in KT2440 function as a network with overlapping components: ParXY is “expected to utilize” outer membrane components of other systems, <strong>specifically TtgC</strong>. Under iron limitation induced with <strong>1 mM bipyridyl</strong>, the ΔpmΔparX triple mutant had growth <strong>AUC ~40%</strong> of the Δpm strain, consistent with efflux network effects on growth under chelator stress. (stein2023therndefflux pages 2-5)</p>
+<p>A KT2440-focused dissertation (Jan 2023) synthesizes experimental work and concludes that <strong>TtgABC is a multidrug tripartite efflux pump whose substrate spectrum does not include pyoverdine</strong>, clarifying functional scope in the context of siderophore biology. (stein2023navigatingpyoverdineand pages 1-8)</p>
+<h3 id="52-2024-broader-authoritative-context-on-resistance-mechanisms">5.2 2024: broader authoritative context on resistance mechanisms</h3>
+<p>A 2024 <em>FEMS Microbiology Reviews</em> article on genomic diversity and antibiotic resistance in the <em>P. putida</em> group provides an up-to-date, authoritative synthesis emphasizing efflux-mediated resistance as a key mechanism in this clade and situating classical systems like TtgABC within modern population-genomics frameworks. (Note: the retrieved excerpt mainly provides contextual framing and canonical citations rather than new TtgC mechanistic experiments.) (udaondo2024unravelingthegenomic pages retrieved; no direct evidence snippet extracted into context IDs)</p>
+<p>A 2024 review on efflux pumps as targets for biofilm inhibition summarizes how efflux can intersect with biofilm formation and highlights efflux pump inhibitors as a strategy; while not KT2440-specific, it supports current translational interest in targeting efflux systems broadly. (ren2024effluxpumpsas pages retrieved; no direct evidence snippet extracted into context IDs)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-biotechnology-tolerance-engineering-for-biofuel-production-efflux-as-a-chassis-trait">6.1 Biotechnology: tolerance engineering for biofuel production (efflux as a chassis trait)</h3>
+<p>Efflux pumps are actively engineered to increase microbial tolerance to toxic products and improve process robustness. Basler et al. (2018) demonstrate that controlled expression of TtgABC (including TtgC) in <em>P. putida</em> DOT-T1E improves survival under highly toxic short-chain alcohol concentrations and increases <strong>n-butanol efflux</strong>, supporting practical implementation of efflux-based tolerance engineering.</p>
+<p>Quantitative application-relevant results include:<br />
+- <strong>≥10-fold</strong> increased survival after 2 h exposure to <strong>1.9% n-butanol</strong>, <strong>2.2% isobutanol</strong>, <strong>1.5% isoprenol</strong>, <strong>0.7% isopentanol</strong>. (basler2018apseudomonasputida pages 3-6)<br />
+- GC-FID evidence of active efflux: induced cells had <strong>5.8% higher extracellular n-butanol</strong> and an estimated efflux increase of <strong>~2.9×10⁻⁸ mol gDW⁻¹ s⁻¹</strong> versus non-induced. (basler2018apseudomonasputida pages 2-3)</p>
+<p>Although this is DOT-T1E (not KT2440), it is directly informative for functional annotation because it demonstrates that TtgABC’s transport capacity extends beyond classical antibiotics/solvents into industrially relevant alcohols, and because TtgC is an essential component of the expressed complex. (basler2018apseudomonasputida pages 1-2, basler2018apseudomonasputida pages 2-3)</p>
+<h3 id="62-clinical-and-environmental-microbiology-mdr-emergence">6.2 Clinical and environmental microbiology: MDR emergence</h3>
+<p>KT2440-derived MDR mutants and MDR clinical strains have been reported to overexpress efflux pumps, including TtgABC, underlining the relevance of this system to antibiotic resistance risk assessment in <em>P. putida</em> group members used as environmental/biotech organisms. (puja2020coordinateoverexpressionof pages 1-2)</p>
+<h2 id="7-expert-interpretation-and-analysis">7. Expert interpretation and analysis</h2>
+<ol>
+<li>
+<p><strong>Most defensible primary function</strong>: For KT2440, the strongest combined evidence supports a <strong>detoxification/intrinsic resistance function</strong>, with physiologically meaningful substrates including antibiotics and bipyridyl-family chelators (soil-relevant), and contributions to solvent tolerance. (martinez‐garcia2011engineeringmultiplegenomic pages 8-9, henriquez2020resistancetobipyridyls pages 3-5, martinez‐garcia2011engineeringmultiplegenomic pages 6-8)</p>
+</li>
+<li>
+<p><strong>What ttgC contributes mechanistically</strong>: TtgC is best annotated as the <strong>outer membrane channel</strong> that completes the trans-envelope efflux route. It is necessary for the pump to expel substrates fully out of the cell envelope; therefore, even when experiments delete ttgA or ttgB, TtgC remains essential to interpret the functional complex. (puja2020coordinateoverexpressionof pages 1-2, daniels2009adaptivedrugresistance pages 2-4)</p>
+</li>
+<li>
+<p><strong>Networked efflux architecture</strong>: 2023 evidence that ParXY may use <strong>TtgC</strong> indicates that TtgC is potentially a <strong>shared outer membrane exit duct</strong> in KT2440, a concept that affects how “substrates of TtgC” should be interpreted: some exported compounds may depend on TtgC even when the inner-membrane transporter differs. (stein2023therndefflux pages 2-5)</p>
+</li>
+<li>
+<p><strong>Phenol phenotype nuance</strong>: The observation that TtgABC inactivation increases phenol tolerance implies that efflux systems can contribute to toxicity indirectly (e.g., by affecting membrane physiology, proton motive force demands, or regulatory state). This underscores the importance of treating efflux pump function as part of a <strong>systems-level envelope stress program</strong>, not solely as a detoxification valve. (putrins2010theimpactof pages 1-2, putrins2010theimpactof pages 5-6)</p>
+</li>
+</ol>
+<h2 id="8-key-statistics-and-data-selected">8. Key statistics and data (selected)</h2>
+<ul>
+<li><strong>Ampicillin high-dose survivor frequency (KT2440)</strong>: WT ~10⁻⁶ vs ΔttgA ~10⁻⁹ at 100 mg/mL ampicillin. (martinez‐garcia2011engineeringmultiplegenomic pages 8-9)</li>
+<li><strong>TtgR-linked overexpression in MDR mutants (KT2440)</strong>: ttgA up <strong>3.8–5.4×</strong>. (puja2020coordinateoverexpressionof pages 1-2)</li>
+<li><strong>Bipyridyl response (KT2440)</strong>: ttgB expression induced ~<strong>7-fold</strong> after Bip exposure; growth inhibition observed for ttgB deletion at <strong>0.5 mM</strong> Bip; synergy with PAβN at <strong>20 μg/mL</strong>. (henriquez2020resistancetobipyridyls pages 3-5)</li>
+<li><strong>Phenol killing (KT2440-isogenic)</strong>: <strong>50 mM</strong> phenol for 30 min reduces viability by ~<strong>10⁴-fold</strong>. (putrins2010theimpactof pages 5-6)</li>
+<li><strong>Efflux quantification (DOT-T1E)</strong>: estimated increase in n-butanol efflux <strong>~2.9×10⁻⁸ mol gDW⁻¹ s⁻¹</strong> with TtgABC expression; <strong>5.8%</strong> increase in extracellular n-butanol. (basler2018apseudomonasputida pages 2-3)</li>
+</ul>
+<h2 id="9-visual-evidence-from-primary-literature">9. Visual evidence from primary literature</h2>
+<p>Putrinš et al. (2010) provide multiple figure panels documenting phenol tolerance phenotypes and cellular effects of <strong>ttgC</strong> loss (plate assays, CFU curves, membrane leakiness proxy, and flow cytometry). These figures support the claims that ttgC/TtgABC inactivation changes phenol tolerance and affects growth-state-dependent cellular responses. (putrins2010theimpactof media 1dd9576c, putrins2010theimpactof media 251607fb, putrins2010theimpactof media 44cbf323, putrins2010theimpactof media 98987297)</p>
+<h2 id="10-consolidated-evidence-table">10. Consolidated evidence table</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/annotation</th>
+<th>Evidence type</th>
+<th>Key details (substrates, localization, regulation, phenotype)</th>
+<th>Quantitative data</th>
+<th>Strain/context</th>
+<th>Reference (authors year journal)</th>
+<th>URL</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ttgC / PP_1384 / UniProt Q88N32 encodes the outer membrane factor (OMF) of the TtgABC tripartite RND efflux pump</strong></td>
+<td>Experiment + review-supported annotation</td>
+<td>TtgABC is described as a tripartite RND system with TtgA adaptor/MFP, TtgB inner-membrane RND transporter, and <strong>TtgC outer-membrane channel/factor</strong>; substrates include antibiotics, flavonoids, aromatic solvents</td>
+<td>TtgR alterations caused <strong>3.8–5.4× ttgA overexpression</strong> in MDR mutants</td>
+<td><strong>KT2440</strong></td>
+<td>Puja et al. 2020 <em>Environmental Microbiology</em></td>
+<td>https://doi.org/10.1111/1462-2920.15200</td>
+<td>(puja2020coordinateoverexpressionof pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>TtgABC is a multidrug/solvent efflux system; TtgC loss alters phenol response</strong></td>
+<td>Experiment</td>
+<td>miniTn5 suppressor screen in a <strong>colR-deficient isogenic strain to KT2440</strong> recovered multiple insertions in <strong>ttgABC</strong>; <strong>ttgC</strong> annotated as “multidrug/solvent RND outer membrane protein”; disruption of ttgABC/ttgC increased phenol tolerance during growth; figures include plate assays, CFU assays, β-galactosidase release, and flow cytometry</td>
+<td>Phenol-tolerant mutants arose at <strong>~10^-4 per cell</strong>; <strong>50 mM phenol for 30 min</strong> reduced viable counts by <strong>~4 orders of magnitude</strong>; β-galactosidase release in colR mutants was <strong>~15%</strong> on glucose and <strong>~30% with 1 mM phenol</strong></td>
+<td><strong>PaW85, stated isogenic to sequenced KT2440</strong></td>
+<td>Putrinš et al. 2010 <em>BMC Microbiology</em></td>
+<td>https://doi.org/10.1186/1471-2180-10-110</td>
+<td>(putrins2010theimpactof pages 1-2, putrins2010theimpactof pages 5-6, putrins2010theimpactof pages 4-5, putrins2010theimpactof pages 8-9, putrins2010theimpactof media 1dd9576c)</td>
+</tr>
+<tr>
+<td><strong>In KT2440, the TtgABC pump accounts for a major share of intrinsic antibiotic resistance; ampicillin resistance maps strongly to this system</strong></td>
+<td>Experiment</td>
+<td>Deletion of <strong>ttgA</strong> used as functional proxy for loss of TtgABC; authors map much of the ampicillin-resistance phenotype to the <strong>ttgABC-encoded pump</strong>; strongest effects seen for quinolones, β-lactams, and chloramphenicol</td>
+<td>Survivor frequency on <strong>100 mg/mL ampicillin</strong>: wild type <strong>~10^-6</strong>, ΔttgA <strong>~10^-9</strong>; reported MIC shifts span <strong>10- to 1000-fold</strong> depending on drug/mutant; example MIC row excerpts show major drops for nalidixic acid and fleroxacin in ΔttgA</td>
+<td><strong>KT2440</strong></td>
+<td>Martínez-García &amp; de Lorenzo 2011 <em>Environmental Microbiology</em></td>
+<td>https://doi.org/10.1111/j.1462-2920.2011.02538.x</td>
+<td>(martinez‐garcia2011engineeringmultiplegenomic pages 8-9, martinez‐garcia2011engineeringmultiplegenomic pages 6-8)</td>
+</tr>
+<tr>
+<td><strong>TtgABC detoxifies bipyridyl-family metal chelators in KT2440</strong></td>
+<td>Experiment</td>
+<td>A <strong>ttgB</strong> deletion mutant was hypersensitive to <strong>2,2'-bipyridyl</strong>; complementation restored growth; data support native function in extrusion of toxic bipyridyl derivatives; phenotype not explained solely by iron starvation</td>
+<td><strong>0.5 mM Bip</strong> plus <strong>20 μg/mL PAβN</strong> markedly impaired growth; <strong>ttgB expression upregulated ~7-fold</strong> after Bip exposure</td>
+<td><strong>KT2440</strong></td>
+<td>Henríquez et al. 2020 <em>Frontiers in Microbiology</em></td>
+<td>https://doi.org/10.3389/fmicb.2020.01974</td>
+<td>(henriquez2020resistancetobipyridyls pages 3-5)</td>
+</tr>
+<tr>
+<td><strong>TtgABC can export short-chain alcohols; this expands the functional substrate scope of the pump containing TtgC</strong></td>
+<td>Experiment + application</td>
+<td>In engineered expression experiments, TtgABC from <em>P. putida</em> DOT-T1E improved tolerance/survival in <strong>n-butanol, isobutanol, isoprenol, isopentanol</strong>; TtgC is part of the expressed tripartite pump; proposed for biofuel tolerance engineering</td>
+<td>Induced cells showed <strong>5.8% higher extracellular n-butanol</strong> and an estimated efflux increase of <strong>~2.9×10^-8 mol gDW^-1 s^-1</strong>; survival improved <strong>at least tenfold</strong> in <strong>1.9% n-butanol, 2.2% isobutanol, 1.5% isoprenol, 0.7% isopentanol</strong> over 2 h</td>
+<td><strong>DOT-T1E</strong></td>
+<td>Basler et al. 2018 <em>Biotechnology for Biofuels</em></td>
+<td>https://doi.org/10.1186/s13068-018-1133-9</td>
+<td>(basler2018apseudomonasputida pages 1-2, basler2018apseudomonasputida pages 2-3, basler2018apseudomonasputida pages 3-6, basler2018apseudomonasputida pages 8-9)</td>
+</tr>
+<tr>
+<td><strong>TtgR and PpeRS regulate efflux systems involving TtgC; ttgR mutations drive MDR</strong></td>
+<td>Experiment</td>
+<td><strong>ttgR</strong> mutations derepress TtgABC; <strong>PpeRS</strong> positively controls both <strong>TtgABC</strong> and <strong>ParXY/TtgC</strong>; TtgABC exports carbenicillin, chloramphenicol, tetracycline, erythromycin, nalidixic acid, flavonoids, and aromatic solvents</td>
+<td>ttgR mutant alleles yielded <strong>3.8–5.4× ttgA overexpression</strong></td>
+<td><strong>KT2440</strong></td>
+<td>Puja et al. 2020 <em>Environmental Microbiology</em></td>
+<td>https://doi.org/10.1111/1462-2920.15200</td>
+<td>(puja2020coordinateoverexpressionof pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>Recent KT2440 work suggests TtgC can serve as the OMF for other tripartite systems, notably ParXY</strong></td>
+<td>Experiment + inference</td>
+<td>2023 work on ParXY states it is <strong>expected to utilize outer-membrane components of other systems, specifically TtgC</strong>; supports a network model of overlapping tripartite pumps in KT2440 rather than strictly one-to-one channel usage</td>
+<td>Under <strong>1 mM Bip</strong>, ΔpmΔparX triple mutant had growth <strong>AUC ~40% of Δpm</strong>, whereas pyoverdine non-producer 3E2 was <strong>~2% of Δpm</strong></td>
+<td><strong>KT2440</strong></td>
+<td>Stein et al. 2023 <em>Microbiology Spectrum</em></td>
+<td>https://doi.org/10.1128/spectrum.02300-23</td>
+<td>(stein2023therndefflux pages 2-5)</td>
+</tr>
+<tr>
+<td><strong>Current synthesis from 2023 literature: TtgABC is broad-spectrum but does not export pyoverdine</strong></td>
+<td>Dissertation synthesis based on primary experiments</td>
+<td>KT2440-focused dissertation concludes TtgABC is a major multidrug tripartite efflux pump with substrates including solvents, antibiotics, bile salts/deoxycholate, and bipyridyls, but <strong>not pyoverdine</strong>; supports annotation of TtgC as the OMF of a broad-spectrum detoxification system</td>
+<td>No single summary metric reported in excerpt; compiles prior experiments including bipyridyl resistance chapter</td>
+<td><strong>KT2440</strong></td>
+<td>Stein 2023 Dissertation</td>
+<td>https://doi.org/10.5282/edoc.32605</td>
+<td>(stein2023navigatingpyoverdineand pages 31-34, stein2023navigatingpyoverdineand pages 49-52, stein2023navigatingpyoverdineand pages 1-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles compact, source-linked evidence that ttgC/PP_1384 encodes the outer membrane factor of the TtgABC RND efflux pump in Pseudomonas putida KT2440. It highlights the strongest experimental support for localization, substrates, regulation, mutant phenotypes, and recent network-level interpretations involving TtgC.</em></p>
+<h2 id="11-reference-urls-with-publication-dates">11. Reference URLs (with publication dates)</h2>
+<p>URLs and dates are included inline above for the core sources used in evidence extraction:<br />
+- Puja et al., <strong>Sep 2020</strong>, <em>Environmental Microbiology</em>: https://doi.org/10.1111/1462-2920.15200 (puja2020coordinateoverexpressionof pages 1-2)<br />
+- Putrinš et al., <strong>Apr 2010</strong>, <em>BMC Microbiology</em>: https://doi.org/10.1186/1471-2180-10-110 (putrins2010theimpactof pages 1-2)<br />
+- Martínez-García &amp; de Lorenzo, <strong>Aug 2011</strong>, <em>Environmental Microbiology</em>: https://doi.org/10.1111/j.1462-2920.2011.02538.x (martinez‐garcia2011engineeringmultiplegenomic pages 8-9)<br />
+- Henríquez et al., <strong>Aug 2020</strong>, <em>Frontiers in Microbiology</em>: https://doi.org/10.3389/fmicb.2020.01974 (henriquez2020resistancetobipyridyls pages 3-5)<br />
+- Basler et al., <strong>May 2018</strong>, <em>Biotechnology for Biofuels</em>: https://doi.org/10.1186/s13068-018-1133-9 (basler2018apseudomonasputida pages 1-2)<br />
+- Stein et al., <strong>Dec 2023</strong>, <em>Microbiology Spectrum</em>: https://doi.org/10.1128/spectrum.02300-23 (stein2023therndefflux pages 2-5)<br />
+- Stein, <strong>Jan 2023</strong>, dissertation: https://doi.org/10.5282/edoc.32605 (stein2023navigatingpyoverdineand pages 1-8)</p>
+<h2 id="12-practical-functional-annotation-statement-recommended">12. Practical functional annotation statement (recommended)</h2>
+<p><strong>ttgC (PP_1384; UniProt Q88N32)</strong> encodes a <strong>TolC/OprM-family outer membrane factor</strong> that forms the outer membrane channel of the <strong>TtgABC tripartite RND efflux system</strong> in <em>P. putida</em> KT2440. The system contributes to intrinsic and adaptive resistance by exporting diverse toxicants—including multiple antibiotics, aromatic solvents, and bipyridyl-family chelators—out of the cell envelope; it is regulated by the local repressor <strong>TtgR</strong> and integrated into broader stress-response regulation (e.g., <strong>PpeRS</strong>, ColRS-linked envelope stress phenotypes). (puja2020coordinateoverexpressionof pages 1-2, martinez‐garcia2011engineeringmultiplegenomic pages 8-9, henriquez2020resistancetobipyridyls pages 3-5, stein2023therndefflux pages 2-5)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(puja2020coordinateoverexpressionof pages 1-2): Hélène Puja, Gwendoline Comment, Sophie Chassagne, Patrick Plésiat, and Katy Jeannot. Coordinate overexpression of two <scp>rnd</scp> efflux systems, <scp>parxy</scp> and <scp>ttgabc</scp>, is responsible for multidrug resistance in <i>pseudomonas putida</i>. Sep 2020. URL: https://doi.org/10.1111/1462-2920.15200, doi:10.1111/1462-2920.15200. This article has 9 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(henriquez2020resistancetobipyridyls pages 3-5): Tania Henríquez, Nicola Victoria Stein, and Heinrich Jung. Resistance to bipyridyls mediated by the ttgabc efflux system in pseudomonas putida kt2440. Frontiers in Microbiology, Aug 2020. URL: https://doi.org/10.3389/fmicb.2020.01974, doi:10.3389/fmicb.2020.01974. This article has 14 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(daniels2009adaptivedrugresistance pages 2-4): Craig Daniels and Juan L. Ramos. Adaptive drug resistance mediated by root-nodulation-cell division efflux pumps. Clinical microbiology and infection : the official publication of the European Society of Clinical Microbiology and Infectious Diseases, 15 Suppl 1:32-6, Jan 2009. URL: https://doi.org/10.1111/j.1469-0691.2008.02693.x, doi:10.1111/j.1469-0691.2008.02693.x. This article has 39 citations.</p>
+</li>
+<li>
+<p>(stein2023therndefflux pages 2-5): Nicola Victoria Stein, Michelle Eder, Fabienne Burr, Sarah Stoss, Lorenz Holzner, Hans-Henning Kunz, and Heinrich Jung. The rnd efflux system parxy affects siderophore secretion in <i>pseudomonas putida</i> kt2440. Dec 2023. URL: https://doi.org/10.1128/spectrum.02300-23, doi:10.1128/spectrum.02300-23. This article has 7 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 31-34): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof pages 4-5): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2011engineeringmultiplegenomic pages 8-9): Esteban Martínez‐García and Víctor de Lorenzo. Engineering multiple genomic deletions in gram‐negative bacteria: analysis of the multi‐resistant antibiotic profile of <i>pseudomonas putida</i> kt2440. Environmental Microbiology, 13(10):2702-2716, Aug 2011. URL: https://doi.org/10.1111/j.1462-2920.2011.02538.x, doi:10.1111/j.1462-2920.2011.02538.x. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez‐garcia2011engineeringmultiplegenomic pages 6-8): Esteban Martínez‐García and Víctor de Lorenzo. Engineering multiple genomic deletions in gram‐negative bacteria: analysis of the multi‐resistant antibiotic profile of <i>pseudomonas putida</i> kt2440. Environmental Microbiology, 13(10):2702-2716, Aug 2011. URL: https://doi.org/10.1111/j.1462-2920.2011.02538.x, doi:10.1111/j.1462-2920.2011.02538.x. This article has 427 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof pages 5-6): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof pages 1-2): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(teran2003antibioticdependentinductionof pages 1-2): Wilson Terán, Antonia Felipe, Ana Segura, Antonia Rojas, Juan-Luis Ramos, and María-Trinidad Gallegos. Antibiotic-dependent induction of pseudomonas putida dot-t1e ttgabc efflux pump is mediated by the drug binding repressor ttgr. Antimicrobial Agents and Chemotherapy, 47:3067-3072, Oct 2003. URL: https://doi.org/10.1128/aac.47.10.3067-3072.2003, doi:10.1128/aac.47.10.3067-3072.2003. This article has 179 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 1-8): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+<li>
+<p>(basler2018apseudomonasputida pages 3-6): Georg Basler, Mitchell Thompson, Danielle Tullman-Ercek, and Jay Keasling. A pseudomonas putida efflux pump acts on short-chain alcohols. Biotechnology for Biofuels, May 2018. URL: https://doi.org/10.1186/s13068-018-1133-9, doi:10.1186/s13068-018-1133-9. This article has 68 citations.</p>
+</li>
+<li>
+<p>(basler2018apseudomonasputida pages 2-3): Georg Basler, Mitchell Thompson, Danielle Tullman-Ercek, and Jay Keasling. A pseudomonas putida efflux pump acts on short-chain alcohols. Biotechnology for Biofuels, May 2018. URL: https://doi.org/10.1186/s13068-018-1133-9, doi:10.1186/s13068-018-1133-9. This article has 68 citations.</p>
+</li>
+<li>
+<p>(basler2018apseudomonasputida pages 1-2): Georg Basler, Mitchell Thompson, Danielle Tullman-Ercek, and Jay Keasling. A pseudomonas putida efflux pump acts on short-chain alcohols. Biotechnology for Biofuels, May 2018. URL: https://doi.org/10.1186/s13068-018-1133-9, doi:10.1186/s13068-018-1133-9. This article has 68 citations.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof media 1dd9576c): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof media 251607fb): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof media 44cbf323): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof media 98987297): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(putrins2010theimpactof pages 8-9): Marta Putrinš, Heili Ilves, Liisa Lilje, Maia Kivisaar, and Rita Hõrak. The impact of colrs two-component system and ttgabc efflux pump on phenol tolerance of pseudomonas putida becomes evident only in growing bacteria. BMC Microbiology, 10:110-110, Apr 2010. URL: https://doi.org/10.1186/1471-2180-10-110, doi:10.1186/1471-2180-10-110. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(basler2018apseudomonasputida pages 8-9): Georg Basler, Mitchell Thompson, Danielle Tullman-Ercek, and Jay Keasling. A pseudomonas putida efflux pump acts on short-chain alcohols. Biotechnology for Biofuels, May 2018. URL: https://doi.org/10.1186/s13068-018-1133-9, doi:10.1186/s13068-018-1133-9. This article has 68 citations.</p>
+</li>
+<li>
+<p>(stein2023navigatingpyoverdineand pages 49-52): Nicola Victoria Maria Stein. Navigating pyoverdine and beyond: the role of tripartite efflux pumps in pseudomonas putida kt2440. Dissertation, Jan 2023. URL: https://doi.org/10.5282/edoc.32605, doi:10.5282/edoc.32605. This article has 1 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>stein2023therndefflux pages 2-5</li>
+<li>putrins2010theimpactof pages 4-5</li>
+<li>puja2020coordinateoverexpressionof pages 1-2</li>
+<li>henriquez2020resistancetobipyridyls pages 3-5</li>
+<li>stein2023navigatingpyoverdineand pages 1-8</li>
+<li>basler2018apseudomonasputida pages 3-6</li>
+<li>basler2018apseudomonasputida pages 2-3</li>
+<li>putrins2010theimpactof pages 5-6</li>
+<li>putrins2010theimpactof pages 1-2</li>
+<li>basler2018apseudomonasputida pages 1-2</li>
+<li>daniels2009adaptivedrugresistance pages 2-4</li>
+<li>stein2023navigatingpyoverdineand pages 31-34</li>
+<li>teran2003antibioticdependentinductionof pages 1-2</li>
+<li>putrins2010theimpactof pages 8-9</li>
+<li>basler2018apseudomonasputida pages 8-9</li>
+<li>stein2023navigatingpyoverdineand pages 49-52</li>
+<li>https://doi.org/10.1111/1462-2920.15200</li>
+<li>https://doi.org/10.1186/1471-2180-10-110</li>
+<li>https://doi.org/10.1111/j.1462-2920.2011.02538.x</li>
+<li>https://doi.org/10.3389/fmicb.2020.01974</li>
+<li>https://doi.org/10.1186/s13068-018-1133-9</li>
+<li>https://doi.org/10.1128/spectrum.02300-23</li>
+<li>https://doi.org/10.5282/edoc.32605</li>
+<li>https://doi.org/10.1111/1462-2920.15200,</li>
+<li>https://doi.org/10.3389/fmicb.2020.01974,</li>
+<li>https://doi.org/10.1111/j.1469-0691.2008.02693.x,</li>
+<li>https://doi.org/10.1128/spectrum.02300-23,</li>
+<li>https://doi.org/10.5282/edoc.32605,</li>
+<li>https://doi.org/10.1186/1471-2180-10-110,</li>
+<li>https://doi.org/10.1111/j.1462-2920.2011.02538.x,</li>
+<li>https://doi.org/10.1128/aac.47.10.3067-3072.2003,</li>
+<li>https://doi.org/10.1186/s13068-018-1133-9,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N32
+gene_symbol: ttgC
+product_type: PROTEIN
+status: DRAFT
+aliases:
+  - PP_1384
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  ttgC encodes a 484-aa outer membrane lipoprotein of the outer membrane factor
+  (OMF) family that serves as the outer membrane channel of RND-type efflux
+  systems in Pseudomonas putida KT2440. UniProt and comparative genomics place it
+  in the TtgABC efflux pump, while genetic and regulatory studies in KT2440 link
+  ttgABC/TtgC to phenol responses, stress phenotypes, and antibiotic-resistant
+  regulatory mutants. More recent work indicates that TtgC can also be shared
+  by the ParXY/TtgC efflux system in multidrug-resistant
+  P. putida isolates. The strongest conservative functional summary is therefore
+  an outer membrane efflux transporter component contributing to transmembrane
+  export of toxic compounds, including antibiotics and aromatic solvent-related
+  stresses, with exact substrate preference depending on regulatory and pump
+  context.
+existing_annotations:
+  - term:
+      id: GO:0009279
+      label: cell outer membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    review:
+      summary: &gt;-
+        Accept. TtgC is an OMF-family outer membrane lipoprotein, and UniProt
+        explicitly places it in the cell outer membrane. This is the most
+        specific supported localization among the current GOA terms.
+      action: ACCEPT
+      reason: &gt;-
+        The reviewed UniProt entry describes TtgC as a probable efflux pump outer
+        membrane protein with cell-outer-membrane localization and lipid
+        anchoring, which matches the expected architecture of tripartite RND
+        efflux systems.
+      supported_by:
+        - reference_id: file:PSEPK/ttgC/ttgC-uniprot.txt
+          supporting_text: &#34;Cell outer membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}.&#34;
+  - term:
+      id: GO:0015562
+      label: efflux transmembrane transporter activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        Accept. The best-supported molecular function for TtgC is participation
+        in efflux transport across the cell envelope as the outer membrane
+        channel of RND transporter systems.
+      action: ACCEPT
+      reason: &gt;-
+        Multiple lines of evidence support efflux function in KT2440. TtgABC is
+        described as the major multidrug efflux pump in KT2440, ttgC abundance
+        rises during phenol stress, and TtgC can also partner with ParXY in
+        multidrug-resistant P. putida strains. Although the exact substrate range
+        is context dependent, efflux transporter activity is the correct core
+        molecular-function summary.
+      supported_by:
+        - reference_id: file:PSEPK/ttgC/ttgC-uniprot.txt
+          supporting_text: &#34;Probable outer membrane component of the TtgABC efflux pump with unknown specificity.&#34;
+        - reference_id: PMID:24907323
+          supporting_text: &#34;ttgA, ttgB, and ttgC, which code for the major multidrug efflux pump TtgABC in P. putida KT2440&#34;
+        - reference_id: PMID:32840000
+          supporting_text: &#34;TtgABC and ParXY/TtgC are both under the positive control of a two-component system, PpeRS&#34;
+        - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+          supporting_text: &#34;The gene ttgC in Pseudomonas putida KT2440 encodes the outer membrane factor (OMF) of the tripartite RND efflux pump TtgABC&#34;
+          reference_section_type: LITERATURE_REVIEW
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This annotation is too generic. TtgC localizes specifically to the cell
+        outer membrane, so the broader parent term membrane adds little value.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        GO:0016020 is a high-level parent term that is superseded here by the
+        more informative and better supported GO:0009279 cell outer membrane.
+      supported_by:
+        - reference_id: file:PSEPK/ttgC/ttgC-uniprot.txt
+          supporting_text: &#34;Cell outer membrane {ECO:0000305}; Lipid-anchor {ECO:0000255|PROSITE-ProRule:PRU00303}.&#34;
+  - term:
+      id: GO:0022857
+      label: transmembrane transporter activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        This parent transporter term is directionally correct but redundant once
+        the more specific efflux transporter activity annotation is retained.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        The available evidence specifically supports export/efflux rather than
+        generic transmembrane transporter activity, so GO:0015562 is the more
+        informative annotation.
+      supported_by:
+        - reference_id: PMID:24907323
+          supporting_text: &#34;major multidrug efflux pump TtgABC&#34;
+  - term:
+      id: GO:0055085
+      label: transmembrane transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      summary: &gt;-
+        Accept. Even though the substrate spectrum is broader than a single
+        antibiotic or solvent term, TtgC is clearly involved in transmembrane
+        export processes mediated by RND efflux systems.
+      action: ACCEPT
+      reason: &gt;-
+        KT2440 data connect ttgC/TtgABC to phenol adaptation, antibiotic
+        resistance, and multidrug efflux. The broad biological-process term is
+        conservative but justified until a single substrate-specific process can
+        be supported without over-annotation.
+      supported_by:
+        - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+          supporting_text: &#34;In a KT2440-isogenic background (PaW85), genetic inactivation of **ttgABC/ttgC** produced an initially counterintuitive phenotype: disruption of the pump **enhanced phenol tolerance**&#34;
+          reference_section_type: LITERATURE_REVIEW
+        - reference_id: PMID:24907323
+          supporting_text: &#34;demonstrated the involvement of efflux pump TtgABC in the stress resistance and biofilm formation phenotypes of the ECF-10 mutant strain&#34;
+        - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+          supporting_text: &#34;In KT2440 MDR evolution/selection experiments, **PpeRS** is described as a positive regulator controlling **both TtgABC and ParXY/TtgC**&#34;
+          reference_section_type: LITERATURE_REVIEW
+        - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+          supporting_text: &#34;the primary biological role of the TtgABC/TtgC system is detoxification and intrinsic resistance against multiple compound classes, including antibiotics, aromatic hydrocarbons/solvents, and specialized metabolites&#34;
+          reference_section_type: LITERATURE_REVIEW
+core_functions:
+  - description: &gt;-
+      Outer membrane efflux transporter activity as the OMF channel of RND efflux
+      systems, primarily TtgABC and in some multidrug-resistant contexts
+      ParXY/TtgC. TtgC contributes to toxic-compound tolerance and stress responses
+      through increased efflux capacity when ttgABC is induced or derepressed.
+    molecular_function:
+      id: GO:0015562
+      label: efflux transmembrane transporter activity
+    directly_involved_in:
+      - id: GO:0055085
+        label: transmembrane transport
+    locations:
+      - id: GO:0009279
+        label: cell outer membrane
+    supported_by:
+      - reference_id: file:PSEPK/ttgC/ttgC-uniprot.txt
+        supporting_text: &#34;Probable outer membrane component of the TtgABC efflux pump with unknown specificity.&#34;
+      - reference_id: PMID:24907323
+        supporting_text: &#34;ttgA, ttgB, and ttgC, which code for the major multidrug efflux pump TtgABC in P. putida KT2440&#34;
+        reference_section_type: ABSTRACT
+      - reference_id: PMID:32840000
+        supporting_text: &#34;In addition to TtgABC, mutants of the second type such as HPG-5 were found to upregulate a novel RND pump, dubbed ParXY/TtgC&#34;
+        reference_section_type: ABSTRACT
+      - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+        supporting_text: &#34;In a KT2440-isogenic background (PaW85), genetic inactivation of **ttgABC/ttgC** produced an initially counterintuitive phenotype: disruption of the pump **enhanced phenol tolerance**&#34;
+        reference_section_type: LITERATURE_REVIEW
+      - reference_id: PMID:24907323
+        supporting_text: &#34;demonstrated the involvement of efflux pump TtgABC in the stress resistance and biofilm formation phenotypes of the ECF-10 mutant strain&#34;
+        reference_section_type: ABSTRACT
+      - reference_id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+        supporting_text: &#34;In KT2440 MDR evolution/selection experiments, **PpeRS** is described as a positive regulator controlling **both TtgABC and ParXY/TtgC**&#34;
+        reference_section_type: LITERATURE_REVIEW
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms.
+    findings:
+      - statement: InterPro2GO supplies family/domain-based automated annotations
+          that require curator review against the specific TtgC outer-membrane factor context.
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.
+    findings:
+      - statement: UniProt subcellular-location mapping provides automated cellular-component
+          annotations based on reviewed-entry localization vocabulary.
+  - id: file:PSEPK/ttgC/ttgC-uniprot.txt
+    title: UniProtKB reviewed entry for probable efflux pump outer membrane protein TtgC
+    findings:
+      - statement: UniProt identifies Q88N32 as the probable outer-membrane component
+          of the TtgABC efflux pump with outer-membrane and lipid-anchor features.
+  - id: PMID:12743835
+    title: Comparative genomic analysis of solvent extrusion pumps in Pseudomonas strains exhibiting different degrees of solvent tolerance.
+    findings:
+      - statement: Comparative genomic analysis places TtgABC among solvent-extrusion
+          pumps in Pseudomonas.
+  - id: PMID:24907323
+    title: Knockout of extracytoplasmic function sigma factor ECF-10 affects stress resistance and biofilm formation in Pseudomonas putida KT2440.
+    findings:
+      - statement: The KT2440 ECF-10 study describes ttgABC as a major multidrug
+          efflux pump affected by stress-regulatory perturbation.
+  - id: PMID:32840000
+    title: Coordinate overexpression of two RND efflux systems, ParXY and TtgABC, is responsible for multidrug resistance in Pseudomonas putida.
+    findings:
+      - statement: Multidrug-resistant P. putida data show TtgC can participate in
+          TtgABC-associated efflux and multidrug resistance.
+  - id: file:PSEPK/ttgC/ttgC-deep-research-falcon.md
+    title: Falcon deep research report for ttgC in Pseudomonas putida KT2440
+    findings:
+      - statement: Falcon synthesis identifies TtgC as the TtgABC outer-membrane
+          factor and highlights context-dependent substrate and pump pairing.
+suggested_questions:
+  - question: &gt;-
+      What are the physiologically dominant substrates of TtgC under native
+      KT2440 growth conditions: antibiotics, aromatic solvents, phenolic
+      compounds, or a broader toxic-compound spectrum?
+    experts:
+      - Ramos JL
+      - Overhage J
+      - Jeannot K
+  - question: &gt;-
+      Under which regulatory and environmental conditions does TtgC function with
+      TtgAB versus the ParXY pump in P. putida KT2440 and related strains?
+    experts:
+      - Overhage J
+      - Jeannot K
+suggested_experiments:
+  - description: &gt;-
+      Construct clean ttgC, ttgABC, and parXY mutants plus defined
+      complementation strains and quantify susceptibility to phenol, toluene,
+      quinolones, beta-lactams, chloramphenicol, and aminoglycosides.
+    hypothesis: &gt;-
+      TtgC is required for efficient export of multiple toxic compounds, but the
+      relative contribution of TtgABC versus ParXY/TtgC depends on the stress
+      condition and regulatory state.
+  - description: &gt;-
+      Measure intracellular accumulation and efflux kinetics of fluorescent or
+      radiolabeled antibiotics and aromatic compounds in wild type, ttgR mutants,
+      ppeRS-activated backgrounds, and ttgC knockouts.
+    hypothesis: &gt;-
+      Derepression of ttgABC or coordinated activation of ttgABC and parXY will
+      lower intracellular substrate accumulation in a TtgC-dependent manner.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

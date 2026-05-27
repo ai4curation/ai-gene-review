@@ -1,0 +1,26 @@
+# gacA notes
+
+## Identity and sequence context
+
+- The requested `gacA` locus in *Pseudomonas putida* KT2440 maps to UniProt `Q88FJ6`; UniProt records the gene name as `uvrY`, the locus tag as `PP_4099`, and the protein name as "Response regulator GacA (Global activator)." The protein is 212 aa long. [file:PSEPK/gacA/gacA-uniprot.txt "GN   Name=uvrY ... OrderedLocusNames=PP_4099 ... DE   RecName: Full=Response regulator GacA ... AltName: Full=Global activator"]
+- Domain architecture is consistent with a classic DNA-binding two-component response regulator: an N-terminal response-regulator receiver domain, a C-terminal LuxR-type helix-turn-helix DNA-binding domain, and a predicted phosphoacceptor Asp54. [file:PSEPK/gacA/gacA-uniprot.txt "FT   DOMAIN          3..119 /note=\"Response regulatory\" ... FT   DOMAIN          141..206 /note=\"HTH luxR-type\" ... FT   MOD_RES         54 /note=\"4-aspartylphosphate\""]
+
+## KT2440-focused functional evidence
+
+- The strongest direct KT2440 evidence places the Gac system upstream of adhesin expression and biofilm development. The lapA/lapF study states that "Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA" and concludes that "The two-component system GacS/GacA appears as a master regulator of the process" of biofilm formation in *P. putida*. [PMID:24488315 "Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA"] [PMID:24488315 "The two-component system GacS/GacA appears as a master regulator of the process"]
+- A KT2442 mutant screen recovered a `gacS` insertion as a moderate biofilm-defective mutant, reinforcing that the Gac system contributes to biofilm development in the KT2440/KT2442 lineage. [PMID:27190143 "A mutation in gacS, encoding the sensor element of the GacS/GacA two-component system, also had a moderate effect on biofilm formation"]
+- A KT2440 c-di-GMP regulatory-network study identified GacA among the global regulators needed for the high-c-di-GMP crinkly/biofilm phenotype. The discussion also states that in KT2440 the GacS/GacA system is essential for `rpoS` expression, which provides a plausible route by which this regulator affects broad lifestyle programs. [PMID:27489550 "Among the bacterial determinants found in this screen are the global transcriptional regulators GacA, AlgU and FleQ"] [PMID:27489550 "the two component system GacS/GacA is essential for the expression of rpoS in KT2440"]
+- A 2023 KT2440 study expanded the phenotype space beyond biofilm control and found that K1 type VI secretion system expression is positively regulated by GacS-GacA and opposed by RetS. [PMID:36748579 "Importantly, expression of the K1-T6SS gene cluster is positively regulated by the GacS-GacA two-component regulatory system (TCS) and repressed by the RetS sensor kinase, which inhibits this TCS"]
+
+## Broader Gac/Rsm interpretation
+
+- Reviews of the Gac/Rsm cascade describe GacA/UvrY-family proteins as phosphorelay-activated transcription regulators that induce small RNAs, antagonize Rsm/Csr proteins, and thereby reprogram social behavior and secondary metabolism. This is useful mechanistic context, but strain-specific outputs should not be transferred uncritically into KT2440 curation. [PMID:18047567 "the conserved GacS/GacA (BarA/UvrY) two-component system positively controls the expression of one to five genes specifying small RNAs"] [PMID:11768529 "GacS senses a still-unknown signal and activates, via a phosphorelay mechanism, the GacA transcription regulator, which in turn triggers the expression of target genes"]
+- Other *P. putida* strains show the same regulator controlling diverse downstream programs: quorum-sensing gene expression in WCS358, putisolvin biosynthesis in PCL1445, WLIP biosynthesis in RW10S2, and PHA accumulation in CA-3. These support the view that GacA is a pleiotropic lifestyle regulator, but they are secondary to the KT2440-specific biofilm and T6SS evidence. [PMID:15345437 "GacA positively regulating ppuI expression"] [PMID:16109938 "putisolvin biosynthesis of PCL1445 was found to be dependent on the GacA/GacS two-component signaling system"] [PMID:22544260 "Expression of wlpR is dependent on gacS"] [PMID:23291549 "gene homologues of the GacS/GacA-rsm small RNA (sRNA) regulatory cascade"]
+
+## Curation takeaways
+
+- Current GOA terms for phosphorelay signal transduction and transcription-related DNA binding are directionally correct.
+- `GO:0003677 DNA binding` is too broad to be a useful core annotation for this protein; `GO:0000156 phosphorelay response regulator activity` and `GO:0003700 DNA-binding transcription factor activity` are more informative.
+- The best supported KT2440-specific process term to add is `GO:1900192 positive regulation of single-species biofilm formation`.
+- K1-T6SS regulation is real and experimentally supported in KT2440, but I am treating it as secondary/non-core until direct GacA target promoters are mapped in this strain.
+- I did not find direct KT2440 evidence in the examined sources showing purified GacA binding a specific promoter or explicitly identifying the cognate `rsmY`/`rsmZ`-like promoters. Any direct promoter-binding language in the review should therefore stay conservative.

@@ -1,0 +1,2479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ureC1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ureC1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A060HK93" target="_blank" class="term-link">
+                        A0A060HK93
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nitrososphaera viennensis EN76</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ureC1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A060HK93" data-a="DESCRIPTION: ureC1 encodes the urease alpha catalytic subunit N..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ureC1 encodes the urease alpha catalytic subunit NVIE_014740 in Nitrososphaera viennensis EN76. It hydrolyzes imported urea intracellularly, supplying ammonia/ammonium for nitrogen metabolism and ammonia oxidation when urea is available.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009039" target="_blank" class="term-link">
+                                    GO:0009039
+                                </a>
+                            </span>
+                            <span class="term-label">urease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0009039" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. UreC is the catalytic alpha subunit of urease, EC 3.5.1.5.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt record names ureC1 as urease subunit alpha and assigns EC 3.5.1.5. NCBIfam TIGR01792 and PANTHER PTHR43440 support conserved urease alpha-subunit function. Falcon research also found organism-specific literature mapping NVIE_014740 to the regulated EN76 urease locus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Urease subunit alpha; EC=3.5.1.5.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">NCBIfam; TIGR01792; urease_alph; 1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Recent EN76 literature explicitly identifies ureC/NVIE_014740 as the urease alpha subunit in a urea transporter-urease operon.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016151" target="_blank" class="term-link">
+                                    GO:0016151
+                                </a>
+                            </span>
+                            <span class="term-label">nickel cation binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0016151" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. Urease is a nickel metalloenzyme, so nickel binding is expected.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Nickel binding is part of the urease catalytic mechanism. The UniProt record explicitly states that the enzyme binds two nickel ions per subunit. Family research notes that rare iron ureases exist, so nickel binding should be supported by gene-specific evidence rather than propagated blindly from urease-family membership.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Binds 2 nickel ions per subunit.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">PTHR43440 family research supports nickel-dependent urease annotations for canonical UreC homologs with explicit Ni-binding evidence, while warning that iron urease paralogs make blanket nickel propagation unsafe.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KEEP_AS_NON_CORE. Correct but less informative than urease activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Urease is a hydrolase, but this parent term is less informative than GO:0009039 urease activity and should not be treated as the core MF.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Urease subunit alpha; EC=3.5.1.5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016810" target="_blank" class="term-link">
+                                    GO:0016810
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0016810" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KEEP_AS_NON_CORE. Correct parent activity for urease, but the specific urease activity is the core molecular function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This parent C-N hydrolase term is technically consistent with urease chemistry, but GO:0009039 is the supported specific activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">RecName: Full=Urease subunit alpha; EC=3.5.1.5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019627" target="_blank" class="term-link">
+                                    GO:0019627
+                                </a>
+                            </span>
+                            <span class="term-label">urea metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000104
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0019627" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. Urease directly metabolizes urea.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> ureC1 encodes the catalytic urease subunit, so urea metabolic process is a direct biological-process annotation, not merely pathway context. In EN76, urea utilization is regulated by nitrogen source and ureC/ut transcripts respond to urea versus ammonia.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Nitrogen metabolism; urea degradation; CO(2) and NH(3) from urea (urease route): step 1/1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Family research identifies canonical UreC/large-subunit ureases as the catalytic subunits for urea hydrolysis, supporting urea catabolism for conserved UreC proteins.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">In N. viennensis EN76, ut and ureC/NVIE_014740 transcripts change about tenfold after urea versus ammonia addition, supporting regulated urea utilization by this locus.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043419" target="_blank" class="term-link">
+                                    GO:0043419
+                                </a>
+                            </span>
+                            <span class="term-label">urea catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000041
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A060HK93" data-a="GO:0043419" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ACCEPT. The UniPathway annotation is specific and useful for this nitrogen-metabolism gene: ureC1 is a urease catalytic subunit that directly catalyzes urea degradation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniPathway adds the correct process for the catalytic reaction. Urease hydrolyzes urea to ammonium and hydrogencarbonate/CO2, making urea catabolism direct rather than regulatory or downstream context. The Falcon report further supports intracellular urea hydrolysis rather than an extracellular urease model for EN76.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">PATHWAY: Nitrogen metabolism; urea degradation; CO(2) and NH(3) from urea (urease route): step 1/1.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Culture studies found no extracellular urease activity and no secretion signal context for the urease genes, supporting intracellular urea catabolism in ammonia-oxidizing archaea including EN76.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes urea hydrolysis as a nickel-dependent urease alpha subunit, contributing to urea catabolism in Nitrososphaera viennensis.</h3>
+                <span class="vote-buttons" data-g="A0A060HK93" data-a="FUNCTION: Catalyzes urea hydrolysis as a nickel-dependent ur..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009039" target="_blank" class="term-link">
+                            urease activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043419" target="_blank" class="term-link">
+                                urea catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:9ARCH/ureC1/ureC1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">RecName: Full=Urease subunit alpha; EC=3.5.1.5.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Canonical urease large/alpha subunits house the dinuclear active site and catalyze urea hydrolysis; ureC1 has explicit EC and nickel-binding support.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Falcon deep research supports ureC1/NVIE_014740 as the EN76 urease alpha subunit in an intracellular urea-utilization system; culture evidence indicates urea is transported into the cell, hydrolyzed by urease, and used as an ammonia source when ammonia is limiting.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms by UniProt keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9ARCH/ureC1/ureC1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt record for ureC1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names A0A060HK93 as urease subunit alpha, EC 3.5.1.5.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon family deep research for PTHR43440 urease alpha subunits</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Family research supports urease activity and urea catabolism for conserved UreC catalytic subunits, but highlights rare iron-dependent ureases as a reason not to infer nickel binding without gene-specific metal evidence.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research for ureC1</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon deep research for ureC1 identified organism-specific support for NVIE_014740 as ureC in a regulated urea transporter-urease operon in Nitrososphaera viennensis EN76. Urea oxidation has lower apparent affinity than ammonia oxidation, and ut/ureC transcripts change about tenfold after urea versus ammonia addition.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ureC1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A060HK93" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">29 citations</span>
+                    
+                    
+                    <span class="report-badge">3 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-21T18:44:49.487391</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ureC1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ureC1-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="ureC1-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000021 Figure 3 (on page 36) provides the Michaelis-Menten kinetic constants for *Nitrososphaera viennensis*, showing an apparent half-sat</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-urec1-uniprot-a0a060hk93-locus-nvie_014740-in-nitrososphaera-viennensis-en76-9arch">Research Report: Functional annotation of <strong>ureC1</strong> (UniProt <strong>A0A060HK93</strong>; locus <strong>NVIE_014740</strong>) in <em>Nitrososphaera viennensis</em> EN76 (9ARCH)</h2>
+<h3 id="1-target-verification-avoid-gene-symbol-ambiguity">1) Target verification (avoid gene-symbol ambiguity)</h3>
+<p>The UniProt target (A0A060HK93) corresponds to the <strong>urease alpha (catalytic) subunit</strong> in the soil ammonia-oxidizing archaeon <em>Nitrososphaera viennensis</em> EN76, with locus tag <strong>NVIE_014740</strong> (gene symbol <strong>ureC/ureC1</strong>). In recent primary literature, <strong>ureC (NVIE_014740)</strong> is explicitly annotated as the urease alpha subunit in <em>N. viennensis</em>, and it is reported to be in the same operon as a urea transporter gene (<strong>ut; NVIE_014780</strong>), matching the UniProt-provided ORF name and functional description. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</p>
+<p>Earlier genomic characterization of strain EN76 also identified a contig containing a “potential urease operon”/“urease gene cluster,” supporting the presence of a urease system in this specific organism (and not a different ureC from bacteria or other archaea). (tourna2011nitrososphaeraviennensisan pages 2-3, tourna2011nitrososphaeraviennensisan pages 3-4)</p>
+<h3 id="2-key-concepts-and-current-understanding-definitions-and-mechanistic-role">2) Key concepts and current understanding (definitions and mechanistic role)</h3>
+<h4 id="21-urease-and-the-meaning-of-urecurec1">2.1 Urease and the meaning of ureC/ureC1</h4>
+<p>Urease is the enzyme that hydrolyzes urea; <strong>ureC (urease subunit alpha)</strong> encodes the <strong>catalytic subunit</strong> (often used as the functional marker gene “ureC” in environmental studies). In <em>N. viennensis</em> EN76, ureC1 (NVIE_014740) is part of the genetic capacity for <strong>urea utilization</strong>, which supplies intracellular <strong>ammonia</strong> that can support both <strong>biosynthesis</strong> and <strong>ammonia oxidation-derived energy metabolism</strong> in ammonia-oxidizing archaea (AOA). (qin2024ammoniaoxidizingbacteriaand pages 8-11, tourna2011nitrososphaeraviennensisan pages 3-4)</p>
+<h4 id="22-pathway-context-in-nitrifying-archaea-urea-as-an-ammonia-precursor">2.2 Pathway context in nitrifying archaea: urea as an ammonia precursor</h4>
+<p>Cultured AOA, including <em>N. viennensis</em>, can use urea such that urea hydrolysis in the <strong>cytoplasm</strong> releases ammonia that is then oxidized (and/or assimilated). Evidence supporting the intracellular coupling is that, across tested ammonia oxidizers including <em>N. viennensis</em>, extracellular urease activity was not detected and urease genes lacked secretion signals, supporting a model where urea is transported into the cell and hydrolyzed internally. (qin2023differentialsubstrateaffinity pages 4-7, qin2023differentialsubstrateaffinity pages 7-10)</p>
+<h3 id="3-molecular-function-substrate-specificity-and-operonregulatory-context-organism-specific">3) Molecular function, substrate specificity, and operon/regulatory context (organism-specific)</h3>
+<h4 id="31-reaction-and-substrate-specificity">3.1 Reaction and substrate specificity</h4>
+<p>Although the reaction chemistry is not explicitly written in the extracted text, the <strong>physiological and kinetic measurements</strong> directly establish that <em>N. viennensis</em> couples urea use to nitrification, and that urea is a <strong>secondary/less-preferred substrate</strong> relative to ammonia.</p>
+<p>In <em>N. viennensis</em> EN76, measured apparent affinities show:<br />
+- <strong>Km(app) for ammonia oxidation:</strong> <strong>0.68 ± 0.16 µM</strong><br />
+- <strong>Km(app) for urea-dependent oxidation:</strong> <strong>8.97 ± 1.27 µM</strong></p>
+<p>This indicates substantially <strong>lower affinity for urea</strong> (and ~10-fold lower specific affinity) than for ammonia. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 7-10, qin2024ammoniaoxidizingbacteriaand media 2caafcb9)</p>
+<p>These organism-specific kinetic parameters are critical for functional annotation because they constrain when ureC1-mediated urea use is likely to contribute in situ (e.g., when urea is available and ammonia is scarce). (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2024ammoniaoxidizingbacteriaand media 2caafcb9)</p>
+<h4 id="32-operon-context-and-accessory-functions-transport-urease">3.2 Operon context and accessory functions (transport + urease)</h4>
+<p>In <em>N. viennensis</em>, <strong>ureC (NVIE_014740)</strong> is reported to be located in the same operon as a urea transporter gene <strong>ut (NVIE_014780)</strong>, supporting a linked <strong>import + hydrolysis</strong> module for urea utilization. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</p>
+<p>Comparative genomics across nitrifiers indicates that AOA commonly encode <strong>urease structural genes (ureABC)</strong> plus <strong>accessory genes (ureDEFG)</strong>, and they typically use archaeal-type urea transporters (e.g., <strong>dur3</strong>, <strong>utp/ut</strong>) rather than the bacterial high-affinity ABC transporter <strong>urtABCDE</strong>. This context supports that <em>Nitrososphaera</em> spp. (Group I.1b AOA, including <em>N. viennensis</em>) generally have the full intracellular machinery for urea uptake and urease activation. (liu2023genomicinsightinto pages 9-11, liu2023genomicinsightinto pages 1-2)</p>
+<h4 id="33-regulation-inducible-urea-utilization-and-repression-by-ammonia">3.3 Regulation: inducible urea utilization and repression by ammonia</h4>
+<p>Multiple complementary observations show that ureC1-linked urea use is <strong>regulated by nitrogen source</strong>:</p>
+<p>1) <strong>Transcriptomics (24 h after substrate switch):</strong> In <em>N. viennensis</em>, transcripts of <strong>ut</strong> and <strong>ureC (NVIE_014740)</strong> changed by ~<strong>tenfold</strong> in response to urea vs ammonia addition, indicating a strongly inducible operon responsive to N source. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</p>
+<p>2) <strong>Physiology / microrespirometry:</strong> When urea-grown <em>N. viennensis</em> cells were amended with low urea (10–20 µM) or ammonia (20–40 µM), O2 consumption responded immediately; however, when ammonia-grown cells were given 10 µM urea, there was <strong>no immediate O2 uptake for hours after ammonia depletion</strong>, consistent with repression of urea utilization during ammonia-based growth and a required adaptation period. (qin2024ammoniaoxidizingbacteriaand pages 55-58)</p>
+<p>3) <strong>Mechanistic interpretation:</strong> The broader experimental framework supports that ammonia oxidizers can repress oxidation of extracellular ammonia when cytoplasmic urea hydrolysis satisfies N needs, consistent with regulated coupling between transport and downstream oxidation. (qin2023differentialsubstrateaffinity pages 7-10, qin2024ammoniaoxidizingbacteriaand pages 11-16)</p>
+<h3 id="4-subcellular-localization-where-urec1-functions">4) Subcellular localization (where ureC1 functions)</h3>
+<p>Direct evidence supports <strong>cytoplasmic/intracellular localization</strong> of the urease system in <em>N. viennensis</em> and related ammonia oxidizers:<br />
+- No extracellular urease activity was detected for tested ammonia oxidizers including <em>N. viennensis</em>.<br />
+- Urease genes lacked signal peptides and urease operons were not flanked by secretion-system genes.</p>
+<p>Together, these observations support that ureC1 (urease alpha subunit) acts <strong>inside the cell</strong>, consistent with an intracellular urea-to-ammonia conversion that then feeds ammonia oxidation/assimilation. (qin2023differentialsubstrateaffinity pages 4-7, qin2023differentialsubstrateaffinity pages 7-10)</p>
+<h3 id="5-biological-role-in-cellular-metabolism-and-nitrogen-cycling">5) Biological role in cellular metabolism and nitrogen cycling</h3>
+<h4 id="51-role-in-n-viennensis-physiology">5.1 Role in <em>N. viennensis</em> physiology</h4>
+<p>Initial genome-based characterization suggested <em>N. viennensis</em> EN76 “might be able to use urea instead of ammonia as sole energy source,” indicating ureC1 supports metabolic flexibility in soil environments. (tourna2011nitrososphaeraviennensisan pages 3-4)</p>
+<p>At the single-cell level, isotopic measurements show urea is used mainly as an <strong>N</strong> source rather than a major <strong>C</strong> source: for <em>N. viennensis</em>, urea-derived carbon incorporation was very low (~0.1% during ammonia growth and 0.5–1.1% after urea depletion), while bicarbonate-derived carbon incorporation remained much higher, consistent with chemoautotrophic carbon fixation dominating. (qin2024ammoniaoxidizingbacteriaand pages 58-62)</p>
+<h4 id="52-broader-ecological-context-soil-and-ocean">5.2 Broader ecological context (soil and ocean)</h4>
+<p>Recent (2023–2024) ecosystem studies highlight how ureC/urease capacity shapes archaeal nitrifier niches:</p>
+<ul>
+<li>
+<p><strong>Soils:</strong> Across major soil Nitrososphaeria lineages, <strong>85.7–89.8%</strong> of AOA in surveyed soils were estimated to encode urease (based on ureC relative to amoA/rpoB), suggesting that urea utilization potential is widespread among soil archaeal nitrifiers related to <em>Nitrososphaera</em>. (liu2023genomicinsightinto pages 1-2)</p>
+</li>
+<li>
+<p><strong>Dark ocean:</strong> Quantitative metagenomic and rate measurements indicate urea is a major N source below the photic zone. UreC prevalence was estimated at <strong>39%</strong> of deep-sea cells in one region, and <strong>10–46%</strong> globally; on average <strong>25%</strong> of deep-sea cells assimilated urea-derived N (or <strong>60%</strong> of detectably active cells). Urea concentrations ranged <strong>21 nM–1.1 µM</strong>, and urea-based nitrification could be comparable to ammonia-based nitrification at some depths/sites. (arandiagorostidi2024ureaassimilationand pages 1-2, arandiagorostidi2024ureaassimilationanda pages 8-13, arandiagorostidi2024ureaassimilationanda pages 17-20)</p>
+</li>
+<li>
+<p><strong>Quantitative nitrification example:</strong> At 150 m depth in one dataset, nitrification product accumulation reached <strong>16.1 nmol N L−1</strong> from ammonium and <strong>11.8 nmol N L−1</strong> from urea incubations, and urea-based nitrification rates were reported as statistically indistinguishable from ammonia-based rates (t-test &gt; 0.1). (arandiagorostidi2024ureaassimilationanda pages 8-13)</p>
+</li>
+</ul>
+<p>These data support the interpretation that ureC-like systems, including those in Nitrososphaeria, can materially contribute to nitrogen cycling under certain substrate regimes, even if ammonia remains the preferred substrate in many settings. (arandiagorostidi2024ureaassimilationanda pages 8-13, qin2024ammoniaoxidizingbacteriaand pages 8-11)</p>
+<h3 id="6-recent-developments-20232024-and-expert-analysis">6) Recent developments (2023–2024) and expert analysis</h3>
+<p>A key 2024 synthesis from controlled cultures is that ammonia-oxidizing archaea and bacteria differ in nitrogen-source preference strategies. For <em>N. viennensis</em>, this includes: (i) higher affinity for ammonia than urea, (ii) inducible ut–ureC expression, and (iii) physiological repression of urea use during ammonia growth—features that collectively support niche differentiation and help explain coexistence patterns where multiple nitrifiers share environments but exploit different nitrogen pools over time. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2024ammoniaoxidizingbacteriaand pages 55-58)</p>
+<p>From a genomic/evolutionary perspective, a 2023 comparative genomics analysis argues urea is the most widely encoded LDON substrate among nitrifiers and that AOA urea metabolic genes (including ureC and certain transporters) show evolutionary patterns consistent with archaeal-specific trajectories and/or lateral gene transfer for some transport components. This supports ongoing research emphasis on transport and regulation as central determinants of urea utilization efficiency. (liu2023genomicinsightinto pages 1-2)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-environmental-monitoring-and-biogeochemical-modeling">7.1 Environmental monitoring and biogeochemical modeling</h4>
+<p>Because ureC is a widely used marker for urease potential, quantitative evidence that ureC is present in large fractions of deep-sea cells (10–46% globally) and that urea assimilation can involve ~25% of deep-sea cells supports incorporating urea-driven processes into models of ocean nitrogen cycling and chemoautotrophic production. (arandiagorostidi2024ureaassimilationand pages 1-2, arandiagorostidi2024ureaassimilationanda pages 8-13)</p>
+<p>Similarly, soil results indicating 85.7–89.8% of AOA in diverse soils encode urease suggest ureC-based functional profiling is useful for predicting archaeal nitrogen acquisition strategies and niche partitioning in terrestrial ecosystems, including those influenced by fertilizer-derived urea. (liu2023genomicinsightinto pages 1-2)</p>
+<h4 id="72-interpreting-urec-as-an-activity-proxy-limitations">7.2 Interpreting ureC as an activity proxy (limitations)</h4>
+<p>Recent field observations caution that ureC abundance does not always predict urea oxidation rates. For example, Southern Ocean work reported variable Thaumarchaeota ureC abundance (highest mean 1.2 × 10^6 copies L−1 in one water mass) but found urea oxidation rates generally lower than ammonia oxidation and not well correlated with marker gene ratios, indicating regulation and community context must be considered in applications that infer function from gene abundance alone. (hollibaugh2023contributionofurean pages 14-18)</p>
+<h3 id="8-evidence-tables">8) Evidence tables</h3>
+<p>The following tables compile organism-specific ureC1 evidence and 2023–2024 quantitative developments with URLs and publication dates.</p>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key findings (include quantitative values)</th>
+<th>Evidence type</th>
+<th>Source (full citation short)</th>
+<th>Publication date</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity verification</td>
+<td>In <em>Nitrososphaera viennensis</em> EN76, <strong>ureC / NVIE_014740</strong> is explicitly identified as the <strong>urease alpha subunit</strong>; it is reported in the same operon as a urea transporter gene <strong>ut / NVIE_014780</strong>, matching UniProt A0A060HK93 annotation (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</td>
+<td>Transcriptomics / genome-linked annotation</td>
+<td>Qin et al., <em>Nat Microbiol</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Primary function and substrate preference in EN76</td>
+<td><em>N. viennensis</em> uses urea as an alternative N/energy source precursor but <strong>prefers ammonia over urea</strong>: apparent <strong>Km(app)</strong> for ammonia <strong>0.68 ± 0.16 µM</strong> versus urea <strong>8.97 ± 1.27 µM</strong>; specific affinity for urea is ~<strong>10-fold lower</strong> than for ammonia (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 7-10, qin2024ammoniaoxidizingbacteriaand media 2caafcb9)</td>
+<td>Culture kinetics</td>
+<td>Qin et al., <em>Nat Microbiol</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Regulation of ureC1 by nitrogen source</td>
+<td>After substrate switching, <strong>ut</strong> and <strong>ureC (NVIE_014740)</strong> transcripts changed by about <strong>10-fold within 24 h</strong>: induced after urea addition and reduced after ammonia addition; by contrast <strong>amt1</strong> remained similar (<strong>1,379 TPM on ammonia vs 1,348 TPM on urea; P = 0.84</strong>) (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</td>
+<td>Transcriptomics</td>
+<td>Qin et al., <em>Nat Microbiol</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Physiological switching behavior</td>
+<td>Urea-grown EN76 showed immediate O2 consumption when low urea (<strong>10–20 µM</strong>) or ammonia (<strong>20–40 µM</strong>) was added, but ammonia-grown cells given <strong>10 µM urea</strong> showed no immediate O2 uptake until after ammonia depletion, indicating repression of urea use during ammonia growth; EN76 maintained growth without a pronounced lag during transition (qin2024ammoniaoxidizingbacteriaand pages 55-58)</td>
+<td>Physiology / microrespirometry</td>
+<td>Qin et al., <em>Nat Microbiol</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Cellular role of urea in EN76</td>
+<td>NanoSIMS-based single-cell data indicate AOM use urea mainly as an <strong>N source rather than C source</strong>; in soil AOA <em>N. viennensis</em>, urea-derived C was only ~<strong>0.1%</strong> during ammonia growth, increasing to <strong>0.5–1.1%</strong> after urea depletion, while bicarbonate-derived C remained much larger (<strong>13 ± 4.5% → 8.0 ± 3.5%</strong>) (qin2024ammoniaoxidizingbacteriaand pages 58-62)</td>
+<td>Single-cell isotope tracing</td>
+<td>Qin et al., <em>Nat Microbiol</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Localization of urease system</td>
+<td>Across tested ammonia oxidizers including EN76, <strong>no extracellular urease activity</strong> was detected; no <strong>signal peptides</strong> were found in urease genes and no nearby secretion-system genes were found, supporting <strong>cytoplasmic localization</strong> of urease/ureC1 (qin2023differentialsubstrateaffinity pages 4-7)</td>
+<td>Enzyme assay + comparative genomics</td>
+<td>Qin et al., bioRxiv</td>
+<td>Aug 2023</td>
+<td>https://doi.org/10.1101/2023.08.04.551995</td>
+</tr>
+<tr>
+<td>Broader AOA genomic context</td>
+<td>Review/genomic survey of <strong>70 nitrifier genomes</strong> found urea to be the most commonly encoded LDON substrate; AOA generally carry <strong>ureABC</strong> plus <strong>ureDEFG</strong> and use archaeal transporter types <strong>dur3</strong> and/or <strong>utp</strong> rather than bacterial <strong>urtABCDE</strong>; experimental urea use is confirmed for <strong>N. viennensis EN76</strong> (liu2023genomicinsightinto pages 9-11, liu2023genomicinsightinto pages 1-2)</td>
+<td>Comparative genomics / review</td>
+<td>Liu et al., <em>Front Microbiol</em></td>
+<td>Dec 2023</td>
+<td>https://doi.org/10.3389/fmicb.2023.1273211</td>
+</tr>
+<tr>
+<td>Initial discovery of urease capacity in EN76</td>
+<td>Draft genome of EN76 contained a contig with a <strong>potential urease operon/urease gene cluster</strong>, leading the authors to propose that this soil AOA could use <strong>urea instead of ammonia as sole energy source</strong>; this provided the first genome-based indication for ureC1 function in this organism (tourna2011nitrososphaeraviennensisan pages 3-4, tourna2011nitrososphaeraviennensisan pages 2-3)</td>
+<td>Genomics / culture characterization</td>
+<td>Tourna et al., <em>PNAS</em></td>
+<td>Apr 2011</td>
+<td>https://doi.org/10.1073/pnas.1013488108</td>
+</tr>
+<tr>
+<td>Soil archaeal prevalence of urease potential</td>
+<td>Across 12 major soil Nitrososphaeria lineages, <strong>85.7–89.8%</strong> of AOA in surveyed soils were estimated to encode <strong>urease</strong> (based on <strong>ureC</strong> relative to <strong>amoA/rpoB</strong>), indicating urea use is widespread among soil archaeal nitrifiers related to <em>Nitrososphaera</em> (liu2023genomicinsightinto pages 1-2)</td>
+<td>Soil metagenomics / expression-focused ecology</td>
+<td>Zhao et al., <em>ISME J</em></td>
+<td>Aug 2023</td>
+<td>https://doi.org/10.1038/s41396-023-01493-y</td>
+</tr>
+<tr>
+<td>Environmental significance of archaeal ureC</td>
+<td>In dark-ocean metagenomes, <strong>ureC</strong> occurred in <strong>39%</strong> of deep-sea cells regionally and <strong>10–46%</strong> globally (median ~<strong>36%</strong>); on average <strong>25%</strong> of deep-sea cells assimilated urea-derived N (or <strong>60%</strong> of active cells), and urea-based nitrification occurred at all sampled depths at one site (arandiagorostidi2024ureaassimilationanda pages 13-17, arandiagorostidi2024ureaassimilationand pages 1-2, arandiagorostidi2024ureaassimilationanda pages 17-20, arandiagorostidi2024ureaassimilationanda pages 8-13)</td>
+<td>Environmental metagenomics + rates</td>
+<td>Arandia-Gorostidi et al., <em>ISME J</em></td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1093/ismejo/wrae230</td>
+</tr>
+<tr>
+<td>Quantitative urea contribution to marine nitrification</td>
+<td>Southern Ocean data showed Thaumarchaeota-associated <strong>ureC</strong> abundance was variable (highest mean <strong>1.2 × 10^6 copies L^-1</strong> in CDW); mean <strong>ureC/rrs ~0.14</strong> overall. Ammonia oxidation averaged <strong>10.9 nmol L^-1 d^-1</strong> versus urea oxidation <strong>2.6 nmol L^-1 d^-1</strong> (or <strong>1.5</strong> excluding outliers), suggesting urea makes a significant but smaller, context-dependent contribution to nitrification (hollibaugh2023contributionofurean pages 14-18)</td>
+<td>Environmental rates + qPCR/metagenetics</td>
+<td>Hollibaugh et al., preprint/2023 study</td>
+<td>2023</td>
+<td>URL not available in retrieved context</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles organism-specific and ecosystem-level evidence relevant to ureC1 (NVIE_014740) in </em>Nitrososphaera viennensis<em> EN76, emphasizing verified identity, biochemical role, regulation, localization, and recent quantitative findings from 2023–2024 literature.</em></p>
+<table>
+<thead>
+<tr>
+<th>Study/system</th>
+<th>Key quantitative results</th>
+<th>Implication/application</th>
+<th>Publication date</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qin et al. 2024 — <em>Nitrososphaera viennensis</em> EN76 culture physiology and regulation</td>
+<td>In <em>N. viennensis</em>, <strong>ureC (NVIE_014740)</strong> and adjacent <strong>ut (NVIE_014780)</strong> transcripts changed by ~<strong>10-fold within 24 h</strong> after switching between urea and ammonia; apparent substrate affinities showed <strong>Km(app) ammonia = 0.68 ± 0.16 µM</strong> versus <strong>Km(app) urea = 8.97 ± 1.27 µM</strong>, with ~<strong>10-fold lower specific affinity</strong> for urea; ammonia-grown cells given <strong>10 µM urea</strong> showed no immediate O2 uptake until ammonia depletion, indicating repression of urea use during ammonia growth (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2024ammoniaoxidizingbacteriaand pages 55-58, qin2024ammoniaoxidizingbacteriaand media 2caafcb9)</td>
+<td>Shows that urease-linked urea oxidation in soil AOA is inducible but typically secondary to ammonia use; useful for modeling nitrogen-source competition in soils and bioreactors and for interpreting ureC expression as a condition-dependent, not constitutive, marker</td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1038/s41564-023-01593-7</td>
+</tr>
+<tr>
+<td>Zhao et al. 2023 — soil Nitrososphaeria resource acquisition</td>
+<td>Across 12 major soil Nitrososphaeria lineages, <strong>85.7–89.8%</strong> of AOA in surveyed soils were estimated to encode <strong>urease</strong> based on <strong>ureC</strong> relative to <strong>amoA/rpoB</strong> reads (liu2023genomicinsightinto pages 1-2)</td>
+<td>Indicates that urea use is a widespread niche-defining trait in soil archaeal nitrifiers, supporting application of ureC-based analyses in predicting nitrogen acquisition strategies and coexistence patterns in agricultural and natural soils</td>
+<td>Aug 2023</td>
+<td>https://doi.org/10.1038/s41396-023-01493-y</td>
+</tr>
+<tr>
+<td>Arandia-Gorostidi et al. 2024 — dark ocean urea assimilation and nitrification</td>
+<td>Regional deep-sea metagenomes estimated <strong>ureC in 39% of cells</strong>; global datasets estimated <strong>10–46%</strong> of deep-sea cells carry ureC (median ~<strong>36%</strong>); on average <strong>25%</strong> of deep-sea cells assimilated urea-derived N, or <strong>60% of detectably active cells</strong>; urea concentrations ranged <strong>21 nM–1.1 µM</strong>; peak nitrification at <strong>150 m</strong> reached <strong>16.1 nmol N L^-1</strong> from ammonium and <strong>11.8 nmol N L^-1</strong> from urea; urea-based nitrification rates were statistically indistinguishable from ammonia-based rates at sampled depths; urea-supported chemoautotrophic C fixation was estimated at <strong>1.4–8.8 mg C m^-2 d^-1</strong>, ~<strong>5–7%</strong> of sinking POC at study sites (arandiagorostidi2024ureaassimilationanda pages 13-17, arandiagorostidi2024ureaassimilationand pages 1-2, arandiagorostidi2024ureaassimilationanda pages 17-20, arandiagorostidi2024ureaassimilationanda pages 8-13)</td>
+<td>Demonstrates that ureC-bearing archaeal and bacterial communities substantially support deep-ocean N cycling and some chemoautotrophic production; relevant to ocean biogeochemical models and to interpreting ureC as an ecologically important marker beyond surface waters</td>
+<td>Jan 2024</td>
+<td>https://doi.org/10.1093/ismejo/wrae230</td>
+</tr>
+<tr>
+<td>Hollibaugh et al. 2024 preprint / 2023 Southern Ocean study — polar nitrification</td>
+<td>Thaumarchaeota-associated <strong>ureC</strong> abundance was variable by water mass, with highest mean <strong>1.2 × 10^6 copies L^-1</strong> in CDW; mean <strong>ureC/rrs ≈ 0.14</strong> overall; ammonia oxidation averaged <strong>10.9 nmol L^-1 d^-1</strong> versus urea oxidation <strong>2.6 nmol L^-1 d^-1</strong> (or <strong>1.5 nmol L^-1 d^-1</strong> excluding high outliers); AO and UO differed significantly among water masses (<strong>p = 0.008</strong>) (hollibaugh2023contributionofurean pages 14-18)</td>
+<td>Suggests urea contributes a measurable but generally smaller share of nitrification in polar waters; useful for constraining regional nitrogen-cycle budgets and for evaluating when ureC abundance does or does not predict active urea-based nitrification</td>
+<td>Feb 2024 preprint / 2023 study</td>
+<td>https://doi.org/10.1101/2024.02.20.581251</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes key 2023–2024 quantitative findings on ureC/urease and urea-based nitrification or assimilation in archaeal nitrifiers across culture, soil, and ocean systems. It highlights the most useful recent statistics for functional interpretation and environmental application.</em></p>
+<h3 id="9-key-takeaways-for-functional-annotation-of-urec1-a0a060hk93-in-n-viennensis">9) Key takeaways for functional annotation of ureC1 (A0A060HK93) in <em>N. viennensis</em></h3>
+<ul>
+<li><strong>Molecular function:</strong> ureC1 (NVIE_014740) encodes the <strong>urease alpha (catalytic) subunit</strong>; it supports urea utilization via an operon that includes a urea transporter (ut; NVIE_014780). (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2023differentialsubstrateaffinity pages 10-13)</li>
+<li><strong>Physiological role:</strong> supplies intracellular ammonia from urea; urea use is <strong>inducible</strong> and <strong>repressed by ammonia</strong>, consistent with regulated nitrogen-source prioritization. (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2024ammoniaoxidizingbacteriaand pages 55-58)</li>
+<li><strong>Substrate preference:</strong> much higher apparent affinity for ammonia than urea (Km(app) 0.68 µM vs 8.97 µM). (qin2024ammoniaoxidizingbacteriaand pages 8-11, qin2024ammoniaoxidizingbacteriaand media 2caafcb9)</li>
+<li><strong>Localization:</strong> urease is <strong>cytoplasmic/intracellular</strong>; no extracellular urease activity detected and no secretion signals in urease genes. (qin2023differentialsubstrateaffinity pages 4-7, qin2023differentialsubstrateaffinity pages 7-10)</li>
+<li><strong>Ecological relevance:</strong> ureC is widespread among Nitrososphaeria in soils and among deep-ocean communities; urea can make substantial contributions to assimilation and, in some settings, nitrification. (liu2023genomicinsightinto pages 1-2, arandiagorostidi2024ureaassimilationand pages 1-2, arandiagorostidi2024ureaassimilationanda pages 8-13)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(qin2024ammoniaoxidizingbacteriaand pages 8-11): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Ammonia-oxidizing bacteria and archaea exhibit differential nitrogen source preferences. Nature microbiology, 9:524-536, Jan 2024. URL: https://doi.org/10.1038/s41564-023-01593-7, doi:10.1038/s41564-023-01593-7. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qin2023differentialsubstrateaffinity pages 10-13): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Differential substrate affinity and catabolite repression enable preferential use of urea by ammonia-oxidizing bacteria. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.04.551995, doi:10.1101/2023.08.04.551995. This article has 1 citations.</p>
+</li>
+<li>
+<p>(tourna2011nitrososphaeraviennensisan pages 2-3): Maria Tourna, Michaela Stieglmeier, Anja Spang, Martin Könneke, Arno Schintlmeister, Tim Urich, Marion Engel, Michael Schloter, Michael Wagner, Andreas Richter, and Christa Schleper. Nitrososphaera viennensis, an ammonia oxidizing archaeon from soil. Proceedings of the National Academy of Sciences, 108:8420-8425, Apr 2011. URL: https://doi.org/10.1073/pnas.1013488108, doi:10.1073/pnas.1013488108. This article has 1117 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tourna2011nitrososphaeraviennensisan pages 3-4): Maria Tourna, Michaela Stieglmeier, Anja Spang, Martin Könneke, Arno Schintlmeister, Tim Urich, Marion Engel, Michael Schloter, Michael Wagner, Andreas Richter, and Christa Schleper. Nitrososphaera viennensis, an ammonia oxidizing archaeon from soil. Proceedings of the National Academy of Sciences, 108:8420-8425, Apr 2011. URL: https://doi.org/10.1073/pnas.1013488108, doi:10.1073/pnas.1013488108. This article has 1117 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qin2023differentialsubstrateaffinity pages 4-7): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Differential substrate affinity and catabolite repression enable preferential use of urea by ammonia-oxidizing bacteria. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.04.551995, doi:10.1101/2023.08.04.551995. This article has 1 citations.</p>
+</li>
+<li>
+<p>(qin2023differentialsubstrateaffinity pages 7-10): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Differential substrate affinity and catabolite repression enable preferential use of urea by ammonia-oxidizing bacteria. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.04.551995, doi:10.1101/2023.08.04.551995. This article has 1 citations.</p>
+</li>
+<li>
+<p>(qin2024ammoniaoxidizingbacteriaand media 2caafcb9): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Ammonia-oxidizing bacteria and archaea exhibit differential nitrogen source preferences. Nature microbiology, 9:524-536, Jan 2024. URL: https://doi.org/10.1038/s41564-023-01593-7, doi:10.1038/s41564-023-01593-7. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2023genomicinsightinto pages 9-11): Qian Liu, Yuhao Chen, and Xue-Wei Xu. Genomic insight into strategy, interaction and evolution of nitrifiers in metabolizing key labile-dissolved organic nitrogen in different environmental niches. Frontiers in Microbiology, Dec 2023. URL: https://doi.org/10.3389/fmicb.2023.1273211, doi:10.3389/fmicb.2023.1273211. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2023genomicinsightinto pages 1-2): Qian Liu, Yuhao Chen, and Xue-Wei Xu. Genomic insight into strategy, interaction and evolution of nitrifiers in metabolizing key labile-dissolved organic nitrogen in different environmental niches. Frontiers in Microbiology, Dec 2023. URL: https://doi.org/10.3389/fmicb.2023.1273211, doi:10.3389/fmicb.2023.1273211. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qin2024ammoniaoxidizingbacteriaand pages 55-58): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Ammonia-oxidizing bacteria and archaea exhibit differential nitrogen source preferences. Nature microbiology, 9:524-536, Jan 2024. URL: https://doi.org/10.1038/s41564-023-01593-7, doi:10.1038/s41564-023-01593-7. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qin2024ammoniaoxidizingbacteriaand pages 11-16): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Ammonia-oxidizing bacteria and archaea exhibit differential nitrogen source preferences. Nature microbiology, 9:524-536, Jan 2024. URL: https://doi.org/10.1038/s41564-023-01593-7, doi:10.1038/s41564-023-01593-7. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qin2024ammoniaoxidizingbacteriaand pages 58-62): Wei Qin, Stephany P. Wei, Yue Zheng, Eunkyung Choi, Xiangpeng Li, Juliet Johnston, Xianhui Wan, Britt Abrahamson, Zachary Flinkstrom, Baozhan Wang, Hanyan Li, Lei Hou, Qing Tao, Wyatt W. Chlouber, Xin Sun, Michael Wells, Long Ngo, Kristopher A. Hunt, Hidetoshi Urakawa, Xuanyu Tao, Dongyu Wang, Xiaoyuan Yan, Dazhi Wang, Chongle Pan, Peter K. Weber, Jiandong Jiang, Jizhong Zhou, Yao Zhang, David A. Stahl, Bess B. Ward, Xavier Mayali, Willm Martens-Habbena, and Mari-Karoliina H. Winkler. Ammonia-oxidizing bacteria and archaea exhibit differential nitrogen source preferences. Nature microbiology, 9:524-536, Jan 2024. URL: https://doi.org/10.1038/s41564-023-01593-7, doi:10.1038/s41564-023-01593-7. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arandiagorostidi2024ureaassimilationand pages 1-2): Nestor Arandia-Gorostidi, Alexander L Jaffe, Alma E Parada, Bennett J Kapili, Karen L Casciotti, Rebecca S R Salcedo, Chloé M J Baumas, and Anne E Dekas. Urea assimilation and oxidation support activity of phylogenetically diverse microbial communities of the dark ocean. The ISME Journal, Jan 2024. URL: https://doi.org/10.1093/ismejo/wrae230, doi:10.1093/ismejo/wrae230. This article has 10 citations.</p>
+</li>
+<li>
+<p>(arandiagorostidi2024ureaassimilationanda pages 8-13): Nestor Arandia-Gorostidi, Alexander L. Jaffe, Alma E. Parada, Bennett J. Kapili, Karen L. Casciotti, Rebecca S. R. Salcedo, Chloé M. J. Baumas, and Anne E. Dekas. Urea assimilation and oxidation supports the activity of a phylogenetically diverse microbial community in the dark ocean. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.26.605319, doi:10.1101/2024.07.26.605319. This article has 1 citations.</p>
+</li>
+<li>
+<p>(arandiagorostidi2024ureaassimilationanda pages 17-20): Nestor Arandia-Gorostidi, Alexander L. Jaffe, Alma E. Parada, Bennett J. Kapili, Karen L. Casciotti, Rebecca S. R. Salcedo, Chloé M. J. Baumas, and Anne E. Dekas. Urea assimilation and oxidation supports the activity of a phylogenetically diverse microbial community in the dark ocean. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.26.605319, doi:10.1101/2024.07.26.605319. This article has 1 citations.</p>
+</li>
+<li>
+<p>(hollibaugh2023contributionofurean pages 14-18): JT Hollibaugh, A Okotie-Oyekan, and J Damashek. Contribution of urea-n to nitrification in the southern ocean west of the antarctic peninsula. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(arandiagorostidi2024ureaassimilationanda pages 13-17): Nestor Arandia-Gorostidi, Alexander L. Jaffe, Alma E. Parada, Bennett J. Kapili, Karen L. Casciotti, Rebecca S. R. Salcedo, Chloé M. J. Baumas, and Anne E. Dekas. Urea assimilation and oxidation supports the activity of a phylogenetically diverse microbial community in the dark ocean. bioRxiv, Jul 2024. URL: https://doi.org/10.1101/2024.07.26.605319, doi:10.1101/2024.07.26.605319. This article has 1 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ureC1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="ureC1-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a><br />
+<img alt="## Context ID: pqac-00000021 Figure 3 (on page 36) provides the Michaelis-Menten kinetic constants for *Nitrososphaera viennensis*, showing an apparent half-sat" src="ureC1-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>qin2024ammoniaoxidizingbacteriaand pages 55-58</li>
+<li>tourna2011nitrososphaeraviennensisan pages 3-4</li>
+<li>qin2024ammoniaoxidizingbacteriaand pages 58-62</li>
+<li>liu2023genomicinsightinto pages 1-2</li>
+<li>arandiagorostidi2024ureaassimilationanda pages 8-13</li>
+<li>hollibaugh2023contributionofurean pages 14-18</li>
+<li>qin2023differentialsubstrateaffinity pages 4-7</li>
+<li>qin2024ammoniaoxidizingbacteriaand pages 8-11</li>
+<li>qin2023differentialsubstrateaffinity pages 10-13</li>
+<li>tourna2011nitrososphaeraviennensisan pages 2-3</li>
+<li>qin2023differentialsubstrateaffinity pages 7-10</li>
+<li>liu2023genomicinsightinto pages 9-11</li>
+<li>qin2024ammoniaoxidizingbacteriaand pages 11-16</li>
+<li>arandiagorostidi2024ureaassimilationand pages 1-2</li>
+<li>arandiagorostidi2024ureaassimilationanda pages 17-20</li>
+<li>arandiagorostidi2024ureaassimilationanda pages 13-17</li>
+<li>https://doi.org/10.1038/s41564-023-01593-7</li>
+<li>https://doi.org/10.1101/2023.08.04.551995</li>
+<li>https://doi.org/10.3389/fmicb.2023.1273211</li>
+<li>https://doi.org/10.1073/pnas.1013488108</li>
+<li>https://doi.org/10.1038/s41396-023-01493-y</li>
+<li>https://doi.org/10.1093/ismejo/wrae230</li>
+<li>https://doi.org/10.1101/2024.02.20.581251</li>
+<li>https://doi.org/10.1038/s41564-023-01593-7,</li>
+<li>https://doi.org/10.1101/2023.08.04.551995,</li>
+<li>https://doi.org/10.1073/pnas.1013488108,</li>
+<li>https://doi.org/10.3389/fmicb.2023.1273211,</li>
+<li>https://doi.org/10.1093/ismejo/wrae230,</li>
+<li>https://doi.org/10.1101/2024.07.26.605319,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ureC1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A060HK93" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="urec1-notes">ureC1 notes</h1>
+<ul>
+<li>UniProt A0A060HK93 names ureC1 as urease subunit alpha, EC 3.5.1.5 [file:9ARCH/ureC1/ureC1-uniprot.txt "RecName: Full=Urease subunit alpha"; "EC=3.5.1.5"].</li>
+<li>The UniPathway urea catabolic process annotation is accepted because urease directly hydrolyzes urea [GO_REF:0000041; file:9ARCH/ureC1/ureC1-goa.tsv].</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A060HK93
+gene_symbol: ureC1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:926571
+  label: Nitrososphaera viennensis EN76
+description: &gt;-
+  ureC1 encodes the urease alpha catalytic subunit NVIE_014740 in
+  Nitrososphaera viennensis EN76. It hydrolyzes imported urea intracellularly,
+  supplying ammonia/ammonium for nitrogen metabolism and ammonia oxidation when
+  urea is available.
+existing_annotations:
+- term:
+    id: GO:0009039
+    label: urease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      ACCEPT. UreC is the catalytic alpha subunit of urease, EC 3.5.1.5.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt record names ureC1 as urease subunit alpha and assigns EC
+      3.5.1.5. NCBIfam TIGR01792 and PANTHER PTHR43440 support conserved urease
+      alpha-subunit function. Falcon research also found organism-specific
+      literature mapping NVIE_014740 to the regulated EN76 urease locus.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: &#39;RecName: Full=Urease subunit alpha; EC=3.5.1.5.&#39;
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: NCBIfam; TIGR01792; urease_alph; 1.
+    - reference_id: file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Recent EN76 literature explicitly identifies ureC/NVIE_014740 as the
+        urease alpha subunit in a urea transporter-urease operon.
+- term:
+    id: GO:0016151
+    label: nickel cation binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      ACCEPT. Urease is a nickel metalloenzyme, so nickel binding is expected.
+    action: ACCEPT
+    reason: &gt;-
+      Nickel binding is part of the urease catalytic mechanism. The UniProt
+      record explicitly states that the enzyme binds two nickel ions per
+      subunit. Family research notes that rare iron ureases exist, so nickel
+      binding should be supported by gene-specific evidence rather than
+      propagated blindly from urease-family membership.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: Binds 2 nickel ions per subunit.
+    - reference_id: file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+      supporting_text: &gt;-
+        PTHR43440 family research supports nickel-dependent urease annotations
+        for canonical UreC homologs with explicit Ni-binding evidence, while
+        warning that iron urease paralogs make blanket nickel propagation
+        unsafe.
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &gt;-
+      KEEP_AS_NON_CORE. Correct but less informative than urease activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Urease is a hydrolase, but this parent term is less informative than
+      GO:0009039 urease activity and should not be treated as the core MF.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: &#39;RecName: Full=Urease subunit alpha; EC=3.5.1.5.&#39;
+- term:
+    id: GO:0016810
+    label: hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      KEEP_AS_NON_CORE. Correct parent activity for urease, but the specific
+      urease activity is the core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This parent C-N hydrolase term is technically consistent with urease
+      chemistry, but GO:0009039 is the supported specific activity.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: &#39;RecName: Full=Urease subunit alpha; EC=3.5.1.5.&#39;
+- term:
+    id: GO:0019627
+    label: urea metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  review:
+    summary: &gt;-
+      ACCEPT. Urease directly metabolizes urea.
+    action: ACCEPT
+    reason: &gt;-
+      ureC1 encodes the catalytic urease subunit, so urea metabolic process is a
+      direct biological-process annotation, not merely pathway context. In
+      EN76, urea utilization is regulated by nitrogen source and ureC/ut
+      transcripts respond to urea versus ammonia.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: &#39;PATHWAY: Nitrogen metabolism; urea degradation; CO(2) and NH(3) from urea (urease route): step 1/1.&#39;
+    - reference_id: file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+      supporting_text: &gt;-
+        Family research identifies canonical UreC/large-subunit ureases as the
+        catalytic subunits for urea hydrolysis, supporting urea catabolism for
+        conserved UreC proteins.
+    - reference_id: file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+      supporting_text: &gt;-
+        In N. viennensis EN76, ut and ureC/NVIE_014740 transcripts change about
+        tenfold after urea versus ammonia addition, supporting regulated urea
+        utilization by this locus.
+- term:
+    id: GO:0043419
+    label: urea catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  review:
+    summary: &gt;-
+      ACCEPT. The UniPathway annotation is specific and useful for this
+      nitrogen-metabolism gene: ureC1 is a urease catalytic subunit that
+      directly catalyzes urea degradation.
+    action: ACCEPT
+    reason: &gt;-
+      UniPathway adds the correct process for the catalytic reaction. Urease
+      hydrolyzes urea to ammonium and hydrogencarbonate/CO2, making urea
+      catabolism direct rather than regulatory or downstream context. The
+      Falcon report further supports intracellular urea hydrolysis rather than
+      an extracellular urease model for EN76.
+    supported_by:
+    - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+      supporting_text: &#39;PATHWAY: Nitrogen metabolism; urea degradation; CO(2) and NH(3) from urea (urease route): step 1/1.&#39;
+    - reference_id: file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+      supporting_text: &gt;-
+        Culture studies found no extracellular urease activity and no secretion
+        signal context for the urease genes, supporting intracellular urea
+        catabolism in ammonia-oxidizing archaea including EN76.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Automatic assignment of GO terms by UniProt keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:9ARCH/ureC1/ureC1-uniprot.txt
+  title: UniProt record for ureC1
+  findings:
+  - statement: &gt;-
+      UniProt names A0A060HK93 as urease subunit alpha, EC 3.5.1.5.
+- id: file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+  title: Falcon family deep research for PTHR43440 urease alpha subunits
+  findings:
+  - statement: &gt;-
+      Family research supports urease activity and urea catabolism for
+      conserved UreC catalytic subunits, but highlights rare iron-dependent
+      ureases as a reason not to infer nickel binding without gene-specific
+      metal evidence.
+- id: file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+  title: Falcon deep research for ureC1
+  findings:
+  - statement: &gt;-
+      Falcon deep research for ureC1 identified organism-specific support for
+      NVIE_014740 as ureC in a regulated urea transporter-urease operon in
+      Nitrososphaera viennensis EN76. Urea oxidation has lower apparent affinity
+      than ammonia oxidation, and ut/ureC transcripts change about tenfold after
+      urea versus ammonia addition.
+core_functions:
+- description: &gt;-
+    Catalyzes urea hydrolysis as a nickel-dependent urease alpha subunit,
+    contributing to urea catabolism in Nitrososphaera viennensis.
+  molecular_function:
+    id: GO:0009039
+    label: urease activity
+  directly_involved_in:
+  - id: GO:0043419
+    label: urea catabolic process
+  supported_by:
+  - reference_id: file:9ARCH/ureC1/ureC1-uniprot.txt
+    supporting_text: &gt;-
+      RecName: Full=Urease subunit alpha; EC=3.5.1.5.
+  - reference_id: file:interpro/panther/PTHR43440/PTHR43440-deep-research-falcon.md
+    supporting_text: &gt;-
+      Canonical urease large/alpha subunits house the dinuclear active site and
+      catalyze urea hydrolysis; ureC1 has explicit EC and nickel-binding
+      support.
+  - reference_id: file:9ARCH/ureC1/ureC1-deep-research-falcon.md
+    supporting_text: &gt;-
+      Falcon deep research supports ureC1/NVIE_014740 as the EN76 urease alpha
+      subunit in an intracellular urea-utilization system; culture evidence
+      indicates urea is transported into the cell, hydrolyzed by urease, and
+      used as an ammonia source when ammonia is limiting.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

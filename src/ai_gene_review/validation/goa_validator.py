@@ -247,12 +247,14 @@ class GOAValidator:
         # Key: (go_id, evidence_code, reference, negated)
         goa_tuples = set()
         goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
+        goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
         for ann in goa_annotations:
             qualifier = getattr(ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
             tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
             goa_tuples.add(tuple_key)
             goa_by_tuple[tuple_key] = ann
+            goa_by_go_id.setdefault(ann.go_id, []).append(ann)
 
         # Check each YAML annotation against GOA
         for yaml_ann in yaml_annotations:
@@ -270,16 +272,26 @@ class GOAValidator:
                 term = yaml_ann.get("term", {})
                 if isinstance(term, dict):
                     go_id = term.get("id", "")
-                    evidence_type = yaml_ann.get("evidence_type", "")
-                    original_ref = yaml_ann.get("original_reference_id", "")
 
-                    # Check if this annotation exists in GOA
-                    negated = yaml_ann.get("negated", False)
-                    yaml_tuple = (go_id, evidence_type, original_ref, negated)
-                    if yaml_tuple in goa_tuples:
+                    # Check if this GO term exists in GOA under any source.
+                    if go_id in goa_by_go_id:
+                        sources = sorted(
+                            {
+                                f"{ann.evidence_code}, {ann.reference}"
+                                for ann in goa_by_go_id[go_id]
+                            }
+                        )
+                        source_summary = "; ".join(sources[:3])
+                        if len(sources) > 3:
+                            source_summary += f"; ... and {len(sources) - 3} more"
+
                         # This is an error - NEW annotation should not exist in GOA
+                        # under any evidence/reference source, including TreeGrafter/IBA.
                         result.is_valid = False
-                        result.error_message = f"Annotation with action=NEW exists in GOA: {go_id} ({evidence_type}, {original_ref})"
+                        result.error_message = (
+                            f"Annotation with action=NEW exists in GOA: {go_id} "
+                            f"(GOA source(s): {source_summary})"
+                        )
                 # Skip further validation for NEW annotations
                 continue
 
@@ -568,8 +580,13 @@ class GOAValidator:
         # Get existing annotations
         existing_annotations = yaml_data.get("existing_annotations", [])
 
-        # Build set of existing tuples (GO ID, evidence_type, reference, negated)
+        # Build set of existing tuples (GO ID, evidence_type, reference, negated,
+        # qualifier). Older seeded files may lack qualifier, so keep a base-tuple
+        # index that lets us backfill the qualifier without adding duplicates.
         existing_tuples = set()
+        existing_missing_qualifier_by_base: Dict[
+            Tuple[str, str, str, bool], List[Dict[str, Any]]
+        ] = {}
         for ann in existing_annotations:
             if isinstance(ann, dict) and "term" in ann:
                 term = ann["term"]
@@ -578,7 +595,11 @@ class GOAValidator:
                     evidence = ann.get("evidence_type", "")
                     ref = ann.get("original_reference_id", "")
                     negated = ann.get("negated", False)
-                    existing_tuples.add((go_id, evidence, ref, negated))
+                    parsed_qualifier = self._parse_qualifier(ann.get("qualifier"))
+                    base_tuple = (go_id, evidence, ref, negated)
+                    existing_tuples.add((*base_tuple, parsed_qualifier or ""))
+                    if not parsed_qualifier:
+                        existing_missing_qualifier_by_base.setdefault(base_tuple, []).append(ann)
 
         # Add missing annotations from GOA
         added_count = 0
@@ -603,13 +624,28 @@ class GOAValidator:
             # Check if this is a NOT annotation
             qualifier = getattr(goa_ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
+            parsed_qualifier = self._parse_qualifier(qualifier)
 
-            # Include negation in tuple key since NOT annotations are distinct
-            tuple_key = (go_id, evidence, reference, is_negated)
+            # Include negation and qualifier in tuple key since NOT annotations and
+            # relation-specific GOA assertions are distinct.
+            base_tuple = (go_id, evidence, reference, is_negated)
+            tuple_key = (*base_tuple, parsed_qualifier or "")
 
             # Skip if this exact tuple already exists in YAML or was already added
             if tuple_key in existing_tuples or tuple_key in seen_tuples:
                 continue
+
+            # Backfill missing qualifiers on older seeded annotations instead of
+            # adding a duplicate annotation for the same GO/evidence/reference tuple.
+            if parsed_qualifier:
+                existing_without_qualifier = existing_missing_qualifier_by_base.get(
+                    base_tuple, []
+                )
+                if existing_without_qualifier:
+                    existing_ann = existing_without_qualifier.pop(0)
+                    existing_ann["qualifier"] = parsed_qualifier
+                    existing_tuples.add(tuple_key)
+                    continue
 
             # Create new annotation entry (stub for review)
             new_annotation: Dict[str, Any] = {
@@ -618,10 +654,12 @@ class GOAValidator:
                 "original_reference_id": reference,
             }
 
-            # Only record qualifier for contributes_to MF annotations;
-            # all other qualifiers are the default for their aspect
-            if self._is_contributes_to(qualifier, goa_ann.go_aspect):
-                new_annotation["qualifier"] = "contributes_to"
+            # Preserve the GOA QUALIFIER column. For complex/subunit curation this
+            # distinction is critical: enables, contributes_to, part_of,
+            # is_active_in, involved_in, and upstream qualifiers mean different
+            # things biologically.
+            if parsed_qualifier:
+                new_annotation["qualifier"] = parsed_qualifier
 
             # Add negated field if this is a NOT annotation
             if is_negated:
@@ -837,9 +875,6 @@ class GOAValidator:
     def _is_contributes_to(qualifier: Optional[str], go_aspect: str = "") -> bool:
         """Return True if this is a contributes_to MF annotation.
 
-        Only contributes_to is recorded as a qualifier -- all other qualifiers
-        are the default for their aspect and need not be stored.
-
         >>> GOAValidator._is_contributes_to("contributes_to", "molecular_function")
         True
         >>> GOAValidator._is_contributes_to("contributes_to", "")
@@ -1014,11 +1049,9 @@ class GOAValidator:
         yaml_file: Path,
         goa_file: Optional[Path] = None,
     ) -> Tuple[int, Path]:
-        """Backfill contributes_to qualifier on existing MF annotations from GOA data.
+        """Backfill GOA qualifiers on existing annotations from GOA data.
 
-        Only populates the qualifier field for contributes_to annotations.
-        No qualifier means enables (the default). Matching is done by
-        (GO ID, evidence_type, reference, negated) tuple.
+        Matching is done by (GO ID, evidence_type, reference, negated) tuple.
 
         Args:
             yaml_file: Path to the gene review YAML file
@@ -1047,16 +1080,22 @@ class GOAValidator:
 
         goa_annotations = self.parse_goa_file(goa_file)
 
-        # Build lookup for contributes_to MF annotations only
-        contributes_to_tuples: set[Tuple[str, str, str, bool]] = set()
+        # Build lookup for recognized GOA qualifiers.
+        qualifiers_by_tuple: Dict[Tuple[str, str, str, bool], set[str]] = {}
         for goa_ann in goa_annotations:
             qualifier_str = getattr(goa_ann, "qualifier", "")
-            if self._is_contributes_to(qualifier_str, goa_ann.go_aspect):
+            parsed_qualifier = self._parse_qualifier(qualifier_str)
+            if parsed_qualifier:
                 is_negated = self._qualifier_is_negated(qualifier_str)
-                tuple_key = (goa_ann.go_id, goa_ann.evidence_code, goa_ann.reference, is_negated)
-                contributes_to_tuples.add(tuple_key)
+                tuple_key = (
+                    goa_ann.go_id,
+                    goa_ann.evidence_code,
+                    goa_ann.reference,
+                    is_negated,
+                )
+                qualifiers_by_tuple.setdefault(tuple_key, set()).add(parsed_qualifier)
 
-        if not contributes_to_tuples:
+        if not qualifiers_by_tuple:
             return 0, yaml_file
 
         if not yaml_file.exists():
@@ -1090,8 +1129,9 @@ class GOAValidator:
 
             tuple_key = (go_id, evidence, ref, negated)
 
-            if tuple_key in contributes_to_tuples:
-                ann["qualifier"] = "contributes_to"
+            qualifiers = qualifiers_by_tuple.get(tuple_key)
+            if qualifiers and len(qualifiers) == 1:
+                ann["qualifier"] = next(iter(qualifiers))
                 updated_count += 1
 
         if updated_count > 0:

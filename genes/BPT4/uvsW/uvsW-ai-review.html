@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P0DXF1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P0DXF1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P0DXF1" target="_blank" class="term-link">
+                        P0DXF1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P0DXF1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P0DXF1" data-a="DESCRIPTION: TODO: Add description for P0DXF1..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P0DXF1</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0000166" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0003677" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0004386" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0016787" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016853" target="_blank" class="term-link">
+                                    GO:0016853
+                                </a>
+                            </span>
+                            <span class="term-label">isomerase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0016853" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043138" target="_blank" class="term-link">
+                                    GO:0043138
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;-5&#39; DNA helicase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000003
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0043138" data-r="GO_REF:0000003" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17092935" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17092935
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The T4 phage UvsW protein contains both DNA unwinding and st...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0016887" data-r="PMID:17092935" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9233823" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9233823
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bacteriophage T4 UvsW protein is a helicase involved in reco...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P0DXF1" data-a="GO:0016887" data-r="PMID:9233823" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17092935" target="_blank" class="term-link">
+                            PMID:17092935
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The T4 phage UvsW protein contains both DNA unwinding and strand annealing activities.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9233823" target="_blank" class="term-link">
+                            PMID:9233823
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Bacteriophage T4 UvsW protein is a helicase involved in recombination, repair and the regulation of DNA replication origins.</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(uvsW-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P0DXF1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">52 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T03:25:12.177622</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="uvsW-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="uvsW-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000047 The requested information is found in Figure 1 and Figure 3 of the document. 1. **Schematic of Hairpin Assay:** Figure 1a provides </a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-uvsw-uniprot-p0dxf1-from-enterobacteria-phage-t4">Research Report: Functional Annotation of <strong>uvsW</strong> (UniProt <strong>P0DXF1</strong>) from <strong>Enterobacteria phage T4</strong></h2>
+<h3 id="0-target-verification-critical-identity-check">0) Target verification (critical identity check)</h3>
+<p>The queried protein corresponds to bacteriophage T4 gene <strong>uvsW</strong> (synonym <strong>dar</strong>) encoding an ATP-dependent helicase that participates in DNA replication, recombination, and repair. Multiple primary studies explicitly identify T4 <strong>UvsW</strong> as a <strong>superfamily 2 (SF2)</strong> helicase with conserved helicase motifs (including Walker A Lys <strong>K141</strong>) and a two–RecA-like domain architecture, matching the UniProt context provided (P0DXF1; EC 5.6.2.4) and the stated domain composition (RecA-like helicase core/P-loop NTPase). (sickmier2004thecrystalstructure pages 1-2, carleskinch1997bacteriophaget4uvsw pages 1-2, nelson2007thet4phage pages 1-1)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-uvsw-is-molecular-identity">1.1 What UvsW is (molecular identity)</h4>
+<p>UvsW is a T4-encoded <strong>ATP-dependent DNA helicase</strong> in the <strong>SF2</strong> helicase superfamily that functions primarily on <strong>branched nucleic-acid substrates</strong> rather than simple linear duplexes. It contains canonical helicase ATPase motifs (Walker A) and is described as ~55–58 kDa in size depending on constructs/annotation. (sickmier2004thecrystalstructure pages 1-2, nelson2007thet4phage pages 1-1, nelson2007thet4phage pages 4-4)</p>
+<h4 id="12-directionality-and-substrate-preference">1.2 Directionality and substrate preference</h4>
+<p>Biochemical characterization supports that UvsW is a <strong>3′→5′</strong> helicase/translocase with strong substrate-polarity dependence: branched substrates with a <strong>3′ ssDNA overhang</strong> are processed more efficiently than those with a 5′ overhang, consistent with 3′→5′ translocation. (perumal2013interactionoft4 pages 1-2, nelson2007thet4phage pages 6-7)</p>
+<h4 id="13-core-biological-roles-replication-initiation-switch-fork-remodeling-recombination-intermediates">1.3 Core biological roles: replication initiation switch, fork remodeling, recombination intermediates</h4>
+<p>UvsW is best understood as a <strong>branch-specific DNA motor</strong> that:<br />
+- <strong>Dissociates RNA–DNA hybrids (R-loops)</strong> at T4 replication origins.<br />
+- Catalyzes <strong>replication fork regression/fork reversal</strong>, producing Holliday junction-like intermediates.<br />
+- Drives <strong>Holliday junction branch migration</strong> over long distances.<br />
+- Acts on recombination intermediates such as <strong>D-loops</strong>.<br />
+- Additionally displays <strong>ssDNA strand annealing</strong> activity.<br />
+These activities fit a single conceptual role: a helicase that remodels branched DNA structures to coordinate the transition between replication-initiation modes and to rescue stalled replication forks. (webb2007thephaget4 pages 1-1, nelson2007thet4phage pages 1-1, long2009forkregressionis pages 3-4, kreuzer2010initiationofbacteriophage pages 5-7, dudas2001uvswproteinregulates pages 1-2)</p>
+<h3 id="2-mechanistic-and-functional-annotation-with-evidence">2) Mechanistic and functional annotation (with evidence)</h3>
+<h4 id="21-enzymatic-activity-and-reaction-type">2.1 Enzymatic activity and reaction type</h4>
+<p>UvsW is an <strong>ATP-dependent helicase</strong> (EC 5.6.2.4 in UniProt context) that couples ATP hydrolysis to nucleic-acid remodeling. In functional assays, mutation of the Walker A lysine (<strong>K141R</strong>) abolishes key ATP-dependent activities (e.g., complementation of recG defects; branch migration; fork regression), indicating catalysis depends on canonical ATPase function. (carleskinch1997bacteriophaget4uvsw pages 1-2, webb2007thephaget4 pages 1-1, garciarodriguez2024similarmechanismsof pages 8-12)</p>
+<p><strong>Substrate specificity (supported substrates):</strong><br />
+- <strong>Origin R-loops</strong> (RNA–DNA hybrids): UvsW dissociates RNA from origin R-loops, serving as a regulatory switch in replication initiation. (dudas2001uvswproteinregulates pages 1-2)<br />
+- <strong>Branched DNA junctions</strong> (X- and Y-shaped substrates; replication forks): UvsW acts efficiently on branched substrates and replication intermediates. (webb2007thephaget4 pages 1-1, nelson2007thet4phage pages 7-7)<br />
+- <strong>Holliday junctions:</strong> UvsW promotes long-range branch migration. (webb2007thephaget4 pages 1-1)<br />
+- <strong>D-loops/recombination intermediates:</strong> UvsW can unwind recombination intermediates, and review synthesis argues it can stabilize D-loops via 3-strand branch migration in recombination-dependent replication. (nelson2007thet4phage pages 7-7, kreuzer2010initiationofbacteriophage pages 7-8)</p>
+<h4 id="22-replication-mode-switching-origin-dependent-recombination-dependent-replication">2.2 Replication-mode switching: origin-dependent → recombination-dependent replication</h4>
+<p>A consistent genetic and mechanistic model is that early in infection, T4 uses <strong>origin-dependent initiation</strong> (R-loop priming), but later switches to <strong>recombination-dependent replication (RDR)</strong> that initiates from D-loop recombination intermediates. UvsW is described as <strong>late expressed</strong> and, upon synthesis, <strong>unwinds origin R-loops</strong> at key origins (e.g., oriF/oriG), contributing to origin inactivation and the switch to RDR. (kreuzer2010initiationofbacteriophage pages 5-7, dudas2001uvswproteinregulates pages 1-2, kreuzer2010initiationofbacteriophage pages 1-2)</p>
+<h4 id="23-fork-regressionfork-reversal-and-restart-stalled-fork-rescue">2.3 Fork regression/fork reversal and restart (stalled fork rescue)</h4>
+<p>UvsW catalyzes <strong>fork regression</strong> (formation of a Holliday-junction-like “chicken foot”), both in vivo and in vitro. Long &amp; Kreuzer (2009) show UvsW is required for accumulation of a diagnostic regressed-fork cleavage fragment in vivo, and purified UvsW catalyzes fork regression/branch migration on fork intermediates isolated from infection. (long2009forkregressionis pages 3-4, kreuzer2010initiationofbacteriophage pages 10-12)</p>
+<p>Single-molecule work provides direct mechanistic support that UvsW-driven fork regression and branch migration enable <strong>template switching and lesion bypass</strong>, dramatically increasing completion of replication past a lesion. (manosas2012directobservationof pages 3-4)</p>
+<h4 id="24-holliday-junction-branch-migration">2.4 Holliday junction branch migration</h4>
+<p>UvsW is a robust Holliday junction branch migration motor: it promotes ATP-dependent migration through <strong>&gt;1000 bp</strong>, and ATPase-defective K141R cannot promote migration (though it can stabilize junctions without ATP), tying the activity to ATP hydrolysis. (webb2007thephaget4 pages 1-1)</p>
+<h4 id="25-strand-annealing-activity-dual-function-helicaseannealase">2.5 Strand annealing activity (dual-function helicase/annealase)</h4>
+<p>UvsW has a potent <strong>ssDNA annealing</strong> activity, which is <strong>enhanced by ATP hydrolysis but does not require it</strong>; this activity is inhibited by ATPγS and by interaction with other proteins (gp32, UvsW.1). The dual capability (unwinding + annealing) is frequently interpreted as particularly suitable for repair pathways such as lesion bypass and synthesis-dependent strand annealing-like reactions. (nelson2007thet4phage pages 1-1, nelson2007thet4phage pages 1-2)</p>
+<h3 id="3-interaction-partners-and-pathway-integration">3) Interaction partners and pathway integration</h3>
+<h4 id="31-uvsw1-small-polypeptide-partner">3.1 UvsW.1 (small polypeptide partner)</h4>
+<p>UvsW forms a complex with a small ~8.8–9 kDa polypeptide <strong>UvsW.1</strong> (also referred to in constructs as UvsW/W.1). FRET and fusion-protein experiments support complex formation, and UvsW.1 modulates UvsW’s annealing activity. (nelson2007thet4phage pages 1-1, nelson2007thet4phage pages 4-4)</p>
+<h4 id="32-gp32-t4-ssdna-binding-protein">3.2 gp32 (T4 ssDNA-binding protein)</h4>
+<p>UvsW function is modulated by T4 ssDNA-binding protein <strong>gp32</strong>. gp32 can inhibit annealing and translocation on gp32-coated ssDNA, but gp32 can also enhance UvsW-catalyzed unwinding of recombination intermediates in a manner dependent on gp32’s acidic C-terminal protein-interaction domain. This supports a model in which UvsW–gp32 interactions tune access to ssDNA and promote coordinated recombination/repair. (perumal2013interactionoft4 pages 1-2)</p>
+<h4 id="33-recombination-proteins-uvsxuvsy-and-nucleases-endovii">3.3 Recombination proteins (UvsX/UvsY) and nucleases (EndoVII)</h4>
+<p>UvsW is integrated with the <strong>UvsWXY</strong> recombination/repair module. Review synthesis places UvsW among proteins required for DSB-directed replication (RDR) and suggests a direct role in stabilizing strand invasion intermediates (D-loops) via branch migration. Fork regression products may be processed by nucleases such as <strong>Endonuclease VII</strong> (gene 49), with genetic evidence linking EndoVII cleavage to regressed intermediates. (kreuzer2010initiationofbacteriophage pages 7-8, long2009forkregressionis pages 3-4)</p>
+<h3 id="4-localization-where-the-gene-product-acts">4) Localization: where the gene product acts</h3>
+<p>Direct microscopy-based subcellular localization was not identified in the retrieved excerpts. However, the functional evidence consistently places UvsW activity <strong>on T4 DNA replication, recombination, and repair intermediates during infection</strong>, including origin R-loops and replication forks. Given T4 DNA replication occurs in infected <em>E. coli</em> and UvsW acts on these intermediates “in vivo” during infection, its operational localization is best described as <strong>intracellular (host cytoplasm/nucleoid region) at phage replication/recombination DNA structures</strong>. (kreuzer2010initiationofbacteriophage pages 10-12, kreuzer2010initiationofbacteriophage pages 1-2)</p>
+<h3 id="5-recent-developments-and-latest-research-prioritizing-20232024">5) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="51-2024-uvsw-as-an-experimental-tool-for-mapping-pathological-r-loops-in-bacteria">5.1 2024: UvsW as an experimental tool for mapping pathological R-loops in bacteria</h4>
+<p>Pandiyan et al. (2024, <em>Nucleic Acids Research</em>, published Apr 2024) used phage T4 UvsW as an <strong>R-loop helicase tool</strong> in <em>E. coli</em>. They report that some cryptic antisense RNAs that form R-loops are detectable only in the combined condition of <strong>Rho deficiency plus UvsW expression</strong>, because such transcripts “require unwinding by UvsW helicase for them to be synthesized in quantity and to be identified.” This is a modern real-world implementation: heterologous UvsW expression enables functional discrimination of R-loop-forming loci and supports mechanistic studies of R-loop–dependent transcription/replication conflicts in bacteria. https://doi.org/10.1093/nar/gkae839 (pandiyan2024pathologicalrloopsin pages 1-2)</p>
+<h4 id="52-2024-uvsw-as-a-trigger-in-retron-mediated-anti-phage-defense">5.2 2024: UvsW as a trigger in retron-mediated anti-phage defense</h4>
+<p>García-Rodríguez et al. (2024, bioRxiv preprint posted Feb 2024) report that a tripartite retron defense system (Retron-Eco11) detects and is triggered by phage helicases including <strong>T4 UvsW</strong> (and T5 D10). The study provides evidence that UvsW’s <strong>catalytic activity</strong> is important for triggering toxicity: the ATPase-defective <strong>UvsW K141R</strong> mutant does not trigger retron-dependent toxicity, supporting a model where the defense senses helicase activity rather than simple binding. https://doi.org/10.1101/2024.02.09.579579 (garciarodriguez2024similarmechanismsof pages 8-12, garciarodriguez2025structurallyrelatedphage pages 8-10, garciarodriguez2024similarmechanismsof pages 1-5)</p>
+<p>Although outside the requested 2023–2024 window, a peer-reviewed follow-up (Nov 2025, <em>Nucleic Acids Research</em>) further substantiates helicase-triggered retron defense, reporting downstream metabolic effects including ~50% PRPP depletion upon activation, underscoring the biological importance of UvsW-like helicase activities as “molecular signatures” sensed by bacterial immunity. https://doi.org/10.1093/nar/gkaf1396 (garciarodriguez2025structurallyrelatedphage pages 10-13)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<p>1) <strong>Model helicase in mechanistic enzymology</strong>: UvsW is used in standardized assays of helicase translocation/unwinding (expression/purification and assay workflows described in a Methods paper), supporting broad adoption as a tractable model for helicase mechanisms and mutational studies. https://doi.org/10.1016/j.ymeth.2010.02.011 (perumal2010analysisofthe pages 1-2)</p>
+<p>2) <strong>Single-molecule force spectroscopy model</strong>: UvsW is used as a model rewinding/fork-regression motor in magnetic/optical tweezer assays, enabling direct measurement of force dependence, direction switching, and coupling of rewinding to fork rescue. https://doi.org/10.1038/ncomms3368 (manosas2013recganduvsw pages 1-2, manosas2013recganduvsw media 08589400)</p>
+<p>3) <strong>Bacterial R-loop biology tool (2024)</strong>: heterologous UvsW expression is used to reveal R-loop–blocked transcription and classify antisense loci, a direct laboratory implementation that leverages UvsW substrate specificity. https://doi.org/10.1093/nar/gkae839 (pandiyan2024pathologicalrloopsin pages 1-2)</p>
+<p>4) <strong>Phage–host conflict biology (2024)</strong>: UvsW functions as a trigger for retron anti-phage systems, providing a new context for why phage helicase activities are evolutionarily “visible” to bacterial immunity. https://doi.org/10.1101/2024.02.09.579579 (garciarodriguez2024similarmechanismsof pages 8-12)</p>
+<h3 id="7-expert-opinions-and-synthesis-from-authoritative-sources">7) Expert opinions and synthesis from authoritative sources</h3>
+<ul>
+<li>
+<p>A dedicated review on T4 replication initiation and fork dynamics describes UvsW as a <strong>late-expressed helicase</strong> with <strong>branched nucleic-acid specificity</strong> that unwinds origin R-loops and is genetically/biochemically required for RDR and fork processing, emphasizing that earlier interpretations about origins/R-loops can be misleading without considering UvsW timing and activity. https://doi.org/10.1186/1743-422x-7-358 (kreuzer2010initiationofbacteriophage pages 5-7)</p>
+</li>
+<li>
+<p>Primary biochemical characterization explicitly anticipates broader utility: authors state they “expect [UvsW] will become an excellent model system” for studying these replication/recombination/repair processes, reflecting expert judgement that the combination of unwinding + annealing and branched-substrate specificity makes UvsW unusually informative as a mechanistic model. https://doi.org/10.1074/jbc.m608153200 (nelson2007thet4phage pages 6-7)</p>
+</li>
+</ul>
+<h3 id="8-key-quantitative-statistics-selected">8) Key quantitative statistics (selected)</h3>
+<ul>
+<li>
+<p><strong>Single-molecule rates and mechanics (Science 2012):</strong> at ~15 pN, UvsW annealing rate ~<strong>1300 bp/s</strong> with processivity ~<strong>9 kbp</strong>; HJ migration rate ~<strong>1000–1300 bp/s</strong>; direction switching characteristic time ~<strong>2 s</strong>; UvsW increases complete replication past a lesion by <strong>&gt;30-fold</strong>, where a lesion otherwise arrested <strong>98%</strong> of molecules. https://doi.org/10.1126/science.1225437 (manosas2012directobservationof pages 3-4)</p>
+</li>
+<li>
+<p><strong>Force tolerance and motor energetics (Nat Commun 2013):</strong> UvsW-driven rewinding proceeds against opposing forces of <strong>~30–35 pN</strong>, with only moderate rate reduction; modeled step size <strong>1–2 bp</strong>, stabilization energy ~<strong>5–5.5 kBT</strong>, and estimated motor efficiency <strong>~40–75%</strong>. https://doi.org/10.1038/ncomms3368 (manosas2013recganduvsw pages 4-5, manosas2013recganduvsw pages 1-2, manosas2013recganduvsw media 08589400)</p>
+</li>
+<li>
+<p><strong>Fork regression efficiency (EMBO Rep 2009):</strong> in vitro fork regression product formation rises to <strong>~94%</strong> at <strong>250 nM UvsW</strong> (30 min at 37°C); uvsW mutants in vivo are nearly deficient for accumulation of a diagnostic <strong>1.48 kb</strong> regressed-fork cleavage product. https://doi.org/10.1038/embor.2009.13 (long2009forkregressionis pages 3-4)</p>
+</li>
+<li>
+<p><strong>Binding kinetics (Nat Commun 2013):</strong> reported association rate on forks <strong>~5 × 10^6 M⁻1 s⁻1</strong> and residence times on the order of <strong>~15–20 s</strong> (depending on fork substrate/conditions). https://doi.org/10.1038/ncomms3368 (manosas2013recganduvsw pages 6-7)</p>
+</li>
+</ul>
+<h3 id="9-consolidated-functional-summary-for-annotation">9) Consolidated functional summary (for annotation)</h3>
+<p><strong>Primary function:</strong> UvsW is an ATP-dependent, SF2, 3′→5′ <strong>branch-specific helicase/rewinding motor</strong> that remodels R-loops, replication forks, Holliday junctions, and recombination intermediates. Its most supported physiological roles in T4 are (i) <strong>turning off origin R-loop initiation</strong> late in infection to favor recombination-dependent initiation, and (ii) <strong>processing stalled/blocked replication forks</strong> via fork regression and branch migration to enable repair, template switching, and restart. (kreuzer2010initiationofbacteriophage pages 5-7, dudas2001uvswproteinregulates pages 1-2, long2009forkregressionis pages 3-4, webb2007thephaget4 pages 1-1)</p>
+<p><strong>Where it acts:</strong> intracellularly during infection on phage DNA replication/recombination structures (origin R-loops and fork/HJ intermediates). (kreuzer2010initiationofbacteriophage pages 10-12, kreuzer2010initiationofbacteriophage pages 1-2)</p>
+<p><strong>Recent (2024) relevance:</strong> beyond canonical T4 replication biology, UvsW is now used as (a) a bacterial R-loop tool and (b) a key trigger of retron anti-phage immunity, highlighting its broader importance in modern bacterial genome stability and phage-defense research. (pandiyan2024pathologicalrloopsin pages 1-2, garciarodriguez2024similarmechanismsof pages 8-12)</p>
+<hr />
+<h3 id="evidence-map-table">Evidence map table</h3>
+<table>
+<thead>
+<tr>
+<th>Functional role/process</th>
+<th>Molecular activity (substrate specificity/polarity)</th>
+<th>Key interaction partners/modulators</th>
+<th>Key quantitative/statistical findings</th>
+<th>Evidence type (genetic/biochemical/structural/single-molecule)</th>
+<th>Key citations (with year, journal, DOI URL)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Verified protein identity / core annotation</td>
+<td>Bacteriophage T4 UvsW (Dar) is a ~55 kDa SF2 ATP-dependent helicase with canonical Walker A Lys141 and two RecA-like domains; branched-DNA specificity and 3′→5′ polarity are consistent with UniProt P0DXF1</td>
+<td>ATP; catalytic Lys141; structural similarity/function overlap with RecG and some biochemical similarity to RecQ</td>
+<td>Walker A mutant K141R abolishes ATPase-dependent helicase functions; protein described as ~55 kDa</td>
+<td>Structural, biochemical, genetic</td>
+<td>Sickmier et al., 2004, <em>Structure</em>, https://doi.org/10.1016/j.str.2004.02.016; Carles-Kinch et al., 1997, <em>EMBO J.</em>, https://doi.org/10.1093/emboj/16.13.4142; Nelson &amp; Benkovic, 2007, <em>J. Biol. Chem.</em>, https://doi.org/10.1074/jbc.m608153200 (sickmier2004thecrystalstructure pages 1-2, carleskinch1997bacteriophaget4uvsw pages 1-2, nelson2007thet4phage pages 1-1)</td>
+</tr>
+<tr>
+<td>Regulation of T4 replication-mode switch</td>
+<td>Unwinds RNA–DNA hybrids/R-loops at T4 origins, promoting the switch from origin-dependent to recombination-dependent (origin-independent) replication</td>
+<td>Origin R-loops; ATP hydrolysis; late expression timing; RecG-like activity</td>
+<td>Purified UvsW efficiently dissociates RNA from synthetic origin R-loops; UvsW expression increases recovery of <em>E. coli</em> rnhA::cat recG double mutants (example table entries 0.5 without UvsW vs 175 with UvsW in the cited excerpt)</td>
+<td>Genetic and biochemical</td>
+<td>Dudas &amp; Kreuzer, 2001, <em>Mol. Cell. Biol.</em>, https://doi.org/10.1128/MCB.21.8.2706-2715.2001; Carles-Kinch et al., 1997, <em>EMBO J.</em>, https://doi.org/10.1093/emboj/16.13.4142 (dudas2001uvswproteinregulates pages 1-2, carleskinch1997bacteriophaget4uvsw pages 1-2)</td>
+</tr>
+<tr>
+<td>Branched-DNA helicase in recombination/repair</td>
+<td>Unwinds a wide range of branched substrates, including stalled-fork mimics, D-loops, X- and Y-structures; 3′→5′ helicase/translocase</td>
+<td>ATP; ATPγS inhibits annealing; gp32 can inhibit annealing and modulate helicase action; UvsW.1 forms a complex with UvsW</td>
+<td>Strong polarity preference: 3′ overhang substrates are efficiently unwound/annealed relative to 5′ overhangs; example in vitro conditions in excerpt include 5 mM ATP, 2 nM DNA substrate, 200 nM protein at 37°C</td>
+<td>Biochemical</td>
+<td>Nelson &amp; Benkovic, 2007, <em>J. Biol. Chem.</em>, https://doi.org/10.1074/jbc.m608153200; Perumal et al., 2013, <em>J. Mol. Biol.</em>, https://doi.org/10.1016/j.jmb.2013.05.012 (nelson2007thet4phage pages 7-7, perumal2013interactionoft4 pages 1-2, nelson2007thet4phage pages 6-7)</td>
+</tr>
+<tr>
+<td>Holliday junction branch migration</td>
+<td>Drives ATP-dependent branch migration of Holliday junctions and acts on X-shaped replication intermediates</td>
+<td>ATP required; K141R mutant binds/stabilizes HJs without productive ATP-driven migration; functionally linked with UvsX/UvsY pathways</td>
+<td>Promotes branch migration efficiently through <strong>&gt;1000 bp</strong> of DNA; ATPase-dead K141R fails to promote migration</td>
+<td>Biochemical, 2D-gel, genetic</td>
+<td>Webb et al., 2007, <em>J. Biol. Chem.</em>, https://doi.org/10.1074/jbc.m705913200 (webb2007thephaget4 pages 1-1)</td>
+</tr>
+<tr>
+<td>Active replication-fork regression / fork reversal</td>
+<td>Catalyzes regression of origin-fork intermediates, converting forks into regressed Holliday-junction-like products by coupled unwinding/rewinding</td>
+<td>ATP; Endonuclease VII (gene 49) implicated downstream in cleavage of regressed forks; K141R used as inactive control</td>
+<td>In vivo, 46/uvsW infections are almost completely deficient for the <strong>1.48-kb DSE fragment</strong>; in vitro, increasing UvsW up to <strong>250 nM</strong> converts fork intermediates to <strong>6.2- and 5.2-kb</strong> products; example product fractions in excerpt rise to <strong>94%</strong> at highest enzyme condition</td>
+<td>Genetic, biochemical, 2D-gel</td>
+<td>Long &amp; Kreuzer, 2009, <em>EMBO Rep.</em>, https://doi.org/10.1038/embor.2009.13 (long2009forkregressionis pages 3-4)</td>
+</tr>
+<tr>
+<td>Stalled-fork restart and template switching</td>
+<td>Couples fork regression with branch migration and fork restoration to enable lesion bypass and restart of T4 replication forks</td>
+<td>T4 replisome/holoenzyme; ATP; reversible branch migration</td>
+<td>Single-molecule assays measured annealing rates of about <strong>1300 bp/s</strong> at <strong>15 pN</strong>, processivity of about <strong>9 kbp</strong>, HJ migration rates about <strong>1000–1300 bp/s</strong>, characteristic direction-switching time about <strong>2 s</strong>; UvsW increased full replication past a leading-strand lesion by <strong>&gt;30-fold</strong> and allowed bypass of a roadblock that otherwise arrested <strong>98%</strong> of molecules</td>
+<td>Single-molecule</td>
+<td>Manosas et al., 2012, <em>Science</em>, https://doi.org/10.1126/science.1225437 (manosas2012directobservationof pages 3-4)</td>
+</tr>
+<tr>
+<td>Robust DNA rewinding motor for fork rescue</td>
+<td>Active rewinding enzyme that couples duplex rewinding to unwinding/protein displacement during fork regression; functional analog of RecG</td>
+<td>ATP; fork junction ssDNA tails; parental duplex interaction over ~10 bp; divalent ions modulate branch-migration direction switching</td>
+<td>Works against opposing loads up to <strong>35 pN</strong>; modeled step size <strong>~1–2 bp</strong>; fork-stabilization energy <strong>~5–5.5 kBT</strong>; maximum work per bp <strong>~7.5 kBT</strong>; estimated motor efficiency <strong>~40–75%</strong>; fork-binding on-rates <strong>~5 × 10^6 M^-1 s^-1</strong>; residence times roughly <strong>15–20 s</strong> in cited conditions</td>
+<td>Single-molecule and modeling</td>
+<td>Manosas et al., 2013, <em>Nat. Commun.</em>, https://doi.org/10.1038/ncomms3368 (manosas2013recganduvsw pages 4-5, manosas2013recganduvsw pages 5-6, manosas2013recganduvsw pages 6-7, manosas2013recganduvsw pages 1-2, manosas2013recganduvsw pages 10-10)</td>
+</tr>
+<tr>
+<td>Strand annealing activity</td>
+<td>Potent ssDNA annealing activity in addition to helicase function; annealing is enhanced by ATP hydrolysis but does not strictly require hydrolysis</td>
+<td>gp32 inhibits annealing; ATPγS inhibits annealing; UvsW.1 inhibits/modulates annealing and forms complex with UvsW</td>
+<td>Fusion with UvsW.1 yields a <strong>68-kDa</strong> protein with properties similar to the UvsW–UvsW.1 complex</td>
+<td>Biochemical, FRET</td>
+<td>Nelson &amp; Benkovic, 2007, <em>J. Biol. Chem.</em>, https://doi.org/10.1074/jbc.m608153200 (nelson2007thet4phage pages 1-1, nelson2007thet4phage pages 6-7)</td>
+</tr>
+<tr>
+<td>Functional interaction with T4 gp32 SSB</td>
+<td>UvsW-catalyzed unwinding of recombination intermediates is enhanced by gp32, but gp32-coated ssDNA can suppress UvsW annealing/translocation unless the gp32 acidic tail mediates productive interaction</td>
+<td>gp32 acidic C-terminal protein-interaction domain; ssDNA; ATP</td>
+<td>Excerpt reports functional fluorescence assays using <strong>500 nM</strong> UvsW and gp32 variants; no direct affinity constant given in snippets</td>
+<td>Biochemical</td>
+<td>Perumal et al., 2013, <em>J. Mol. Biol.</em>, https://doi.org/10.1016/j.jmb.2013.05.012 (perumal2013interactionoft4 pages 1-2)</td>
+</tr>
+<tr>
+<td>Heterologous tool for bacterial R-loop biology</td>
+<td>In <em>E. coli</em>, heterologous UvsW acts as an R-loop helicase and can reveal or relieve transcriptional blocks caused by pathological antisense R-loops</td>
+<td>Rho deficiency context; bacterial antisense RNAs that form R-loops</td>
+<td>2024 study used UvsW expression to distinguish antisense loci detectable only under combined <strong>Rho deficiency + UvsW</strong>; these transcripts required UvsW unwinding to be synthesized in quantity and identified</td>
+<td>Functional genomics / bacterial application</td>
+<td>Pandiyan et al., 2024, <em>Nucleic Acids Res.</em>, https://doi.org/10.1093/nar/gkae839 (pandiyan2024pathologicalrloopsin pages 1-2, pandiyan2024pathologicalrloopsin pages 4-6)</td>
+</tr>
+<tr>
+<td>Target/trigger in anti-phage defense</td>
+<td>Phage-encoded UvsW is sensed by Retron-Eco11 as a defense trigger; retron activation depends on helicase catalytic activity rather than mere DNA binding</td>
+<td>Retron-Eco11 msDNA, RT, PRTase-like effector; ATPase/helicase catalytic motifs; D10 is a functional analog trigger in T5</td>
+<td>Escape mapping placed <strong>all five</strong> T4 escape mutants in uvsW and <strong>all five</strong> T5 escape mutants in d10 in the cited excerpt; UvsW K141R fails to trigger toxicity; Retron-Eco11 activation linked to about <strong>50% PRPP depletion</strong> in later peer-reviewed follow-up</td>
+<td>2024 preprint genetics/heterologous expression; later peer-reviewed confirmation</td>
+<td>García-Rodríguez et al., 2024, <em>bioRxiv</em>, https://doi.org/10.1101/2024.02.09.579579; García-Rodríguez et al., 2025, <em>Nucleic Acids Res.</em>, https://doi.org/10.1093/nar/gkaf1396 (garciarodriguez2024similarmechanismsof pages 8-12, garciarodriguez2025structurallyrelatedphage pages 8-10, garciarodriguez2024similarmechanismsof pages 1-5, garciarodriguez2025structurallyrelatedphage pages 10-13)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported functional annotation of bacteriophage T4 UvsW/Dar, including its molecular activities, pathway roles, modulators, quantitative properties, and newer 2024 biological contexts. It is useful as a compact evidence map linking classical T4 replication/recombination studies with recent R-loop and anti-phage defense findings.</em></p>
+<h3 id="visual-evidence-figure-crops">Visual evidence (figure crops)</h3>
+<p>A schematic and quantitative force-dependence plots for UvsW rewinding in single-molecule assays were retrieved from Manosas et al. (2013). (manosas2013recganduvsw media 08589400, manosas2013recganduvsw media 4c764a72)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(sickmier2004thecrystalstructure pages 1-2): E.Allen Sickmier, Kenneth N Kreuzer, and Stephen W White. The crystal structure of the uvsw helicase from bacteriophage t4. Structure, 12:583-592, Apr 2004. URL: https://doi.org/10.1016/j.str.2004.02.016, doi:10.1016/j.str.2004.02.016. This article has 33 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carleskinch1997bacteriophaget4uvsw pages 1-2): Kelly Carles-Kinch, James W. George, and Kenneth N. Kreuzer. Bacteriophage t4 uvsw protein is a helicase involved in recombination, repair and the regulation of dna replication origins. The EMBO Journal, 16:4142-4151, Jul 1997. URL: https://doi.org/10.1093/emboj/16.13.4142, doi:10.1093/emboj/16.13.4142. This article has 104 citations.</p>
+</li>
+<li>
+<p>(nelson2007thet4phage pages 1-1): Scott W. Nelson and Stephen J. Benkovic. The t4 phage uvsw protein contains both dna unwinding and strand annealing activities*. Journal of Biological Chemistry, 282:407-416, Jan 2007. URL: https://doi.org/10.1074/jbc.m608153200, doi:10.1074/jbc.m608153200. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nelson2007thet4phage pages 4-4): Scott W. Nelson and Stephen J. Benkovic. The t4 phage uvsw protein contains both dna unwinding and strand annealing activities*. Journal of Biological Chemistry, 282:407-416, Jan 2007. URL: https://doi.org/10.1074/jbc.m608153200, doi:10.1074/jbc.m608153200. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(perumal2013interactionoft4 pages 1-2): Senthil K. Perumal, Scott W. Nelson, and Stephen J. Benkovic. Interaction of t4 uvsw helicase and single-stranded dna binding protein gp32 through its carboxy-terminal acidic tail. Journal of molecular biology, 425 16:2823-39, Aug 2013. URL: https://doi.org/10.1016/j.jmb.2013.05.012, doi:10.1016/j.jmb.2013.05.012. This article has 17 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nelson2007thet4phage pages 6-7): Scott W. Nelson and Stephen J. Benkovic. The t4 phage uvsw protein contains both dna unwinding and strand annealing activities*. Journal of Biological Chemistry, 282:407-416, Jan 2007. URL: https://doi.org/10.1074/jbc.m608153200, doi:10.1074/jbc.m608153200. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(webb2007thephaget4 pages 1-1): Michael R. Webb, Jody L. Plank, David T. Long, Tao-shih Hsieh, and Kenneth N. Kreuzer. The phage t4 protein uvsw drives holliday junction branch migration*. Journal of Biological Chemistry, 282:34401-34411, Nov 2007. URL: https://doi.org/10.1074/jbc.m705913200, doi:10.1074/jbc.m705913200. This article has 32 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(long2009forkregressionis pages 3-4): David T Long and Kenneth N Kreuzer. Fork regression is an active helicase‐driven pathway in bacteriophage t4. EMBO reports, Apr 2009. URL: https://doi.org/10.1038/embor.2009.13, doi:10.1038/embor.2009.13. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kreuzer2010initiationofbacteriophage pages 5-7): Kenneth N Kreuzer and J Rodney Brister. Initiation of bacteriophage t4 dna replication and replication fork dynamics: a review in the virology journal series on bacteriophage t4 and its relatives. Virology Journal, 7:358-358, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-358, doi:10.1186/1743-422x-7-358. This article has 129 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dudas2001uvswproteinregulates pages 1-2): Kathleen C. Dudas and Kenneth N. Kreuzer. Uvsw protein regulates bacteriophage t4 origin-dependent replication by unwinding r-loops. Molecular and Cellular Biology, 21:2706-2715, Apr 2001. URL: https://doi.org/10.1128/mcb.21.8.2706-2715.2001, doi:10.1128/mcb.21.8.2706-2715.2001. This article has 59 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciarodriguez2024similarmechanismsof pages 8-12): Fernando Manuel García-Rodríguez, Francisco Martínez-Abarca, Max E. Wilkinson, and Nicolás Toro. Similar mechanisms of retron-mediated anti-phage defense for different families of tailed phages. bioRxiv, Feb 2024. URL: https://doi.org/10.1101/2024.02.09.579579, doi:10.1101/2024.02.09.579579. This article has 5 citations.</p>
+</li>
+<li>
+<p>(nelson2007thet4phage pages 7-7): Scott W. Nelson and Stephen J. Benkovic. The t4 phage uvsw protein contains both dna unwinding and strand annealing activities*. Journal of Biological Chemistry, 282:407-416, Jan 2007. URL: https://doi.org/10.1074/jbc.m608153200, doi:10.1074/jbc.m608153200. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kreuzer2010initiationofbacteriophage pages 7-8): Kenneth N Kreuzer and J Rodney Brister. Initiation of bacteriophage t4 dna replication and replication fork dynamics: a review in the virology journal series on bacteriophage t4 and its relatives. Virology Journal, 7:358-358, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-358, doi:10.1186/1743-422x-7-358. This article has 129 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kreuzer2010initiationofbacteriophage pages 1-2): Kenneth N Kreuzer and J Rodney Brister. Initiation of bacteriophage t4 dna replication and replication fork dynamics: a review in the virology journal series on bacteriophage t4 and its relatives. Virology Journal, 7:358-358, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-358, doi:10.1186/1743-422x-7-358. This article has 129 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kreuzer2010initiationofbacteriophage pages 10-12): Kenneth N Kreuzer and J Rodney Brister. Initiation of bacteriophage t4 dna replication and replication fork dynamics: a review in the virology journal series on bacteriophage t4 and its relatives. Virology Journal, 7:358-358, Dec 2010. URL: https://doi.org/10.1186/1743-422x-7-358, doi:10.1186/1743-422x-7-358. This article has 129 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2012directobservationof pages 3-4): Maria Manosas, Senthil K. Perumal, Vincent Croquette, and Stephen J. Benkovic. Direct observation of stalled fork restart via fork regression in the t4 replication system. Science, 338:1217-1220, Nov 2012. URL: https://doi.org/10.1126/science.1225437, doi:10.1126/science.1225437. This article has 104 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nelson2007thet4phage pages 1-2): Scott W. Nelson and Stephen J. Benkovic. The t4 phage uvsw protein contains both dna unwinding and strand annealing activities*. Journal of Biological Chemistry, 282:407-416, Jan 2007. URL: https://doi.org/10.1074/jbc.m608153200, doi:10.1074/jbc.m608153200. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pandiyan2024pathologicalrloopsin pages 1-2): Apuratha Pandiyan, Jillella Mallikarjun, Himanshi Maheshwari, and Jayaraman Gowrishankar. Pathological r-loops in bacteria from engineered expression of endogenous antisense rnas whose synthesis is ordinarily terminated by rho. Nucleic Acids Research, 52:12438-12455, Apr 2024. URL: https://doi.org/10.1093/nar/gkae839, doi:10.1093/nar/gkae839. This article has 4 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciarodriguez2025structurallyrelatedphage pages 8-10): Fernando M García-Rodríguez, Francisco Martínez-Abarca, Alejandro González-Delgado, David J Wen, Seth L Shipman, Max E Wilkinson, and Nicolás Toro. Structurally related phage helicases trigger type iii-a3 retron-mediated anti-phage defense across diverse tailed phage families. Nucleic Acids Research, Nov 2025. URL: https://doi.org/10.1093/nar/gkaf1396, doi:10.1093/nar/gkaf1396. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garciarodriguez2024similarmechanismsof pages 1-5): Fernando Manuel García-Rodríguez, Francisco Martínez-Abarca, Max E. Wilkinson, and Nicolás Toro. Similar mechanisms of retron-mediated anti-phage defense for different families of tailed phages. bioRxiv, Feb 2024. URL: https://doi.org/10.1101/2024.02.09.579579, doi:10.1101/2024.02.09.579579. This article has 5 citations.</p>
+</li>
+<li>
+<p>(garciarodriguez2025structurallyrelatedphage pages 10-13): Fernando M García-Rodríguez, Francisco Martínez-Abarca, Alejandro González-Delgado, David J Wen, Seth L Shipman, Max E Wilkinson, and Nicolás Toro. Structurally related phage helicases trigger type iii-a3 retron-mediated anti-phage defense across diverse tailed phage families. Nucleic Acids Research, Nov 2025. URL: https://doi.org/10.1093/nar/gkaf1396, doi:10.1093/nar/gkaf1396. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(perumal2010analysisofthe pages 1-2): Senthil K. Perumal, Kevin D. Raney, and Stephen J. Benkovic. Analysis of the dna translocation and unwinding activities of t4 phage helicases. Methods, 51 3:277-88, Jul 2010. URL: https://doi.org/10.1016/j.ymeth.2010.02.011, doi:10.1016/j.ymeth.2010.02.011. This article has 18 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw pages 1-2): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw media 08589400): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw pages 4-5): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw pages 6-7): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw pages 5-6): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw pages 10-10): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pandiyan2024pathologicalrloopsin pages 4-6): Apuratha Pandiyan, Jillella Mallikarjun, Himanshi Maheshwari, and Jayaraman Gowrishankar. Pathological r-loops in bacteria from engineered expression of endogenous antisense rnas whose synthesis is ordinarily terminated by rho. Nucleic Acids Research, 52:12438-12455, Apr 2024. URL: https://doi.org/10.1093/nar/gkae839, doi:10.1093/nar/gkae839. This article has 4 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(manosas2013recganduvsw media 4c764a72): Maria Manosas, Senthil K. Perumal, Piero R. Bianco, Felix Ritort, Stephen J. Benkovic, and Vincent Croquette. Recg and uvsw catalyse robust dna rewinding critical for stalled dna replication fork rescue. Nature Communications, Sep 2013. URL: https://doi.org/10.1038/ncomms3368, doi:10.1038/ncomms3368. This article has 97 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="uvsW-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000047 The requested information is found in Figure 1 and Figure 3 of the document. 1. **Schematic of Hairpin Assay:** Figure 1a provides " src="uvsW-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>dudas2001uvswproteinregulates pages 1-2</li>
+<li>manosas2012directobservationof pages 3-4</li>
+<li>pandiyan2024pathologicalrloopsin pages 1-2</li>
+<li>garciarodriguez2025structurallyrelatedphage pages 10-13</li>
+<li>perumal2010analysisofthe pages 1-2</li>
+<li>garciarodriguez2024similarmechanismsof pages 8-12</li>
+<li>kreuzer2010initiationofbacteriophage pages 5-7</li>
+<li>long2009forkregressionis pages 3-4</li>
+<li>manosas2013recganduvsw pages 6-7</li>
+<li>sickmier2004thecrystalstructure pages 1-2</li>
+<li>kreuzer2010initiationofbacteriophage pages 7-8</li>
+<li>kreuzer2010initiationofbacteriophage pages 1-2</li>
+<li>kreuzer2010initiationofbacteriophage pages 10-12</li>
+<li>garciarodriguez2025structurallyrelatedphage pages 8-10</li>
+<li>garciarodriguez2024similarmechanismsof pages 1-5</li>
+<li>manosas2013recganduvsw pages 1-2</li>
+<li>manosas2013recganduvsw pages 4-5</li>
+<li>manosas2013recganduvsw pages 5-6</li>
+<li>manosas2013recganduvsw pages 10-10</li>
+<li>pandiyan2024pathologicalrloopsin pages 4-6</li>
+<li>UvsW</li>
+<li>https://doi.org/10.1093/nar/gkae839</li>
+<li>https://doi.org/10.1101/2024.02.09.579579</li>
+<li>https://doi.org/10.1093/nar/gkaf1396</li>
+<li>https://doi.org/10.1016/j.ymeth.2010.02.011</li>
+<li>https://doi.org/10.1038/ncomms3368</li>
+<li>https://doi.org/10.1186/1743-422x-7-358</li>
+<li>https://doi.org/10.1074/jbc.m608153200</li>
+<li>https://doi.org/10.1126/science.1225437</li>
+<li>https://doi.org/10.1038/embor.2009.13</li>
+<li>https://doi.org/10.1016/j.str.2004.02.016;</li>
+<li>https://doi.org/10.1093/emboj/16.13.4142;</li>
+<li>https://doi.org/10.1128/MCB.21.8.2706-2715.2001;</li>
+<li>https://doi.org/10.1093/emboj/16.13.4142</li>
+<li>https://doi.org/10.1074/jbc.m608153200;</li>
+<li>https://doi.org/10.1016/j.jmb.2013.05.012</li>
+<li>https://doi.org/10.1074/jbc.m705913200</li>
+<li>https://doi.org/10.1101/2024.02.09.579579;</li>
+<li>https://doi.org/10.1016/j.str.2004.02.016,</li>
+<li>https://doi.org/10.1093/emboj/16.13.4142,</li>
+<li>https://doi.org/10.1074/jbc.m608153200,</li>
+<li>https://doi.org/10.1016/j.jmb.2013.05.012,</li>
+<li>https://doi.org/10.1074/jbc.m705913200,</li>
+<li>https://doi.org/10.1038/embor.2009.13,</li>
+<li>https://doi.org/10.1186/1743-422x-7-358,</li>
+<li>https://doi.org/10.1128/mcb.21.8.2706-2715.2001,</li>
+<li>https://doi.org/10.1101/2024.02.09.579579,</li>
+<li>https://doi.org/10.1126/science.1225437,</li>
+<li>https://doi.org/10.1093/nar/gkae839,</li>
+<li>https://doi.org/10.1093/nar/gkaf1396,</li>
+<li>https://doi.org/10.1016/j.ymeth.2010.02.011,</li>
+<li>https://doi.org/10.1038/ncomms3368,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P0DXF1
+gene_symbol: P0DXF1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P0DXF1&#39;
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016853
+    label: isomerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0043138
+    label: 3&#39;-5&#39; DNA helicase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: EXP
+  original_reference_id: PMID:17092935
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: EXP
+  original_reference_id: PMID:9233823
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:17092935
+  title: The T4 phage UvsW protein contains both DNA unwinding and strand annealing
+    activities.
+  findings: []
+- id: PMID:9233823
+  title: Bacteriophage T4 UvsW protein is a helicase involved in recombination, repair
+    and the regulation of DNA replication origins.
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

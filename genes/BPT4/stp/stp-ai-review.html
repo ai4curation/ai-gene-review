@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P62765 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P62765</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P62765" target="_blank" class="term-link">
+                        P62765
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P62765";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P62765" data-a="DESCRIPTION: TODO: Add description for P62765..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P62765</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004518" target="_blank" class="term-link">
+                                    GO:0004518
+                                </a>
+                            </span>
+                            <span class="term-label">nuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P62765" data-a="GO:0004518" data-r="GO_REF:0000002" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050792" target="_blank" class="term-link">
+                                    GO:0050792
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of viral process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P62765" data-a="GO:0050792" data-r="GO_REF:0000002" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052031" target="_blank" class="term-link">
+                                    GO:0052031
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated perturbation of host defense response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P62765" data-a="GO:0052031" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052170" target="_blank" class="term-link">
+                                    GO:0052170
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host innate immune response</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P62765" data-a="GO:0052170" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099018" target="_blank" class="term-link">
+                                    GO:0099018
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated evasion of host restriction-modification system</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P62765" data-a="GO:0099018" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(stp-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P62765" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">12 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T02:33:40.745943</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="stp-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="stp-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000031 I have extracted Table 4, which shows the deduced amino acid sequences of Stp variants, and Table 5, which details the effects of s</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-bacteriophage-t4-stp-uniprot-p62765-t4-suppressor-of-prr-stp">Research report: Bacteriophage T4 <strong>stp</strong> (UniProt <strong>P62765</strong>) — “T4 suppressor of prr” (Stp)</h2>
+<h3 id="0-mandatory-identity-verification-to-avoid-gene-symbol-ambiguity">0) Mandatory identity verification (to avoid gene-symbol ambiguity)</h3>
+<p>The gene symbol <strong>stp</strong> in this report refers specifically to <strong>Enterobacteria phage T4</strong> (bacteriophage T4) and encodes the <strong>T4 suppressor of prr (Stp)</strong>, a <em>minuscule phage peptide</em> that (i) <strong>inhibits the host type I restriction system EcoPrrI</strong> and (ii) <strong>activates the host PrrC anticodon nuclease</strong> (ACNase) that cleaves <strong>tRNA\u207bLys</strong>. These defining properties and the “Suppressor of prr” naming are consistent across primary literature and authoritative reviews, confirming the target identity described in UniProt P62765. (penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2, snyder1995phage‐exclusionenzymesa pages 3-4)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-prr-defense-module-and-why-stp-matters">1.1 The <strong>prr</strong> defense module and why <strong>Stp</strong> matters</h4>
+<p>In <em>prr+</em> Escherichia coli strains, the <strong>prr locus</strong> encodes (or is linked to) a coupled defense arrangement that includes:<br />
+- A <strong>type I restriction–modification (R–M) system</strong> (EcoPrrI; Hsd components) that restricts invading DNA, and<br />
+- A <strong>latent RNase toxin</strong>, <strong>PrrC</strong>, an <strong>anticodon nuclease (ACNase)</strong> that cleaves <strong>tRNA\u207bLys</strong> when activated. (kaufmann2000anticodonnucleases. pages 1-2)</p>
+<p>A central concept is that <strong>PrrC is masked/kept latent by association with the EcoPrrI restriction complex</strong>; perturbation of the restriction machinery can “unmask” or activate PrrC. (amitsur2003bacteriophaget4‐encodedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</p>
+<p><strong>Stp</strong> is the phage-encoded factor that ties these elements together: it is an <strong>anti-restriction effector</strong> that inhibits EcoPrrI restriction, but this same action (directly or indirectly) <strong>activates PrrC</strong>, leading to tRNA cleavage and potential translational arrest—hence Stp is a “double-edged effector.” (penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</p>
+<h4 id="12-what-stp-is-size-and-sequence-level-definition">1.2 What Stp is (size and sequence-level definition)</h4>
+<p>Stp is exceptionally small. Snyder’s expert perspective describes <strong>an ORF of ~26 amino acids</strong> encoding Stp. (snyder1995phage‐exclusionenzymesa pages 3-4)</p>
+<p>Penner et al. determined the deduced Stp peptide sequence (Table 4) as <strong>MSNFHNEHVMQFYRNNLKTKGVFGRQ</strong> (with a stop codon following; length ~27 aa depending on counting conventions). (penner1995phaget4codedstp pages 5-7, penner1995phaget4codedstp media c9ccb3d5)</p>
+<h4 id="13-what-anticodon-nuclease-activation-means-here">1.3 What “anticodon nuclease activation” means here</h4>
+<p>When <strong>PrrC</strong> is activated, it cleaves <strong>tRNA\u207bLys</strong> in the anticodon loop/near the wobble position, generating <strong>5′-OH and 2′,3′-cyclic phosphate termini</strong>. This lesion can inhibit translation, including T4 late protein synthesis unless repaired. (penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</p>
+<h3 id="2-molecular-function-mechanism-substrate-specificity-and-reaction-context">2) Molecular function: mechanism, substrate specificity, and reaction context</h3>
+<h4 id="21-primary-function-of-stp-anti-restriction-of-ecoprri">2.1 Primary function of Stp: anti-restriction of <strong>EcoPrrI</strong></h4>
+<p>Penner et al. show that Stp <strong>abolishes EcoPrrI restriction activity but not the cognate modification activity</strong>, consistent with selective interference with the restriction apparatus (e.g., HsdR-dependent function). (penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 2-4)</p>
+<p>A key mechanistic point is that <strong>anti-restriction does not require PrrC</strong>: Stp can alleviate EcoPrrI restriction even in backgrounds lacking prrC, indicating a direct anti-restriction action on EcoPrrI/Hsd rather than an indirect effect via PrrC. (penner1995phaget4codedstp pages 2-4, penner1995phaget4codedstp pages 8-9)</p>
+<h4 id="22-how-stp-activates-prrc-acnase-and-why-dna-matters">2.2 How Stp activates PrrC (ACNase) and why DNA matters</h4>
+<p>Penner et al. propose a conformational relay model in which <strong>Stp binds an Hsd (EcoPrrI) subunit</strong>, producing a conformational change that is transmitted to the <strong>Hsd–PrrC interface</strong>, thereby permitting PrrC to cleave tRNA\u207bLys. (penner1995phaget4codedstp pages 7-8)</p>
+<p>Amitsur et al. add biochemical constraints: Stp activates PrrC most effectively when <strong>EcoPrrI is bound to its cognate DNA substrate</strong>; in vitro Stp-dependent activation is <strong>DNase-sensitive</strong> and depends on nucleotide conditions. (amitsur2003bacteriophaget4‐encodedstp pages 1-2)</p>
+<h4 id="23-energeticcatalytic-requirements-of-activation-gtp-hydrolysis">2.3 Energetic/catalytic requirements of activation (GTP hydrolysis)</h4>
+<p>A recurring biochemical feature is that <strong>GTP hydrolysis</strong> is implicated as a driving requirement for activation of the EcoPrrI:PrrC ACNase system. Amitsur et al. report that the activation process is driven by <strong>GTP hydrolysis</strong>, likely via the <strong>NTPase domain of PrrC</strong>, and that Stp’s effect is relayed through the EcoPrrI component rather than acting on free PrrC. (amitsur2003bacteriophaget4‐encodedstp pages 1-2, amitsur2003bacteriophaget4‐encodedstp pages 2-3)</p>
+<h4 id="24-substrate-specificity-and-catalytic-reaction-what-is-cleaved">2.4 Substrate specificity and catalytic reaction (what is cleaved)</h4>
+<p>Stp itself is best understood as an <strong>effector/regulator peptide</strong>, not as the catalytic nuclease.<br />
+The downstream nuclease reaction is catalyzed by <strong>PrrC</strong>, which cleaves <strong>tRNA\u207bLys</strong> (lysine tRNA) at/near the anticodon wobble position, yielding <strong>5′-OH</strong> and <strong>2′,3′-cyclic phosphate</strong> ends. (kaufmann2000anticodonnucleases. pages 1-2, penner1995phaget4codedstp pages 1-2)</p>
+<h3 id="3-infection-cycle-context-timing-localization-and-pathway-placement">3) Infection-cycle context: timing, localization, and pathway placement</h3>
+<h4 id="31-timing-of-stp-expression-and-localization-inference">3.1 Timing of Stp expression and localization inference</h4>
+<p>Penner et al. describe Stp as expressed on a <strong>delayed-early schedule</strong> and state it is <strong>unlikely to be packaged in the virion</strong>, implying that Stp acts <strong>after infection</strong> within the host cell rather than being delivered as a preformed virion protein. (penner1995phaget4codedstp pages 8-9)</p>
+<p>Stp is also described as <strong>diffusible</strong> (i.e., not a structural/virion component), consistent with a role in modulating host macromolecular complexes in the cytosol during infection. (penner1995phaget4codedstp pages 1-2)</p>
+<h4 id="32-pathwaysystem-role-coupling-anti-restriction-to-trna-restriction-fail-safe">3.2 Pathway/system role: coupling anti-restriction to tRNA restriction (“fail-safe”)</h4>
+<p>Expert synthesis emphasizes that PrrC is masked by Hsd proteins and that <strong>Stp’s anti-restriction action may dissociate or disable the Hsd complex</strong>, thereby inactivating DNA restriction while <strong>inadvertently freeing/activating PrrC</strong>—a “fail-safe” outcome in which tRNA cleavage can kill the cell if restriction is inactivated. (snyder1995phage‐exclusionenzymesa pages 3-4)</p>
+<h3 id="4-genetics-and-phenotypes-what-happens-when-stp-is-mutated">4) Genetics and phenotypes: what happens when stp is mutated</h3>
+<p>Penner et al. provide allele-level genotype–phenotype mapping and show that <strong>Stp is necessary and sufficient</strong> for ACNase activation, because induction of cloned stp in uninfected <em>prr+</em> E. coli elicits ACNase activity. (penner1995phaget4codedstp pages 7-8)</p>
+<p>Key structure–function insights from mutant panels:<br />
+- The conserved <strong>N-proximal ~18 aa region</strong> is sufficient/critical for both anti-restriction and ACNase activation, while the C-terminus is more dispensable. (penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 5-7)<br />
+- Specific residues (e.g., <strong>F4, E7, H8, R14</strong>) are often essential for ACNase activation; some substitutions can differentially affect the two functions (e.g., <strong>F4S</strong> abolishing ACNase activation while “hardly” affecting anti-restriction). (penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 7-8)</p>
+<p>Quantitative/semiquantitative phenotypes (Table 5) include, for example:<br />
+- <strong>prr:stp</strong>: efficiency of plating (EOP) ~<strong>0.4</strong> with ACNase <strong>+</strong><br />
+- <strong>prr:stpF4S</strong>: EOP ~<strong>0.2</strong> with ACNase <strong>−</strong><br />
+- <strong>prr:stpE7V</strong>: EOP ~<strong>10\u207b\u00b3</strong> with ACNase <strong>−</strong><br />
+- <strong>prr:stp(Baker)</strong>: EOP ~<strong>0.8</strong> with ACNase <strong>+</strong> (penner1995phaget4codedstp pages 7-8, penner1995phaget4codedstp media 2c0776ea)</p>
+<p>These data support the conclusion that Stp’s N-terminal residues are a major determinant of its functional interaction with the EcoPrrI–PrrC complex. (penner1995phaget4codedstp pages 5-7, penner1995phaget4codedstp pages 7-8)</p>
+<h3 id="5-recent-developments-prioritizing-20232024-and-current-framing">5) Recent developments (prioritizing 2023–2024) and current framing</h3>
+<h4 id="51-2023-high-throughput-accessory-gene-functional-screens-include-stp-as-a-control">5.1 2023: high-throughput “accessory gene” functional screens include Stp as a control</h4>
+<p>A 2023 large-scale platform for discovering phage accessory genes identified <strong>10,888 putative accessory genes</strong> from <strong>1,706 Enterobacteriophage genomes</strong> (10,888 genes across 1,217 phages in nonredundant accessory regions) and synthesized 200 genes for assays; the authors explicitly included <strong>Stp</strong> among <strong>11 previously characterized phage genes</strong> used as controls. (silas2023activationofprogrammed pages 1-3)</p>
+<p>This indicates that—even though mechanistic work on Stp is largely earlier—Stp remains a canonical reference point in modern experimental frameworks for phage counter-defense biology. (silas2023activationofprogrammed pages 1-3)</p>
+<h4 id="52-2024-continued-use-as-a-canonical-example-in-educationalreview-synthesis">5.2 2024: continued use as a canonical example in educational/review synthesis</h4>
+<p>A 2024 synthesis on why phages encode tRNAs reprises the classic model: PrrC is inhibited by a restriction enzyme in uninfected cells, and <strong>phage anti-restriction protein Stp binds the inhibiting restriction enzyme</strong>, releasing/activating PrrC, which cleaves <strong>tRNA\u207bLys</strong> and arrests translation; T4 can counteract with tRNA repair enzymes (<strong>pnk</strong>, <strong>rli</strong>). (quinn2024whydobacteriophages pages 32-35)</p>
+<p><em>Note on evidence quality:</em> this 2024 item is not clearly tied to a major peer-reviewed venue in the retrieved metadata (“Unknown journal”), so it should be treated as secondary/tertiary synthesis. The mechanistic and quantitative claims in this report are anchored primarily in peer-reviewed primary papers and authoritative reviews from 1995–2003. (penner1995phaget4codedstp pages 1-2, amitsur2003bacteriophaget4‐encodedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-stpprrc-as-a-model-for-phage-counter-defense-and-abortive-infection-coupling">6.1 Stp/PrrC as a model for phage counter-defense and abortive infection coupling</h4>
+<p>The Stp–EcoPrrI–PrrC module is widely used conceptually to illustrate how a <strong>phage counter-defense (anti-restriction)</strong> can trigger <strong>host “abortive infection” style defenses</strong> (tRNA cleavage/toxin activation). (kaufmann2000anticodonnucleases. pages 1-2, snyder1995phage‐exclusionenzymesa pages 3-4)</p>
+<h4 id="62-reagenttool-concept-expert-viewpoint">6.2 Reagent/tool concept (expert viewpoint)</h4>
+<p>Snyder’s 1995 commentary frames phage-exclusion enzymes (including the prr/PrrC system activated by Stp) as potentially a “bonanza” of biochemical/cell-biology reagents, reflecting an expert view that such systems can be harnessed experimentally to probe macromolecular interactions and regulation. (snyder1995phage‐exclusionenzymesa pages 3-4)</p>
+<h4 id="63-inclusion-in-modern-functional-genomics-pipelines">6.3 Inclusion in modern functional-genomics pipelines</h4>
+<p>Stp’s inclusion as a known control gene in 2023 accessory gene discovery pipelines suggests practical implementation as a benchmark factor when assessing phage genes that modulate restriction systems or trigger toxic outcomes. (silas2023activationofprogrammed pages 1-3)</p>
+<h3 id="7-key-statistics-and-data-points-from-cited-studies">7) Key statistics and data points (from cited studies)</h3>
+<ul>
+<li><strong>Stp length</strong>: ORF encodes ~<strong>26 aa</strong> (expert synthesis). (snyder1995phage‐exclusionenzymesa pages 3-4)</li>
+<li><strong>Stp sequence</strong>: <strong>MSNFHNEHVMQFYRNNLKTKGVFGRQ</strong> (Table 4). (penner1995phaget4codedstp pages 5-7, penner1995phaget4codedstp media c9ccb3d5)</li>
+<li><strong>Mutant phenotypes</strong>: Example Table 5 values include <strong>EOP 0.4 (+)</strong> for prr:stp, <strong>0.2 (−)</strong> for F4S, and <strong>10\u207b\u00b3 (−)</strong> for E7V. (penner1995phaget4codedstp pages 7-8, penner1995phaget4codedstp media 2c0776ea)</li>
+<li><strong>Alternative activator potency</strong>: <strong>dTTP ~5 × 10\u207b\u2077 M</strong> as an in vitro surrogate activator of ACNase under assay conditions. (amitsur2003bacteriophaget4‐encodedstp pages 2-3)</li>
+<li><strong>2023 screening scale</strong>: <strong>1,706 genomes</strong>, <strong>10,888 putative AGs</strong>, <strong>200 synthesized AGs</strong>, with <strong>Stp among 11 controls</strong>. (silas2023activationofprogrammed pages 1-3)</li>
+</ul>
+<h3 id="8-evidence-table-compact-functional-annotation-map">8) Evidence table (compact functional annotation map)</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Experimentally supported finding</th>
+<th>Example quantitative/phenotypic detail</th>
+<th>Key citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Peptide size / sequence</td>
+<td>T4 <strong>Stp</strong> is a minuscule phage-encoded peptide of ~26–27 aa; Penner et al. reported the deduced sequence <strong>MSNFHNEHVMQFYRNNLKTKGVFGRQ</strong> (stop codon omitted).</td>
+<td>Table 4 in Penner et al. lists the wt peptide and mutant/variant sequences; Snyder describes an ORF of about <strong>26 aa</strong>.</td>
+<td>(penner1995phaget4codedstp pages 5-7, snyder1995phage‐exclusionenzymesa pages 3-4, penner1995phaget4codedstp media c9ccb3d5)</td>
+</tr>
+<tr>
+<td>Primary function 1: anti-restriction</td>
+<td>Stp inhibits <strong>EcoprrI</strong> type IC restriction activity while sparing cognate DNA modification, consistent with action on the restriction-specific Hsd machinery.</td>
+<td>Lower Stp levels suffice for anti-restriction than for ACNase activation; anti-restriction does <strong>not</strong> require PrrC.</td>
+<td>(penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 2-4)</td>
+</tr>
+<tr>
+<td>Primary function 2: PrrC activation</td>
+<td>Stp is <strong>necessary and sufficient</strong> to activate the latent host <strong>PrrC anticodon nuclease (ACNase)</strong>, leading to cleavage of <strong>tRNA^Lys</strong>.</td>
+<td>Induction of cloned <strong>stp</strong> in uninfected <strong>prr+</strong> E. coli elicits ACNase activity; stp mutations abolish activation.</td>
+<td>(penner1995phaget4codedstp pages 1-2, penner1995phaget4codedstp pages 5-7, penner1995phaget4codedstp pages 7-8)</td>
+</tr>
+<tr>
+<td>Mechanistic model</td>
+<td>Stp likely binds an <strong>Hsd/EcoPrrI</strong> component and relays a conformational change to the <strong>Hsd–PrrC</strong> interface, unmasking latent PrrC.</td>
+<td>Proposed “single-hit” inactivation of EcoPrrI versus a higher/continued Stp requirement for ACNase activation.</td>
+<td>(penner1995phaget4codedstp pages 1-2, penner1995phaget4codedstp pages 9-10, penner1995phaget4codedstp pages 7-8)</td>
+</tr>
+<tr>
+<td>Biochemical requirements</td>
+<td>In vitro Stp-dependent activation is favored when <strong>EcoPrrI is DNA-bound</strong>, is <strong>DNase-sensitive</strong>, and requires nucleotide turnover with <strong>GTP hydrolysis</strong> likely through the PrrC NTPase domain.</td>
+<td>Activation reactions lose activity with DNase; GTP hydrolysis is required for activation of the holoenzyme.</td>
+<td>(amitsur2003bacteriophaget4‐encodedstp pages 1-2, amitsur2003bacteriophaget4‐encodedstp pages 2-3)</td>
+</tr>
+<tr>
+<td>Alternative activator</td>
+<td>A normal host metabolite can substitute for Stp: <strong>dTTP</strong> is the most potent reported surrogate activator in vitro, apparently acting through a mechanistically distinct holoenzyme/DNA state.</td>
+<td>Effective level reported at approximately <strong>5 × 10^-7 M dTTP</strong> under assay conditions.</td>
+<td>(amitsur2003bacteriophaget4‐encodedstp pages 2-3, amitsur2003bacteriophaget4‐encodedstp pages 1-2)</td>
+</tr>
+<tr>
+<td>Target reaction / substrate context</td>
+<td>The biologically relevant downstream nuclease reaction is cleavage of <strong>tRNA^Lys</strong> at/near the wobble position, generating <strong>5′-OH</strong> and <strong>2′,3′-cyclic phosphate</strong> termini; this reaction is catalyzed by host <strong>PrrC</strong>, not by Stp itself.</td>
+<td>Cleaved tRNA lesions can block late T4 protein synthesis unless repaired by phage <strong>Pnk/Rnl1</strong> functions.</td>
+<td>(penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</td>
+</tr>
+<tr>
+<td>Infection timing / localization notes</td>
+<td>Stp is reported as a <strong>delayed-early</strong> T4 gene product and is <strong>unlikely to be virion packaged</strong>; it therefore most likely acts <strong>inside the infected host cytoplasm</strong> after infection rather than being injected as a preformed virion protein.</td>
+<td>Timing inference comes from delayed-early expression; localization is inferred from diffusible intracellular action on EcoPrrI/PrrC.</td>
+<td>(penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 1-2)</td>
+</tr>
+<tr>
+<td>Phenotypic consequences during infection</td>
+<td>Because Stp activates PrrC, <strong>stp</strong> mutations suppress the requirement for T4 tRNA-repair enzymes on <strong>prr+</strong> hosts; without Stp-mediated activation, pnk/rli become nonessential in that context.</td>
+<td>Stp is thus a “double-edged” effector: anti-restriction for phage benefit, but it can also trigger host tRNA restriction.</td>
+<td>(penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</td>
+</tr>
+<tr>
+<td>Mutational readouts</td>
+<td>The conserved <strong>N-proximal ~18 aa</strong> are most important; residues such as <strong>F4, E7, H8, R14</strong> are critical for activity, while much of the C-terminus is more dispensable.</td>
+<td>Example Table 5 values: <strong>prr:stp = EOP 0.4, ACNase +</strong>; <strong>stpF4S = 0.2, −</strong>; <strong>stpE7V = 10^-3, −</strong>; <strong>stp(Baker) = 0.8, +</strong>.</td>
+<td>(penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 5-7, penner1995phaget4codedstp pages 7-8, penner1995phaget4codedstp media c9ccb3d5, penner1995phaget4codedstp media 2c0776ea)</td>
+</tr>
+<tr>
+<td>Recent framing (2023–2024)</td>
+<td>Recent reviews still cite the <strong>Stp–EcoprrI–PrrC</strong> axis as a classic example of phage anti-restriction provoking abortive infection/tRNA cleavage; in 2023 Stp was also included as a known accessory-gene control in a large phage AG screen.</td>
+<td>Silas et al. screened <strong>10,888 putative AGs</strong> from <strong>1,217 phages</strong> and included <strong>Stp</strong> among 11 known controls.</td>
+<td>(quinn2024whydobacteriophages pages 32-35, silas2023activationofprogrammed pages 1-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally supported facts about bacteriophage T4 Stp, including its size, anti-restriction and PrrC-activating roles, mechanistic requirements, infection context, and quantitative mutant phenotypes. It is useful as a compact evidence map for functional annotation of UniProt P62765.</em></p>
+<h3 id="9-visual-evidence-stp-sequence-and-mutant-phenotypes">9) Visual evidence: Stp sequence and mutant phenotypes</h3>
+<p>The following extracted tables provide primary-data support for Stp’s minuscule size/sequence and for genotype–phenotype relationships (ACNase activation and plating efficiencies): Table 4/5 from Penner et al. 1995. (penner1995phaget4codedstp media c9ccb3d5, penner1995phaget4codedstp media 2c0776ea)</p>
+<h3 id="10-summary-functional-annotation-for-database-style-fields">10) Summary functional annotation (for database-style fields)</h3>
+<ul>
+<li><strong>Gene/product</strong>: T4 <strong>stp</strong> encodes <strong>Stp</strong>, a minuscule (~26–27 aa) diffusible peptide expressed delayed-early during infection. (penner1995phaget4codedstp pages 8-9, snyder1995phage‐exclusionenzymesa pages 3-4, penner1995phaget4codedstp pages 5-7)</li>
+<li><strong>Primary molecular function</strong>: <strong>Anti-restriction effector</strong> inhibiting EcoPrrI type I restriction (not modification). (penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 2-4)</li>
+<li><strong>Mechanistic role</strong>: Modulates the <strong>EcoPrrI–PrrC</strong> complex (especially DNA-bound state) to <strong>activate latent PrrC anticodon nuclease</strong>, in a DNase-sensitive, nucleotide- and <strong>GTP hydrolysis</strong>-dependent manner. (amitsur2003bacteriophaget4‐encodedstp pages 1-2, amitsur2003bacteriophaget4‐encodedstp pages 2-3)</li>
+<li><strong>Downstream enzymatic reaction (catalyzed by host PrrC)</strong>: Cleavage of <strong>tRNA\u207bLys</strong> producing <strong>5′-OH</strong> and <strong>2′,3′-cyclic phosphate</strong> ends; lesion can block translation unless repaired by phage RNA repair enzymes. (penner1995phaget4codedstp pages 1-2, kaufmann2000anticodonnucleases. pages 1-2)</li>
+<li><strong>Cellular location of action (inferred)</strong>: intracellular (host cytosol) after infection; not virion-packaged. (penner1995phaget4codedstp pages 8-9, penner1995phaget4codedstp pages 1-2)</li>
+</ul>
+<h3 id="references-urls-publication-dates">References (URLs, publication dates)</h3>
+<ul>
+<li>Penner M, Morad I, Snyder L, Kaufmann G. <strong>Phage T4-coded Stp: double-edged effector of coupled DNA and tRNA-restriction systems.</strong> <em>J Mol Biol.</em> <strong>1995-06</strong>. https://doi.org/10.1006/jmbi.1995.0343 (penner1995phaget4codedstp pages 1-2)</li>
+<li>Amitsur M, Benjamin S, Rosner R, et al. <strong>Bacteriophage T4-encoded Stp can be replaced as activator of anticodon nuclease by a normal host cell metabolite.</strong> <em>Mol Microbiol.</em> <strong>2003-10</strong>. https://doi.org/10.1046/j.1365-2958.2003.03691.x (amitsur2003bacteriophaget4‐encodedstp pages 1-2)</li>
+<li>Kaufmann G. <strong>Anticodon nucleases.</strong> <em>Trends Biochem Sci.</em> <strong>2000-02</strong>. https://doi.org/10.1016/S0968-0004(99)01525-X (kaufmann2000anticodonnucleases. pages 1-2)</li>
+<li>Snyder L. <strong>Phage-exclusion enzymes: a bonanza of biochemical and cell biology reagents?</strong> <em>Mol Microbiol.</em> <strong>1995-02</strong>. https://doi.org/10.1111/j.1365-2958.1995.tb02255.x (snyder1995phage‐exclusionenzymesa pages 3-4)</li>
+<li>Silas S, Carion H, Makarova KS, et al. <strong>Activation of programmed cell death and counter-defense functions of phage accessory genes.</strong> <em>bioRxiv</em> <strong>2023-06</strong>. https://doi.org/10.1101/2023.04.06.535777 (silas2023activationofprogrammed pages 1-3)</li>
+<li>Quinn RE. <strong>Why do bacteriophages encode for tRNAs?</strong> <em>Unknown journal</em> <strong>2024</strong>. (metadata incomplete in retrieval) (quinn2024whydobacteriophages pages 32-35)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(penner1995phaget4codedstp pages 1-2): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kaufmann2000anticodonnucleases. pages 1-2): Gabriel Kaufmann. Anticodon nucleases. Trends in biochemical sciences, 25 2:70-4, Feb 2000. URL: https://doi.org/10.1016/s0968-0004(99)01525-x, doi:10.1016/s0968-0004(99)01525-x. This article has 193 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(snyder1995phage‐exclusionenzymesa pages 3-4): Larry Snyder. Phage‐exclusion enzymes: a bonanza of biochemical and cell biology reagents? Molecular Microbiology, 15:415-420, Feb 1995. URL: https://doi.org/10.1111/j.1365-2958.1995.tb02255.x, doi:10.1111/j.1365-2958.1995.tb02255.x. This article has 259 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amitsur2003bacteriophaget4‐encodedstp pages 1-2): Michal Amitsur, Sima Benjamin, Rachel Rosner, Daphne Chapman‐Shimshoni, Roberto Meidler, Shani Blanga, and Gabriel Kaufmann. Bacteriophage t4‐encoded stp can be replaced as activator of anticodon nuclease by a normal host cell metabolite. Molecular Microbiology, 50:129-143, Oct 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03691.x, doi:10.1046/j.1365-2958.2003.03691.x. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp pages 5-7): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp media c9ccb3d5): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp pages 8-9): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp pages 2-4): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp pages 7-8): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amitsur2003bacteriophaget4‐encodedstp pages 2-3): Michal Amitsur, Sima Benjamin, Rachel Rosner, Daphne Chapman‐Shimshoni, Roberto Meidler, Shani Blanga, and Gabriel Kaufmann. Bacteriophage t4‐encoded stp can be replaced as activator of anticodon nuclease by a normal host cell metabolite. Molecular Microbiology, 50:129-143, Oct 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03691.x, doi:10.1046/j.1365-2958.2003.03691.x. This article has 27 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp media 2c0776ea): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(silas2023activationofprogrammed pages 1-3): Sukrit Silas, Héloïse Carion, Kira S. Makarova, Eric Laderman, David Sanchez Godinez, Matthew Johnson, Andrea Fossati, Danielle Swaney, Michael Bocek, Eugene V. Koonin, and Joseph Bondy-Denomy. Activation of programmed cell death and counter-defense functions of phage accessory genes. bioRxiv, Jun 2023. URL: https://doi.org/10.1101/2023.04.06.535777, doi:10.1101/2023.04.06.535777. This article has 9 citations.</p>
+</li>
+<li>
+<p>(quinn2024whydobacteriophages pages 32-35): RE Quinn. Why do bacteriophages encode for trnas? Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(penner1995phaget4codedstp pages 9-10): Michal Penner, Ilan Morad, Larry Snyder, and Gabriel Kaufmann. Phage t4-coded stp: double-edged effector of coupled dna and trna-restriction systems. Journal of molecular biology, 249 5:857-68, Jun 1995. URL: https://doi.org/10.1006/jmbi.1995.0343, doi:10.1006/jmbi.1995.0343. This article has 112 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="stp-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000031 I have extracted Table 4, which shows the deduced amino acid sequences of Stp variants, and Table 5, which details the effects of s" src="stp-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>silas2023activationofprogrammed pages 1-3</li>
+<li>quinn2024whydobacteriophages pages 32-35</li>
+<li>https://doi.org/10.1006/jmbi.1995.0343</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03691.x</li>
+<li>https://doi.org/10.1016/S0968-0004(99</li>
+<li>https://doi.org/10.1111/j.1365-2958.1995.tb02255.x</li>
+<li>https://doi.org/10.1101/2023.04.06.535777</li>
+<li>https://doi.org/10.1006/jmbi.1995.0343,</li>
+<li>https://doi.org/10.1016/s0968-0004(99</li>
+<li>https://doi.org/10.1111/j.1365-2958.1995.tb02255.x,</li>
+<li>https://doi.org/10.1046/j.1365-2958.2003.03691.x,</li>
+<li>https://doi.org/10.1101/2023.04.06.535777,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P62765
+gene_symbol: P62765
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P62765&#39;
+existing_annotations:
+- term:
+    id: GO:0004518
+    label: nuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0050792
+    label: regulation of viral process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052031
+    label: symbiont-mediated perturbation of host defense response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0052170
+    label: symbiont-mediated suppression of host innate immune response
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099018
+    label: symbiont-mediated evasion of host restriction-modification system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

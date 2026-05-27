@@ -1,0 +1,4023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOMM40 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TOMM40</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O96008" target="_blank" class="term-link">
+                        O96008
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TOMM40";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O96008" data-a="DESCRIPTION: Channel-forming subunit of the translocase of the ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Channel-forming subunit of the translocase of the outer mitochondrial membrane (TOM) complex. TOMM40 forms the central beta-barrel pore through which most nuclear-encoded mitochondrial precursor proteins are translocated across the outer membrane. The TOM complex contains two copies of TOMM40 forming a dimeric channel, together with receptor subunits (TOMM20, TOMM22, TOMM70) and small subunits (TOMM5, TOMM6, TOMM7). Also involved in ER-mitochondria contact sites via BCAP31 interaction, and in PINK1/Parkin mitophagy signaling through TOM-VDAC2 interaction.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030943" target="_blank" class="term-link">
+                                    GO:0030943
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion targeting sequence binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0030943" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM40 forms the channel that translocates presequence-containing precursors. The beta-barrel pore interacts with targeting sequences during translocation. Well supported by yeast Tom40 studies and human data (PMID:15644312).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0030150" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM40 is the central channel through which matrix-destined preproteins pass. However, TOMM40 is involved in ALL mitochondrial import pathways, not only matrix import. This annotation captures only one pathway (TOM-TIM23-PAM).
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matrix import is one of several import routes through the TOM channel.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005742" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM40 is the defining channel subunit of the TOM complex. Directly demonstrated in human cells by co-immunoprecipitation and BN-PAGE (PMID:12198123, PMID:15644312, PMID:18331822).
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0008320" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM40 is the protein-conducting channel of the outer membrane. This MF term accurately describes its core molecular function.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TOMM40/TOMM40-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel translocation pore** in the mitochondrial outer membrane that enables **import of nuclear-encoded mitochondrial precursor proteins** into mitochondria as part of the TOM complex.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0008320" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA annotation for the same term. InterPro-based inference is correct — TOMM40 has protein transmembrane transporter activity.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0030150" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA for same term. Correct but captures only one of several import pathways through TOM.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matrix import is one specific pathway; TOMM40 serves all import routes.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very generic parent term. The more specific GO:0008320 (protein transmembrane transporter activity) is already annotated and more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general; subsumed by more specific annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31412244" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31412244
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    TOM40 Targets Atg2 to Mitochondria-Associated ER Membranes f...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005515" data-r="PMID:31412244" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:31412244 shows TOM40 targets Atg2 to MAM for phagophore expansion. Protein binding is uninformative per curation guidelines. The actual function is recruitment of ATG2A to ER-mitochondria contact sites.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative. The interaction with ATG2A represents a non-core MAM/autophagy function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0030150" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Redundant with IBA and IEA for same term. Correct but non-core — matrix import is one of many pathways served by the TOM channel.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general — TOMM40 specifically localizes to the mitochondrial outer membrane. The more specific CC term GO:0005741 is already annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by more specific mitochondrial outer membrane annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005741" data-r="PMID:15644312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Humphries et al. 2005 demonstrated TOMM40 localization to the outer membrane by subcellular fractionation and protease protection assays. Core CC.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31206022" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31206022
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BAP31 regulates mitochondrial function via interaction with ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005741" data-r="PMID:31206022" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Namba 2019 confirmed TOMM40 at OM via immunofluorescence and co-IP. Redundant with PMID:15644312 evidence for same term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0030150" data-r="PMID:15644312" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Humphries et al. showed depletion of TOMM40 compromises protein import. However, this is expected for the general import channel. Non-core because TOMM40 serves all import routes, not specifically matrix import.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005741" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kato &amp; Mihara 2008 identified Tom5 and Tom6 in the human TOM complex and confirmed Tom40 as an outer membrane component. Redundant with EXP evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                    GO:0045040
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0045040" data-r="PMID:18331822" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This term refers to insertion of proteins INTO the outer membrane (e.g., alpha-helical or beta-barrel proteins). TOMM40 itself is inserted into the OM but does not catalyze insertion of others — that is the role of SAM (for beta-barrels) and MTCH2/MIM (for alpha-helical proteins). TOMM40 facilitates translocation THROUGH the outer membrane, not insertion into it.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TOMM40 is a translocation channel, not an insertase. It translocates proteins across the OM, not into the OM lipid bilayer.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    protein transmembrane transporter activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                                    GO:0140596
+                                </a>
+                            </span>
+                            <span class="term-label">TOM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0140596" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kato &amp; Mihara confirmed TOMM40 in the human TOM complex via immuno-isolation. GO:0140596 (TOM complex) is a more specific CC term than GO:0005742 (mitochondrial outer membrane translocase complex). Both are correct.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome confirms TOMM40 as mitochondrial. Too general — more specific OM annotation exists.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31206022" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31206022
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BAP31 regulates mitochondrial function via interaction with ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005515" data-r="PMID:31206022" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Namba 2019 showed TOMM40 interacts with BCAP31 at ER-mitochondria contact sites. Protein binding is uninformative per guidelines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative. The BCAP31 interaction is a non-core MAM function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044233" target="_blank" class="term-link">
+                                    GO:0044233
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondria-associated endoplasmic reticulum membrane contact site</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31206022" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31206022
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BAP31 regulates mitochondrial function via interaction with ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0044233" data-r="PMID:31206022" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Namba 2019 demonstrated TOMM40 localizes to MAM via interaction with BCAP31. This is a secondary localization beyond its primary OM residence. The MAM function (facilitating Complex I assembly) is a non-core role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MAM localization is secondary to the core TOM complex function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070585" target="_blank" class="term-link">
+                                    GO:0070585
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31206022" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31206022
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    BAP31 regulates mitochondrial function via interaction with ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0070585" data-r="PMID:31206022" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Namba 2019 showed BAP31-TOMM40 complex mediates NDUFS4 translocation to mitochondria. This is a specific aspect of TOMM40 general import function. The term is quite general but captures TOMM40 role in protein localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> General term; the specific Complex I assembly role via BAP31 is non-core.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24746669" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24746669
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cyclin B1/Cdk1 coordinates mitochondrial respiration for cel...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005743" data-r="PMID:24746669" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:24746669 is about Cyclin B1/Cdk1 and mitochondrial respiration. TOMM40 is an outer membrane beta-barrel protein. Inner membrane localization is incorrect — TOMM40 may contact the IM via supercomplex formation with TIM complexes, but it is not an IM resident protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TOMM40 is an outer membrane protein. Inner membrane annotation is incorrect; likely an artifact of co-fractionation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27554484" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27554484
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Tim29 is a novel subunit of the human TIM22 translocase and ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005515" data-r="PMID:27554484" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kang et al. 2016 showed TIMM29 interacts with TOMM40, linking TIM22 to TOM complex. Protein binding is uninformative per guidelines.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative. The TIM22-TOM interaction via TIMM29 is better captured by TOM complex CC annotation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5205661
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005741" data-r="Reactome:R-HSA-5205661" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway for PINK1 recruitment to mitochondria. Confirms TOMM40 at the outer membrane. Redundant with direct experimental evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0016020" data-r="PMID:15644312" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extremely generic CC term. TOMM40 is specifically in the mitochondrial outer membrane (GO:0005741), which is already well-annotated.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Too general; subsumed by mitochondrial outer membrane.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0008320" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ortholog-based transfer of transporter activity. Correct and redundant with IBA evidence for same term.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11745481" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11745481
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic identity and differential expression of p38.5 (Hayma...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005739" data-r="PMID:11745481" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PMID:11745481 (Das et al. 2001) identified TOMM40 as p38.5/Haymaker and reported differential expression in malignant cells. The NOT annotation for mitochondrion localization is incorrect — TOMM40 is definitively a mitochondrial protein. This may reflect early confusion about the gene identity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The NOT|mitochondrion annotation contradicts overwhelming evidence that TOMM40 is a core mitochondrial outer membrane protein.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10980201" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10980201
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of rat TOM40, a central component of the pr...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005741" data-r="PMID:10980201" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Based on rat Tom40 characterization (Suzuki et al. 2000). Correct — outer membrane localization is conserved.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12198123
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insertion and assembly of human tom7 into the preprotein tra...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005742" data-r="PMID:12198123" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Johnston et al. 2002 identified TOMM40 in the ~380 kDa TOM complex by BN-PAGE and supershift analysis. Direct experimental evidence for TOM complex membership.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0005742" data-r="PMID:15644312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Humphries et al. 2005 confirmed TOMM40 in TOM complex by BN-PAGE. Redundant with PMID:12198123 but independent confirmation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O96008" data-a="GO:0008320" data-r="PMID:15644312" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Humphries et al. described TOMM40 as the channel-forming subunit essential for protein import. Core MF annotation.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TOMM40 is the central beta-barrel channel of the TOM complex, the main entry gate for nuclear-encoded mitochondrial precursor proteins. Two copies of TOMM40 form a dimeric pore in the outer membrane through which virtually all imported proteins pass, regardless of their final destination (matrix, inner membrane, IMS, or outer membrane). The channel interacts with mitochondrial targeting sequences during translocation.</h3>
+                <span class="vote-buttons" data-g="O96008" data-a="FUNCTION: TOMM40 is the central beta-barrel channel of the T..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                            protein transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                protein import into mitochondrial matrix
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045041" target="_blank" class="term-link">
+                                protein import into mitochondrial intermembrane space
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                            mitochondrial outer membrane translocase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link">
+                                PMID:15644312
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Tom40 is the channel-forming subunit of the translocase of the mitochondrial outer membrane (TOM complex), essential for protein import into mitochondria.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link">
+                                PMID:12198123
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">We found that the 120-kDa complex contains Tom40 and lacks receptor components. This intermediate can be chased to the stable approximately 380-kDa mammalian TOM complex that additionally contains Tom22.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM40/TOMM40-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel translocation pore** in the mitochondrial outer membrane that enables **import of nuclear-encoded mitochondrial precursor proteins** into mitochondria as part of the TOM complex.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TOMM40/TOMM40-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for TOMM40</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Falcon corroborates TOMM40 as the beta-barrel TOM complex pore in the mitochondrial outer membrane and separates this core import function from less direct APOE-region disease association signals.</div>
+                        
+                        <div class="finding-text">"**Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel translocation pore** in the mitochondrial outer membrane that enables **import of nuclear-encoded mitochondrial precursor proteins** into mitochondria as part of the TOM complex."</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10980201" target="_blank" class="term-link">
+                            PMID:10980201
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Characterization of rat TOM40, a central component of the preprotein translocase of the mitochondrial outer membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11745481" target="_blank" class="term-link">
+                            PMID:11745481
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Genetic identity and differential expression of p38.5 (Haymaker) in human malignant and nonmalignant cells.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link">
+                            PMID:12198123
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insertion and assembly of human tom7 into the preprotein translocase complex of the outer mitochondrial membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link">
+                            PMID:15644312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dissection of the mitochondrial import and assembly pathway for human Tom40.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link">
+                            PMID:18331822
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of Tom5 and Tom6 in the preprotein translocase complex of human mitochondrial outer membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24746669" target="_blank" class="term-link">
+                            PMID:24746669
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cyclin B1/Cdk1 coordinates mitochondrial respiration for cell-cycle G2/M progression.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27554484" target="_blank" class="term-link">
+                            PMID:27554484
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Tim29 is a novel subunit of the human TIM22 translocase and is involved in complex assembly and stability.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31206022" target="_blank" class="term-link">
+                            PMID:31206022
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">BAP31 regulates mitochondrial function via interaction with Tom40 within ER-mitochondria contact sites.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31412244" target="_blank" class="term-link">
+                            PMID:31412244
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">TOM40 Targets Atg2 to Mitochondria-Associated ER Membranes for Phagophore Expansion.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5205661
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pink1 is recruited from the cytoplasm to the mitochondria</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TOMM40-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O96008" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: Human **TOMM40** (UniProt **O96008**) — Functional Annotation, Mechanism, and Disease-Linked Evidence (2023–2024 prioritized)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">28 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-05-11T00:07:58.383091</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-human-tomm40-uniprot-o96008-functional-annotation-mechanism-and-disease-linked-evidence-20232024-prioritized">Research Report: Human <strong>TOMM40</strong> (UniProt <strong>O96008</strong>) — Functional Annotation, Mechanism, and Disease-Linked Evidence (2023–2024 prioritized)</h1>
+<h2 id="1-target-verification-identity-organism-familydomain-alignment">1. Target verification (identity, organism, family/domain alignment)</h2>
+<p>The literature retrieved and analyzed consistently refers to <strong>human TOMM40 (Tom40)</strong> as the <strong>pore-forming β‑barrel subunit of the mitochondrial translocase of the outer membrane (TOM) complex</strong>, matching the UniProt O96008 description (“mitochondrial import receptor subunit TOM40 homolog”) and its porin/β‑barrel domain architecture. Tom40 is described as a <strong>19‑β‑strand β‑barrel channel</strong> in the <strong>mitochondrial outer membrane (OMM)</strong>. (nussberger2024newinsightsinto pages 2-4, su2024structureofthe pages 3-5)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h2>
+<h3 id="21-tom-complex-and-mitochondrial-protein-import">2.1 TOM complex and mitochondrial protein import</h3>
+<p>In human cells, the <strong>TOM complex</strong> is the <strong>primary entry gate</strong> for the vast majority of <strong>nuclear-encoded mitochondrial precursor proteins (preproteins)</strong> that must cross the <strong>outer mitochondrial membrane</strong> en route to the OMM, intermembrane space (IMS), inner membrane (IMM), or matrix. (nussberger2024newinsightsinto pages 1-2)</p>
+<h3 id="22-tomm40tom40-molecular-function">2.2 TOMM40/Tom40 molecular function</h3>
+<p><strong>TOMM40 encodes Tom40</strong>, the <strong>central translocation pore</strong> of the TOM complex. Structurally, Tom40 is a <strong>β‑barrel channel</strong> (19 β‑strands) that provides the conduit for preproteins to move from cytosol into the IMS as the first step in mitochondrial import. (su2024structureofthe pages 3-5, nussberger2024newinsightsinto pages 2-4)</p>
+<h3 id="23-receptorpore-coupling-tom20tom22tom70">2.3 Receptor–pore coupling: Tom20/Tom22/Tom70</h3>
+<p>Preproteins are initially recognized by TOM receptors (classically Tom20, Tom22, Tom70), then routed to the Tom40 channel for translocation. A 2024 review summarizes that Tom20 preferentially recognizes cleavable N‑terminal presequences and Tom70 binds other precursor classes including hydrophobic carrier precursors, contextualizing how substrates are delivered to the pore. (borgert2024conservedqualitycontrol pages 3-4)</p>
+<h2 id="3-subcellular-localization-and-complex-membership">3. Subcellular localization and complex membership</h2>
+<h3 id="31-localization">3.1 Localization</h3>
+<p>Tom40 is an <strong>integral OMM protein</strong> forming the TOM pore. (su2024structureofthe pages 3-5, nussberger2024newinsightsinto pages 2-4)</p>
+<h3 id="32-core-subunits-and-structural-organization">3.2 Core subunits and structural organization</h3>
+<p>A 2024 cryo‑EM study of the <strong>human TOM holo complex</strong> reports the core complex composition as <strong>Tom40, Tom22, Tom5, Tom6, Tom7</strong>, with receptor <strong>Tom20</strong> positioned asymmetrically on the complex. (su2024structureofthe pages 3-5)</p>
+<p>A key structural view of the human TOM holo complex subunit arrangement (Tom40/Tom22/Tom5/Tom6/Tom7) is provided in Figure 1 of Su et al. 2024. (su2024structureofthe media 4747d2ba)</p>
+<h2 id="4-recent-developments-prioritizing-20232024">4. Recent developments (prioritizing 2023–2024)</h2>
+<h3 id="41-high-resolution-structural-insights-into-human-tomtom40-2024">4.1 High-resolution structural insights into human TOM/Tom40 (2024)</h3>
+<p>A 2024 expert review synthesizing recent sub‑nanometer to near‑atomic structures reports that Tom40 is a <strong>19‑β‑strand β‑barrel</strong> and that human TOM core structures show <strong>two Tom40 pores</strong> that create a cytosolic-side <strong>“preprotein funnel”</strong>. The review cites a <strong>human TOM core complex at 2.53 Å resolution (PDB 7VD2)</strong> and notes Tom40 dimerization involves <strong>β1–β19 interactions</strong> (analogous to VDAC). (nussberger2024newinsightsinto pages 2-4)</p>
+<h3 id="42-structural-plasticity-and-receptor-positioning-tom20-in-the-human-tom-holo-complex-su-et-al-2024">4.2 Structural plasticity and receptor positioning (Tom20) in the human TOM holo complex (Su et al., 2024)</h3>
+<p>Su et al. determined a <strong>cryo‑EM structure</strong> of the <strong>human TOM holo complex including an intact Tom20 receptor</strong> (PNAS Nexus; <strong>June 2024</strong>, https://doi.org/10.1093/pnasnexus/pgae269). Tom20 was resolved as a <strong>single subunit</strong> located near the center of the complex and stabilized by interactions with <strong>Tom22, Tom40, and Tom6</strong>. (su2024structureofthe pages 3-5)</p>
+<p>The structure supports a model in which receptor positioning and TOM architecture allow <strong>simultaneous receptor engagement</strong> for efficient preprotein delivery into Tom40. Tom20 binding is associated with conformational changes in Tom22 (reported shifts/displacements on the order of a few Å), consistent with a <strong>dynamic, plastic receptor–pore interface</strong>. (su2024structureofthe pages 3-5)</p>
+<h3 id="43-mechanistic-open-questions-and-emerging-models-2024">4.3 Mechanistic open questions and emerging models (2024)</h3>
+<p>Despite structural advances, a 2024 review emphasizes that there is still <strong>no general physical model</strong> for how diverse unfolded polypeptides cross the outer membrane pore and overcome entropic/energetic barriers, especially since the OMM lacks a strong membrane potential. The review highlights hypotheses in which downstream IMS/IMM import machineries can provide pulling forces and <strong>mtHsp70 ATP hydrolysis</strong> contributes to driving matrix import. (nussberger2024newinsightsinto pages 1-2)</p>
+<h2 id="5-pathways-interaction-partners-and-functional-context">5. Pathways, interaction partners, and functional context</h2>
+<h3 id="51-tomtim-coupling-and-downstream-import-routes">5.1 TOM–TIM coupling and downstream import routes</h3>
+<p>The TOM complex is functionally coupled to downstream translocases that determine ultimate destination (IMM/matrix/IMS). Recent synthesis highlights evidence for direct TOM interactions with the IMM translocase <strong>TIM23</strong> during matrix translocation, reinforcing that Tom40 acts as the upstream pore for multiple import pathways. (nussberger2024newinsightsinto pages 1-2)</p>
+<h3 id="52-quality-control-at-the-tom-pore-import-stress-clogging-ups">5.2 Quality control at the TOM pore (import stress, clogging, UPS)</h3>
+<p>A 2024 review of mitochondrial import quality control describes how import can stall and clog TOM, triggering cytosolic proteotoxic stress. It emphasizes conserved mechanisms coupling the TOM machinery to the <strong>ubiquitin–proteasome system</strong> to remove arrested precursors and maintain import competence. Although not TOMM40-specific at residue-level, this review provides mechanistic context for Tom40 as the pore whose occupancy and clearance are central to import surveillance. (borgert2024conservedqualitycontrol pages 3-4)</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-structural-biology-as-a-platform-for-mechanistic-inference">6.1 Structural biology as a platform for mechanistic inference</h3>
+<p>The 2024 human TOM holo-complex cryo‑EM structure provides a concrete framework for interpreting how receptors (e.g., Tom20) interact with Tom40 and other core subunits, enabling hypothesis-driven studies (e.g., mutagenesis of receptor–pore interfaces) relevant to mitochondrial biogenesis and import regulation. (su2024structureofthe pages 3-5, su2024structureofthe media 4747d2ba)</p>
+<h3 id="62-tomm40-genetic-variation-used-in-clinical-trial-stratification-tommorrow">6.2 TOMM40 genetic variation used in clinical-trial stratification (TOMMORROW)</h3>
+<p>The TOMMORROW study (a phase 3 trial program) used <strong>TOMM40 rs10524523 (“523” poly‑T length)</strong> together with <strong>APOE genotype</strong> to stratify cognitively normal older adults into AD risk groups. A 2024 analysis leveraging TOMMORROW trial data reports enrollment of <strong>3,465 participants aged 65–83</strong> (trial conducted 2013–2018; ClinicalTrials.gov identifier NCT01931566 is noted in the paper). This illustrates real-world implementation of TOMM40 variation in longitudinal cognitive research and trial design. (mahedy2024investigationofgenetic pages 1-2)</p>
+<h2 id="7-expert-opinions-and-authoritative-analyses-selected-2024-sources">7. Expert opinions and authoritative analyses (selected 2024 sources)</h2>
+<h3 id="71-tom-complex-as-a-dynamic-mechanistically-unresolved-but-structurally-tractable-gateway">7.1 TOM complex as a dynamic, mechanistically unresolved but structurally tractable gateway</h3>
+<p>The Biochemical Society Transactions review (April 2024; https://doi.org/10.1042/bst20231236) frames current expert consensus: TOM is the essential OMM gateway, but critical mechanistic questions remain about capture/translocation energetics and how pore dynamics and membrane environment regulate import. (nussberger2024newinsightsinto pages 1-2, nussberger2024newinsightsinto pages 2-4)</p>
+<h3 id="72-tomm40-within-the-apoe-locus-interpretation-cautions">7.2 TOMM40 within the APOE locus: interpretation cautions</h3>
+<p>A 2024 Nature Genetics autopsy-based analysis highlights how association signals within the broader APOE region often resolve to APOE ε effects after adjustment, emphasizing interpretive challenges when assigning causality to TOMM40 from common-variant GWAS in this locus. (shade2024gwasofmultiple pages 2-3)</p>
+<h2 id="8-disease-associations-alzheimers-disease-locus-evidence-20232024-prioritized">8. Disease associations: Alzheimer’s disease locus evidence (2023–2024 prioritized)</h2>
+<h3 id="81-autopsy-based-neuropathology-gwas-suggests-limited-tomm40-independent-signal-after-apoe-adjustment-2024">8.1 Autopsy-based neuropathology GWAS suggests limited TOMM40-independent signal after APOE adjustment (2024)</h3>
+<p>A large autopsy-based GWAS of <strong>11 neuropathology endophenotypes</strong> (NACC/ROSMAP/ACT; <strong>n = 7,804 total autopsied participants</strong>) evaluated multiple phenotypes (amyloid plaques, Braak stage, CAA, CERAD score, LATE-NC, etc.). APOE itself (rs429358) was the top variant in the APOE region for multiple phenotypes, but <strong>after adjusting for APOE ε diplotypes</strong>, rs429358 was no longer associated with the five APOE-linked neuropathology phenotypes; <strong>no other variants remained genome-wide significant for the other APOE-associated phenotypes</strong>, while one locus (lead variant <strong>rs7247551</strong>, between APOC2 and CLPTM1) <strong>remained significantly associated with CAA</strong> (<strong>OR = 0.81; P = 8.0 × 10−12</strong>). These results support the interpretation that, for these neuropathology endpoints, many regional signals are driven by APOE ε rather than clearly separable TOMM40 effects. (shade2024gwasofmultiple pages 2-3, shade2024gwasofmultiple pages 1-2)</p>
+<h3 id="82-proteome-wide-association-implicates-tomm40-as-part-of-an-ad-dementia-risk-network-2024">8.2 Proteome-wide association implicates TOMM40 as part of an AD dementia risk network (2024)</h3>
+<p>A 2024 American Journal of Human Genetics study developed an omnibus proteome-wide association framework (PWAS‑O) and applied it to AD dementia using dorsolateral prefrontal cortex proteomic reference data. The authors report <strong>43 PWAS risk genes</strong> and note a connected protein interaction network including well-known AD risk genes <strong>TOMM40</strong> and neighbors in the APOE region. They report validation of causal genetic effects mediated through proteome abundance for <strong>27/43 (63%)</strong> PWAS‑O risk genes. (hu2024omnibusproteomewideassociation pages 1-3, hu2024omnibusproteomewideassociation pages 6-7)</p>
+<h3 id="83-apoe-genotype-stratified-epigenetics-highlights-tomm40-cpg-differences-but-not-clear-expression-mediation-2024">8.3 APOE-genotype-stratified epigenetics highlights TOMM40 CpG differences but not clear expression mediation (2024)</h3>
+<p>A 2024 Translational Psychiatry study analyzed methylation in <strong>2,021 blood samples</strong> and <strong>697 brain samples</strong> and found multiple APOE-region CpG differences between APOE ε4 carriers and non-carriers. In brain, the <strong>most significant APOE-region CpG</strong> was located in <strong>TOMM40 (cg02613937)</strong> and was hypomethylated in ε4 carriers (<strong>P = 1.3 × 10−13</strong> in total sample; evidence largely from AD cases <strong>P = 7.0 × 10−13</strong>). However, the authors report this TOMM40 CpG was <strong>not significantly associated with expression of genes in the APOE region</strong> in brain, complicating a direct mechanistic interpretation. (panitch2024apoegenotypespecificmethylation pages 4-5, panitch2024apoegenotypespecificmethylation pages 1-2)</p>
+<h3 id="84-linkage-disequilibrium-ld-patterns-constrain-independence-claims-for-tomm40-polymorphisms">8.4 Linkage disequilibrium (LD) patterns constrain “independence” claims for TOMM40 polymorphisms</h3>
+<p>Whole-genome sequencing-based analysis of TOMM40′523 genotyping reports LD relationships showing that the APOE ε4 marker <strong>rs429358</strong> can have high LD with TOMM40′523 haplotypes (example r2 ~0.869 reported) and that <strong>rs2075650</strong> shows more moderate LD with a 523 haplotype (example r2 ~0.421 reported). These data support the widely recognized challenge that many common-variant signals in TOMM40/APOE are difficult to disentangle without careful conditional/haplotype analyses. (vialle2025genotypingtomm40′523 pages 20-22)</p>
+<h2 id="9-relevant-statistics-and-data-highlights-from-retrieved-studies">9. Relevant statistics and data highlights (from retrieved studies)</h2>
+<ul>
+<li><strong>Human TOM holo complex cryo‑EM (Jun 2024):</strong> overall ~6.87 Å; local resolution ~5.6 Å for core and ~4.7 Å for Tom20-containing region; Tom20 present as one copy and positioned centrally with extensive interactions to Tom22/Tom40/Tom6. (su2024structureofthe pages 3-5)</li>
+<li><strong>Autopsy neuropathology GWAS (Nature Genetics, 2024):</strong> <strong>n = 7,804</strong> autopsied participants; after APOE ε adjustment, only <strong>rs7247551</strong> remained significant for <strong>CAA</strong> (<strong>OR = 0.81; P = 8.0 × 10−12</strong>). (shade2024gwasofmultiple pages 2-3)</li>
+<li><strong>Methylation study (Translational Psychiatry, 2024):</strong> <strong>2,021 blood samples</strong>, <strong>697 brain samples</strong>; TOMM40 CpG cg02613937 <strong>P = 1.3 × 10−13</strong> (total brain sample) and <strong>P = 7.0 × 10−13</strong> (AD cases). (panitch2024apoegenotypespecificmethylation pages 4-5)</li>
+<li><strong>TOMMORROW trial cohort used for longitudinal cognitive-change GWAS (Translational Psychiatry, 2024):</strong> <strong>3,465</strong> cognitively healthy adults aged <strong>65–83</strong>, with APOE and TOMM40′523 used for risk grouping. (mahedy2024investigationofgenetic pages 1-2)</li>
+</ul>
+<h2 id="10-summary-table-of-evidence-20232024-focus">10. Summary table of evidence (2023–2024 focus)</h2>
+<p>The following table consolidates the main functional, structural, and disease-association evidence used in this report.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key finding</th>
+<th>System/approach</th>
+<th>Quantitative details (resolution, sample size, p-values, OR, etc.)</th>
+<th>Publication (first author, year, journal)</th>
+<th>URL/DOI</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>structure/function</td>
+<td>Human TOMM40 (Tom40) is the core pore-forming subunit of the TOM complex and forms the channel for mitochondrial preprotein translocation; the human TOM core is arranged as a dimer with two Tom40 β-barrels plus Tom22, Tom5, Tom6, and Tom7.</td>
+<td>Cryo-EM structure of human TOM holo/core complex</td>
+<td>Overall map ~6.87 Å; local resolution ~5.6 Å for core and ~4.7 Å for Tom20-containing region; two Tom40 pores visible in binocular-like dimeric assembly</td>
+<td>Su, 2024, <em>PNAS Nexus</em></td>
+<td>https://doi.org/10.1093/pnasnexus/pgae269</td>
+<td>(su2024structureofthe pages 3-5, su2024structureofthe media 4747d2ba)</td>
+</tr>
+<tr>
+<td>structure/function</td>
+<td>Tom40 is a 19-β-strand β-barrel pore-forming subunit; high-resolution structures show two Tom40 barrels forming a cytosolic “preprotein funnel.”</td>
+<td>Review synthesizing recent cryo-EM/structural work on TOM</td>
+<td>Human TOM core cited at 2.53 Å (PDB 7VD2); Tom40 dimer interface involves β1 and β19 strands</td>
+<td>Nussberger, 2024, <em>Biochemical Society Transactions</em></td>
+<td>https://doi.org/10.1042/bst20231236</td>
+<td>(nussberger2024newinsightsinto pages 2-4)</td>
+</tr>
+<tr>
+<td>mechanism</td>
+<td>TOM is the main outer-membrane entry gate for nuclear-encoded mitochondrial proteins destined for outer membrane, intermembrane space, inner membrane, or matrix; energetic/mechanical aspects remain incompletely resolved because the outer membrane lacks a strong membrane potential.</td>
+<td>Expert review</td>
+<td>Import is proposed to be assisted by pulling forces from IMS/IMM machineries and mtHsp70 ATP hydrolysis for matrix import</td>
+<td>Nussberger, 2024, <em>Biochemical Society Transactions</em></td>
+<td>https://doi.org/10.1042/bst20231236</td>
+<td>(nussberger2024newinsightsinto pages 1-2)</td>
+</tr>
+<tr>
+<td>mechanism</td>
+<td>Tom20 docks asymmetrically on the human TOM holo complex and contacts Tom40, Tom22, and Tom6, supporting receptor-guided substrate delivery into the Tom40 pore.</td>
+<td>Cryo-EM with chemical cross-linking to stabilize Tom20 in human TOM</td>
+<td>Tom20 induces conformational shifts in Tom22 (~4.4 Å C-terminus, ~3.6 Å N-terminus displacement)</td>
+<td>Su, 2024, <em>PNAS Nexus</em></td>
+<td>https://doi.org/10.1093/pnasnexus/pgae269</td>
+<td>(su2024structureofthe pages 3-5)</td>
+</tr>
+<tr>
+<td>localization</td>
+<td>TOMM40 localizes to the mitochondrial outer membrane as the central channel of the TOM translocase.</td>
+<td>Structural review and primary structural study</td>
+<td>Outer-membrane β-barrel channel; two-pore TOM core architecture</td>
+<td>Nussberger, 2024, <em>Biochemical Society Transactions</em>; Su, 2024, <em>PNAS Nexus</em></td>
+<td>https://doi.org/10.1042/bst20231236 ; https://doi.org/10.1093/pnasnexus/pgae269</td>
+<td>(su2024structureofthe pages 3-5, nussberger2024newinsightsinto pages 2-4)</td>
+</tr>
+<tr>
+<td>interactions</td>
+<td>Key TOMM40 partners in the human TOM complex include Tom22 and the small TOM proteins Tom5, Tom6, and Tom7; receptor Tom20 engages one side of the complex.</td>
+<td>Cryo-EM structural mapping</td>
+<td>Figure-level structural assignment of Tom40/Tom22/Tom5/Tom6/Tom7 arrangement in human holo complex</td>
+<td>Su, 2024, <em>PNAS Nexus</em></td>
+<td>https://doi.org/10.1093/pnasnexus/pgae269</td>
+<td>(su2024structureofthe media 4747d2ba)</td>
+</tr>
+<tr>
+<td>quality control</td>
+<td>The vast majority of mitochondrial proteins pass through the TOM complex, and clogged import channels are cleared by conserved quality-control mechanisms linked to the ubiquitin-proteasome system.</td>
+<td>Review of mitochondrial import surveillance</td>
+<td>Human cells estimated to import ~900–1300 proteins via mitochondrial pathways; clogged precursors trigger proteotoxic stress and require extraction/degradation pathways</td>
+<td>Borgert, 2024, <em>Journal of Inherited Metabolic Disease</em></td>
+<td>https://doi.org/10.1002/jimd.12756</td>
+<td>(borgert2024conservedqualitycontrol pages 3-4)</td>
+</tr>
+<tr>
+<td>disease genetics</td>
+<td>In a large autopsy-based GWAS of neuropathology endophenotypes, most APOE-region signals were accounted for by APOE ε diplotypes rather than independent TOMM40 effects.</td>
+<td>GWAS/meta-analysis of neuropathology endophenotypes across NACC, ROSMAP, ACT</td>
+<td>n = 7,804 autopsied participants total; after APOE adjustment, rs429358 lost significance for five phenotypes; only rs7247551 (between APOC2 and CLPTM1) remained significant for CAA, OR = 0.81, P = 8.0 × 10^-12</td>
+<td>Shade, 2024, <em>Nature Genetics</em></td>
+<td>https://doi.org/10.1038/s41588-024-01939-9</td>
+<td>(shade2024gwasofmultiple pages 2-3, shade2024gwasofmultiple pages 1-2)</td>
+</tr>
+<tr>
+<td>disease proteomics</td>
+<td>PWAS-O identified TOMM40 among 43 AD dementia risk genes, supporting a genetically regulated proteome-level link at the APOE/TOMM40 region.</td>
+<td>Omnibus proteome-wide association study using DLPFC proteomics integrated with AD GWAS</td>
+<td>43 PWAS risk genes identified; 27/43 (63%) showed validated causal genetic effects mediated through the proteome</td>
+<td>Hu, 2024, <em>American Journal of Human Genetics</em></td>
+<td>https://doi.org/10.1016/j.ajhg.2024.07.001</td>
+<td>(hu2024omnibusproteomewideassociation pages 1-3, hu2024omnibusproteomewideassociation pages 6-7)</td>
+</tr>
+<tr>
+<td>disease epigenetics</td>
+<td>In brain, the strongest APOE-genotype-associated CpG in the APOE region was in TOMM40, hypomethylated in APOE ε4 carriers, but this CpG was not significantly associated with expression of APOE-region genes in brain.</td>
+<td>Genome-wide methylation analysis in blood and brain</td>
+<td>2,021 blood samples and 697 brain samples; TOMM40 cg02613937 in brain: total sample P = 1.3 × 10^-13, AD cases P = 7.0 × 10^-13; 7 APOE-region CpGs reached P &lt; 5 × 10^-8 between ε4 carriers and non-carriers</td>
+<td>Panitch, 2024, <em>Translational Psychiatry</em></td>
+<td>https://doi.org/10.1038/s41398-024-02834-x</td>
+<td>(panitch2024apoegenotypespecificmethylation pages 4-5, panitch2024apoegenotypespecificmethylation pages 1-2)</td>
+</tr>
+<tr>
+<td>disease/cognition</td>
+<td>The TOMMORROW trial embedded TOMM40 rs10524523 (“523”) with APOE genotype in risk stratification for cognitively normal older adults, reflecting ongoing real-world use of TOMM40 variation in longitudinal cognitive studies.</td>
+<td>Clinical-trial cohort design for longitudinal cognition GWAS</td>
+<td>Trial enrolled 3,465 adults aged 65–83 years; TOMM40 “523” used with APOE ε2/3/4 to classify high vs low AD risk groups</td>
+<td>Mahedy, 2024, <em>Translational Psychiatry</em></td>
+<td>https://doi.org/10.1038/s41398-023-02726-6</td>
+<td>(mahedy2024investigationofgenetic pages 1-2)</td>
+</tr>
+<tr>
+<td>disease genetics/interpretation</td>
+<td>Recent reviews of AD/CVD shared genetics still place TOMM40 within the broader APOE locus rather than establishing TOMM40 as an unequivocally independent causal AD gene.</td>
+<td>Scoping review of genetic overlap literature</td>
+<td>2,918 articles screened; 274 included; authors emphasize shared loci/mechanisms but limitations in longitudinal and diverse cohorts</td>
+<td>Moore, 2024, <em>Genes</em></td>
+<td>https://doi.org/10.3390/genes15121509</td>
+<td>(moore2024istherelationship pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main 2023-2024 structural, mechanistic, localization, quality-control, and disease-association evidence for human TOMM40/Tom40. It is useful for separating well-supported core mitochondrial import functions from more ambiguous disease-genetics signals at the APOE locus.</em></p>
+<h2 id="11-practical-functional-annotation-concise">11. Practical functional annotation (concise)</h2>
+<p><strong>Primary molecular function:</strong> Tom40 (TOMM40 product) is a <strong>β‑barrel translocation pore</strong> in the mitochondrial outer membrane that enables <strong>import of nuclear-encoded mitochondrial precursor proteins</strong> into mitochondria as part of the TOM complex. (su2024structureofthe pages 3-5, nussberger2024newinsightsinto pages 2-4)</p>
+<p><strong>Cellular location:</strong> <strong>Mitochondrial outer membrane</strong> (integral membrane β‑barrel). (su2024structureofthe pages 3-5, nussberger2024newinsightsinto pages 2-4)</p>
+<p><strong>Core pathway membership:</strong> <strong>Mitochondrial protein import</strong> via TOM, coordinating with downstream translocases such as <strong>TIM23</strong> for matrix-directed import. (nussberger2024newinsightsinto pages 1-2)</p>
+<p><strong>Key interaction partners (complex subunits):</strong> Tom22, Tom5, Tom6, Tom7 (core); receptor Tom20 docks and contacts Tom40/Tom22/Tom6. (su2024structureofthe pages 3-5, su2024structureofthe media 4747d2ba)</p>
+<p><strong>Disease interpretation (AD locus):</strong> TOMM40 is repeatedly implicated in APOE-region multi-omics analyses, but autopsy-based neuropathology genetics indicates many signals in this locus are largely accounted for by APOE ε effects after adjustment; LD between TOMM40 variants and APOE alleles complicates claims of TOMM40-independent causality without conditional/haplotype modeling. (shade2024gwasofmultiple pages 2-3, vialle2025genotypingtomm40′523 pages 20-22)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(nussberger2024newinsightsinto pages 2-4): Stephan Nussberger, Robin Ghosh, and Shuo Wang. New insights into the structure and dynamics of the tom complex in mitochondria. Biochemical Society Transactions, 52:911-922, Apr 2024. URL: https://doi.org/10.1042/bst20231236, doi:10.1042/bst20231236. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(su2024structureofthe pages 3-5): Jiayue Su, Xuyang Tian, Ziyi Wang, Jiawen Yang, Shan Sun, and Sen-Fang Sui. Structure of the intact tom20 receptor in the human translocase of the outer membrane complex. PNAS Nexus, Jun 2024. URL: https://doi.org/10.1093/pnasnexus/pgae269, doi:10.1093/pnasnexus/pgae269. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nussberger2024newinsightsinto pages 1-2): Stephan Nussberger, Robin Ghosh, and Shuo Wang. New insights into the structure and dynamics of the tom complex in mitochondria. Biochemical Society Transactions, 52:911-922, Apr 2024. URL: https://doi.org/10.1042/bst20231236, doi:10.1042/bst20231236. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(borgert2024conservedqualitycontrol pages 3-4): Lion Borgert, Thomas Becker, and Fabian den Brave. Conserved quality control mechanisms of mitochondrial protein import. Journal of Inherited Metabolic Disease, 47:903-916, May 2024. URL: https://doi.org/10.1002/jimd.12756, doi:10.1002/jimd.12756. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(su2024structureofthe media 4747d2ba): Jiayue Su, Xuyang Tian, Ziyi Wang, Jiawen Yang, Shan Sun, and Sen-Fang Sui. Structure of the intact tom20 receptor in the human translocase of the outer membrane complex. PNAS Nexus, Jun 2024. URL: https://doi.org/10.1093/pnasnexus/pgae269, doi:10.1093/pnasnexus/pgae269. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mahedy2024investigationofgenetic pages 1-2): Liam Mahedy, Emma L. Anderson, Kate Tilling, Zak A. Thornton, Andrew R. Elmore, Sándor Szalma, Arthur Simen, Meredith Culp, Stephen Zicha, Brian T. Harel, George Davey Smith, Erin N. Smith, and Lavinia Paternoster. Investigation of genetic determinants of cognitive change in later life. Translational Psychiatry, Jan 2024. URL: https://doi.org/10.1038/s41398-023-02726-6, doi:10.1038/s41398-023-02726-6. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shade2024gwasofmultiple pages 2-3): L. Shade, Yuriko Katsumata, E. Abner, K. Z. Aung, Steven A Claas, Qi Qiao, B. A. Heberle, J. A. Brandon, Madeline L. Page, T. Hohman, S. Mukherjee, R. Mayeux, Lindsay A. Farrer, G. Schellenberg, J. Haines, W. Kukull, K. Nho, A. Saykin, David A. Bennett, Julie A. Schneider, Walter A. Sarah Marilyn Sanjay David James Helena Suzanne Kukull Biber Albert Asthana Bennett Brewer Chui Cr, Sarah A. Biber, Marilyn S. Albert, Sanjay Asthana, David A. Bennett, J. Brewer, H. Chui, S. Craft, Charles S. DeCarli, Todd Golde, T. Grabowski, Victor Henderson, Bradley T. Hyman, Jeffrey A. Kaye, Neil W. Kowall, Frank LaFerla, A. Levey, Oscar L Lopez, Bruce L. Miller, John C. Morris, Henry L. Paulson, Ronald C. Petersen, Eric M Reiman, Roger N. Rosenberg, Mary Sano, A. Saykin, Scott Small, Stephen Strittmatter, Russell H Swerdlow, J. Trojanowski, Linda J. van Eldik, R. Vassar, Thomas Wisniewski, Kari A. Stephens, Kwun Chuen Gary Chan, Heather O’Connell, Kathryn M. Gauthreaux, Charles N. Mock, Yen-Chi Chen, Stacy Oswald, Zack Miller, Dean K. Shibata, Kyle Ormsby, Jessica E. Culhane, Sarah Yasuda, Walter A. Sanjay Thomas James D. Paul K. Gail P. C. Dirk Kukull Asthana Grabowski Bowen Crane Jarvik Keene, J. Bowen, Paul K. Crane, Gail P. Jarvik, C. D. Keene, Eric B Larson, W. McCormick, S. McCurry, S. Mukherjee, Neil W. Kowall, Ann C Mckee, Robert A. Stern, Lawrence S Honig, J. Vonsattel, J. Williamson, James R. Burke, Christine M. Hulette, K. Welsh-Bohmer, Marla Gearing, J. Lah, A. Levey, T. Wingo, Liana G. Apostolova, Marty Farlow, B. Ghetti, A. Saykin, Salvatore Spina, Marilyn S. Albert, Constantine G. Lyketsos, Juan C Troncoso, Matthew P. Frosch, Robert C. Green, John H. Growdon, Bradley T. Hyman, Rudolph E. Tanzi, Huntington Potter, Dennis W Dickson, Nilufer Ertekin-Taner, N. Graff-Radford, Joseph E. Parisi, Ronald C. Petersen, R. Duara, J. Buxbaum, A. Goate, Mary Sano, Arjun V. Masurkar, Thomas Wisniewski, E. Bigio, M. Mesulam, Sandra Weintraub, R. Vassar, Jeffrey A. Kaye, Joseph F. Quinn, R. Woltjer, Lisa L. Barnes, David A. Bennett, Julie A. Schneider, Lei Yu, Victor Henderson, K. Fallon, L. Harrell, D. C. Marson, E. D. Roberson, Charles S. DeCarli, Lee-Way Jin, J. Olichney, Ronald Kim, Frank LaFerla, E. Monuki, Elizabeth Head, David Sultzer, Daniel H. Geschwind, Harry V. Vinters, M. Chesselet, D. Galasko, J. Brewer, A. Boxer, A. Karydas, Joel H Kramer, Bruce L. Miller, H. Rosen, William W. Seeley, Jeffrey M. Burns, Russell H Swerdlow, E. Abner, D. Fardo, Linda J. van Eldik, Roger L Albin, Andrew P. Lieberman, Henry L. Paulson, Steven E. Arnold, J. Trojanowski, V. V. Van Deerlin, R. Hamilton, M. Kamboh, Oscar L Lopez, James T. Becker, Chuanhai Cao, A. Raj, Amanda G. Smith, H. Chui, C. Miller, J. Ringman, L. S. Schneider, Thomas D. Bird, J. Sonnen, chang-en Yu, Elaine Peskind, Murray M. Raskind, Ge Li, Debby W. Tsuang, Craig S. Atwood, C. Carlsson, M. Sager, Nathaniel A Chin, S. Craft, Nigel J. Cairns, John C. Morris, C. Cruchaga, Stephen Strittmatter, Eric M Reiman, Thomas G. Beach, M. Huentelman, John Hardy, Amanda J. Myers, John S K Kauwe, H. Hakonarson, Deborah Blacker, Thomas J. Montine, Clinton T. Baldwin, Lindsay A. Farrer, G. Jun, Kathryn L. Lunetta, William S. Bush, J. Haines, A. Lerner, Xiongwei Zhou, S. Barral, Christiane Reitz, B. Vardarajan, R. Mayeux, Gary W Beecham, R. Carney, M. Cuccaro, John R. Gilbert, K. Hamilton-Nelson, B. Kunkle, Eden R. Martin, M. Pericak-Vance, Jeffery M Vance, L. Cantwell, Amanda P. Kuzma, J. Malamon, A. Naj, L. Qu, G. Schellenberg, O. Valladares, Li-San Wang, Yi Zhao, James B. Leverenz, P. D. de Jager, Denis A. Evans, M. Katz, Richard B. Lipton, Bradley F Boeve, M. Allen, M. Carrasquillo, Steven G. Younkin, K. Faber, T. Foroud, Valory N. Pavlik, P. Massman, E. Darby, Monica Rodriguear, Aisha Khaleeq, D. Royall, Alan B Stevens, Marcia Ory, John Detoledo, Henrick Wilms, Kim Johnson, Victoria Perez, Michelle Hernandez, Kirk C. Wilhelmsen, Jeffrey L. Tilson, S. Chasse, Robert C. Barber, T. Fairchild, Sid E. O'Bryant, Janice Knebl, James R. Hall, Leigh Johnson, Douglas Mains, Lisa Alvarez, Adriana Gamboa, David Paydarfar, J. Bertelson, Martin Woon, Gayle Ayres, Alyssa Aguirre, Raymond Palmer, Marsha S Polk, P. Adams, R. Huebinger, Joan S. Reisch, Roger N. Rosenberg, M. Cullum, Benjamin Williams, M. Quiceno, L. Hynan, Janet Smith, Barbara Davis, Trung Nguyen, E. Rogaeva, P. S. George-Hyslop, M. Ebbert, Peter T Nelson, and D. Fardo. Gwas of multiple neuropathology endophenotypes identifies new risk loci and provides insights into the genetic risk of dementia. Nature Genetics, 56:2407-2421, Oct 2024. URL: https://doi.org/10.1038/s41588-024-01939-9, doi:10.1038/s41588-024-01939-9. This article has 60 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shade2024gwasofmultiple pages 1-2): L. Shade, Yuriko Katsumata, E. Abner, K. Z. Aung, Steven A Claas, Qi Qiao, B. A. Heberle, J. A. Brandon, Madeline L. Page, T. Hohman, S. Mukherjee, R. Mayeux, Lindsay A. Farrer, G. Schellenberg, J. Haines, W. Kukull, K. Nho, A. Saykin, David A. Bennett, Julie A. Schneider, Walter A. Sarah Marilyn Sanjay David James Helena Suzanne Kukull Biber Albert Asthana Bennett Brewer Chui Cr, Sarah A. Biber, Marilyn S. Albert, Sanjay Asthana, David A. Bennett, J. Brewer, H. Chui, S. Craft, Charles S. DeCarli, Todd Golde, T. Grabowski, Victor Henderson, Bradley T. Hyman, Jeffrey A. Kaye, Neil W. Kowall, Frank LaFerla, A. Levey, Oscar L Lopez, Bruce L. Miller, John C. Morris, Henry L. Paulson, Ronald C. Petersen, Eric M Reiman, Roger N. Rosenberg, Mary Sano, A. Saykin, Scott Small, Stephen Strittmatter, Russell H Swerdlow, J. Trojanowski, Linda J. van Eldik, R. Vassar, Thomas Wisniewski, Kari A. Stephens, Kwun Chuen Gary Chan, Heather O’Connell, Kathryn M. Gauthreaux, Charles N. Mock, Yen-Chi Chen, Stacy Oswald, Zack Miller, Dean K. Shibata, Kyle Ormsby, Jessica E. Culhane, Sarah Yasuda, Walter A. Sanjay Thomas James D. Paul K. Gail P. C. Dirk Kukull Asthana Grabowski Bowen Crane Jarvik Keene, J. Bowen, Paul K. Crane, Gail P. Jarvik, C. D. Keene, Eric B Larson, W. McCormick, S. McCurry, S. Mukherjee, Neil W. Kowall, Ann C Mckee, Robert A. Stern, Lawrence S Honig, J. Vonsattel, J. Williamson, James R. Burke, Christine M. Hulette, K. Welsh-Bohmer, Marla Gearing, J. Lah, A. Levey, T. Wingo, Liana G. Apostolova, Marty Farlow, B. Ghetti, A. Saykin, Salvatore Spina, Marilyn S. Albert, Constantine G. Lyketsos, Juan C Troncoso, Matthew P. Frosch, Robert C. Green, John H. Growdon, Bradley T. Hyman, Rudolph E. Tanzi, Huntington Potter, Dennis W Dickson, Nilufer Ertekin-Taner, N. Graff-Radford, Joseph E. Parisi, Ronald C. Petersen, R. Duara, J. Buxbaum, A. Goate, Mary Sano, Arjun V. Masurkar, Thomas Wisniewski, E. Bigio, M. Mesulam, Sandra Weintraub, R. Vassar, Jeffrey A. Kaye, Joseph F. Quinn, R. Woltjer, Lisa L. Barnes, David A. Bennett, Julie A. Schneider, Lei Yu, Victor Henderson, K. Fallon, L. Harrell, D. C. Marson, E. D. Roberson, Charles S. DeCarli, Lee-Way Jin, J. Olichney, Ronald Kim, Frank LaFerla, E. Monuki, Elizabeth Head, David Sultzer, Daniel H. Geschwind, Harry V. Vinters, M. Chesselet, D. Galasko, J. Brewer, A. Boxer, A. Karydas, Joel H Kramer, Bruce L. Miller, H. Rosen, William W. Seeley, Jeffrey M. Burns, Russell H Swerdlow, E. Abner, D. Fardo, Linda J. van Eldik, Roger L Albin, Andrew P. Lieberman, Henry L. Paulson, Steven E. Arnold, J. Trojanowski, V. V. Van Deerlin, R. Hamilton, M. Kamboh, Oscar L Lopez, James T. Becker, Chuanhai Cao, A. Raj, Amanda G. Smith, H. Chui, C. Miller, J. Ringman, L. S. Schneider, Thomas D. Bird, J. Sonnen, chang-en Yu, Elaine Peskind, Murray M. Raskind, Ge Li, Debby W. Tsuang, Craig S. Atwood, C. Carlsson, M. Sager, Nathaniel A Chin, S. Craft, Nigel J. Cairns, John C. Morris, C. Cruchaga, Stephen Strittmatter, Eric M Reiman, Thomas G. Beach, M. Huentelman, John Hardy, Amanda J. Myers, John S K Kauwe, H. Hakonarson, Deborah Blacker, Thomas J. Montine, Clinton T. Baldwin, Lindsay A. Farrer, G. Jun, Kathryn L. Lunetta, William S. Bush, J. Haines, A. Lerner, Xiongwei Zhou, S. Barral, Christiane Reitz, B. Vardarajan, R. Mayeux, Gary W Beecham, R. Carney, M. Cuccaro, John R. Gilbert, K. Hamilton-Nelson, B. Kunkle, Eden R. Martin, M. Pericak-Vance, Jeffery M Vance, L. Cantwell, Amanda P. Kuzma, J. Malamon, A. Naj, L. Qu, G. Schellenberg, O. Valladares, Li-San Wang, Yi Zhao, James B. Leverenz, P. D. de Jager, Denis A. Evans, M. Katz, Richard B. Lipton, Bradley F Boeve, M. Allen, M. Carrasquillo, Steven G. Younkin, K. Faber, T. Foroud, Valory N. Pavlik, P. Massman, E. Darby, Monica Rodriguear, Aisha Khaleeq, D. Royall, Alan B Stevens, Marcia Ory, John Detoledo, Henrick Wilms, Kim Johnson, Victoria Perez, Michelle Hernandez, Kirk C. Wilhelmsen, Jeffrey L. Tilson, S. Chasse, Robert C. Barber, T. Fairchild, Sid E. O'Bryant, Janice Knebl, James R. Hall, Leigh Johnson, Douglas Mains, Lisa Alvarez, Adriana Gamboa, David Paydarfar, J. Bertelson, Martin Woon, Gayle Ayres, Alyssa Aguirre, Raymond Palmer, Marsha S Polk, P. Adams, R. Huebinger, Joan S. Reisch, Roger N. Rosenberg, M. Cullum, Benjamin Williams, M. Quiceno, L. Hynan, Janet Smith, Barbara Davis, Trung Nguyen, E. Rogaeva, P. S. George-Hyslop, M. Ebbert, Peter T Nelson, and D. Fardo. Gwas of multiple neuropathology endophenotypes identifies new risk loci and provides insights into the genetic risk of dementia. Nature Genetics, 56:2407-2421, Oct 2024. URL: https://doi.org/10.1038/s41588-024-01939-9, doi:10.1038/s41588-024-01939-9. This article has 60 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hu2024omnibusproteomewideassociation pages 1-3): Tingyang Hu, Randy L. Parrish, Qile Dai, Aron S. Buchman, Shinya Tasaki, David A. Bennett, Nicholas T. Seyfried, Michael P. Epstein, and Jingjing Yang. Omnibus proteome-wide association study identifies 43 risk genes for alzheimer disease dementia. The American Journal of Human Genetics, 111:1848-1863, Sep 2024. URL: https://doi.org/10.1016/j.ajhg.2024.07.001, doi:10.1016/j.ajhg.2024.07.001. This article has 13 citations.</p>
+</li>
+<li>
+<p>(hu2024omnibusproteomewideassociation pages 6-7): Tingyang Hu, Randy L. Parrish, Qile Dai, Aron S. Buchman, Shinya Tasaki, David A. Bennett, Nicholas T. Seyfried, Michael P. Epstein, and Jingjing Yang. Omnibus proteome-wide association study identifies 43 risk genes for alzheimer disease dementia. The American Journal of Human Genetics, 111:1848-1863, Sep 2024. URL: https://doi.org/10.1016/j.ajhg.2024.07.001, doi:10.1016/j.ajhg.2024.07.001. This article has 13 citations.</p>
+</li>
+<li>
+<p>(panitch2024apoegenotypespecificmethylation pages 4-5): Rebecca Panitch, Nathan Sahelijo, Junming Hu, Kwangsik Nho, David A. Bennett, Kathryn L. Lunetta, Rhoda Au, Thor D. Stein, Lindsay A. Farrer, and Gyungah R. Jun. Apoe genotype-specific methylation patterns are linked to alzheimer disease pathology and estrogen response. Translational Psychiatry, Feb 2024. URL: https://doi.org/10.1038/s41398-024-02834-x, doi:10.1038/s41398-024-02834-x. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(panitch2024apoegenotypespecificmethylation pages 1-2): Rebecca Panitch, Nathan Sahelijo, Junming Hu, Kwangsik Nho, David A. Bennett, Kathryn L. Lunetta, Rhoda Au, Thor D. Stein, Lindsay A. Farrer, and Gyungah R. Jun. Apoe genotype-specific methylation patterns are linked to alzheimer disease pathology and estrogen response. Translational Psychiatry, Feb 2024. URL: https://doi.org/10.1038/s41398-024-02834-x, doi:10.1038/s41398-024-02834-x. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vialle2025genotypingtomm40′523 pages 20-22): RA Vialle, L Yu, Y Li, RT Raittz, and JM Farfel. Genotyping tomm40′ 523 poly-t polymorphisms using whole-genome sequencing. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(moore2024istherelationship pages 1-2): Anni Moore and Marylyn D. Ritchie. Is the relationship between cardiovascular disease and alzheimer’s disease genetic? a scoping review. Genes, 15:1509, Nov 2024. URL: https://doi.org/10.3390/genes15121509, doi:10.3390/genes15121509. This article has 5 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>nussberger2024newinsightsinto pages 1-2</li>
+<li>borgert2024conservedqualitycontrol pages 3-4</li>
+<li>su2024structureofthe pages 3-5</li>
+<li>nussberger2024newinsightsinto pages 2-4</li>
+<li>mahedy2024investigationofgenetic pages 1-2</li>
+<li>shade2024gwasofmultiple pages 2-3</li>
+<li>panitch2024apoegenotypespecificmethylation pages 4-5</li>
+<li>moore2024istherelationship pages 1-2</li>
+<li>shade2024gwasofmultiple pages 1-2</li>
+<li>hu2024omnibusproteomewideassociation pages 1-3</li>
+<li>hu2024omnibusproteomewideassociation pages 6-7</li>
+<li>panitch2024apoegenotypespecificmethylation pages 1-2</li>
+<li>https://doi.org/10.1093/pnasnexus/pgae269</li>
+<li>https://doi.org/10.1042/bst20231236</li>
+<li>https://doi.org/10.1002/jimd.12756</li>
+<li>https://doi.org/10.1038/s41588-024-01939-9</li>
+<li>https://doi.org/10.1016/j.ajhg.2024.07.001</li>
+<li>https://doi.org/10.1038/s41398-024-02834-x</li>
+<li>https://doi.org/10.1038/s41398-023-02726-6</li>
+<li>https://doi.org/10.3390/genes15121509</li>
+<li>https://doi.org/10.1042/bst20231236,</li>
+<li>https://doi.org/10.1093/pnasnexus/pgae269,</li>
+<li>https://doi.org/10.1002/jimd.12756,</li>
+<li>https://doi.org/10.1038/s41398-023-02726-6,</li>
+<li>https://doi.org/10.1038/s41588-024-01939-9,</li>
+<li>https://doi.org/10.1016/j.ajhg.2024.07.001,</li>
+<li>https://doi.org/10.1038/s41398-024-02834-x,</li>
+<li>https://doi.org/10.3390/genes15121509,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O96008
+gene_symbol: TOMM40
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Channel-forming subunit of the translocase of the outer mitochondrial
+  membrane (TOM) complex. TOMM40 forms the central beta-barrel pore through which
+  most nuclear-encoded mitochondrial precursor proteins are translocated across the
+  outer membrane. The TOM complex contains two copies of TOMM40 forming a dimeric
+  channel, together with receptor subunits (TOMM20, TOMM22, TOMM70) and small subunits
+  (TOMM5, TOMM6, TOMM7). Also involved in ER-mitochondria contact sites via BCAP31
+  interaction, and in PINK1/Parkin mitophagy signaling through TOM-VDAC2 interaction.
+alternative_products:
+- name: &#39;1&#39;
+  id: O96008-1
+- name: &#39;2&#39;
+  id: O96008-2
+  sequence_note: VSP_008589, VSP_008590
+existing_annotations:
+- term:
+    id: GO:0030943
+    label: mitochondrion targeting sequence binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: TOMM40 forms the channel that translocates presequence-containing precursors.
+      The beta-barrel pore interacts with targeting sequences during translocation.
+      Well supported by yeast Tom40 studies and human data (PMID:15644312).
+    action: ACCEPT
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: TOMM40 is the central channel through which matrix-destined preproteins
+      pass. However, TOMM40 is involved in ALL mitochondrial import pathways, not
+      only matrix import. This annotation captures only one pathway (TOM-TIM23-PAM).
+    action: KEEP_AS_NON_CORE
+    reason: Matrix import is one of several import routes through the TOM channel.
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: TOMM40 is the defining channel subunit of the TOM complex. Directly
+      demonstrated in human cells by co-immunoprecipitation and BN-PAGE (PMID:12198123,
+      PMID:15644312, PMID:18331822).
+    action: ACCEPT
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: TOMM40 is the protein-conducting channel of the outer membrane. This
+      MF term accurately describes its core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: file:human/TOMM40/TOMM40-deep-research-falcon.md
+      supporting_text: &gt;-
+        **Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel
+        translocation pore** in the mitochondrial outer membrane that enables
+        **import of nuclear-encoded mitochondrial precursor proteins** into
+        mitochondria as part of the TOM complex.
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Redundant with IBA annotation for the same term. InterPro-based inference
+      is correct — TOMM40 has protein transmembrane transporter activity.
+    action: ACCEPT
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Redundant with IBA for same term. Correct but captures only one of
+      several import pathways through TOM.
+    action: KEEP_AS_NON_CORE
+    reason: Matrix import is one specific pathway; TOMM40 serves all import routes.
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: Very generic parent term. The more specific GO:0008320 (protein transmembrane
+      transporter activity) is already annotated and more informative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Too general; subsumed by more specific annotations.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31412244
+  review:
+    summary: PMID:31412244 shows TOM40 targets Atg2 to MAM for phagophore expansion.
+      Protein binding is uninformative per curation guidelines. The actual function
+      is recruitment of ATG2A to ER-mitochondria contact sites.
+    action: REMOVE
+    reason: Protein binding is uninformative. The interaction with ATG2A represents
+      a non-core MAM/autophagy function.
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Redundant with IBA and IEA for same term. Correct but non-core — matrix
+      import is one of many pathways served by the TOM channel.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: Correct but too general — TOMM40 specifically localizes to the mitochondrial
+      outer membrane. The more specific CC term GO:0005741 is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by more specific mitochondrial outer membrane annotation.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: EXP
+  original_reference_id: PMID:15644312
+  review:
+    summary: Humphries et al. 2005 demonstrated TOMM40 localization to the outer
+      membrane by subcellular fractionation and protease protection assays. Core CC.
+    action: ACCEPT
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: EXP
+  original_reference_id: PMID:31206022
+  review:
+    summary: Namba 2019 confirmed TOMM40 at OM via immunofluorescence and co-IP.
+      Redundant with PMID:15644312 evidence for same term.
+    action: ACCEPT
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IMP
+  original_reference_id: PMID:15644312
+  review:
+    summary: Humphries et al. showed depletion of TOMM40 compromises protein import.
+      However, this is expected for the general import channel. Non-core because
+      TOMM40 serves all import routes, not specifically matrix import.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: Kato &amp; Mihara 2008 identified Tom5 and Tom6 in the human TOM complex
+      and confirmed Tom40 as an outer membrane component. Redundant with EXP evidence.
+    action: ACCEPT
+- term:
+    id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: This term refers to insertion of proteins INTO the outer membrane (e.g.,
+      alpha-helical or beta-barrel proteins). TOMM40 itself is inserted into the OM
+      but does not catalyze insertion of others — that is the role of SAM (for beta-barrels)
+      and MTCH2/MIM (for alpha-helical proteins). TOMM40 facilitates translocation
+      THROUGH the outer membrane, not insertion into it.
+    action: MODIFY
+    reason: TOMM40 is a translocation channel, not an insertase. It translocates
+      proteins across the OM, not into the OM lipid bilayer.
+    proposed_replacement_terms:
+    - id: GO:0008320
+      label: protein transmembrane transporter activity
+- term:
+    id: GO:0140596
+    label: TOM complex
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: Kato &amp; Mihara confirmed TOMM40 in the human TOM complex via immuno-isolation.
+      GO:0140596 (TOM complex) is a more specific CC term than GO:0005742
+      (mitochondrial outer membrane translocase complex). Both are correct.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: High-throughput mitochondrial proteome confirms TOMM40 as mitochondrial.
+      Too general — more specific OM annotation exists.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane annotation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31206022
+  review:
+    summary: Namba 2019 showed TOMM40 interacts with BCAP31 at ER-mitochondria contact
+      sites. Protein binding is uninformative per guidelines.
+    action: REMOVE
+    reason: Protein binding is uninformative. The BCAP31 interaction is a non-core
+      MAM function.
+- term:
+    id: GO:0044233
+    label: mitochondria-associated endoplasmic reticulum membrane contact site
+  evidence_type: IDA
+  original_reference_id: PMID:31206022
+  review:
+    summary: Namba 2019 demonstrated TOMM40 localizes to MAM via interaction with
+      BCAP31. This is a secondary localization beyond its primary OM residence.
+      The MAM function (facilitating Complex I assembly) is a non-core role.
+    action: KEEP_AS_NON_CORE
+    reason: MAM localization is secondary to the core TOM complex function.
+- term:
+    id: GO:0070585
+    label: protein localization to mitochondrion
+  evidence_type: IGI
+  original_reference_id: PMID:31206022
+  review:
+    summary: Namba 2019 showed BAP31-TOMM40 complex mediates NDUFS4 translocation
+      to mitochondria. This is a specific aspect of TOMM40 general import function.
+      The term is quite general but captures TOMM40 role in protein localization.
+    action: KEEP_AS_NON_CORE
+    reason: General term; the specific Complex I assembly role via BAP31 is non-core.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:24746669
+  review:
+    summary: PMID:24746669 is about Cyclin B1/Cdk1 and mitochondrial respiration.
+      TOMM40 is an outer membrane beta-barrel protein. Inner membrane localization
+      is incorrect — TOMM40 may contact the IM via supercomplex formation with TIM
+      complexes, but it is not an IM resident protein.
+    action: REMOVE
+    reason: TOMM40 is an outer membrane protein. Inner membrane annotation is
+      incorrect; likely an artifact of co-fractionation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:27554484
+  review:
+    summary: Kang et al. 2016 showed TIMM29 interacts with TOMM40, linking TIM22
+      to TOM complex. Protein binding is uninformative per guidelines.
+    action: REMOVE
+    reason: Protein binding is uninformative. The TIM22-TOM interaction via TIMM29
+      is better captured by TOM complex CC annotation.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5205661
+  review:
+    summary: Reactome pathway for PINK1 recruitment to mitochondria. Confirms TOMM40
+      at the outer membrane. Redundant with direct experimental evidence.
+    action: ACCEPT
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:15644312
+  review:
+    summary: Extremely generic CC term. TOMM40 is specifically in the mitochondrial
+      outer membrane (GO:0005741), which is already well-annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Too general; subsumed by mitochondrial outer membrane.
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: Ortholog-based transfer of transporter activity. Correct and redundant
+      with IBA evidence for same term.
+    action: ACCEPT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IMP
+  original_reference_id: PMID:11745481
+  negated: true
+  review:
+    summary: PMID:11745481 (Das et al. 2001) identified TOMM40 as p38.5/Haymaker and
+      reported differential expression in malignant cells. The NOT annotation for
+      mitochondrion localization is incorrect — TOMM40 is definitively a mitochondrial
+      protein. This may reflect early confusion about the gene identity.
+    action: REMOVE
+    reason: The NOT|mitochondrion annotation contradicts overwhelming evidence that
+      TOMM40 is a core mitochondrial outer membrane protein.
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: ISS
+  original_reference_id: PMID:10980201
+  review:
+    summary: Based on rat Tom40 characterization (Suzuki et al. 2000). Correct —
+      outer membrane localization is conserved.
+    action: ACCEPT
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:12198123
+  review:
+    summary: Johnston et al. 2002 identified TOMM40 in the ~380 kDa TOM complex
+      by BN-PAGE and supershift analysis. Direct experimental evidence for TOM
+      complex membership.
+    action: ACCEPT
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:15644312
+  review:
+    summary: Humphries et al. 2005 confirmed TOMM40 in TOM complex by BN-PAGE.
+      Redundant with PMID:12198123 but independent confirmation.
+    action: ACCEPT
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: TAS
+  original_reference_id: PMID:15644312
+  review:
+    summary: Humphries et al. described TOMM40 as the channel-forming subunit
+      essential for protein import. Core MF annotation.
+    action: ACCEPT
+core_functions:
+- molecular_function:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  description: &gt;-
+    TOMM40 is the central beta-barrel channel of the TOM complex, the main entry
+    gate for nuclear-encoded mitochondrial precursor proteins. Two copies of TOMM40
+    form a dimeric pore in the outer membrane through which virtually all imported
+    proteins pass, regardless of their final destination (matrix, inner membrane,
+    IMS, or outer membrane). The channel interacts with mitochondrial targeting
+    sequences during translocation.
+  directly_involved_in:
+  - id: GO:0030150
+    label: protein import into mitochondrial matrix
+  - id: GO:0045041
+    label: protein import into mitochondrial intermembrane space
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  supported_by:
+  - reference_id: PMID:15644312
+    supporting_text: &gt;-
+      Tom40 is the channel-forming subunit of the translocase of the mitochondrial
+      outer membrane (TOM complex), essential for protein import into mitochondria.
+  - reference_id: PMID:12198123
+    supporting_text: &gt;-
+      We found that the 120-kDa complex contains Tom40 and lacks receptor
+      components. This intermediate can be chased to the stable approximately
+      380-kDa mammalian TOM complex that additionally contains Tom22.
+  - reference_id: file:human/TOMM40/TOMM40-deep-research-falcon.md
+    supporting_text: &gt;-
+      **Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel
+      translocation pore** in the mitochondrial outer membrane that enables
+      **import of nuclear-encoded mitochondrial precursor proteins** into
+      mitochondria as part of the TOM complex.
+references:
+- id: file:human/TOMM40/TOMM40-deep-research-falcon.md
+  title: Falcon deep research report for TOMM40
+  findings:
+  - statement: &gt;-
+      Falcon corroborates TOMM40 as the beta-barrel TOM complex pore in the
+      mitochondrial outer membrane and separates this core import function from
+      less direct APOE-region disease association signals.
+    supporting_text: &gt;-
+      **Primary molecular function:** Tom40 (TOMM40 product) is a **β‑barrel
+      translocation pore** in the mitochondrial outer membrane that enables
+      **import of nuclear-encoded mitochondrial precursor proteins** into
+      mitochondria as part of the TOM complex.
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:10980201
+  title: Characterization of rat TOM40, a central component of the preprotein translocase
+    of the mitochondrial outer membrane.
+  findings: []
+- id: PMID:11745481
+  title: Genetic identity and differential expression of p38.5 (Haymaker) in human
+    malignant and nonmalignant cells.
+  findings: []
+- id: PMID:12198123
+  title: Insertion and assembly of human tom7 into the preprotein translocase complex
+    of the outer mitochondrial membrane.
+  findings: []
+- id: PMID:15644312
+  title: Dissection of the mitochondrial import and assembly pathway for human Tom40.
+  findings: []
+- id: PMID:18331822
+  title: Identification of Tom5 and Tom6 in the preprotein translocase complex of
+    human mitochondrial outer membrane.
+  findings: []
+- id: PMID:24746669
+  title: Cyclin B1/Cdk1 coordinates mitochondrial respiration for cell-cycle G2/M
+    progression.
+  findings: []
+- id: PMID:27554484
+  title: Tim29 is a novel subunit of the human TIM22 translocase and is involved in
+    complex assembly and stability.
+  findings: []
+- id: PMID:31206022
+  title: BAP31 regulates mitochondrial function via interaction with Tom40 within
+    ER-mitochondria contact sites.
+  findings: []
+- id: PMID:31412244
+  title: TOM40 Targets Atg2 to Mitochondria-Associated ER Membranes for Phagophore
+    Expansion.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+- id: Reactome:R-HSA-5205661
+  title: Pink1 is recruited from the cytoplasm to the mitochondria
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

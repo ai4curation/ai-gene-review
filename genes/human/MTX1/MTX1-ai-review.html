@@ -1,0 +1,3067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTX1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MTX1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q13505" target="_blank" class="term-link">
+                        Q13505
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MTX1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q13505" data-a="DESCRIPTION: MTX1 (metaxin-1) is a non-enzymatic mitochondrial ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MTX1 (metaxin-1) is a non-enzymatic mitochondrial outer membrane metaxin-family accessory subunit of the mammalian SAM complex. Its best-supported core role is structural support of SAM-mediated insertion and assembly of beta-barrel outer membrane proteins such as VDACs and TOM40, with additional non-core links to MIB/MICOS-associated organization and mitochondrial quality control.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                    GO:0045040
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0045040" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct phylogenetic inference. MTX1 is an accessory SAM subunit involved in SAM-mediated insertion/assembly of beta-barrel proteins into the mitochondrial outer membrane.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/MTX1/MTX1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">MTX1 is best supported as an **accessory subunit of the mitochondrial Sorting and Assembly Machinery (SAM)** required for efficient **import/assembly of β-barrel proteins** into the OMM</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                    GO:0070096
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex assembly</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0070096" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as a SAM-related assembly role. MTX1 supports assembly of beta-barrel outer membrane proteins, including TOM complex components such as TOM40, rather than acting as a catalytic enzyme.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001401" target="_blank" class="term-link">
+                                    GO:0001401
+                                </a>
+                            </span>
+                            <span class="term-label">SAM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0001401" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct. MTX1 is a metaxin-family accessory subunit of the mammalian SAM complex with SAMM50, MTX2, and MTX3.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001401" target="_blank" class="term-link">
+                                    GO:0001401
+                                </a>
+                            </span>
+                            <span class="term-label">SAM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0001401" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct InterPro-derived complex annotation. The Falcon review identifies MTX1 as a mammalian SAM complex accessory subunit.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct UniProt-derived localization. MTX1 is an outer mitochondrial membrane SAM/metaxin protein.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but overly general. MTX1 is specifically localized to the mitochondrial outer membrane and SAM complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and SAM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007595" target="_blank" class="term-link">
+                                    GO:0007595
+                                </a>
+                            </span>
+                            <span class="term-label">lactation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000107
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0007595" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This automatic orthology transfer does not match the synthesized function of human MTX1 as a mitochondrial SAM accessory factor. Falcon research did not identify MTX1-specific evidence for lactation as a gene-level core process.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Unsupported organism-level phenotype transfer; not part of the curated MTX1 mitochondrial SAM function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001401" target="_blank" class="term-link">
+                                    GO:0001401
+                                </a>
+                            </span>
+                            <span class="term-label">SAM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17510655" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17510655
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conserved roles of Sam50 and metaxins in VDAC biogenesis.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0001401" data-r="PMID:17510655" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. Conserved roles of metaxins and Sam50 in VDAC biogenesis support MTX1 membership in the SAM complex.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31387448" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31387448
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondria-hubs for regulating cellular biochemistry: emer...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0005741" data-r="PMID:31387448" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. MTX1 is consistently described as a mitochondrial outer membrane metaxin/SAM component.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                    GO:0045040
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31387448" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31387448
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mitochondria-hubs for regulating cellular biochemistry: emer...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0045040" data-r="PMID:31387448" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as the core MTX1 process. MTX1 acts as a non-catalytic accessory factor for SAM-mediated insertion/assembly of beta-barrel proteins into the mitochondrial outer membrane.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. MTX1 is specifically localized to the mitochondrial outer membrane and SAM complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and SAM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31644573" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31644573
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Armadillo repeat-containing protein 1 is a dual localization...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0005515" data-r="PMID:31644573" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic to represent MTX1 function. The relevant biology is membership in SAM and non-core association with MIB/MICOS-linked assemblies.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding is uninformative; complex membership and mitochondrial assembly terms capture the supported function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001401" target="_blank" class="term-link">
+                                    GO:0001401
+                                </a>
+                            </span>
+                            <span class="term-label">SAM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26477565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26477565
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolution and structural organization of the mitochondrial c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0001401" data-r="PMID:26477565" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. Affinity/proteomics evidence supports MTX1 in SAM-containing mitochondrial outer membrane assemblies.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007007" target="_blank" class="term-link">
+                                    GO:0007007
+                                </a>
+                            </span>
+                            <span class="term-label">inner mitochondrial membrane organization</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26477565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26477565
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolution and structural organization of the mitochondrial c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0007007" data-r="PMID:26477565" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plausible secondary consequence of MTX1 association with MIB/MICOS-linked assemblies, but not the primary curated function compared with SAM-mediated outer membrane beta-barrel biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MIB/MICOS-associated architecture is supported as an additional role, not the core MTX1 function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140275" target="_blank" class="term-link">
+                                    GO:0140275
+                                </a>
+                            </span>
+                            <span class="term-label">MIB complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26477565" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26477565
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Evolution and structural organization of the mitochondrial c...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0140275" data-r="PMID:26477565" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported as an additional MTX1-associated complex context. Keep as non-core because the strongest synthesized function is SAM-mediated beta-barrel outer membrane protein biogenesis.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> MIB/MICOS association is secondary to the core SAM complex role.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8660965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8660965
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure and organization of the human metaxin gene (MTX) a...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q13505" data-a="GO:0016020" data-r="PMID:8660965" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. MTX1 is specifically a mitochondrial outer membrane metaxin/SAM protein.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and SAM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>MTX1 is a structural/accessory metaxin subunit of the mammalian SAM complex that supports insertion and assembly of beta-barrel proteins into the mitochondrial outer membrane.</h3>
+                <span class="vote-buttons" data-g="Q13505" data-a="FUNCTION: MTX1 is a structural/accessory metaxin subunit of ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                protein insertion into mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                mitochondrial outer membrane translocase complex assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001401" target="_blank" class="term-link">
+                            SAM complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/MTX1/MTX1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">MTX1 is best supported as an **accessory subunit of the mitochondrial Sorting and Assembly Machinery (SAM)** required for efficient **import/assembly of β-barrel proteins** into the OMM</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/MTX1/MTX1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Mammalian SAM contains **SAMM50/SAM50** plus **MTX1, MTX2, MTX3**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/MTX1/MTX1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">MTX1 is an **outer mitochondrial membrane (OMM)** protein</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17510655" target="_blank" class="term-link">
+                            PMID:17510655
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Conserved roles of Sam50 and metaxins in VDAC biogenesis.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26477565" target="_blank" class="term-link">
+                            PMID:26477565
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Evolution and structural organization of the mitochondrial contact site (MICOS) complex and the mitochondrial intermembrane space bridging (MIB) complex.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31387448" target="_blank" class="term-link">
+                            PMID:31387448
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Mitochondria-hubs for regulating cellular biochemistry: emerging concepts and networks.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31644573" target="_blank" class="term-link">
+                            PMID:31644573
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Armadillo repeat-containing protein 1 is a dual localization protein associated with mitochondrial intermembrane space bridging complex.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8660965" target="_blank" class="term-link">
+                            PMID:8660965
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Structure and organization of the human metaxin gene (MTX) and pseudogene.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/MTX1/MTX1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for human MTX1</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which human MTX1 surfaces are required for SAM-mediated VDAC/TOM40 beta-barrel assembly versus MIB/MICOS-associated interactions?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q13505" data-a="Q: Which human MTX1 surfaces are required for SAM-med..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is MTX1 turnover by LC3C/p62-linked piecemeal mitophagy regulated by the same interfaces used for SAM complex assembly?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q13505" data-a="Q: Is MTX1 turnover by LC3C/p62-linked piecemeal mito..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use endogenous MTX1 knockout/rescue with domain or interface mutants, then assay SAM complex assembly, VDAC1/TOM40 import and assembly, mitochondrial ultrastructure, and LC3C/p62-dependent MTX1 turnover.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MTX1 contributes separable interfaces for SAM beta-barrel assembly and MIB/MICOS-associated mitochondrial architecture.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: endogenous rescue, import assay, and mitochondrial proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q13505" data-a="EXPERIMENT: Use endogenous MTX1 knockout/rescue with domain or..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MTX1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q13505" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">30 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-05-11T11:27:26.615390</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-mtx1-metaxin-1-uniprot-q13505">Research Report: Human MTX1 (Metaxin-1; UniProt Q13505)</h2>
+<h3 id="0-target-verification-required-disambiguation">0) Target verification (required disambiguation)</h3>
+<p>The research target is <strong>human MTX1 (metaxin 1)</strong>, UniProt <strong>Q13505</strong>, a <strong>metaxin-family</strong> protein homologous to yeast <strong>Sam37/Tom37/Mas37</strong> and discussed in the literature as a <strong>mitochondrial outer membrane (OMM) factor</strong> involved in mitochondrial protein biogenesis—not an unrelated “MTX1” symbol from another organism or pathway. This identity is consistent across recent reviews of mitochondrial β‑barrel assembly and mitochondrial transport adaptor biology. (ganesan2024biogenesisofmitochondrial pages 2-4, zhao2021metaxinsarecore pages 1-2)</p>
+<hr />
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-what-mtx1-is-conceptual-definition">1.1 What MTX1 is (conceptual definition)</h4>
+<p><strong>Metaxin-1 (MTX1)</strong> is best understood as a <strong>non-enzymatic, structural/accessory component</strong> of the mammalian <strong>Sorting and Assembly Machinery (SAM)</strong> that supports <strong>biogenesis of mitochondrial outer-membrane β‑barrel proteins</strong>. In this context, MTX1 is not a classical glutathione S‑transferase enzyme despite GST-like domains; instead, it functions as part of a membrane protein assembly/import system. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<h4 id="12-the-barrel-importassembly-pathway-in-mitochondria">1.2 The β‑barrel import/assembly pathway in mitochondria</h4>
+<p>Mitochondrial β‑barrel proteins are nuclear-encoded and translated in the cytosol, then:<br />
+1) <strong>Targeted to and translocated across the OMM via the TOM complex</strong>,<br />
+2) <strong>Chaperoned through the intermembrane space by TIM transfer chaperones (e.g., Tim9/Tim10, Tim8/Tim13)</strong>, and<br />
+3) <strong>Inserted into the OMM by the SAM complex</strong>. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<p>A recent review emphasizes that SAM’s core subunit Sam50 (human SAMM50) assembles precursor β‑strands at a lateral gate via a <strong>Sam50–preprotein hybrid barrel</strong>, and releases the mature β‑barrel by a <strong>β‑barrel switching mechanism</strong>. (ganesan2024biogenesisofmitochondrial pages 1-2)</p>
+<h4 id="13-sam-complex-composition-in-mammals-including-mtx1">1.3 SAM complex composition in mammals (including MTX1)</h4>
+<p>A 2024 review explicitly lists the <strong>mammalian SAM complex</strong> components as <strong>SAMM50</strong> plus <strong>Metaxin-1 (MTX1; canonical sequence mass ~51 kDa), Metaxin-2 (MTX2; ~30 kDa), and Metaxin-3 (MTX3; ~35 kDa)</strong>. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<hr />
+<h3 id="2-subcellular-localization-and-complex-membership">2) Subcellular localization and complex membership</h3>
+<h4 id="21-mtx1-localizes-to-the-mitochondrial-outer-membrane">2.1 MTX1 localizes to the mitochondrial outer membrane</h4>
+<p>Across mechanistic reviews and pathway models, metaxins (including MTX1) are placed in the <strong>outer mitochondrial membrane protein import/assembly apparatus</strong>, consistent with a primary action site at the OMM. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<h4 id="22-mtx1-as-a-sam-accessory-subunit-and-a-hub-associated-factor">2.2 MTX1 as a SAM accessory subunit and a hub-associated factor</h4>
+<p>A key theme in recent mechanistic synthesis is that <strong>SAM is not only a β‑barrel insertase</strong> but also <strong>a hub for interactions between mitochondrial outer and inner membrane complexes</strong>, including physical and functional coupling with TOM and contacts with MICOS/MIB. (ganesan2024biogenesisofmitochondrial pages 1-2)</p>
+<hr />
+<h3 id="3-primary-molecular-function-of-mtx1-functional-annotation">3) Primary molecular function of MTX1 (functional annotation)</h3>
+<h4 id="31-functional-role-barrel-protein-biogenesis-not-a-catalytic-enzyme">3.1 Functional role: β‑barrel protein biogenesis (not a catalytic enzyme)</h4>
+<p>MTX1’s primary functional annotation is as an accessory component of <strong>SAM-mediated insertion/assembly of β‑barrel OMM proteins</strong> (e.g., VDACs and TOM40). (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<h4 id="32-likely-substrates-and-pathway-placement">3.2 Likely substrates and pathway placement</h4>
+<p>A 2024 review lists canonical mammalian SAM substrates including <strong>SAMM50, TOMM40, VDAC1/2/3</strong> (β‑barrel proteins) and provides a mechanistic pathway diagram tying TOM→TIM chaperones→SAM insertion. MTX1 sits in this pathway as part of the mammalian SAM complex composition rather than as a substrate itself in this table. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<hr />
+<h3 id="4-recent-developments-and-latest-research-prioritized-20232024">4) Recent developments and latest research (prioritized 2023–2024)</h3>
+<h4 id="41-2024-review-update-mechanistic-model-of-barrel-assembly-and-sam-as-interaction-hub">4.1 2024 review update: mechanistic model of β‑barrel assembly and SAM as interaction hub</h4>
+<p>The 2024 FEBS Open Bio review emphasizes two points relevant to MTX1 annotation: (i) <strong>mammalian SAM includes MTX1/2/3</strong>, and (ii) the SAM complex is increasingly viewed as an <strong>interaction hub</strong> linking β‑barrel biogenesis to broader mitochondrial organization (including TOM supercomplexes and MICOS/MIB contact-site biology). (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<h4 id="42-2024-cancer-proteomics-mtx1-as-part-of-an-enhanced-mitochondrial-importbiogenesis-signature">4.2 2024 cancer proteomics: MTX1 as part of an “enhanced mitochondrial import/biogenesis” signature</h4>
+<p>A 2024 letter analyzing proteomic data from melanoma lymph node metastases reports that <strong>mitochondrial dynamics and biogenesis are enhanced in BRAF V600E-mutated metastatic melanomas</strong>, citing <strong>upregulation of Metaxin‑1 and Metaxin‑2 (MTX1/2)</strong> and TOM import-associated proteins in that context. The study uses cohorts including <strong>127 metastasis samples</strong> overall and analyzes BRAF-status subsets (e.g., 78 with known BRAF status) and a progression-focused subset of <strong>88 metastases</strong>, using enrichment analyses (e.g., volcano plots with <strong>FDR &lt; 0.02</strong>). (almeida2024mitochondrialdysfunctionand pages 1-4, almeida2024mitochondrialdysfunctionand media 1ca45a9d, almeida2024mitochondrialdysfunctionand media 3236bfaf, almeida2024mitochondrialdysfunctionand media 09168aed, almeida2024mitochondrialdysfunctionand media efcaeb08)</p>
+<p><em>Interpretation:</em> This work does not demonstrate MTX1 mechanism directly, but it reflects <strong>real-world, large-cohort proteomics</strong> where MTX1 abundance tracks with mitochondrial import/biogenesis states in tumors. (almeida2024mitochondrialdysfunctionand pages 1-4, almeida2024mitochondrialdysfunctionand media 1ca45a9d)</p>
+<h4 id="43-2024-clinical-genetics-context-indirect-mtx1-relevance-via-mtx2">4.3 2024 clinical genetics context (indirect MTX1 relevance via MTX2)</h4>
+<p>A 2024 case report on <strong>MTX2-associated mandibuloacral dysplasia progeroid syndrome (MADaM)</strong> provides clinical context that MTX2 encodes an OMM protein and situates MADaM as due to recessive MTX2 mutations; MTX2 is repeatedly described in the literature as tightly partnered with MTX1 in OMM biology. (fu2024casereporta pages 1-2)</p>
+<hr />
+<h3 id="5-mtx1-interaction-partners-and-connected-pathways">5) MTX1 interaction partners and connected pathways</h3>
+<h4 id="51-mtx1mtx2-partnership-and-sam-context">5.1 MTX1–MTX2 partnership and SAM context</h4>
+<p>Metaxins (MTX1/2) are repeatedly treated as a functional pair in SAM-related biology and mitochondrial trafficking. In a metaxin-focused transport study, the authors explicitly state that the metaxin complex (metaxin1 = Sam37/Tom37 homolog; metaxin2 = Sam35/Tom38/Tob38 homolog) functions with SAM50 to form SAM for β‑barrel insertion. (zhao2021metaxinsarecore pages 1-2)</p>
+<h4 id="52-mitochondrial-trafficking-adaptor-biology-conserved-with-human-neuron-relevance">5.2 Mitochondrial trafficking adaptor biology (conserved, with human-neuron relevance)</h4>
+<p>A high-impact study on mitochondrial transport adaptor complexes reports that metaxins <strong>bind MIRO and kinesin/dynein adaptor machinery</strong> in <em>C. elegans</em> neurons and that <strong>metaxin homologs are also required for mitochondrial transport in human iPSC-derived neurons</strong>, indicating evolutionary conservation of a trafficking-related role for metaxins at the OMM. (zhao2021metaxinsarecore pages 1-2)</p>
+<p><em>Note:</em> This evidence supports a metaxin-family role in trafficking; it is not MTX1-only human biochemistry. (zhao2021metaxinsarecore pages 1-2)</p>
+<hr />
+<h3 id="6-mtx1-in-selective-autophagymitophagy-mechanistic-primary-evidence">6) MTX1 in selective autophagy/mitophagy (mechanistic primary evidence)</h3>
+<p>Although MTX1’s primary annotation is SAM accessory function, there is strong mechanistic evidence that MTX1 can also be a <strong>selective mitophagy cargo</strong> under basal “piecemeal mitophagy” conditions.</p>
+<h4 id="61-lc3c-dependent-piecemeal-mitophagy-identifies-mtx1-as-cargo-primary-evidence">6.1 LC3C-dependent piecemeal mitophagy identifies MTX1 as cargo (primary evidence)</h4>
+<p>A primary study (“Autophagosomal content profiling…”, 2017) used APEX2-tagged LC3C proximity labeling plus proteinase K protection and quantitative MS, identifying <strong>1,147</strong> protK-protected candidate autophagosomal substrates, including <strong>762 proteins in LC3C-labelled samples</strong>, and identifying <strong>MTX1</strong> among LC3C-positive autophagosomal cargo candidates. The authors report replicate correlation (Pearson <strong>0.7</strong>) and identify a large MTX1-associated set in the LC3C proximity labeling context (including a set of <strong>560</strong> protK-protected biotinylated proteins in the MTX1-associated analysis described in the excerpt). (guerroue2017autophagosomalcontentprofiling pages 4-6, guerroue2017autophagosomalcontentprofiling pages 8-10)</p>
+<p>Mechanistically, they present multiple lines of evidence consistent with MTX1 being delivered to lysosomes via a <strong>basal, Parkin-independent, LC3C- and p62-associated pathway</strong>, including: MTX1 colocalization with LC3C and lysosomal markers; increased MTX1 abundance upon LC3C knockdown and lysosomal protease inhibition; and mapping of non-canonical LIR motifs enabling MTX1 binding to hATG8 proteins. (guerroue2017autophagosomalcontentprofiling pages 6-8)</p>
+<h4 id="62-samm50p62-pathway-for-basal-mitophagy-of-sammicos-components-implicates-mtx1">6.2 SAMM50/p62 pathway for basal mitophagy of SAM/MICOS components implicates MTX1</h4>
+<p>A 2021 Journal of Cell Biology paper extends this concept by showing that SAMM50 (SAM core) acts with <strong>p62</strong> to mediate <strong>piecemeal basal- and OXPHOS-induced mitophagy</strong> of SAM/MICOS components. It reports quantitative binding affinities of SAMM50 to hATG8 proteins (including LC3C) with <strong>Kd values ~10–57 μM</strong>, and discusses MTX1 as strongly interacting with hATG8 proteins; the authors propose a mechanism where SAMM50–hATG8 binding can permit strong MTX1 binding to the same hATG8. (abudu2021samm50actswith pages 12-14)</p>
+<p>Additionally, direct interaction relationships among SAM components and p62 are described, supporting a mechanistic route by which MTX1 can be recognized in a piecemeal mitophagy quality-control pathway at SAM/MICOS sites. (abudu2021samm50actswith pages 2-4)</p>
+<p><em>Interpretation:</em> These studies suggest MTX1 can be both (i) a <strong>core biogenesis factor</strong> at the OMM and (ii) a <strong>regulated quality-control cargo</strong>, consistent with SAM/MICOS acting as a mitochondrial homeostasis hub. (ganesan2024biogenesisofmitochondrial pages 1-2, guerroue2017autophagosomalcontentprofiling pages 6-8, abudu2021samm50actswith pages 12-14)</p>
+<hr />
+<h3 id="7-current-applications-and-real-world-implementations">7) Current applications and real-world implementations</h3>
+<h4 id="71-systems-biology-proteomics-biomarkers-of-mitochondrial-states-in-cancer">7.1 Systems biology / proteomics biomarkers of mitochondrial states in cancer</h4>
+<p>In metastatic melanoma proteomics, MTX1/2 appear as part of a signature of enhanced mitochondrial dynamics/biogenesis/import. This is a real-world implementation of mitochondrial proteome profiling to stratify disease biology and potential therapeutic vulnerabilities (metabolism and immune suppression). (almeida2024mitochondrialdysfunctionand pages 1-4, almeida2024mitochondrialdysfunctionand media 1ca45a9d)</p>
+<h4 id="72-clinical-genetics-adjacent-relevance">7.2 Clinical genetics (adjacent relevance)</h4>
+<p>While MTX1 itself is not the direct diagnostic gene in the cited 2024 case report, <strong>MTX2-related disease</strong> provides clinically actionable insight into the metaxin/SAM axis (with MTX1 often discussed as functionally interdependent with MTX2 in OMM biology). (fu2024casereporta pages 1-2)</p>
+<h4 id="73-neuronal-mitochondrial-distribution-models">7.3 Neuronal mitochondrial distribution models</h4>
+<p>Metaxin-dependent mitochondrial transport is studied in genetically tractable organisms and translated to <strong>human iPSC-derived neurons</strong>, providing a model system for evaluating mitochondrial trafficking defects relevant to neurodegeneration. (zhao2021metaxinsarecore pages 1-2)</p>
+<hr />
+<h3 id="8-relevant-statistics-and-data-points-recent-studies-emphasized">8) Relevant statistics and data points (recent studies emphasized)</h3>
+<ul>
+<li><strong>Mammalian SAM composition &amp; sizes:</strong> MTX1 listed as ~<strong>51 kDa</strong> (canonical isoform) in a 2024 review table of SAM components. (ganesan2024biogenesisofmitochondrial pages 2-4)</li>
+<li><strong>Melanoma proteomics cohorts (2024):</strong> 127 total metastasis samples; 78 with known BRAF status (45 BRAF V600E, 33 WT); progression analysis on 88 lymph node metastases (54 progressed vs 34 non-progressed). (almeida2024mitochondrialdysfunctionand pages 1-4)</li>
+<li><strong>Significance threshold in pathway enrichment (2024 melanoma):</strong> volcano plot enrichment analysis used <strong>FDR &lt; 0.02</strong>. (almeida2024mitochondrialdysfunctionand pages 1-4)</li>
+<li><strong>MASLD prevalence statistic (2024 liver mitophagy review):</strong> MASLD affects approximately <strong>one-third of the global population</strong> (used here as disease-burden context for mitophagy relevance). (chen2024livercellmitophagy pages 1-2)</li>
+<li><strong>Autophagosomal content profiling (2017; foundational for MTX1 autophagy biology):</strong> 1,147 protK-protected autophagosomal substrate candidates; 762 in LC3C-labelled set; Pearson correlation 0.7; MTX1-associated analysis included 560 protK-protected biotinylated proteins (as described in excerpt). (guerroue2017autophagosomalcontentprofiling pages 4-6, guerroue2017autophagosomalcontentprofiling pages 8-10)</li>
+<li><strong>SAMM50–hATG8 affinity (2021 JCB):</strong> Kd values reported in the range <strong>10–57 μM</strong> for SAMM50 binding to multiple hATG8s including LC3C. (abudu2021samm50actswith pages 12-14)</li>
+</ul>
+<hr />
+<h3 id="9-expert-synthesis-and-analysis-authoritative-interpretation">9) Expert synthesis and analysis (authoritative interpretation)</h3>
+<p>The strongest, most consistently supported annotation for <strong>human MTX1 (Q13505)</strong> is that it is an <strong>OMM metaxin-family assembly factor</strong> functioning as an accessory component of mammalian <strong>SAM</strong> for <strong>β‑barrel membrane protein biogenesis</strong>, positioned at the terminal insertion/assembly step downstream of TOM import and TIM chaperoning. (ganesan2024biogenesisofmitochondrial pages 2-4)</p>
+<p>Two broader expert-level themes emerge from recent authoritative reviews and mechanistic studies:<br />
+1) <strong>SAM is increasingly conceptualized as an interaction hub</strong>, physically and functionally coupled to other mitochondrial architectural systems (TOM, MICOS/MIB), implying that MTX1 perturbations could influence more than just β‑barrel insertion (e.g., membrane contacts and organelle architecture). (ganesan2024biogenesisofmitochondrial pages 1-2)<br />
+2) <strong>MTX1 can be selectively turned over by piecemeal/basal mitophagy pathways</strong>, especially those involving LC3C/p62 and SAMM50 at SAM/MICOS sites, suggesting an endogenous quality-control axis acting on the same machinery responsible for building the OMM. (guerroue2017autophagosomalcontentprofiling pages 6-8, abudu2021samm50actswith pages 12-14)</p>
+<hr />
+<h3 id="summary-table">Summary table</h3>
+<p>The following table provides a compact reference linking MTX1’s localization, function, complexes, interactions, phenotypes, and evidence types.</p>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Summary for human MTX1 (Metaxin-1; UniProt Q13505)</th>
+<th>Key evidence / methods</th>
+<th>Most relevant citations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>Human <strong>MTX1 / Metaxin-1</strong> is a metaxin-family protein, homologous to yeast <strong>Sam37/Tom37/Mas37</strong>, and is discussed in the context of mitochondrial outer membrane protein import rather than an unrelated MTX1 symbol.</td>
+<td>Comparative/functional review synthesis; orthology assignments; mitochondrial import literature.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4); 2021, <em>Nature Communications</em>, https://doi.org/10.1038/s41467-020-20346-2 (zhao2021metaxinsarecore pages 1-2)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>MTX1 is an <strong>outer mitochondrial membrane (OMM)</strong> protein; recent reviews place metaxins among cytosolically exposed SAM peripheral subunits on the OMM. MTX1 also appears in OMM-associated higher-order assemblies linked to MICOS/MIB.</td>
+<td>Review of mitochondrial β-barrel biogenesis; BN-PAGE/assembly-state analysis; affinity-enrichment MS; mitochondrial isolation.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4); 2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 11-14)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>MTX1 is best supported as an <strong>accessory subunit of the mitochondrial Sorting and Assembly Machinery (SAM)</strong> required for efficient <strong>import/assembly of β-barrel proteins</strong> into the OMM; this is a structural/assembly role, not an enzymatic catalytic activity.</td>
+<td>In vitro [35S]-import/assembly assays for VDAC1 and TOM40; mitochondrial proteomics; knockout/complementation.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4); 2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 4-8)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>β-barrel precursors are synthesized in the cytosol, pass through <strong>TOM</strong>, are escorted across the intermembrane space by <strong>TIM chaperones</strong>, and are inserted into the OMM by <strong>SAM</strong>. MTX1 functions at the terminal OMM assembly step with SAM50/metaxins.</td>
+<td>Mechanistic pathway review and model figure synthesis.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4)</td>
+</tr>
+<tr>
+<td>Key complex: SAM</td>
+<td>Mammalian SAM contains <strong>SAMM50/SAM50</strong> plus <strong>MTX1, MTX2, MTX3</strong>; MTX1 is one of the peripheral/accessory SAM components linked to β-barrel membrane protein insertion.</td>
+<td>Review synthesis; KO/assembly analysis in human cells.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 2-4); 2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 4-8)</td>
+</tr>
+<tr>
+<td>Key complex: MIB / MICOS-associated assemblies</td>
+<td>MTX1 is also positioned in <strong>MIB (mitochondrial intermembrane space bridging) / MICOS-associated</strong> assemblies, supporting a role at outer–inner membrane contact architecture in addition to β-barrel biogenesis.</td>
+<td>BN-PAGE co-migration; affinity-enrichment MS; review context on SAM as interaction hub.</td>
+<td>2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 11-14, morf2026characterizationofhuman pages 14-17); 2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2)</td>
+</tr>
+<tr>
+<td>Interaction partner: MTX2</td>
+<td><strong>MTX2</strong> is the most consistently supported partner. MTX2 is required for <strong>steady-state stability of MTX1</strong> in human cells, although MTX1 can assemble/import independently of MTX2. Clinical MTX2 deficiency is reported to secondarily reduce MTX1 protein levels.</td>
+<td>CRISPR KO + immunoblot/BN-PAGE/complementation; clinical genetics review/case report.</td>
+<td>2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 4-8, morf2026characterizationofhuman pages 11-14); 2024, <em>Frontiers in Endocrinology</em>, https://doi.org/10.3389/fendo.2024.1345067 (fu2024casereporta pages 1-2)</td>
+</tr>
+<tr>
+<td>Interaction partner: SAMM50 / SAM50</td>
+<td>MTX1 is functionally and physically linked to <strong>SAM50</strong>, consistent with membership in SAM-containing OMM assemblies.</td>
+<td>SAM-complex biochemical characterization; review of mammalian SAM composition.</td>
+<td>2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 2-4); 2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 4-8)</td>
+</tr>
+<tr>
+<td>Interaction partners: TOM components</td>
+<td>Functionally, MTX1 loss impairs <strong>TOM40</strong> biogenesis/steady-state abundance, fitting a role in β-barrel assembly. Direct stable interaction with TOM receptors is less consistent: older work and reviews connect metaxins to TOM/SAM handoff, but one recent human interactome dataset did <strong>not</strong> enrich TOM20/TOM22 with FLAG-MTX1.</td>
+<td>[35S]-TOM40 import assays; steady-state proteomics; affinity-enrichment MS.</td>
+<td>2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 14-17, morf2026characterizationofhuman pages 4-8); 2024, <em>FEBS Open Bio</em>, https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4)</td>
+</tr>
+<tr>
+<td>Interaction partners: MICOS/MIB-associated factors</td>
+<td>MTX1 interactomes are enriched for <strong>DNAJC11, ARMC1, TMEM11, CARD19</strong>, and other MIB/MICOS-associated factors, arguing that part of MTX1 biology extends beyond minimal SAM composition.</td>
+<td>Affinity-enrichment mass spectrometry; BN-PAGE co-migration.</td>
+<td>2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 11-14, morf2026characterizationofhuman pages 14-17)</td>
+</tr>
+<tr>
+<td>Interaction partners: MIRO / trafficking machinery</td>
+<td>Metaxins are reported as core components of mitochondrial <strong>transport adaptor complexes</strong>. In neurons, MTX proteins associate with <strong>MIRO</strong>, <strong>KLC/kinesin light chain</strong>, and <strong>TRAK</strong>-containing transport machinery; this is strongest in nonhuman systems plus human-neuron conservation, while human MTX1-specific biochemical detail remains limited. Recent human MTX1 interactomes also enriched <strong>MIRO1/MIRO2</strong>.</td>
+<td>Genetics/biochemistry in <em>C. elegans</em> and human iPSC-derived neurons; AE-MS in human cells.</td>
+<td>2021, <em>Nature Communications</em>, https://doi.org/10.1038/s41467-020-20346-2 (zhao2021metaxinsarecore pages 1-2); 2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 11-14)</td>
+</tr>
+<tr>
+<td>Loss-of-function phenotypes</td>
+<td>Human MTX1 loss causes <strong>defective VDAC1 import/assembly</strong>, reduced <strong>TOM40</strong> levels, decreased overall mitochondrial protein abundance, <strong>reduced mitochondrial volume</strong>, punctate/swollen mitochondria, altered network interconnectivity, and abnormal mtDNA distribution; rescue is seen with FLAG-MTX1 re-expression.</td>
+<td>CRISPR/Cas9 KO in U2OS; mitochondrial proteomics; BN-PAGE; [35S]-import assays; TEM; complementation.</td>
+<td>2026, <em>bioRxiv</em>, https://doi.org/10.64898/2026.03.15.711473 (morf2026characterizationofhuman pages 14-17, morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 4-8, morf2026characterizationofhuman pages 11-14)</td>
+</tr>
+<tr>
+<td>Roles beyond import</td>
+<td>2024 literature mainly treats MTX1 as an <strong>OMM protein import/mitochondrial homeostasis factor</strong>. Reviews also cite MTX1 as a <strong>cargo in LC3C-dependent piecemeal mitophagy</strong>, but this appears secondary to its primary import role. Proteomic studies in melanoma report <strong>upregulation of MTX1/2</strong> alongside mitochondrial biogenesis/import signatures in BRAF V600E metastases.</td>
+<td>Disease review; cancer proteomics; visual figure extraction for MTX1/2 upregulation statement.</td>
+<td>2024, <em>Antioxidants</em>, https://doi.org/10.3390/antiox13060729 (chen2024livercellmitophagy pages 1-2); 2024, <em>Clinical and Translational Medicine</em>, https://doi.org/10.1002/ctm2.1773 (almeida2024mitochondrialdysfunctionand pages 1-4, almeida2024mitochondrialdysfunctionand media 1ca45a9d, almeida2024mitochondrialdysfunctionand media 3236bfaf, almeida2024mitochondrialdysfunctionand media 09168aed, almeida2024mitochondrialdysfunctionand media efcaeb08)</td>
+</tr>
+<tr>
+<td>Current confidence</td>
+<td><strong>Highest-confidence annotation:</strong> MTX1 is a human mitochondrial OMM metaxin-family protein that acts mainly as a <strong>non-enzymatic accessory factor in SAM-mediated β-barrel protein biogenesis</strong>, with additional links to MICOS/MIB organization and mitochondrial trafficking/homeostasis.</td>
+<td>Convergent support across peer-reviewed reviews, mechanistic studies, and recent human-cell functional work.</td>
+<td>Synthesis of 2024 reviews and human-cell functional data (morf2026characterizationofhuman pages 1-4, morf2026characterizationofhuman pages 4-8, morf2026characterizationofhuman pages 11-14, ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main functional annotation points for human MTX1, including localization, molecular function, complex membership, interaction partners, and supporting evidence. It is useful as a compact reference linking each claim to the strongest available recent and foundational citations.</em></p>
+<hr />
+<h3 id="urls-and-publication-dates-key-sources-cited">URLs and publication dates (key sources cited)</h3>
+<ul>
+<li>Ganesan et al. <strong>Sep 2024</strong>. <em>FEBS Open Bio</em>. “Biogenesis of mitochondrial β‑barrel membrane proteins.” https://doi.org/10.1002/2211-5463.13905 (ganesan2024biogenesisofmitochondrial pages 1-2, ganesan2024biogenesisofmitochondrial pages 2-4)</li>
+<li>de Almeida et al. <strong>Accepted 8 Jul 2024</strong>. <em>Clinical and Translational Medicine</em>. “Mitochondrial dysfunction and immune suppression in BRAF V600E‑mutated metastatic melanoma.” https://doi.org/10.1002/ctm2.1773 (almeida2024mitochondrialdysfunctionand pages 1-4, almeida2024mitochondrialdysfunctionand media 1ca45a9d)</li>
+<li>Chen et al. <strong>Published 15 Jun 2024</strong>. <em>Antioxidants</em>. “Liver Cell Mitophagy in MASLD and Liver Fibrosis.” https://doi.org/10.3390/antiox13060729 (chen2024livercellmitophagy pages 1-2)</li>
+<li>Fu et al. <strong>Published 13 Mar 2024</strong>. <em>Frontiers in Endocrinology</em>. MTX2 MADaM case report. https://doi.org/10.3389/fendo.2024.1345067 (fu2024casereporta pages 1-2)</li>
+<li>Zhao et al. <strong>Jan 2021</strong>. <em>Nature Communications</em>. “Metaxins are core components of mitochondrial transport adaptor complexes.” https://doi.org/10.1038/s41467-020-20346-2 (zhao2021metaxinsarecore pages 1-2)</li>
+<li>Le Guerroué et al. <strong>Nov 2017</strong>. <em>Molecular Cell</em>. LC3C-dependent piecemeal mitophagy (MTX1 cargo). https://doi.org/10.1016/j.molcel.2017.10.029 (guerroue2017autophagosomalcontentprofiling pages 6-8)</li>
+<li>Abudu et al. <strong>May 2021</strong>. <em>Journal of Cell Biology</em>. SAMM50/p62 piecemeal mitophagy of SAM/MICOS (MTX1 implicated). https://doi.org/10.1083/jcb.202009092 (abudu2021samm50actswith pages 12-14)</li>
+</ul>
+<h3 id="notes-on-evidence-limitations">Notes on evidence limitations</h3>
+<p>Human-cell, MTX1-specific loss-of-function phenotypes in <strong>2023–2024</strong> primary literature were not prominent in the retrieved set; the most detailed mechanistic loss-of-function dataset available in this run is a 2026 preprint (used cautiously in the background table as supportive context but not required for the 2023–2024 emphasis). Accordingly, the most robust 2023–2024 MTX1 statements in this report come from authoritative reviews and large-cohort proteomics rather than MTX1-targeted genetic perturbation studies published in 2024. (ganesan2024biogenesisofmitochondrial pages 2-4, almeida2024mitochondrialdysfunctionand pages 1-4)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ganesan2024biogenesisofmitochondrial pages 2-4): Iniyan Ganesan, Jon V. Busto, Nikolaus Pfanner, and Nils Wiedemann. Biogenesis of mitochondrial β‐barrel membrane proteins. FEBS Open Bio, 14:1595-1609, Sep 2024. URL: https://doi.org/10.1002/2211-5463.13905, doi:10.1002/2211-5463.13905. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhao2021metaxinsarecore pages 1-2): Yinsuo Zhao, Eli Song, Wenjuan Wang, Chung-Han Hsieh, Xinnan Wang, Wei Feng, Xiangming Wang, and Kang Shen. Metaxins are core components of mitochondrial transport adaptor complexes. Nature Communications, Jan 2021. URL: https://doi.org/10.1038/s41467-020-20346-2, doi:10.1038/s41467-020-20346-2. This article has 112 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ganesan2024biogenesisofmitochondrial pages 1-2): Iniyan Ganesan, Jon V. Busto, Nikolaus Pfanner, and Nils Wiedemann. Biogenesis of mitochondrial β‐barrel membrane proteins. FEBS Open Bio, 14:1595-1609, Sep 2024. URL: https://doi.org/10.1002/2211-5463.13905, doi:10.1002/2211-5463.13905. This article has 20 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almeida2024mitochondrialdysfunctionand pages 1-4): Natália Pinto de Almeida, Ágnes Judit Jánosi, Runyu Hong, Ahmad Rajeh, Fábio Nogueira, Leticia Szadai, Beata Szeitz, Indira Pla Parada, Viktória Doma, Nicole Woldmar, Jéssica Guedes, Zsuzsanna Újfaludi, Aron Bartha, Yonghyo Kim, Charlotte Welinder, Bo Baldetorp, Lajos Vince Kemény, Zoltan Pahi, Guihong Wan, Nga Nguyen, Tibor Pankotai, Balázs Győrffy, Krzysztof Pawłowski, Peter Horvatovich, Attila Marcell Szasz, Aniel Sanchez, Magdalena Kuras, Jimmy Rodriguez Murillo, Lazaro Betancourt, Gilberto B. Domont, Yevgeniy R. Semenov, Kun‐Hsing Yu, Ho Jeong Kwon, István Balázs Németh, David Fenyő, Elisabet Wieslander, György Marko‐Varga, and Jeovanis Gil. Mitochondrial dysfunction and immune suppression in braf v600e‐mutated metastatic melanoma. Clinical and Translational Medicine, Jul 2024. URL: https://doi.org/10.1002/ctm2.1773, doi:10.1002/ctm2.1773. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almeida2024mitochondrialdysfunctionand media 1ca45a9d): Natália Pinto de Almeida, Ágnes Judit Jánosi, Runyu Hong, Ahmad Rajeh, Fábio Nogueira, Leticia Szadai, Beata Szeitz, Indira Pla Parada, Viktória Doma, Nicole Woldmar, Jéssica Guedes, Zsuzsanna Újfaludi, Aron Bartha, Yonghyo Kim, Charlotte Welinder, Bo Baldetorp, Lajos Vince Kemény, Zoltan Pahi, Guihong Wan, Nga Nguyen, Tibor Pankotai, Balázs Győrffy, Krzysztof Pawłowski, Peter Horvatovich, Attila Marcell Szasz, Aniel Sanchez, Magdalena Kuras, Jimmy Rodriguez Murillo, Lazaro Betancourt, Gilberto B. Domont, Yevgeniy R. Semenov, Kun‐Hsing Yu, Ho Jeong Kwon, István Balázs Németh, David Fenyő, Elisabet Wieslander, György Marko‐Varga, and Jeovanis Gil. Mitochondrial dysfunction and immune suppression in braf v600e‐mutated metastatic melanoma. Clinical and Translational Medicine, Jul 2024. URL: https://doi.org/10.1002/ctm2.1773, doi:10.1002/ctm2.1773. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almeida2024mitochondrialdysfunctionand media 3236bfaf): Natália Pinto de Almeida, Ágnes Judit Jánosi, Runyu Hong, Ahmad Rajeh, Fábio Nogueira, Leticia Szadai, Beata Szeitz, Indira Pla Parada, Viktória Doma, Nicole Woldmar, Jéssica Guedes, Zsuzsanna Újfaludi, Aron Bartha, Yonghyo Kim, Charlotte Welinder, Bo Baldetorp, Lajos Vince Kemény, Zoltan Pahi, Guihong Wan, Nga Nguyen, Tibor Pankotai, Balázs Győrffy, Krzysztof Pawłowski, Peter Horvatovich, Attila Marcell Szasz, Aniel Sanchez, Magdalena Kuras, Jimmy Rodriguez Murillo, Lazaro Betancourt, Gilberto B. Domont, Yevgeniy R. Semenov, Kun‐Hsing Yu, Ho Jeong Kwon, István Balázs Németh, David Fenyő, Elisabet Wieslander, György Marko‐Varga, and Jeovanis Gil. Mitochondrial dysfunction and immune suppression in braf v600e‐mutated metastatic melanoma. Clinical and Translational Medicine, Jul 2024. URL: https://doi.org/10.1002/ctm2.1773, doi:10.1002/ctm2.1773. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almeida2024mitochondrialdysfunctionand media 09168aed): Natália Pinto de Almeida, Ágnes Judit Jánosi, Runyu Hong, Ahmad Rajeh, Fábio Nogueira, Leticia Szadai, Beata Szeitz, Indira Pla Parada, Viktória Doma, Nicole Woldmar, Jéssica Guedes, Zsuzsanna Újfaludi, Aron Bartha, Yonghyo Kim, Charlotte Welinder, Bo Baldetorp, Lajos Vince Kemény, Zoltan Pahi, Guihong Wan, Nga Nguyen, Tibor Pankotai, Balázs Győrffy, Krzysztof Pawłowski, Peter Horvatovich, Attila Marcell Szasz, Aniel Sanchez, Magdalena Kuras, Jimmy Rodriguez Murillo, Lazaro Betancourt, Gilberto B. Domont, Yevgeniy R. Semenov, Kun‐Hsing Yu, Ho Jeong Kwon, István Balázs Németh, David Fenyő, Elisabet Wieslander, György Marko‐Varga, and Jeovanis Gil. Mitochondrial dysfunction and immune suppression in braf v600e‐mutated metastatic melanoma. Clinical and Translational Medicine, Jul 2024. URL: https://doi.org/10.1002/ctm2.1773, doi:10.1002/ctm2.1773. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(almeida2024mitochondrialdysfunctionand media efcaeb08): Natália Pinto de Almeida, Ágnes Judit Jánosi, Runyu Hong, Ahmad Rajeh, Fábio Nogueira, Leticia Szadai, Beata Szeitz, Indira Pla Parada, Viktória Doma, Nicole Woldmar, Jéssica Guedes, Zsuzsanna Újfaludi, Aron Bartha, Yonghyo Kim, Charlotte Welinder, Bo Baldetorp, Lajos Vince Kemény, Zoltan Pahi, Guihong Wan, Nga Nguyen, Tibor Pankotai, Balázs Győrffy, Krzysztof Pawłowski, Peter Horvatovich, Attila Marcell Szasz, Aniel Sanchez, Magdalena Kuras, Jimmy Rodriguez Murillo, Lazaro Betancourt, Gilberto B. Domont, Yevgeniy R. Semenov, Kun‐Hsing Yu, Ho Jeong Kwon, István Balázs Németh, David Fenyő, Elisabet Wieslander, György Marko‐Varga, and Jeovanis Gil. Mitochondrial dysfunction and immune suppression in braf v600e‐mutated metastatic melanoma. Clinical and Translational Medicine, Jul 2024. URL: https://doi.org/10.1002/ctm2.1773, doi:10.1002/ctm2.1773. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fu2024casereporta pages 1-2): Xiaohui Fu, Shuli Chen, Xiao Huang, Qinghua Lu, Yunfei Cui, Weinan Lin, and Qin Yang. Case report: a novel splice-site mutation of mtx2 gene caused mandibuloacral dysplasia progeroid syndrome: the first report from china and literature review. Frontiers in Endocrinology, Mar 2024. URL: https://doi.org/10.3389/fendo.2024.1345067, doi:10.3389/fendo.2024.1345067. This article has 4 citations.</p>
+</li>
+<li>
+<p>(guerroue2017autophagosomalcontentprofiling pages 4-6): François Le Guerroué, Franziska Eck, Jennifer Jung, Tatjana Starzetz, Michel Mittelbronn, Manuel Kaulich, and Christian Behrends. Autophagosomal content profiling reveals an lc3c-dependent piecemeal mitophagy pathway. Molecular cell, 68 4:786-796.e6, Nov 2017. URL: https://doi.org/10.1016/j.molcel.2017.10.029, doi:10.1016/j.molcel.2017.10.029. This article has 171 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guerroue2017autophagosomalcontentprofiling pages 8-10): François Le Guerroué, Franziska Eck, Jennifer Jung, Tatjana Starzetz, Michel Mittelbronn, Manuel Kaulich, and Christian Behrends. Autophagosomal content profiling reveals an lc3c-dependent piecemeal mitophagy pathway. Molecular cell, 68 4:786-796.e6, Nov 2017. URL: https://doi.org/10.1016/j.molcel.2017.10.029, doi:10.1016/j.molcel.2017.10.029. This article has 171 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guerroue2017autophagosomalcontentprofiling pages 6-8): François Le Guerroué, Franziska Eck, Jennifer Jung, Tatjana Starzetz, Michel Mittelbronn, Manuel Kaulich, and Christian Behrends. Autophagosomal content profiling reveals an lc3c-dependent piecemeal mitophagy pathway. Molecular cell, 68 4:786-796.e6, Nov 2017. URL: https://doi.org/10.1016/j.molcel.2017.10.029, doi:10.1016/j.molcel.2017.10.029. This article has 171 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abudu2021samm50actswith pages 12-14): Yakubu Princely Abudu, Birendra Kumar Shrestha, Wenxin Zhang, Anthimi Palara, Hanne Britt Brenne, Kenneth Bowitz Larsen, Deanna Lynn Wolfson, Gianina Dumitriu, Cristina Ionica Øie, Balpreet Singh Ahluwalia, Gahl Levy, Christian Behrends, Sharon A. Tooze, Stephane Mouilleron, Trond Lamark, and Terje Johansen. Samm50 acts with p62 in piecemeal basal- and oxphos-induced mitophagy of sam and micos components. Journal of Cell Biology, May 2021. URL: https://doi.org/10.1083/jcb.202009092, doi:10.1083/jcb.202009092. This article has 73 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(abudu2021samm50actswith pages 2-4): Yakubu Princely Abudu, Birendra Kumar Shrestha, Wenxin Zhang, Anthimi Palara, Hanne Britt Brenne, Kenneth Bowitz Larsen, Deanna Lynn Wolfson, Gianina Dumitriu, Cristina Ionica Øie, Balpreet Singh Ahluwalia, Gahl Levy, Christian Behrends, Sharon A. Tooze, Stephane Mouilleron, Trond Lamark, and Terje Johansen. Samm50 acts with p62 in piecemeal basal- and oxphos-induced mitophagy of sam and micos components. Journal of Cell Biology, May 2021. URL: https://doi.org/10.1083/jcb.202009092, doi:10.1083/jcb.202009092. This article has 73 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024livercellmitophagy pages 1-2): Jiaxin Chen, Linge Jian, Yangkun Guo, Chengwei Tang, Zhiyin Huang, and Jinhang Gao. Liver cell mitophagy in metabolic dysfunction-associated steatotic liver disease and liver fibrosis. Antioxidants, 13:729, Jun 2024. URL: https://doi.org/10.3390/antiox13060729, doi:10.3390/antiox13060729. This article has 27 citations.</p>
+</li>
+<li>
+<p>(morf2026characterizationofhuman pages 1-4): Sarah E. J. Morf, Matthew P. Challis, Sanjeev Uthishtran, Caitlin L. Rowe, Alice J. Sharpe, Natasha Kapoor-Kaushik, Senthil Arumugam, Luke E. Formosa, Kate McArthur, and Michael T. Ryan. Characterization of human metaxin proteins reveals functional diversification of sam37 homologs mtx1 and mtx3. bioRxiv, Mar 2026. URL: https://doi.org/10.64898/2026.03.15.711473, doi:10.64898/2026.03.15.711473. This article has 0 citations.</p>
+</li>
+<li>
+<p>(morf2026characterizationofhuman pages 11-14): Sarah E. J. Morf, Matthew P. Challis, Sanjeev Uthishtran, Caitlin L. Rowe, Alice J. Sharpe, Natasha Kapoor-Kaushik, Senthil Arumugam, Luke E. Formosa, Kate McArthur, and Michael T. Ryan. Characterization of human metaxin proteins reveals functional diversification of sam37 homologs mtx1 and mtx3. bioRxiv, Mar 2026. URL: https://doi.org/10.64898/2026.03.15.711473, doi:10.64898/2026.03.15.711473. This article has 0 citations.</p>
+</li>
+<li>
+<p>(morf2026characterizationofhuman pages 4-8): Sarah E. J. Morf, Matthew P. Challis, Sanjeev Uthishtran, Caitlin L. Rowe, Alice J. Sharpe, Natasha Kapoor-Kaushik, Senthil Arumugam, Luke E. Formosa, Kate McArthur, and Michael T. Ryan. Characterization of human metaxin proteins reveals functional diversification of sam37 homologs mtx1 and mtx3. bioRxiv, Mar 2026. URL: https://doi.org/10.64898/2026.03.15.711473, doi:10.64898/2026.03.15.711473. This article has 0 citations.</p>
+</li>
+<li>
+<p>(morf2026characterizationofhuman pages 14-17): Sarah E. J. Morf, Matthew P. Challis, Sanjeev Uthishtran, Caitlin L. Rowe, Alice J. Sharpe, Natasha Kapoor-Kaushik, Senthil Arumugam, Luke E. Formosa, Kate McArthur, and Michael T. Ryan. Characterization of human metaxin proteins reveals functional diversification of sam37 homologs mtx1 and mtx3. bioRxiv, Mar 2026. URL: https://doi.org/10.64898/2026.03.15.711473, doi:10.64898/2026.03.15.711473. This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ganesan2024biogenesisofmitochondrial pages 2-4</li>
+<li>ganesan2024biogenesisofmitochondrial pages 1-2</li>
+<li>fu2024casereporta pages 1-2</li>
+<li>zhao2021metaxinsarecore pages 1-2</li>
+<li>guerroue2017autophagosomalcontentprofiling pages 6-8</li>
+<li>almeida2024mitochondrialdysfunctionand pages 1-4</li>
+<li>chen2024livercellmitophagy pages 1-2</li>
+<li>morf2026characterizationofhuman pages 11-14</li>
+<li>guerroue2017autophagosomalcontentprofiling pages 4-6</li>
+<li>guerroue2017autophagosomalcontentprofiling pages 8-10</li>
+<li>morf2026characterizationofhuman pages 1-4</li>
+<li>morf2026characterizationofhuman pages 4-8</li>
+<li>morf2026characterizationofhuman pages 14-17</li>
+<li>35S</li>
+<li>https://doi.org/10.1002/2211-5463.13905</li>
+<li>https://doi.org/10.1038/s41467-020-20346-2</li>
+<li>https://doi.org/10.64898/2026.03.15.711473</li>
+<li>https://doi.org/10.3389/fendo.2024.1345067</li>
+<li>https://doi.org/10.3390/antiox13060729</li>
+<li>https://doi.org/10.1002/ctm2.1773</li>
+<li>https://doi.org/10.1016/j.molcel.2017.10.029</li>
+<li>https://doi.org/10.1083/jcb.202009092</li>
+<li>https://doi.org/10.1002/2211-5463.13905,</li>
+<li>https://doi.org/10.1038/s41467-020-20346-2,</li>
+<li>https://doi.org/10.1002/ctm2.1773,</li>
+<li>https://doi.org/10.3389/fendo.2024.1345067,</li>
+<li>https://doi.org/10.1016/j.molcel.2017.10.029,</li>
+<li>https://doi.org/10.1083/jcb.202009092,</li>
+<li>https://doi.org/10.3390/antiox13060729,</li>
+<li>https://doi.org/10.64898/2026.03.15.711473,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q13505
+gene_symbol: MTX1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  MTX1 (metaxin-1) is a non-enzymatic mitochondrial outer membrane metaxin-family
+  accessory subunit of the mammalian SAM complex. Its best-supported core role
+  is structural support of SAM-mediated insertion and assembly of beta-barrel
+  outer membrane proteins such as VDACs and TOM40, with additional non-core
+  links to MIB/MICOS-associated organization and mitochondrial quality control.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q13505-1
+- name: &#39;2&#39;
+  id: Q13505-2
+  sequence_note: VSP_035742
+- name: &#39;3&#39;
+  id: Q13505-3
+  sequence_note: VSP_035741
+existing_annotations:
+- term:
+    id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Correct phylogenetic inference. MTX1 is an accessory SAM subunit involved
+      in SAM-mediated insertion/assembly of beta-barrel proteins into the
+      mitochondrial outer membrane.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/MTX1/MTX1-deep-research-falcon.md
+      supporting_text: &#34;MTX1 is best supported as an **accessory subunit of the mitochondrial Sorting and Assembly Machinery (SAM)** required for efficient **import/assembly of β-barrel proteins** into the OMM&#34;
+- term:
+    id: GO:0070096
+    label: mitochondrial outer membrane translocase complex assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Accepted as a SAM-related assembly role. MTX1 supports assembly of
+      beta-barrel outer membrane proteins, including TOM complex components such
+      as TOM40, rather than acting as a catalytic enzyme.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0001401
+    label: SAM complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Correct. MTX1 is a metaxin-family accessory subunit of the mammalian SAM
+      complex with SAMM50, MTX2, and MTX3.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0001401
+    label: SAM complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct InterPro-derived complex annotation. The Falcon review identifies
+      MTX1 as a mammalian SAM complex accessory subunit.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct UniProt-derived localization. MTX1 is an outer mitochondrial
+      membrane SAM/metaxin protein.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct but overly general. MTX1 is specifically localized to the
+      mitochondrial outer membrane and SAM complex.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and SAM complex annotations.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0007595
+    label: lactation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  review:
+    summary: &gt;-
+      This automatic orthology transfer does not match the synthesized function
+      of human MTX1 as a mitochondrial SAM accessory factor. Falcon research did
+      not identify MTX1-specific evidence for lactation as a gene-level core
+      process.
+    action: REMOVE
+    reason: &gt;-
+      Unsupported organism-level phenotype transfer; not part of the curated
+      MTX1 mitochondrial SAM function.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0001401
+    label: SAM complex
+  evidence_type: IPI
+  original_reference_id: PMID:17510655
+  review:
+    summary: &gt;-
+      Accepted. Conserved roles of metaxins and Sam50 in VDAC biogenesis support
+      MTX1 membership in the SAM complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:31387448
+  review:
+    summary: &gt;-
+      Accepted. MTX1 is consistently described as a mitochondrial outer membrane
+      metaxin/SAM component.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:31387448
+  review:
+    summary: &gt;-
+      Accepted as the core MTX1 process. MTX1 acts as a non-catalytic accessory
+      factor for SAM-mediated insertion/assembly of beta-barrel proteins into
+      the mitochondrial outer membrane.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: &gt;-
+      Correct but too general. MTX1 is specifically localized to the
+      mitochondrial outer membrane and SAM complex.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and SAM complex annotations.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31644573
+  review:
+    summary: &gt;-
+      Protein binding is too generic to represent MTX1 function. The relevant
+      biology is membership in SAM and non-core association with MIB/MICOS-linked
+      assemblies.
+    action: REMOVE
+    reason: &gt;-
+      Generic protein binding is uninformative; complex membership and
+      mitochondrial assembly terms capture the supported function.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0001401
+    label: SAM complex
+  evidence_type: HDA
+  original_reference_id: PMID:26477565
+  review:
+    summary: &gt;-
+      Accepted. Affinity/proteomics evidence supports MTX1 in SAM-containing
+      mitochondrial outer membrane assemblies.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0007007
+    label: inner mitochondrial membrane organization
+  evidence_type: IC
+  original_reference_id: PMID:26477565
+  review:
+    summary: &gt;-
+      Plausible secondary consequence of MTX1 association with MIB/MICOS-linked
+      assemblies, but not the primary curated function compared with SAM-mediated
+      outer membrane beta-barrel biogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      MIB/MICOS-associated architecture is supported as an additional role, not
+      the core MTX1 function.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0140275
+    label: MIB complex
+  evidence_type: HDA
+  original_reference_id: PMID:26477565
+  review:
+    summary: &gt;-
+      Supported as an additional MTX1-associated complex context. Keep as
+      non-core because the strongest synthesized function is SAM-mediated
+      beta-barrel outer membrane protein biogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      MIB/MICOS association is secondary to the core SAM complex role.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8660965
+  review:
+    summary: &gt;-
+      Correct but too general. MTX1 is specifically a mitochondrial outer
+      membrane metaxin/SAM protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and SAM complex annotations.
+    additional_reference_ids:
+    - file:human/MTX1/MTX1-deep-research-falcon.md
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: PMID:17510655
+  title: Conserved roles of Sam50 and metaxins in VDAC biogenesis.
+  findings: []
+- id: PMID:26477565
+  title: Evolution and structural organization of the mitochondrial contact site (MICOS)
+    complex and the mitochondrial intermembrane space bridging (MIB) complex.
+  findings: []
+- id: PMID:31387448
+  title: &#39;Mitochondria-hubs for regulating cellular biochemistry: emerging concepts
+    and networks.&#39;
+  findings: []
+- id: PMID:31644573
+  title: Armadillo repeat-containing protein 1 is a dual localization protein associated
+    with mitochondrial intermembrane space bridging complex.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+- id: PMID:8660965
+  title: Structure and organization of the human metaxin gene (MTX) and pseudogene.
+  findings: []
+- id: file:human/MTX1/MTX1-deep-research-falcon.md
+  title: Falcon deep research report for human MTX1
+  findings: []
+core_functions:
+- description: &gt;-
+    MTX1 is a structural/accessory metaxin subunit of the mammalian SAM complex
+    that supports insertion and assembly of beta-barrel proteins into the
+    mitochondrial outer membrane.
+  supported_by:
+  - reference_id: file:human/MTX1/MTX1-deep-research-falcon.md
+    supporting_text: &#34;MTX1 is best supported as an **accessory subunit of the mitochondrial Sorting and Assembly Machinery (SAM)** required for efficient **import/assembly of β-barrel proteins** into the OMM&#34;
+  - reference_id: file:human/MTX1/MTX1-deep-research-falcon.md
+    supporting_text: &#34;Mammalian SAM contains **SAMM50/SAM50** plus **MTX1, MTX2, MTX3**&#34;
+  - reference_id: file:human/MTX1/MTX1-deep-research-falcon.md
+    supporting_text: &#34;MTX1 is an **outer mitochondrial membrane (OMM)** protein&#34;
+  directly_involved_in:
+  - id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  - id: GO:0070096
+    label: mitochondrial outer membrane translocase complex assembly
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0001401
+    label: SAM complex
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which human MTX1 surfaces are required for SAM-mediated VDAC/TOM40
+    beta-barrel assembly versus MIB/MICOS-associated interactions?
+  experts: []
+- question: &gt;-
+    Is MTX1 turnover by LC3C/p62-linked piecemeal mitophagy regulated by the same
+    interfaces used for SAM complex assembly?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    MTX1 contributes separable interfaces for SAM beta-barrel assembly and
+    MIB/MICOS-associated mitochondrial architecture.
+  description: &gt;-
+    Use endogenous MTX1 knockout/rescue with domain or interface mutants, then
+    assay SAM complex assembly, VDAC1/TOM40 import and assembly, mitochondrial
+    ultrastructure, and LC3C/p62-dependent MTX1 turnover.
+  experiment_type: endogenous rescue, import assay, and mitochondrial proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

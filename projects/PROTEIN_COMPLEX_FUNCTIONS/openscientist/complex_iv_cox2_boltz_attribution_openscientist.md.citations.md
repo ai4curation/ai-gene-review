@@ -1,0 +1,16 @@
+# Citations for Complex IV COX2 Boltz2-style Function Attribution
+
+OpenScientist job: `47b9b1a8-c989-404c-901d-db76500278a6`
+
+## PMID Citations
+
+- PMID:15229189
+- PMID:19336478
+- PMID:31851937
+- PMID:26160915
+- PMID:22095077
+- PMID:29355485
+- PMID:29381136
+- PMID:19295170
+- PMID:28330871
+- PMID:27550809

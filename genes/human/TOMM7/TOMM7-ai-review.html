@@ -1,0 +1,3489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOMM7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TOMM7</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9P0U1" target="_blank" class="term-link">
+                        Q9P0U1
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TOMM7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9P0U1" data-a="DESCRIPTION: TOMM7 is a small single-pass mitochondrial outer m..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TOMM7 is a small single-pass mitochondrial outer membrane TOM complex subunit. It is not the TOM pore or a standalone transporter; instead it regulates TOM core assembly, stability, and oligomeric organization, and it has a supported mitochondrial quality-control role in PINK1 stabilization/activation and PINK1-Parkin mitophagy signaling after mitochondrial depolarization.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005742" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct phylogenetic inference. TOMM7 is a conserved small TOM subunit in the mitochondrial outer membrane translocase complex.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TOMM7/TOMM7-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TOMM7 is an **outer mitochondrial membrane** subunit of the TOM machinery.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct UniProt-derived localization. TOMM7 is a single-pass outer mitochondrial membrane TOM subunit.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005742" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct InterPro-derived annotation. TOMM7 is a Tom7-family small TOM complex subunit.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0030150" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct as a broad TOM pathway consequence but not TOMM7&#39;s most specific role. TOMM7 regulates TOM complex assembly/stability and supports import indirectly through the TOM complex.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matrix import is one route through TOM; TOMM7&#39;s core role is TOM complex regulation.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12198123
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insertion and assembly of human tom7 into the preprotein tra...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005515" data-r="PMID:12198123" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein binding is too generic. The relevant result is TOMM7 insertion and assembly into the TOM complex, captured by TOM complex and assembly terms.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative for TOMM7 function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30021884
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Histone Interaction Landscapes Visualized by Crosslinking Ma...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005515" data-r="PMID:30021884" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Histone crosslinking protein binding is not part of the curated TOMM7 mitochondrial outer membrane/TOM function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative and likely unrelated to TOMM7 core function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:35271311
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    OpenCell: Endogenous tagging for the cartography of human ce...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005515" data-r="PMID:35271311" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic OpenCell protein binding does not capture TOMM7&#39;s function as a regulatory/structural TOM complex subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Protein binding is uninformative; complex and process annotations are more appropriate.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030150" target="_blank" class="term-link">
+                                    GO:0030150
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into mitochondrial matrix</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0030150" data-r="PMID:15644312" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad but valid for the TOM import pathway. TOMM7 contributes indirectly through TOM complex organization rather than acting as the matrix-import motor or pore.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Matrix import is a TOM pathway outcome but not TOMM7&#39;s most specific function.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005741" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct localization. TOMM7 is a small outer mitochondrial membrane subunit of the TOM machinery.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                    GO:0045040
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0045040" data-r="PMID:18331822" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad TOM biology is related, but TOMM7 is not an independent insertase. The specific supported role is TOM complex assembly/stability and oligomeric-state regulation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace outer membrane insertion with TOM complex assembly/stability.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                    mitochondrial outer membrane translocase complex assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                                    GO:0140596
+                                </a>
+                            </span>
+                            <span class="term-label">TOM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0140596" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific. TOMM7 is a TOM core/holo complex subunit adjacent to TOM40/TOM22 and the other small Tom proteins.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. TOMM7 is specifically a mitochondrial outer membrane TOM complex subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and TOM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24270810" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24270810
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-content genome-wide RNAi screens identify regulators of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005742" data-r="PMID:24270810" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. The TOMM7/PINK1-Parkin evidence is consistent with TOMM7 acting at the TOM complex.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031647" target="_blank" class="term-link">
+                                    GO:0031647
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of protein stability</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24270810" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24270810
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-content genome-wide RNAi screens identify regulators of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0031647" data-r="PMID:24270810" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted for the PINK1 context. TOMM7 is required for efficient PINK1 stabilization/activation at the TOM complex after mitochondrial depolarization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903749" target="_blank" class="term-link">
+                                    GO:1903749
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein localization to mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24270810" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24270810
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-content genome-wide RNAi screens identify regulators of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:1903749" data-r="PMID:24270810" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted as a PINK1-related annotation. TOMM7 supports PINK1 accumulation at damaged mitochondria/TOM after depolarization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905091" target="_blank" class="term-link">
+                                    GO:1905091
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of type 2 mitophagy</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24270810" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24270810
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    High-content genome-wide RNAi screens identify regulators of...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:1905091" data-r="PMID:24270810" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. TOMM7 enables PINK1 stabilization/activation at TOM and downstream Parkin recruitment, supporting PINK1-Parkin mitophagy signaling.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5205661
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005741" data-r="Reactome:R-HSA-5205661" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. Reactome places TOMM7 at the mitochondrial outer membrane in TOM/PINK1 pathway context.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12198123
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insertion and assembly of human tom7 into the preprotein tra...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005739" data-r="PMID:12198123" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but too general. TOMM7 is specifically an outer membrane TOM complex subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and TOM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12198123
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Insertion and assembly of human tom7 into the preprotein tra...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0005742" data-r="PMID:12198123" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accepted. PMID:12198123 directly addresses insertion and assembly of human TOM7 into the TOM complex.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008320" target="_blank" class="term-link">
+                                    GO:0008320
+                                </a>
+                            </span>
+                            <span class="term-label">protein transmembrane transporter activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15644312
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissection of the mitochondrial import and assembly pathway ...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P0U1" data-a="GO:0008320" data-r="PMID:15644312" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM7 is not the TOM protein-conducting pore. Its role is regulatory and structural within the TOM complex rather than direct transporter activity.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> TOMM7 regulates TOM complex assembly/stability but does not independently enable protein transmembrane transporter activity.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TOMM7 is a regulatory/structural small TOM subunit that modulates TOM complex assembly, stability, and oligomeric organization at the mitochondrial outer membrane.</h3>
+                <span class="vote-buttons" data-g="Q9P0U1" data-a="FUNCTION: TOMM7 is a regulatory/structural small TOM subunit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                mitochondrial outer membrane translocase complex assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                            TOM complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM7/TOMM7-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Functionally, TOMM7 is best classified as a **non-enzymatic regulatory/structural subunit**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM7/TOMM7-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">TOMM7 is an **outer mitochondrial membrane** subunit of the TOM machinery.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TOMM7 links the TOM complex to mitochondrial quality control by enabling PINK1 stabilization/activation at TOM and downstream PINK1-Parkin mitophagy signaling after mitochondrial damage.</h3>
+                <span class="vote-buttons" data-g="Q9P0U1" data-a="FUNCTION: TOMM7 links the TOM complex to mitochondrial quali..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1905091" target="_blank" class="term-link">
+                                positive regulation of type 2 mitophagy
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031647" target="_blank" class="term-link">
+                                regulation of protein stability
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903749" target="_blank" class="term-link">
+                                positive regulation of protein localization to mitochondrion
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                            TOM complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM7/TOMM7-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">TOMM7 is also **required for efficient PINK1 stabilization/activation at the TOM complex**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12198123" target="_blank" class="term-link">
+                            PMID:12198123
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Insertion and assembly of human tom7 into the preprotein translocase complex of the outer mitochondrial membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15644312" target="_blank" class="term-link">
+                            PMID:15644312
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Dissection of the mitochondrial import and assembly pathway for human Tom40.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link">
+                            PMID:18331822
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of Tom5 and Tom6 in the preprotein translocase complex of human mitochondrial outer membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24270810" target="_blank" class="term-link">
+                            PMID:24270810
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">High-content genome-wide RNAi screens identify regulators of parkin upstream of mitophagy.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30021884" target="_blank" class="term-link">
+                            PMID:30021884
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry in Intact Cell Nuclei.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35271311" target="_blank" class="term-link">
+                            PMID:35271311
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">OpenCell: Endogenous tagging for the cartography of human cellular organization.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5205661
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pink1 is recruited from the cytoplasm to the mitochondria</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TOMM7/TOMM7-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for human TOMM7</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which TOMM7 structural features separately control TOM oligomeric stability and PINK1 arrest/activation at the TOM complex?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9P0U1" data-a="Q: Which TOMM7 structural features separately control..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why do different TOMM7 disease alleles produce selective developmental, metabolic, or cerebrovascular phenotypes despite retention of mitochondrial localization?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9P0U1" data-a="Q: Why do different TOMM7 disease alleles produce sel..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare endogenous TOMM7 knockout/rescue with p.W25R and p.P29L alleles for TOM complex assembly, TOMM40/TOMM22 interaction, import of representative mitochondrial precursors, PINK1 stabilization, Parkin recruitment, and endothelial/iPSC metabolic phenotypes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TOMM7 disease variants selectively weaken TOMM7-TOMM40/TOMM22 interactions, altering TOM assembly and PINK1 signaling without uniformly abolishing import.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: endogenous rescue, TOM assembly assay, and mitophagy assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9P0U1" data-a="EXPERIMENT: Compare endogenous TOMM7 knockout/rescue with p.W2..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TOMM7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P0U1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">36 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-05-11T12:29:42.246057</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-tomm7-uniprot-q9p0u1-functional-annotation-mechanisms-and-recent-findings">Research report: Human <strong>TOMM7</strong> (UniProt <strong>Q9P0U1</strong>) — functional annotation, mechanisms, and recent findings</h2>
+<h3 id="0-target-identity-verification-mandatory">0) Target identity verification (mandatory)</h3>
+<p>The UniProt accession <strong>Q9P0U1</strong> corresponds to <strong>Homo sapiens TOMM7</strong> (synonyms: TOM7, TOMM07), annotated as <strong>“mitochondrial import receptor subunit TOM7 homolog”</strong>, a small Tom7-family component of the <strong>translocase of the outer mitochondrial membrane (TOM) complex</strong>. The retrieved human structural, mechanistic, and genetics literature consistently uses <strong>TOMM7/Tom7</strong> to describe this <strong>TOM complex subunit</strong> and does not indicate an alternative gene/protein identity under this symbol in humans (pitt2021abiochemicaland pages 16-17, raimi2024mechanismofhuman pages 1-2, young2023ahypomorphicvariant pages 1-2).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-tom-complex-and-tomm7s-functional-class">1.1 The TOM complex and TOMM7’s functional class</h4>
+<p>The <strong>TOM complex</strong> is the major entry gate for nuclear-encoded mitochondrial precursor proteins, consisting of the pore-forming <strong>TOM40</strong> plus receptor and accessory subunits. In humans, one commonly described composition includes <strong>seven subunits: TOM5, TOM6, TOM7, TOM20, TOM22, TOM40, TOM70</strong> (raimi2024mechanismofhuman pages 1-2, su2024structureofthe pages 1-3). In human cryo-EM structures, <strong>TOMM7</strong> is a <strong>small, single-pass α-helical subunit</strong> that associates peripherally with the TOM40 β-barrel and is part of the <strong>TOM core complex</strong> (wang2020atomicstructureof pages 1-2, pitt2021abiochemicaland pages 6-9).</p>
+<p>Functionally, TOMM7 is best classified as a <strong>non-enzymatic regulatory/structural subunit</strong>: it does not form the transport pore itself but instead <strong>modulates TOM complex assembly, stability, and higher-order organization</strong>, and it contributes to mitochondrial quality-control signaling (pitt2021abiochemicaland pages 6-9, su2024structureofthe pages 1-3).</p>
+<h4 id="12-localization-and-topology">1.2 Localization and topology</h4>
+<p>TOMM7 is an <strong>outer mitochondrial membrane</strong> subunit of the TOM machinery. Topology evidence summarized in a structural/biochemical review indicates that TOMM7’s <strong>C-terminus faces the intermembrane space (IMS)</strong>: fusing GFP to the IMS-facing C-terminus abolishes correct mitochondrial targeting, consistent with an IMS-exposed C-terminal region (pitt2021abiochemicaland pages 16-17).</p>
+<h4 id="13-structural-features-relevant-to-mechanism">1.3 Structural features relevant to mechanism</h4>
+<p>Recent structural syntheses emphasize that human Tom7 has an <strong>IMS-directed extended/elongated C-terminal segment/loop</strong> (nussberger2024newinsightsinto pages 2-4). Cryo-EM-based reviews also describe an <strong>extended IMS segment</strong> in human Tom7 containing a <strong>negatively charged patch</strong> (pitt2021abiochemicaland pages 11-12). In addition, Tom7’s transmembrane helix shows a <strong>kink/bend</strong>, positioning it near Tom22/Tom40 interfaces and supporting a role in organizing TOM subunit architecture and oligomeric state (pitt2021abiochemicaland pages 6-9).</p>
+<h3 id="2-tomm7-primary-functions-and-supported-mechanisms">2) TOMM7 primary functions and supported mechanisms</h3>
+<h4 id="21-regulator-of-tom-complex-assembly-stability-and-oligomeric-state">2.1 Regulator of TOM complex assembly, stability, and oligomeric state</h4>
+<p>Human TOM structures show Tom7 as one of the small subunits surrounding TOM40 in the TOM core, consistent with a stabilizing/organizing role within the complex (wang2020atomicstructureof pages 1-2, pitt2021abiochemicaland pages 6-9). Functional interpretations from cryo-EM and biochemical literature support that Tom7 <strong>modulates assembly dynamics</strong> and can function antagonistically to Tom6: Tom6 promotes TOM formation/stability, whereas Tom7 <strong>delays assembly and/or reduces stability</strong> (wang2020atomicstructureof pages 1-2, su2024structureofthe pages 1-3). A 2024 cryo-EM study of the human TOM holo complex (capturing intact Tom20) explicitly states that <strong>Tom6 stabilizes TOM via interaction with Tom22</strong>, while <strong>Tom7 reduces complex stability</strong> (su2024structureofthe pages 1-3).</p>
+<p>Together, these data support annotating TOMM7 as a <strong>regulatory subunit influencing TOM stability and higher-order organization</strong> rather than as a canonical receptor (TOM20/TOM70) or the pore (TOM40) (su2024structureofthe pages 1-3, raimi2024mechanismofhuman pages 1-2).</p>
+<h4 id="22-role-in-pink1-import-arrest-and-pink1parkin-mitophagy-signaling">2.2 Role in PINK1 import arrest and PINK1/Parkin mitophagy signaling</h4>
+<p>A major mechanistic role of TOMM7 in mammalian cells is its requirement for <strong>PINK1 stabilization/activation at the TOM complex</strong> on damaged mitochondria.</p>
+<ul>
+<li>
+<p><strong>Genetic/functional evidence (cell biology):</strong> Tom7 was identified as essential for <strong>PINK1 accumulation on the outer mitochondrial membrane (OMM)</strong> after loss of mitochondrial membrane potential; without Tom7, PINK1 is imported into depolarized mitochondria and then <strong>cleaved by OMA1</strong> rather than accumulating for Parkin activation (sekine2019reciprocalrolesof pages 1-3). This supports a model in which TOMM7 promotes or enables <strong>import arrest</strong> of PINK1 at TOM under depolarization conditions.</p>
+</li>
+<li>
+<p><strong>Mechanistic reconstitution (2024):</strong> In a reconstituted system, co-expression of <strong>human PINK1</strong> together with <strong>all seven TOM subunits</strong> is sufficient for PINK1 activation. The study demonstrates an <strong>essential role for TOM40 and its structurally associated TOM7 and TOM22</strong> in PINK1 activation, while TOM20 and TOM70 are required for optimal activation (raimi2024mechanismofhuman pages 1-2). This work also provides a quantitative biochemical signature: under depolarization, full-length PINK1 appears in a distinct <strong>~700-kDa TOM-associated complex</strong>, compared with native TOM at <strong>~500 kDa</strong> by BN-PAGE (raimi2024mechanismofhuman pages 1-2).</p>
+</li>
+<li>
+<p><strong>Downstream effect on Parkin:</strong> A structural/biochemical review summarizes evidence that human Tom7 is critical for <strong>Parkin recruitment/OMM accumulation</strong> and PINK1 accumulation after depolarization, and notes that defects in Tom7-deficient cells can be rescued by <strong>OMA1 knockdown</strong> in some contexts, indicating functional interplay between TOMM7-dependent PINK1 stabilization and proteolytic regulation by OMA1 (pitt2021abiochemicaland pages 16-17, pitt2021abiochemicaland pages 17-19).</p>
+</li>
+</ul>
+<p>Collectively, the most defensible functional annotation is that TOMM7 is a TOM-core accessory subunit that <strong>links outer-membrane protein import machinery to mitochondrial quality control</strong> by enabling <strong>PINK1 retention/activation at TOM</strong> during stress, thereby promoting <strong>PINK1–Parkin mitophagy</strong> signaling (sekine2019reciprocalrolesof pages 1-3, raimi2024mechanismofhuman pages 1-2).</p>
+<h3 id="3-recent-developments-and-latest-research-prioritizing-20232024">3) Recent developments and latest research (prioritizing 2023–2024)</h3>
+<h4 id="31-2024-structural-insights-into-tomm7-topology-and-dynamics">3.1 2024 structural insights into TOMM7 topology and dynamics</h4>
+<p>A 2024 structural review highlights Tom7’s <strong>elongated IMS-oriented C-terminus/loop</strong>, proposing that this element may help shape the <strong>IMS-side exit pathway</strong> of the TOM pore region in human complexes (nussberger2024newinsightsinto pages 2-4). In parallel, 2024 cryo-EM work capturing the TOM holo complex (including intact Tom20) reinforces Tom7’s presence as a small subunit surrounding Tom40 and frames Tom7 as a <strong>destabilizing counterbalance</strong> to Tom6 stabilization (su2024structureofthe pages 1-3). These studies are important because they shift TOMM7 annotation from a generic “small TOM subunit” to a <strong>structurally distinctive, IMS-featured modulator</strong> of TOM architecture (nussberger2024newinsightsinto pages 2-4, pitt2021abiochemicaland pages 11-12).</p>
+<h4 id="32-2024-mechanistic-clarification-of-tom-subunit-requirements-for-pink1-activation">3.2 2024 mechanistic clarification of TOM subunit requirements for PINK1 activation</h4>
+<p>The 2024 Science Advances reconstitution study is a key advance because it disentangles TOM subunit contributions: TOM7 (with TOM40 and TOM22) is <strong>essential</strong>, whereas receptor subunits TOM20/TOM70 are <strong>required for optimal</strong> activation, and the work explicitly frames these insights as enabling development of <strong>small-molecule PINK1 activators</strong> as a Parkinson’s disease therapeutic strategy (raimi2024mechanismofhuman pages 1-2).</p>
+<h4 id="33-20232024-human-genetics-tomm7-as-a-mendelian-disease-gene">3.3 2023–2024 human genetics: TOMM7 as a Mendelian disease gene</h4>
+<p>Two recent clinical genetics reports provide strong real-world evidence that TOMM7 dysfunction causes multisystem developmental disease:</p>
+<ul>
+<li>
+<p><strong>2023 (Jan): p.Trp25Arg (W25R) hypomorphic allele.</strong> A homozygous missense variant <strong>c.73T&gt;C (p.Trp25Arg)</strong> causes syndromic short stature and developmental delay with skeletal dysplasia, hypotonia, microvesicular liver steatosis, and ocular findings; mouse modeling supports the allele as <strong>hypomorphic</strong> and associates TOMM7 perturbation with bioenergetic uncoupling-like phenotypes (young2023ahypomorphicvariant pages 1-2). URL: https://doi.org/10.1016/j.xhgg.2022.100148 (Jan 2023) (young2023ahypomorphicvariant pages 1-2).</p>
+</li>
+<li>
+<p><strong>2024 (Dec): recurrent p.Pro29Leu (P29L) expands phenotype to moyamoya.</strong> A recurrent homozygous <strong>p.Pro29Leu (p.P29L; c.86C&gt;T)</strong> was found in <strong>9 patients from 7 unrelated families</strong> with microcephaly, short stature/postnatal growth failure, developmental delay, facial dysmorphism, atrophic macular scarring, and <strong>moyamoya disease in 5/9</strong> (li2024homozygousvariantin pages 2-3). This association reached genome-wide significance (<strong>P = 2.5072 × 10−23</strong>) in the authors’ analysis, and the paper reports a TOMM7 frequency across gnomAD ancestry groups of <strong>0.0251%</strong> (li2024homozygousvariantin pages 14-16). URL: https://doi.org/10.1016/j.ebiom.2024.105476 (Dec 2024) (li2024homozygousvariantin pages 2-3, li2024homozygousvariantin pages 14-16).</p>
+</li>
+</ul>
+<p>These findings support including TOMM7 in diagnostic gene panels for syndromic growth failure/microcephaly and potentially for pediatric cerebrovascular syndromes with mitochondrial features (li2024homozygousvariantin pages 2-3, young2023ahypomorphicvariant pages 1-2).</p>
+<h3 id="4-pathways-interactions-and-cellular-contexts">4) Pathways, interactions, and cellular contexts</h3>
+<h4 id="41-core-pathway-mitochondrial-protein-import-via-tom">4.1 Core pathway: mitochondrial protein import via TOM</h4>
+<p>TOMM7 participates in mitochondrial protein import indirectly by regulating the integrity and assembly state of the TOM complex, which is required for the import of most nuclear-encoded mitochondrial proteins (raimi2024mechanismofhuman pages 1-2, su2024structureofthe pages 1-3). Thus, TOMM7 is best placed in pathways annotated as <strong>mitochondrial protein targeting/import</strong> and <strong>mitochondrial outer membrane translocation</strong>.</p>
+<h4 id="42-mitochondrial-quality-control-pink1parkin-pathway">4.2 Mitochondrial quality control: PINK1–Parkin pathway</h4>
+<p>When mitochondria lose membrane potential, PINK1 is stabilized at the TOM complex and triggers Parkin recruitment/activation to initiate mitophagy. TOMM7 is a key determinant of this switch: loss of Tom7 prevents PINK1 arrest at the OMM and leads to OMA1-dependent cleavage, thereby reducing PINK1’s ability to activate Parkin on damaged mitochondria (sekine2019reciprocalrolesof pages 1-3). Reconstitution work places TOMM7 among the essential TOM components for PINK1 activation (raimi2024mechanismofhuman pages 1-2).</p>
+<h3 id="5-quantitative-data-and-key-statistics-from-recent-studies">5) Quantitative data and key statistics from recent studies</h3>
+<ul>
+<li>
+<p><strong>BN-PAGE complex sizes (2024 mechanistic study):</strong> full-length PINK1 stabilizes in a TOM-associated complex at <strong>~700 kDa</strong>, distinct from native TOM at <strong>~500 kDa</strong> (raimi2024mechanismofhuman pages 1-2).</p>
+</li>
+<li>
+<p><strong>Population/statistical genetics (2024):</strong> p.P29L cohort of <strong>9 patients / 7 families</strong>; <strong>moyamoya in 5/9</strong>; association significance <strong>P = 2.5072 × 10−23</strong>; reported gnomAD presence <strong>0.0251%</strong> across ancestry groups (li2024homozygousvariantin pages 2-3, li2024homozygousvariantin pages 14-16).</p>
+</li>
+<li>
+<p><strong>Mitochondrial proteomics/flux (2022, still highly relevant to 2024 genetics):</strong> in TOMM7 p.P29L patient fibroblasts, mitochondrial proteomics detected <strong>587 proteins</strong>, with <strong>91 differentially expressed</strong> (P&lt;0.05), and patient fibroblasts showed <strong>elevated basal and maximal OCR</strong> (garg2022autosomalrecessiveprogeroid pages 2-3). Variant functional assays show reduced TOMM7 interaction with TOMM40 and TOMM22 (garg2022autosomalrecessiveprogeroid pages 3-5).</p>
+</li>
+</ul>
+<p>These numbers support the interpretation that TOMM7 variants can shift mitochondrial import/proteome balance and bioenergetics without necessarily collapsing mitochondrial respiration globally (garg2022autosomalrecessiveprogeroid pages 2-3, garg2022autosomalrecessiveprogeroid pages 3-5).</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<ol>
+<li>
+<p><strong>Clinical genetics / diagnostics (2023–2024 implementation):</strong> TOMM7 has clear relevance as a Mendelian disease gene for syndromic growth and neurodevelopmental phenotypes, and (in 2024) a distinct syndrome including <strong>moyamoya</strong>. These data motivate TOMM7 inclusion in diagnostic pipelines for <strong>microcephaly + growth failure + developmental delay</strong>, particularly when accompanied by ophthalmologic findings and/or cerebrovascular disease (li2024homozygousvariantin pages 2-3, young2023ahypomorphicvariant pages 1-2).</p>
+</li>
+<li>
+<p><strong>Therapeutic strategy development (mitophagy modulation):</strong> mechanistic reconstitution of PINK1 activation at TOM explicitly frames the work as enabling <strong>small-molecule activators of PINK1</strong> as a therapeutic approach for Parkinson’s disease, and identifies TOM7/TOM22/TOM40 as essential components to consider in such strategies (raimi2024mechanismofhuman pages 1-2). Complementarily, earlier mechanistic work suggests that modulating <strong>OMA1</strong> can rescue Parkin recruitment for some PINK1 dysfunction contexts, highlighting the TOMM7–OMA1 axis as a conceptual intervention point (sekine2019reciprocalrolesof pages 1-3, pitt2021abiochemicaland pages 17-19).</p>
+</li>
+</ol>
+<h3 id="7-expert-synthesis-and-interpretation-authoritative-sources">7) Expert synthesis and interpretation (authoritative sources)</h3>
+<p>Structural/biochemical reviews emphasize that the TOM complex is not only a constitutive import machine but also a hub connecting import, mitochondrial homeostasis, and disease processes. Within that framework, TOMM7 is increasingly viewed as a <strong>regulatory element</strong> whose IMS-facing structural features and impact on complex stability can influence both import and quality-control signaling (nussberger2024newinsightsinto pages 2-4, su2024structureofthe pages 1-3). In Parkinson’s-related mechanisms, primary and reconstitution studies converge on TOMM7 as a component required for appropriate PINK1 behavior at the import gate during mitochondrial damage, which helps explain why TOM machinery components are repeatedly implicated in mitophagy regulation and disease-relevant stress responses (sekine2019reciprocalrolesof pages 1-3, raimi2024mechanismofhuman pages 1-2).</p>
+<h3 id="8-consolidated-evidence-table">8) Consolidated evidence table</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key findings</th>
+<th>Evidence type</th>
+<th>Publication (first author, year, journal)</th>
+<th>Publication date (month/year if available)</th>
+<th>URL</th>
+<th>Notes for functional annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/localization/topology</td>
+<td>TOMM7 matches UniProt Q9P0U1: a small human TOM complex subunit in the Tom7 family. It is part of the TOM core/holo complex with TOM40, TOM22, TOM5, TOM6, and receptors TOM20/TOM70. Topology data support a single-pass outer-membrane helix with the C-terminus facing the intermembrane space (IMS); GFP fusion to the C-terminus disrupts targeting, consistent with an IMS-exposed tail. (pitt2021abiochemicaland pages 16-17, raimi2024mechanismofhuman pages 1-2, pitt2021abiochemicaland pages 3-6)</td>
+<td>Cryo-EM, cell biology, review</td>
+<td>Pitt, 2021, <em>Cells</em>; Raimi, 2024, <em>Science Advances</em></td>
+<td>05/2021; 06/2024</td>
+<td>https://doi.org/10.3390/cells10051164 ; https://doi.org/10.1126/sciadv.adn7191</td>
+<td>Annotate as a non-enzymatic regulatory/structural TOM subunit of the mitochondrial outer membrane, not a transporter channel itself.</td>
+</tr>
+<tr>
+<td>Structural features</td>
+<td>Human Tom7 has a kinked transmembrane helix and an elongated C-terminal/loop segment projecting toward the IMS; this IMS-directed segment is described as extended and includes a negatively charged patch. Tom7 lies peripherally adjacent to the Tom40 β-barrel and near Tom22/Tom5, helping shape the TOM core architecture. (nussberger2024newinsightsinto pages 2-4, pitt2021abiochemicaland pages 6-9, pitt2021abiochemicaland pages 11-12)</td>
+<td>Cryo-EM, structural review</td>
+<td>Nussberger, 2024, <em>Biochemical Society Transactions</em>; Pitt, 2021, <em>Cells</em></td>
+<td>04/2024; 05/2021</td>
+<td>https://doi.org/10.1042/bst20231236 ; https://doi.org/10.3390/cells10051164</td>
+<td>Useful for annotation of topology and likely IMS-side regulatory interactions during precursor exit/complex organization.</td>
+</tr>
+<tr>
+<td>TOM assembly &amp; stability</td>
+<td>Tom7 is a small α-helical TOM subunit that surrounds Tom40 and participates in assembly/stability dynamics. Human and comparative studies support an antagonistic relationship with Tom6: Tom6 stabilizes TOM, whereas Tom7 can reduce stability/delay assembly; loss of Tom7 increases tetramer formation and increases hTom40 import/biogenesis in some systems. (wang2020atomicstructureof pages 1-2, pitt2021abiochemicaland pages 6-9, su2024structureofthe pages 1-3)</td>
+<td>Cryo-EM, biochemical genetics, review</td>
+<td>Wang, 2020, <em>Cell Discovery</em>; Pitt, 2021, <em>Cells</em>; Su, 2024, <em>PNAS Nexus</em></td>
+<td>09/2020; 05/2021; 06/2024</td>
+<td>https://doi.org/10.1038/s41421-020-00198-2 ; https://doi.org/10.3390/cells10051164 ; https://doi.org/10.1093/pnasnexus/pgae269</td>
+<td>Best described as a regulator of TOM complex biogenesis/oligomeric state rather than a core receptor or pore-forming unit.</td>
+</tr>
+<tr>
+<td>PINK1/Parkin mitophagy</td>
+<td>TOMM7 is required for efficient PINK1 stabilization/activation at damaged mitochondria and for downstream Parkin recruitment. In TOMM7-deficient cells, PINK1 fails to accumulate after depolarization; Tom7 loss allows PINK1 import/OMA1 cleavage instead of OMM arrest. OMA1 knockdown can rescue defects in some contexts. Reconstituted human TOM studies show TOM40, TOM22, and TOM7 are essential for PINK1 activation, while TOM20/TOM70 optimize activation. BN-PAGE detects full-length PINK1 in a ~700-kDa TOM-associated complex versus native TOM at ~500-kDa. (pitt2021abiochemicaland pages 16-17, raimi2024mechanismofhuman pages 1-2, sekine2019reciprocalrolesof pages 1-3, pitt2021abiochemicaland pages 17-19)</td>
+<td>Cell biology, reconstitution, BN-PAGE</td>
+<td>Sekine, 2019, <em>Molecular Cell</em>; Raimi, 2024, <em>Science Advances</em>; Pitt, 2021, <em>Cells</em></td>
+<td>03/2019; 06/2024; 05/2021</td>
+<td>https://doi.org/10.1016/j.molcel.2019.01.002 ; https://doi.org/10.1126/sciadv.adn7191 ; https://doi.org/10.3390/cells10051164</td>
+<td>Functional annotation should mention a role in mitochondrial quality control/mitophagy via PINK1 import arrest and activation at TOM.</td>
+</tr>
+<tr>
+<td>Human disease genetics</td>
+<td>Hypomorphic TOMM7 p.Trp25Arg (c.73T&gt;C; p.W25R) causes syndromic short stature/developmental delay with skeletal dysplasia, hypotonia, liver steatosis, and ocular findings; proband homozygous, parents heterozygous. Prior structural interpretation places Trp25 near Arg24, predicted to affect TOMM40 interaction. (young2023ahypomorphicvariant pages 1-2)</td>
+<td>Human genetics, mouse modeling, bioenergetics</td>
+<td>Young, 2023, <em>Human Genetics and Genomics Advances</em></td>
+<td>01/2023</td>
+<td>https://doi.org/10.1016/j.xhgg.2022.100148</td>
+<td>Supports disease relevance of partial TOMM7 loss of function and TOM complex dysregulation in growth/development.</td>
+</tr>
+<tr>
+<td>Human disease genetics</td>
+<td>TOMM7 p.Pro29Leu (c.86C&gt;T; p.P29L) was first linked to autosomal recessive progeroid syndrome/Garg-Mishra phenotype in a single family: severe dwarfism, mandibular hypoplasia, hyperopia/micro-ophthalmia, partial lipodystrophy. The variant is rare in gnomAD (MAF 0.000048 in East Asians in one report) and affects a fully conserved residue in the kinked helix contacting TOMM40. (garg2022autosomalrecessiveprogeroid pages 1-2, garg2022autosomalrecessiveprogeroid pages 2-3, garg2022autosomalrecessiveprogeroid pages 3-5)</td>
+<td>Human genetics, structural interpretation, proteomics</td>
+<td>Garg, 2022, <em>Journal of Clinical Investigation</em></td>
+<td>12/2022</td>
+<td>https://doi.org/10.1172/jci156864</td>
+<td>Strong evidence that altered TOMM7-TOM interactions can produce a multisystem developmental/progeroid disorder.</td>
+</tr>
+<tr>
+<td>Human disease genetics</td>
+<td>A 2024 study expanded p.Pro29Leu to a recurrent disease allele: homozygous TOMM7 p.P29L in 9 patients from 7 unrelated families, with postnatal growth failure/short stature, microcephaly, facial dysmorphism, developmental delay, atrophic macular scarring, and moyamoya disease in 5/9 patients. Association reached genome-wide significance (P = 2.5072 × 10^-23). The variant frequency quoted across gnomAD ancestry groups was 0.0251%, and the paper notes enrichment in the Taiwanese population. (li2024homozygousvariantin pages 2-3, li2024homozygousvariantin pages 1-2, li2024homozygousvariantin pages 14-16)</td>
+<td>Human genetics, population analysis, iPSC/endothelial biology</td>
+<td>Li, 2024, <em>eBioMedicine</em></td>
+<td>12/2024</td>
+<td>https://doi.org/10.1016/j.ebiom.2024.105476</td>
+<td>Expands annotation to include cerebrovascular disease susceptibility and metabolic reprogramming phenotypes.</td>
+</tr>
+<tr>
+<td>Quantitative data/stats</td>
+<td>In TOMM7 p.P29L patient fibroblasts, mitochondrial proteomics detected 587 proteins, with 91 differentially expressed proteins (P&lt;0.05); GSEA showed enrichment of ATP-production/proton-transport proteins and reduction of phospholipid metabolic proteins. Patient fibroblasts showed elevated basal and maximal OCR. (garg2022autosomalrecessiveprogeroid pages 2-3, garg2022autosomalrecessiveprogeroid pages 3-5)</td>
+<td>Proteomics, extracellular flux</td>
+<td>Garg, 2022, <em>Journal of Clinical Investigation</em></td>
+<td>12/2022</td>
+<td>https://doi.org/10.1172/jci156864</td>
+<td>Quantitative support that TOMM7 perturbs select mitochondrial proteome/import balance rather than abolishing respiration globally.</td>
+</tr>
+<tr>
+<td>Quantitative data/stats</td>
+<td>p.W25R and Tomm7 deficiency produce a paradoxical bioenergetic phenotype: increased oxygen consumption despite bioenergetic deficiency, interpreted as uncoupling between oxidation and ATP synthesis rather than overt TCA/ETC failure. In 2024 endothelial/iPSC models with p.P29L, respiration was slightly decreased while glycolytic ATP production increased significantly, with elevated hexokinase 2 and enhanced glycolysis. (young2023ahypomorphicvariant pages 1-2, li2024homozygousvariantin pages 1-2)</td>
+<td>Mouse/cell physiology, iPSC metabolism</td>
+<td>Young, 2023, <em>HGGA</em>; Li, 2024, <em>eBioMedicine</em></td>
+<td>01/2023; 12/2024</td>
+<td>https://doi.org/10.1016/j.xhgg.2022.100148 ; https://doi.org/10.1016/j.ebiom.2024.105476</td>
+<td>Suggests TOMM7 loss/hypomorphism alters mitochondrial import-linked metabolic setpoints and can trigger glycolytic compensation.</td>
+</tr>
+<tr>
+<td>Human disease genetics / mechanism</td>
+<td>TOMM7 p.P29L retains mitochondrial localization but shows reduced interaction with TOMM40 and TOMM22, consistent with impaired integration into or regulation of the TOM complex. In contrast, Parkin-dependent mitophagy appeared largely intact in patient fibroblasts in the JCI study, indicating that not all TOMM7 disease alleles phenocopy complete TOMM7 loss for mitophagy. (garg2022autosomalrecessiveprogeroid pages 2-3, garg2022autosomalrecessiveprogeroid pages 5-6, garg2022autosomalrecessiveprogeroid pages 3-5)</td>
+<td>Co-IP, localization, mitophagy assay</td>
+<td>Garg, 2022, <em>Journal of Clinical Investigation</em></td>
+<td>12/2022</td>
+<td>https://doi.org/10.1172/jci156864</td>
+<td>Important nuance: disease mechanism may involve selective defects in TOM assembly/import specificity rather than total mitophagy failure.</td>
+</tr>
+<tr>
+<td>Functional systems biology</td>
+<td>In vascular/endothelial contexts, TOMM7 modulates mitochondrial Rac1/redox signaling and cerebrovascular network formation; Tomm7 loss in zebrafish and mice causes cerebrovascular abnormalities. The 2024 human p.P29L study connects this biology to moyamoya disease and endothelial tube-formation defects in edited iPSC-derived endothelial cells. (li2024homozygousvariantin pages 2-3, li2024homozygousvariantin pages 1-2)</td>
+<td>Animal models, endothelial cell biology, iPSC</td>
+<td>Li, 2024, <em>eBioMedicine</em></td>
+<td>12/2024</td>
+<td>https://doi.org/10.1016/j.ebiom.2024.105476</td>
+<td>Real-world relevance includes developmental vascular pathology, not only mitochondrial import biochemistry.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes identity, structural biology, mitochondrial import function, mitophagy roles, and disease genetics for human TOMM7 (UniProt Q9P0U1). It consolidates recent and foundational evidence, including variant-specific clinical findings and key quantitative results useful for functional annotation.</em></p>
+<h3 id="9-summary-functional-annotation-actionable">9) Summary functional annotation (actionable)</h3>
+<p><strong>TOMM7 (Tom7)</strong> is a small, single-pass <strong>outer mitochondrial membrane</strong> TOM complex subunit with an <strong>IMS-facing extended C-terminal/loop segment</strong> and a kinked transmembrane helix (nussberger2024newinsightsinto pages 2-4, pitt2021abiochemicaland pages 11-12). Its primary role is to <strong>regulate TOM complex assembly/oligomeric state and stability</strong>, acting in opposition to Tom6 in stability control, and to support the TOM complex’s function as a signaling node in mitochondrial quality control (su2024structureofthe pages 1-3, pitt2021abiochemicaland pages 6-9). TOMM7 is also <strong>required for efficient PINK1 stabilization/activation at the TOM complex</strong> under mitochondrial depolarization, thereby enabling <strong>Parkin recruitment and PINK1–Parkin mitophagy</strong> (sekine2019reciprocalrolesof pages 1-3, raimi2024mechanismofhuman pages 1-2). Human biallelic missense variants (notably <strong>p.W25R</strong> and <strong>p.P29L</strong>) cause syndromic developmental disease, and recurrent <strong>p.P29L</strong> is associated with a microcephalic osteodysplastic dwarfism syndrome frequently complicated by <strong>moyamoya disease</strong> (young2023ahypomorphicvariant pages 1-2, li2024homozygousvariantin pages 2-3).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pitt2021abiochemicaland pages 16-17): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(raimi2024mechanismofhuman pages 1-2): Olawale G. Raimi, Hina Ojha, Kenneth Ehses, Verena Dederer, Sven M. Lange, Cristian Polo Rivera, Tom D. Deegan, Yinchen Chen, Melanie Wightman, Rachel Toth, Karim P. M. Labib, Sebastian Mathea, Neil Ranson, Rubén Fernández-Busnadiego, and Miratul M. K. Muqit. Mechanism of human pink1 activation at the tom complex in a reconstituted system. Science Advances, Jun 2024. URL: https://doi.org/10.1126/sciadv.adn7191, doi:10.1126/sciadv.adn7191. This article has 40 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(young2023ahypomorphicvariant pages 1-2): Cameron Young, Dominyka Batkovskyte, Miyuki Kitamura, Maria Shvedova, Yutaro Mihara, Jun Akiba, Wen Zhou, Anna Hammarsjö, Gen Nishimura, Shuichi Yatsuga, Giedre Grigelioniene, and Tatsuya Kobayashi. A hypomorphic variant in the translocase of the outer mitochondrial membrane complex subunit tomm7 causes short stature and developmental delay. Human Genetics and Genomics Advances, 4:100148, Jan 2023. URL: https://doi.org/10.1016/j.xhgg.2022.100148, doi:10.1016/j.xhgg.2022.100148. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(su2024structureofthe pages 1-3): Jiayue Su, Xuyang Tian, Ziyi Wang, Jiawen Yang, Shan Sun, and Sen-Fang Sui. Structure of the intact tom20 receptor in the human translocase of the outer membrane complex. PNAS Nexus, Jun 2024. URL: https://doi.org/10.1093/pnasnexus/pgae269, doi:10.1093/pnasnexus/pgae269. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2020atomicstructureof pages 1-2): Wenhe Wang, Xudong Chen, Laixing Zhang, Jingbo Yi, Qingxi Ma, Jian Yin, Wei Zhuo, Jinke Gu, and Maojun Yang. Atomic structure of human tom core complex. Cell Discovery, Sep 2020. URL: https://doi.org/10.1038/s41421-020-00198-2, doi:10.1038/s41421-020-00198-2. This article has 151 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 6-9): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(nussberger2024newinsightsinto pages 2-4): Stephan Nussberger, Robin Ghosh, and Shuo Wang. New insights into the structure and dynamics of the tom complex in mitochondria. Biochemical Society Transactions, 52:911-922, Apr 2024. URL: https://doi.org/10.1042/bst20231236, doi:10.1042/bst20231236. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 11-12): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(sekine2019reciprocalrolesof pages 1-3): Shiori Sekine, Chunxin Wang, Dionisia P. Sideris, Eric Bunker, Zhe Zhang, and Richard J. Youle. Reciprocal roles of tom7 and oma1 during mitochondrial import and activation of pink1. Molecular cell, 73 5:1028-1043.e5, Mar 2019. URL: https://doi.org/10.1016/j.molcel.2019.01.002, doi:10.1016/j.molcel.2019.01.002. This article has 189 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 17-19): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(li2024homozygousvariantin pages 2-3): Chia-Yi Li, Li-Wen Chen, Meng-Che Tsai, Yen-Yin Chou, Pei-Xuan Lin, Yu-Ming Chang, Wuh-Liang Hwu, Yin-Hsiu Chien, Ju-Li Lin, Hui-An Chen, Ni-Chung Lee, Pen-Hua Su, Tzung-Chien Hsieh, Hannah Klinkhammer, Yi-Chieh Wang, Yi-Ting Huang, Peter M. Krawitz, Sheng-Hsiang Lin, Lynn L.H. Huang, Po-Min Chiang, Min-Hsiu Shih, and Peng-Chieh Chen. Homozygous variant in translocase of outer mitochondrial membrane 7 leads to metabolic reprogramming and microcephalic osteodysplastic dwarfism with moyamoya disease. eBioMedicine, 110:105476, Dec 2024. URL: https://doi.org/10.1016/j.ebiom.2024.105476, doi:10.1016/j.ebiom.2024.105476. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024homozygousvariantin pages 14-16): Chia-Yi Li, Li-Wen Chen, Meng-Che Tsai, Yen-Yin Chou, Pei-Xuan Lin, Yu-Ming Chang, Wuh-Liang Hwu, Yin-Hsiu Chien, Ju-Li Lin, Hui-An Chen, Ni-Chung Lee, Pen-Hua Su, Tzung-Chien Hsieh, Hannah Klinkhammer, Yi-Chieh Wang, Yi-Ting Huang, Peter M. Krawitz, Sheng-Hsiang Lin, Lynn L.H. Huang, Po-Min Chiang, Min-Hsiu Shih, and Peng-Chieh Chen. Homozygous variant in translocase of outer mitochondrial membrane 7 leads to metabolic reprogramming and microcephalic osteodysplastic dwarfism with moyamoya disease. eBioMedicine, 110:105476, Dec 2024. URL: https://doi.org/10.1016/j.ebiom.2024.105476, doi:10.1016/j.ebiom.2024.105476. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garg2022autosomalrecessiveprogeroid pages 2-3): Abhimanyu Garg, Wee-Teik Keng, Zhenkang Chen, Adwait Amod Sathe, Chao Xing, Pavithira Devi Kailasam, Yanqiu Shao, Nicholas P. Lesner, Claire B. Llamas, Anil K. Agarwal, and Prashant Mishra. Autosomal recessive progeroid syndrome due to homozygosity for a tomm7 variant. Journal of Clinical Investigation, Dec 2022. URL: https://doi.org/10.1172/jci156864, doi:10.1172/jci156864. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garg2022autosomalrecessiveprogeroid pages 3-5): Abhimanyu Garg, Wee-Teik Keng, Zhenkang Chen, Adwait Amod Sathe, Chao Xing, Pavithira Devi Kailasam, Yanqiu Shao, Nicholas P. Lesner, Claire B. Llamas, Anil K. Agarwal, and Prashant Mishra. Autosomal recessive progeroid syndrome due to homozygosity for a tomm7 variant. Journal of Clinical Investigation, Dec 2022. URL: https://doi.org/10.1172/jci156864, doi:10.1172/jci156864. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 3-6): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(garg2022autosomalrecessiveprogeroid pages 1-2): Abhimanyu Garg, Wee-Teik Keng, Zhenkang Chen, Adwait Amod Sathe, Chao Xing, Pavithira Devi Kailasam, Yanqiu Shao, Nicholas P. Lesner, Claire B. Llamas, Anil K. Agarwal, and Prashant Mishra. Autosomal recessive progeroid syndrome due to homozygosity for a tomm7 variant. Journal of Clinical Investigation, Dec 2022. URL: https://doi.org/10.1172/jci156864, doi:10.1172/jci156864. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(li2024homozygousvariantin pages 1-2): Chia-Yi Li, Li-Wen Chen, Meng-Che Tsai, Yen-Yin Chou, Pei-Xuan Lin, Yu-Ming Chang, Wuh-Liang Hwu, Yin-Hsiu Chien, Ju-Li Lin, Hui-An Chen, Ni-Chung Lee, Pen-Hua Su, Tzung-Chien Hsieh, Hannah Klinkhammer, Yi-Chieh Wang, Yi-Ting Huang, Peter M. Krawitz, Sheng-Hsiang Lin, Lynn L.H. Huang, Po-Min Chiang, Min-Hsiu Shih, and Peng-Chieh Chen. Homozygous variant in translocase of outer mitochondrial membrane 7 leads to metabolic reprogramming and microcephalic osteodysplastic dwarfism with moyamoya disease. eBioMedicine, 110:105476, Dec 2024. URL: https://doi.org/10.1016/j.ebiom.2024.105476, doi:10.1016/j.ebiom.2024.105476. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(garg2022autosomalrecessiveprogeroid pages 5-6): Abhimanyu Garg, Wee-Teik Keng, Zhenkang Chen, Adwait Amod Sathe, Chao Xing, Pavithira Devi Kailasam, Yanqiu Shao, Nicholas P. Lesner, Claire B. Llamas, Anil K. Agarwal, and Prashant Mishra. Autosomal recessive progeroid syndrome due to homozygosity for a tomm7 variant. Journal of Clinical Investigation, Dec 2022. URL: https://doi.org/10.1172/jci156864, doi:10.1172/jci156864. This article has 33 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pitt2021abiochemicaland pages 16-17</li>
+<li>nussberger2024newinsightsinto pages 2-4</li>
+<li>pitt2021abiochemicaland pages 11-12</li>
+<li>pitt2021abiochemicaland pages 6-9</li>
+<li>su2024structureofthe pages 1-3</li>
+<li>sekine2019reciprocalrolesof pages 1-3</li>
+<li>raimi2024mechanismofhuman pages 1-2</li>
+<li>young2023ahypomorphicvariant pages 1-2</li>
+<li>li2024homozygousvariantin pages 2-3</li>
+<li>li2024homozygousvariantin pages 14-16</li>
+<li>garg2022autosomalrecessiveprogeroid pages 2-3</li>
+<li>garg2022autosomalrecessiveprogeroid pages 3-5</li>
+<li>wang2020atomicstructureof pages 1-2</li>
+<li>pitt2021abiochemicaland pages 17-19</li>
+<li>pitt2021abiochemicaland pages 3-6</li>
+<li>garg2022autosomalrecessiveprogeroid pages 1-2</li>
+<li>li2024homozygousvariantin pages 1-2</li>
+<li>garg2022autosomalrecessiveprogeroid pages 5-6</li>
+<li>https://doi.org/10.1016/j.xhgg.2022.100148</li>
+<li>https://doi.org/10.1016/j.ebiom.2024.105476</li>
+<li>https://doi.org/10.3390/cells10051164</li>
+<li>https://doi.org/10.1126/sciadv.adn7191</li>
+<li>https://doi.org/10.1042/bst20231236</li>
+<li>https://doi.org/10.1038/s41421-020-00198-2</li>
+<li>https://doi.org/10.1093/pnasnexus/pgae269</li>
+<li>https://doi.org/10.1016/j.molcel.2019.01.002</li>
+<li>https://doi.org/10.1172/jci156864</li>
+<li>https://doi.org/10.3390/cells10051164,</li>
+<li>https://doi.org/10.1126/sciadv.adn7191,</li>
+<li>https://doi.org/10.1016/j.xhgg.2022.100148,</li>
+<li>https://doi.org/10.1093/pnasnexus/pgae269,</li>
+<li>https://doi.org/10.1038/s41421-020-00198-2,</li>
+<li>https://doi.org/10.1042/bst20231236,</li>
+<li>https://doi.org/10.1016/j.molcel.2019.01.002,</li>
+<li>https://doi.org/10.1016/j.ebiom.2024.105476,</li>
+<li>https://doi.org/10.1172/jci156864,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9P0U1
+gene_symbol: TOMM7
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TOMM7 is a small single-pass mitochondrial outer membrane TOM complex subunit.
+  It is not the TOM pore or a standalone transporter; instead it regulates TOM
+  core assembly, stability, and oligomeric organization, and it has a supported
+  mitochondrial quality-control role in PINK1 stabilization/activation and
+  PINK1-Parkin mitophagy signaling after mitochondrial depolarization.
+existing_annotations:
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Correct phylogenetic inference. TOMM7 is a conserved small TOM subunit in
+      the mitochondrial outer membrane translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TOMM7/TOMM7-deep-research-falcon.md
+      supporting_text: &#34;TOMM7 is an **outer mitochondrial membrane** subunit of the TOM machinery.&#34;
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct UniProt-derived localization. TOMM7 is a single-pass outer
+      mitochondrial membrane TOM subunit.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct InterPro-derived annotation. TOMM7 is a Tom7-family small TOM
+      complex subunit.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct as a broad TOM pathway consequence but not TOMM7&#39;s most specific
+      role. TOMM7 regulates TOM complex assembly/stability and supports import
+      indirectly through the TOM complex.
+    action: KEEP_AS_NON_CORE
+    reason: Matrix import is one route through TOM; TOMM7&#39;s core role is TOM complex regulation.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12198123
+  review:
+    summary: &gt;-
+      Protein binding is too generic. The relevant result is TOMM7 insertion and
+      assembly into the TOM complex, captured by TOM complex and assembly terms.
+    action: REMOVE
+    reason: Protein binding is uninformative for TOMM7 function.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:30021884
+  review:
+    summary: &gt;-
+      Histone crosslinking protein binding is not part of the curated TOMM7
+      mitochondrial outer membrane/TOM function.
+    action: REMOVE
+    reason: Protein binding is uninformative and likely unrelated to TOMM7 core function.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:35271311
+  review:
+    summary: &gt;-
+      Generic OpenCell protein binding does not capture TOMM7&#39;s function as a
+      regulatory/structural TOM complex subunit.
+    action: REMOVE
+    reason: Protein binding is uninformative; complex and process annotations are more appropriate.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0030150
+    label: protein import into mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: PMID:15644312
+  review:
+    summary: &gt;-
+      Broad but valid for the TOM import pathway. TOMM7 contributes indirectly
+      through TOM complex organization rather than acting as the matrix-import
+      motor or pore.
+    action: KEEP_AS_NON_CORE
+    reason: Matrix import is a TOM pathway outcome but not TOMM7&#39;s most specific function.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Correct localization. TOMM7 is a small outer mitochondrial membrane subunit
+      of the TOM machinery.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      The broad TOM biology is related, but TOMM7 is not an independent insertase.
+      The specific supported role is TOM complex assembly/stability and
+      oligomeric-state regulation.
+    action: MODIFY
+    reason: Replace outer membrane insertion with TOM complex assembly/stability.
+    proposed_replacement_terms:
+    - id: GO:0070096
+      label: mitochondrial outer membrane translocase complex assembly
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0140596
+    label: TOM complex
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Correct and specific. TOMM7 is a TOM core/holo complex subunit adjacent to
+      TOM40/TOM22 and the other small Tom proteins.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: &gt;-
+      Correct but too general. TOMM7 is specifically a mitochondrial outer
+      membrane TOM complex subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and TOM complex annotations.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: TAS
+  original_reference_id: PMID:24270810
+  review:
+    summary: &gt;-
+      Accepted. The TOMM7/PINK1-Parkin evidence is consistent with TOMM7 acting
+      at the TOM complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0031647
+    label: regulation of protein stability
+  evidence_type: IMP
+  original_reference_id: PMID:24270810
+  review:
+    summary: &gt;-
+      Accepted for the PINK1 context. TOMM7 is required for efficient PINK1
+      stabilization/activation at the TOM complex after mitochondrial
+      depolarization.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:1903749
+    label: positive regulation of protein localization to mitochondrion
+  evidence_type: IMP
+  original_reference_id: PMID:24270810
+  review:
+    summary: &gt;-
+      Accepted as a PINK1-related annotation. TOMM7 supports PINK1 accumulation
+      at damaged mitochondria/TOM after depolarization.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:1905091
+    label: positive regulation of type 2 mitophagy
+  evidence_type: IMP
+  original_reference_id: PMID:24270810
+  review:
+    summary: &gt;-
+      Accepted. TOMM7 enables PINK1 stabilization/activation at TOM and
+      downstream Parkin recruitment, supporting PINK1-Parkin mitophagy signaling.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5205661
+  review:
+    summary: &gt;-
+      Accepted. Reactome places TOMM7 at the mitochondrial outer membrane in
+      TOM/PINK1 pathway context.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:12198123
+  review:
+    summary: &gt;-
+      Correct but too general. TOMM7 is specifically an outer membrane TOM
+      complex subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and TOM complex annotations.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:12198123
+  review:
+    summary: &gt;-
+      Accepted. PMID:12198123 directly addresses insertion and assembly of human
+      TOM7 into the TOM complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+- term:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  evidence_type: TAS
+  original_reference_id: PMID:15644312
+  review:
+    summary: &gt;-
+      TOMM7 is not the TOM protein-conducting pore. Its role is regulatory and
+      structural within the TOM complex rather than direct transporter activity.
+    action: REMOVE
+    reason: &gt;-
+      TOMM7 regulates TOM complex assembly/stability but does not independently
+      enable protein transmembrane transporter activity.
+    additional_reference_ids:
+    - file:human/TOMM7/TOMM7-deep-research-falcon.md
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:12198123
+  title: Insertion and assembly of human tom7 into the preprotein translocase complex
+    of the outer mitochondrial membrane.
+  findings: []
+- id: PMID:15644312
+  title: Dissection of the mitochondrial import and assembly pathway for human Tom40.
+  findings: []
+- id: PMID:18331822
+  title: Identification of Tom5 and Tom6 in the preprotein translocase complex of
+    human mitochondrial outer membrane.
+  findings: []
+- id: PMID:24270810
+  title: High-content genome-wide RNAi screens identify regulators of parkin upstream
+    of mitophagy.
+  findings: []
+- id: PMID:30021884
+  title: Histone Interaction Landscapes Visualized by Crosslinking Mass Spectrometry
+    in Intact Cell Nuclei.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+- id: PMID:35271311
+  title: &#39;OpenCell: Endogenous tagging for the cartography of human cellular organization.&#39;
+  findings: []
+- id: Reactome:R-HSA-5205661
+  title: Pink1 is recruited from the cytoplasm to the mitochondria
+  findings: []
+- id: file:human/TOMM7/TOMM7-deep-research-falcon.md
+  title: Falcon deep research report for human TOMM7
+  findings: []
+core_functions:
+- description: &gt;-
+    TOMM7 is a regulatory/structural small TOM subunit that modulates TOM complex
+    assembly, stability, and oligomeric organization at the mitochondrial outer
+    membrane.
+  supported_by:
+  - reference_id: file:human/TOMM7/TOMM7-deep-research-falcon.md
+    supporting_text: &#34;Functionally, TOMM7 is best classified as a **non-enzymatic regulatory/structural subunit**&#34;
+  - reference_id: file:human/TOMM7/TOMM7-deep-research-falcon.md
+    supporting_text: &#34;TOMM7 is an **outer mitochondrial membrane** subunit of the TOM machinery.&#34;
+  directly_involved_in:
+  - id: GO:0070096
+    label: mitochondrial outer membrane translocase complex assembly
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0140596
+    label: TOM complex
+- description: &gt;-
+    TOMM7 links the TOM complex to mitochondrial quality control by enabling
+    PINK1 stabilization/activation at TOM and downstream PINK1-Parkin mitophagy
+    signaling after mitochondrial damage.
+  supported_by:
+  - reference_id: file:human/TOMM7/TOMM7-deep-research-falcon.md
+    supporting_text: &#34;TOMM7 is also **required for efficient PINK1 stabilization/activation at the TOM complex**&#34;
+  directly_involved_in:
+  - id: GO:1905091
+    label: positive regulation of type 2 mitophagy
+  - id: GO:0031647
+    label: regulation of protein stability
+  - id: GO:1903749
+    label: positive regulation of protein localization to mitochondrion
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0140596
+    label: TOM complex
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which TOMM7 structural features separately control TOM oligomeric stability
+    and PINK1 arrest/activation at the TOM complex?
+  experts: []
+- question: &gt;-
+    Why do different TOMM7 disease alleles produce selective developmental,
+    metabolic, or cerebrovascular phenotypes despite retention of mitochondrial
+    localization?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    TOMM7 disease variants selectively weaken TOMM7-TOMM40/TOMM22 interactions,
+    altering TOM assembly and PINK1 signaling without uniformly abolishing import.
+  description: &gt;-
+    Compare endogenous TOMM7 knockout/rescue with p.W25R and p.P29L alleles for
+    TOM complex assembly, TOMM40/TOMM22 interaction, import of representative
+    mitochondrial precursors, PINK1 stabilization, Parkin recruitment, and
+    endothelial/iPSC metabolic phenotypes.
+  experiment_type: endogenous rescue, TOM assembly assay, and mitophagy assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

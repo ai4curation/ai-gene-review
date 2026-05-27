@@ -1,0 +1,2607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOMM5 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TOMM5</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8N4H5" target="_blank" class="term-link">
+                        Q8N4H5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TOMM5";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8N4H5" data-a="DESCRIPTION: TOMM5 is a very small single-pass mitochondrial ou..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TOMM5 is a very small single-pass mitochondrial outer membrane subunit of the TOM translocase core. It is a structural/regulatory accessory component, not an enzyme or independent receptor, and supports TOM core organization, stability, and biogenesis around TOMM40.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005742" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct phylogenetic inference. TOMM5 is a conserved small Tom subunit of the TOM core complex.
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:human/TOMM5/TOMM5-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">TOMM5 is a component of the TOM machinery embedded in the **mitochondrial outer membrane** as part of the detergent-stable TOM **core complex**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005741" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct UniProt-derived localization. Human structural and review evidence place TOMM5 in the mitochondrial outer membrane TOM core.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005742" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct InterPro-derived complex annotation. TOMM5 is a small subunit of the mitochondrial TOM translocase complex.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000052
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005739" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but less specific than the well-supported mitochondrial outer membrane/TOM complex localization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and TOM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005741" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Kato and Mihara identified human Tom5 in the outer membrane TOM preprotein translocase complex; this matches the Falcon synthesis of structural evidence.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045040" target="_blank" class="term-link">
+                                    GO:0045040
+                                </a>
+                            </span>
+                            <span class="term-label">protein insertion into mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0045040" data-r="PMID:18331822" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TOMM5 supports TOM organization and biogenesis, but the evidence does not support TOMM5 as an independent insertase for outer membrane proteins. TOM complex assembly is the more precise process annotation.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Replace the insertion term with TOM complex assembly/stability, which is the small Tom5 subunit role supported by structural and ortholog evidence.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                    mitochondrial outer membrane translocase complex assembly
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                                    GO:0140596
+                                </a>
+                            </span>
+                            <span class="term-label">TOM complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0140596" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct and specific. TOMM5 is a detergent-stable TOM core subunit adjacent to TOMM40, TOMM6, TOMM7, and TOMM22.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005739" data-r="PMID:34800366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome data support mitochondrial localization, but the term is too general for a TOM outer membrane core subunit.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Subsumed by mitochondrial outer membrane and TOM complex annotations.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                    GO:0005741
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            Reactome:R-HSA-5205661
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005741" data-r="Reactome:R-HSA-5205661" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome places TOMM5 at the mitochondrial outer membrane in TOM/PINK1 pathway context. This agrees with the TOM core localization.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070585" target="_blank" class="term-link">
+                                    GO:0070585
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to mitochondrion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0070585" data-r="PMID:18331822" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct as a broad process annotation for a TOM complex subunit, but TOMM5&#39;s more specific role is structural support of TOM core assembly and organization.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Broad process term; the synthesized core function emphasizes TOM complex assembly/stability.
+                        </div>
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005742" target="_blank" class="term-link">
+                                    GO:0005742
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial outer membrane translocase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18331822
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of Tom5 and Tom6 in the preprotein translocas...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N4H5" data-a="GO:0005742" data-r="PMID:18331822" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence from Kato and Mihara supports human TOMM5 membership in the mitochondrial outer membrane translocase complex.
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>TOMM5 is a structural/regulatory small Tom subunit that contributes to the TOM core translocase by stabilizing TOMM40-containing assemblies and likely assisting TOM biogenesis.</h3>
+                <span class="vote-buttons" data-g="Q8N4H5" data-a="FUNCTION: TOMM5 is a structural/regulatory small Tom subunit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070096" target="_blank" class="term-link">
+                                mitochondrial outer membrane translocase complex assembly
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005741" target="_blank" class="term-link">
+                                mitochondrial outer membrane
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0140596" target="_blank" class="term-link">
+                            TOM complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM5/TOMM5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">TOMM5 is **not an enzyme** and has **no known catalytic reaction or substrate specificity** in the enzyme/transporter sense.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM5/TOMM5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">TOMM5 is a component of the TOM machinery embedded in the **mitochondrial outer membrane** as part of the detergent-stable TOM **core complex**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:human/TOMM5/TOMM5-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Mechanistically, TOMM5 is best annotated as an **accessory structural/regulatory subunit** that supports TOM complex organization and likely assists biogenesis/assembly</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18331822" target="_blank" class="term-link">
+                            PMID:18331822
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Identification of Tom5 and Tom6 in the preprotein translocase complex of human mitochondrial outer membrane.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        Reactome:R-HSA-5205661
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Pink1 is recruited from the cytoplasm to the mitochondria</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:human/TOMM5/TOMM5-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Falcon deep research report for human TOMM5</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which Tom5 contacts in the human TOM core are essential for TOMM40 assembly versus precursor routing?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8N4H5" data-a="Q: Which Tom5 contacts in the human TOM core are esse..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How much of TOMM5 function in human cells can be separated from conserved yeast Tom5 roles in late Tom40 assembly at SAM?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8N4H5" data-a="Q: How much of TOMM5 function in human cells can be s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Use endogenous TOMM5 depletion/rescue with structure-guided mutants and measure TOMM40 assembly intermediates, mature TOM complex abundance, and import of representative mitochondrial precursor classes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: TOMM5 promotes stable TOM core biogenesis by contacting TOMM40 during or after TOMM40 assembly.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: endogenous rescue and mitochondrial import assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q8N4H5" data-a="EXPERIMENT: Use endogenous TOMM5 depletion/rescue with structu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TOMM5-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N4H5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">42 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-05-11T11:14:28.477844</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-human-tomm5-uniprot-q8n4h5-tom5-family-functional-annotation">Research report: Human <strong>TOMM5</strong> (UniProt <strong>Q8N4H5</strong>; Tom5 family) functional annotation</h2>
+<h3 id="0-identity-verification-critical-disambiguation">0) Identity verification (critical disambiguation)</h3>
+<p>The gene <strong>TOMM5</strong> (synonyms <strong>TOM5</strong>, <strong>C9orf105</strong>) encodes the human homolog of the TOM-complex small subunit <strong>Tom5</strong>, a <strong>single-pass α-helical</strong> protein that is part of the mitochondrial <strong>translocase of the outer membrane (TOM) complex</strong> (pitt2021abiochemicaland pages 1-3, pitt2021abiochemicaland pages 6-9). The literature retrieved here consistently uses “Tom5/TOMM5” to denote this TOM-complex subunit and does not indicate an alternative human gene/protein with the same symbol in this context (pitt2021abiochemicaland pages 1-3).</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-the-tom-complex-and-mitochondrial-protein-import">1.1 The TOM complex and mitochondrial protein import</h4>
+<p>Mammalian mitochondria import the vast majority of their proteins from the cytosol; reviews typically cite ~<strong>1,000–1,500</strong> mitochondrial proteins, with import across the outer membrane occurring primarily through the <strong>TOM complex</strong> (pitt2021abiochemicaland pages 16-17, pitt2021abiochemicaland pages 6-9). The TOM complex is organized around the β‑barrel channel <strong>TOMM40/Tom40</strong>, with additional receptor and small accessory subunits that contribute to recognition, translocation, and complex organization (pitt2021abiochemicaland pages 1-3, pitt2021abiochemicaland pages 6-9).</p>
+<h4 id="12-what-tomm5-is-and-is-not">1.2 What TOMM5 is (and is not)</h4>
+<p>TOMM5 is <strong>not an enzyme</strong> and has <strong>no known catalytic reaction or substrate specificity</strong> in the enzyme/transporter sense. Rather, TOMM5 is best understood as a <strong>structural/regulatory accessory subunit</strong> of a large membrane translocase, contributing to the assembly, stability, and/or mechanistic routing properties of the TOM pore (tucker2019cryoemstructureof pages 1-3, pitt2021abiochemicaland pages 6-9).</p>
+<h3 id="2-molecular-function-of-tomm5-in-the-tom-complex">2) Molecular function of TOMM5 in the TOM complex</h3>
+<h4 id="21-core-biochemical-role-inferred-from-structure-ortholog-experiments">2.1 Core biochemical role (inferred from structure + ortholog experiments)</h4>
+<p>Across species, Tom5-family proteins are described as <strong>small TOM subunits</strong> that directly associate with the Tom40 β‑barrel and are proposed to support: (i) <strong>TOM complex stability/organization</strong>, (ii) <strong>precursor handling/transfer</strong>, and (iii) <strong>biogenesis/assembly</strong> of TOM components (tucker2019cryoemstructureof pages 1-3, becker2010assemblyofthe pages 1-2, bausewein2020thestructureof pages 5-8).</p>
+<p>A key mechanistic idea emphasized in structural reviews is that Tom5 sits at a peripheral region of the TOM dimer and is positioned to participate in routing or recruitment events for particular classes of imported precursors (araiso2022structuraloverviewof pages 1-3). In particular, Araiso &amp; Endo summarize cryo‑EM-derived models in which the <strong>N‑terminal segment of Tom40</strong> traverses the channel and <strong>interacts with Tom5</strong> at the <strong>periphery</strong> of the TOM dimer; this site is discussed as a location where downstream components for <strong>presequence‑lacking precursors</strong> can be recruited (araiso2022structuraloverviewof pages 1-3).</p>
+<h4 id="22-role-in-tom-biogenesisassembly-strongest-direct-experimental-evidence-is-fungalyeast">2.2 Role in TOM biogenesis/assembly (strongest direct experimental evidence is fungal/yeast)</h4>
+<p>The most direct causal evidence for a Tom5-family protein in TOM assembly comes from yeast: Becker et al. identified a Tom40 assembly intermediate at the SAM complex and concluded that <strong>Tom5 associates with the Tom40 precursor at the SAM complex</strong> in a later stage that promotes Tom40 assembly; Tom5 thereby helps progress Tom40 from early SAM-associated intermediates toward mature TOM complexes (becker2010assemblyofthe pages 1-2). While this is not human TOMM5 per se, it is widely used as the mechanistic basis for inferring a conserved Tom5 contribution to TOM core biogenesis (becker2010assemblyofthe pages 1-2, pitt2021abiochemicaland pages 6-9).</p>
+<h3 id="3-subcellular-localization-and-topology-human-specific-structural-evidence">3) Subcellular localization and topology (human-specific structural evidence)</h3>
+<h4 id="31-localization">3.1 Localization</h4>
+<p>TOMM5 is a component of the TOM machinery embedded in the <strong>mitochondrial outer membrane</strong> as part of the detergent-stable TOM <strong>core complex</strong> (pitt2021abiochemicaland pages 6-9, guan2021structuralinsightsinto media bb38bae5).</p>
+<h4 id="32-topology-and-position-within-the-human-tom-core">3.2 Topology and position within the human TOM core</h4>
+<p>Human cryo‑EM structures of the TOM core complex resolve Tom5 (TOMM5) as a <strong>single-pass α‑helical</strong> subunit that <strong>surrounds</strong> the Tom40 β‑barrel together with Tom6 and Tom7 (pitt2021abiochemicaland pages 6-9). In the human TOM core complex structure presented by Guan et al., Tom5 is located on the <strong>periphery of each Tom40 barrel</strong> (rather than at the Tom22-bridged central interface), consistent with a peripheral accessory role (guan2021structuralinsightsinto media bb38bae5, guan2021structuralinsightsinto media 07568b50).</p>
+<h3 id="4-interaction-partners-and-complex-membership">4) Interaction partners and complex membership</h3>
+<h4 id="41-tom-core-membership-and-direct-contacts">4.1 TOM core membership and direct contacts</h4>
+<p>Structural and review evidence places TOMM5 as a β‑barrel-associated TOM core subunit that directly contacts <strong>TOMM40/Tom40</strong>, and resides adjacent to <strong>Tom6, Tom7, and Tom22</strong> in the assembled complex (pitt2021abiochemicaland pages 6-9, pitt2021abiochemicaland pages 3-6). The TOM core is observed in multiple oligomeric states (dimeric/tetrameric/trimeric forms) that all retain Tom5 as part of the assembly (pitt2021abiochemicaland pages 11-12).</p>
+<h4 id="42-oligomeric-state-statistics-structural">4.2 Oligomeric state statistics (structural)</h4>
+<p>A review synthesis of cryo‑EM findings reports TOM core oligomers that include:<br />
+* a <strong>dimeric</strong> core containing a dimer of Tom40 with Tom5, Tom6, Tom7, and Tom22;<br />
+* a <strong>tetrameric</strong> arrangement (dimer of dimers) with <strong>two copies each</strong> of Tom6, Tom22, and <strong>Tom5</strong> at the dimer–dimer interface; and<br />
+* a <strong>trimeric</strong> TOM containing three copies of Tom40, Tom5, Tom6, Tom7, Tom22 (pitt2021abiochemicaland pages 11-12).</p>
+<h3 id="5-recent-developments-and-latest-research-priority-20232024">5) Recent developments and latest research (priority 2023–2024)</h3>
+<h4 id="51-2023-tomm5-as-a-mitochondrial-microprotein-in-a-large-translocase">5.1 2023: TOMM5 as a mitochondrial microprotein in a large translocase</h4>
+<p>A 2023 review focused on mitochondrial microproteins explicitly catalogs TOMM5 as a <strong>51‑amino‑acid</strong> TOM component and describes Tom5/TOMM5 (with TOMM6 and TOMM7) as associating with TOMM40 and <strong>regulating stability</strong> of the import channel; the review also contextualizes the TOM complex as an ~<strong>440 kDa</strong> system (kamradt2023mitochondrialmicroproteinscritical pages 1-4). Although the excerpted text is review-level (not a new primary perturbation study), it represents current (2023) consensus framing of TOMM5’s role as a very small structural regulator embedded in a major import machine (kamradt2023mitochondrialmicroproteinscritical pages 1-4).</p>
+<h4 id="52-2024-structuredynamics-focused-tom-reviews-reinforce-tomm5s-role-as-a-small-core-subunit">5.2 2024: Structure/dynamics-focused TOM reviews reinforce TOMM5’s role as a small core subunit</h4>
+<p>A 2024 Biochemical Society Transactions review on TOM structure/dynamics lists Tom5 among the holo-complex subunits and emphasizes the structural context of a two‑pore Tom40 architecture revealed by cryo‑EM; it additionally notes that Tom5 shows relatively <strong>low sequence identity</strong> across fungi, consistent with evolutionary flexibility outside small conserved motifs (nussberger2024newinsightsinto pages 2-4). A complementary structure-centric synthesis also frames Tom5 among the “low molecular weight” TOM subunits implicated in assembly/stability and possible precursor handover at the cytosolic face (bausewein2020thestructureof pages 5-8).</p>
+<h3 id="6-disease-relevance-phenotypes-and-real-world-implementations">6) Disease relevance, phenotypes, and real-world implementations</h3>
+<h4 id="61-human-disease-genetics-limited-tomm5-specific-evidence-in-retrieved-primary-literature">6.1 Human disease genetics: limited TOMM5-specific evidence in retrieved primary literature</h4>
+<p>In the retrieved sources, there is <strong>no well-established monogenic human disease</strong> directly attributed to TOMM5 variants, and human TOMM5-specific functional perturbation datasets were not prominent in the accessible full texts (pitt2021abiochemicaland pages 16-17, pitt2021abiochemicaland pages 3-6). Database-level disease-target associations exist (e.g., Open Targets lists several diseases with low overall association scores and evidence largely driven by limited literature and functional genomics screens), but these should be treated as <strong>hypothesis-generating</strong> rather than confirmatory (OpenTargets Search: -TOMM5).</p>
+<h4 id="62-strongest-organismal-phenotype-evidence-tomm5-mice">6.2 Strongest organismal phenotype evidence: Tomm5−/− mice</h4>
+<p>A dedicated mouse knockout pathology study reported that <strong>Tomm5−/−</strong> mice develop a striking <strong>lung-restricted</strong> phenotype resembling human <strong>cryptogenic organizing pneumonia (COP)</strong>, with patchy intra-alveolar organizing lesions that evolve into fibrogenic buds containing extracellular matrix components and <strong>α‑SMA-positive myofibroblasts</strong>; the authors propose impaired mitochondrial function/import during neonatal transition to air and oxidative stress as plausible contributing mechanisms (vogel2013cryptogenicorganizingpneumonia pages 1-2, vogel2013cryptogenicorganizingpneumonia pages 5-7). This provides important in vivo evidence that Tomm5 can be physiologically important, though it does not by itself establish a direct human TOMM5 disease mechanism (vogel2013cryptogenicorganizingpneumonia pages 5-7).</p>
+<h4 id="63-applications-and-implementations-in-researchbiomedicine">6.3 Applications and implementations in research/biomedicine</h4>
+<ul>
+<li><strong>Structure-enabled mechanistic modeling:</strong> Human cryo‑EM structures (and their review syntheses) are actively used to infer how accessory subunits such as Tom5 position around Tom40 and may influence routing and complex dynamics (guan2021structuralinsightsinto media bb38bae5, araiso2022structuraloverviewof pages 1-3).</li>
+<li><strong>Mitochondrial targeting tools:</strong> A TOM review notes that human Tom5 has been used as a <strong>mitochondrial-targeting fusion</strong> in a cancer-cell context (e.g., to deliver p53 to mitochondria), illustrating use of TOMM5-derived sequences as experimental targeting elements; however, this is not yet a validated therapeutic approach (pitt2021abiochemicaland pages 16-17).</li>
+</ul>
+<h3 id="7-expert-synthesis-and-interpretation-authoritative-viewpoints">7) Expert synthesis and interpretation (authoritative viewpoints)</h3>
+<ol>
+<li><strong>Confidence-high statements (human structural context):</strong> TOMM5 is a small α‑helical TOM core subunit that directly contacts Tom40 and is positioned peripherally in human TOM core cryo‑EM reconstructions (guan2021structuralinsightsinto media bb38bae5, pitt2021abiochemicaland pages 6-9).</li>
+<li><strong>Moderate-confidence mechanistic role (cross-species inference):</strong> Tom5-family proteins likely contribute to <strong>TOM assembly/biogenesis and stability</strong>, supported strongly by yeast SAM-associated assembly intermediates and widely extrapolated to metazoans (becker2010assemblyofthe pages 1-2, pitt2021abiochemicaland pages 6-9).</li>
+<li><strong>Open questions emphasized by experts:</strong> Reviews explicitly state that functional knowledge for Tom5/TOMM5 in humans remains limited compared with other subunits; some yeast-specific mechanistic features (Tom40 regions implicated in Tom5 interactions) may not be conserved in human Tom40, implying that the exact human mechanism could differ (pitt2021abiochemicaland pages 16-17).</li>
+</ol>
+<h3 id="8-key-statistics-and-data-points-from-recentauthoritative-sources">8) Key statistics and data points (from recent/authoritative sources)</h3>
+<ul>
+<li>TOMM5 is described as <strong>~51 aa</strong> in a 2023 mitochondrial microprotein review (kamradt2023mitochondrialmicroproteinscritical pages 1-4).</li>
+<li>TOM (reviewed) is an ~<strong>440 kDa</strong> complex (kamradt2023mitochondrialmicroproteinscritical pages 1-4).</li>
+<li>TOM core oligomeric states reported from cryo‑EM include dimeric/tetrameric/trimeric assemblies containing Tom5, with <strong>two copies</strong> of Tom5 at the tetramer interface (review synthesis) (pitt2021abiochemicaland pages 11-12).</li>
+</ul>
+<h3 id="9-summary-table-of-evidence">9) Summary table of evidence</h3>
+<p>The following table consolidates high-confidence annotation statements, clearly separating human-structure-based evidence from inferences and remaining gaps.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation topic</th>
+<th>Key points</th>
+<th>Best supporting sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protein identity</td>
+<td>• Human gene/protein verified as <strong>TOMM5 / Tom5</strong>, UniProt <strong>Q8N4H5</strong> • Small <strong>Tom5-family</strong> subunit of the mitochondrial <strong>TOM</strong> (translocase of outer membrane) complex • Reviewed as one of the canonical TOM components in human mitochondria</td>
+<td>Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 1-3, pitt2021abiochemicaland pages 3-6); Lionaki et al., 2023, https://doi.org/10.1002/bies.202200160</td>
+</tr>
+<tr>
+<td>Subcellular localization / topology</td>
+<td>• Localized to the <strong>mitochondrial outer membrane</strong> within the TOM core complex • <strong>Single-pass α-helical</strong> membrane protein; one of the small TOM subunits • In human cryo-EM structures, Tom5 lies on the <strong>periphery of each Tom40 barrel</strong>, opposite the Tom22-bridged central interface</td>
+<td>Guan et al., 2021, https://doi.org/10.1038/s41421-021-00252-7 (guan2021structuralinsightsinto media bb38bae5, guan2021structuralinsightsinto media 07568b50); Wang et al., 2020, https://doi.org/10.1038/s41421-020-00198-2; Araiso &amp; Endo, 2022, https://doi.org/10.2142/biophysico.bppb-v19.0022 (araiso2022structuraloverviewof pages 1-3)</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>• Not an enzyme; acts as a <strong>structural/regulatory accessory subunit</strong> of the TOM import channel • Proposed roles include <strong>precursor transfer</strong>, <strong>binding-site formation</strong>, and <strong>assembly/stability</strong> support for TOM • Functional assignment in humans remains partly inferred from structure and fungal homologs</td>
+<td>Tucker &amp; Park, 2019, https://doi.org/10.1038/s41594-019-0339-2 (tucker2019cryoemstructureof pages 1-3); Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 6-9, pitt2021abiochemicaland pages 16-17)</td>
+</tr>
+<tr>
+<td>Complex membership / interactions</td>
+<td>• Member of the detergent-stable <strong>TOM core</strong> with <strong>Tom40, Tom22, Tom6, Tom7</strong> • Directly contacts <strong>Tom40</strong>; positioned near Tom22/Tom6/Tom7 in dimeric and higher-order assemblies • Human TOM cores resolved as <strong>dimers</strong>, with tetrameric/higher-order states also observed</td>
+<td>Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 3-6, pitt2021abiochemicaland pages 11-12, pitt2021abiochemicaland pages 6-9); Guan et al., 2021, https://doi.org/10.1038/s41421-021-00252-7; Wang et al., 2020, https://doi.org/10.1038/s41421-020-00198-2</td>
+</tr>
+<tr>
+<td>Role in import mechanism</td>
+<td>• TOM is the main entry gate for most nuclear-encoded mitochondrial proteins; Tom5 contributes as an <strong>auxiliary subunit</strong> rather than a receptor with a known substrate specificity • Structural review places Tom5 near the <strong>Tom40 N-terminal segment</strong> and a peripheral route implicated in recruiting downstream factors for <strong>presequence-lacking precursors</strong> • Detailed <strong>human-specific mechanistic proof</strong> remains limited</td>
+<td>Araiso &amp; Endo, 2022, https://doi.org/10.2142/biophysico.bppb-v19.0022 (araiso2022structuraloverviewof pages 1-3); Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 16-17)</td>
+</tr>
+<tr>
+<td>Role in TOM biogenesis / assembly</td>
+<td>• Best direct evidence comes from <strong>yeast/fungal ortholog</strong> studies: Tom5 promotes a later <strong>SAM-associated Tom40 assembly stage</strong> • Supports formation of stable intermediates for integration of newly synthesized TOM components • Human role is widely inferred to involve <strong>assembly and maintenance</strong> of TOM, but dedicated endogenous TOMM5 perturbation data are scarce</td>
+<td>Becker et al., 2010, https://doi.org/10.1091/mbc.e10-06-0518 (becker2010assemblyofthe pages 1-2); Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 6-9, pitt2021abiochemicaland pages 16-17)</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 developments</td>
+<td>• 2023 review highlights TOMM5 as a <strong>51-aa mitochondrial microprotein</strong> embedded in a large import machine • 2024 reviews emphasize evolutionary conservation of the TOM architecture and new structure/dynamics insights, reinforcing Tom5 as a <strong>small regulatory/core-surrounding subunit</strong> • Recent work refines <strong>complex architecture and dynamics</strong> more than TOMM5-specific biochemistry</td>
+<td>Kamradt &amp; Makarewich, 2023, https://doi.org/10.1152/ajpcell.00189.2023; Lionaki et al., 2023, https://doi.org/10.1002/bies.202200160; Nussberger et al., 2024, https://doi.org/10.1042/bst20231236; Özdemir &amp; Dennerlein, 2024, https://doi.org/10.1515/hsz-2024-0043</td>
+</tr>
+<tr>
+<td>Disease / phenotype links</td>
+<td>• No well-established <strong>monogenic human TOMM5 disease</strong> is supported by the retrieved primary literature • Broader TOM dysfunction is linked to neurodegeneration, cardiovascular disease, mitophagy defects, and cancer biology, but this is usually driven by other TOM subunits • Database-level disease associations for TOMM5 exist but are <strong>low-confidence / indirect</strong> and should be interpreted cautiously</td>
+<td>Heinemeyer et al., 2019, https://doi.org/10.1089/dna.2018.4292; Zhao &amp; Zou, 2021, https://doi.org/10.3389/fcvm.2021.749756; Open Targets (accessed via tool output) (OpenTargets Search: -TOMM5)</td>
+</tr>
+<tr>
+<td>Model-organism phenotype evidence</td>
+<td>• A mouse knockout report described <strong>cryptogenic organizing pneumonia</strong> in <strong>Tomm5−/−</strong> mice, indicating organism-level importance • This phenotype is informative but does <strong>not yet define the precise molecular lesion</strong> in human cells • Separate TOM-complex small-subunit disease precedent exists for <strong>TOMM7</strong>, underscoring plausibility of TOM small-subunit pathology</td>
+<td>Vogel et al., 2013, https://doi.org/10.1177/0300985812450723; Young et al., 2023, https://doi.org/10.1016/j.xhgg.2022.100148</td>
+</tr>
+<tr>
+<td>Knowledge gaps / confidence limits</td>
+<td>• Human <strong>endogenous TOMM5 loss-of-function</strong> studies are very limited • No clear human <strong>substrate specificity</strong>, catalytic activity, or direct disease-causing variants established • Many functional claims are extrapolated from <strong>fungal orthologs</strong> and from TOM-complex structural context rather than TOMM5-specific perturbation experiments</td>
+<td>Pitt &amp; Buchanan, 2021, https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 16-17, pitt2021abiochemicaland pages 3-6); Nussberger et al., 2024, https://doi.org/10.1042/bst20231236</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the strongest currently available evidence for human TOMM5 functional annotation, emphasizing what is directly supported in humans versus what is inferred from TOM-complex structure or fungal ortholog studies. It is useful for distinguishing high-confidence facts from remaining knowledge gaps.</em></p>
+<h3 id="10-conclusions-functional-annotation-statement">10) Conclusions (functional annotation statement)</h3>
+<p>Human <strong>TOMM5 (Q8N4H5)</strong> encodes a <strong>very small</strong>, single-pass α‑helical subunit of the mitochondrial <strong>TOM</strong> protein import machinery. The highest-confidence human evidence is structural: TOMM5 is a peripheral β‑barrel-associated component of the TOM core that directly contacts <strong>TOMM40/Tom40</strong> and sits adjacent to Tom6/Tom7/Tom22 in the assembled pore complex (guan2021structuralinsightsinto media bb38bae5, pitt2021abiochemicaland pages 6-9). Mechanistically, TOMM5 is best annotated as an <strong>accessory structural/regulatory subunit</strong> that supports TOM complex organization and likely assists biogenesis/assembly (strongest causal evidence from yeast) rather than acting as a receptor with defined substrate specificity (becker2010assemblyofthe pages 1-2, pitt2021abiochemicaland pages 16-17). TOMM5-specific human disease genetics remain underdeveloped in the retrieved literature, but a Tomm5 knockout mouse phenotype indicates potential organism-level importance and motivates deeper human functional and genetic studies (vogel2013cryptogenicorganizingpneumonia pages 5-7).</p>
+<h3 id="urls-most-central-sources">URLs (most central sources)</h3>
+<ul>
+<li>Guan et al. 2021 (Cell Discovery; human TOM core structures): https://doi.org/10.1038/s41421-021-00252-7 (guan2021structuralinsightsinto media bb38bae5, guan2021structuralinsightsinto media 07568b50)</li>
+<li>Wang et al. 2020 (Cell Discovery; atomic human TOM core): https://doi.org/10.1038/s41421-020-00198-2</li>
+<li>Pitt &amp; Buchanan 2021 (Cells; TOM complex interactions/disease context): https://doi.org/10.3390/cells10051164 (pitt2021abiochemicaland pages 6-9, pitt2021abiochemicaland pages 16-17)</li>
+<li>Kamradt &amp; Makarewich 2023 (AJP-Cell; mitochondrial microproteins): https://doi.org/10.1152/ajpcell.00189.2023 (kamradt2023mitochondrialmicroproteinscritical pages 1-4)</li>
+<li>Nussberger et al. 2024 (Biochem Soc Trans; TOM structure/dynamics): https://doi.org/10.1042/bst20231236 (nussberger2024newinsightsinto pages 2-4)</li>
+<li>Araiso &amp; Endo 2022 (Biophysics and Physicobiology; TOM structural overview): https://doi.org/10.2142/biophysico.bppb-v19.0022 (araiso2022structuraloverviewof pages 1-3)</li>
+<li>Becker et al. 2010 (MBoC; Tom5 in Tom40 assembly, yeast): https://doi.org/10.1091/mbc.e10-06-0518 (becker2010assemblyofthe pages 1-2)</li>
+<li>Vogel et al. 2013 (Vet Pathol; Tomm5−/− mouse COP-like phenotype): https://doi.org/10.1177/0300985812450723 (vogel2013cryptogenicorganizingpneumonia pages 5-7, vogel2013cryptogenicorganizingpneumonia pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(pitt2021abiochemicaland pages 1-3): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 6-9): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 16-17): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(tucker2019cryoemstructureof pages 1-3): Kyle Tucker and Eunyong Park. Cryo-em structure of the mitochondrial protein-import channel tom complex at near-atomic resolution. Nature Structural &amp; Molecular Biology, 26:1158-1166, Nov 2019. URL: https://doi.org/10.1038/s41594-019-0339-2, doi:10.1038/s41594-019-0339-2. This article has 208 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(becker2010assemblyofthe pages 1-2): Thomas Becker, Bernard Guiard, Nicolas Thornton, Nicole Zufall, David A. Stroud, Nils Wiedemann, and Nikolaus Pfanner. Assembly of the mitochondrial protein import channel. Molecular Biology of the Cell, 21:3106-3113, Sep 2010. URL: https://doi.org/10.1091/mbc.e10-06-0518, doi:10.1091/mbc.e10-06-0518. This article has 77 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bausewein2020thestructureof pages 5-8): Thomas Bausewein, Hammad Naveed, Jie Liang, and Stephan Nussberger. The structure of the tom core complex in the mitochondrial outer membrane. Biological Chemistry, 401:687-697, Apr 2020. URL: https://doi.org/10.1515/hsz-2020-0104, doi:10.1515/hsz-2020-0104. This article has 25 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(araiso2022structuraloverviewof pages 1-3): Yuhei Araiso and Toshiya Endo. Structural overview of the translocase of the mitochondrial outer membrane complex. Biophysics and Physicobiology, 19:n/a, Jun 2022. URL: https://doi.org/10.2142/biophysico.bppb-v19.0022, doi:10.2142/biophysico.bppb-v19.0022. This article has 21 citations.</p>
+</li>
+<li>
+<p>(guan2021structuralinsightsinto media bb38bae5): Zeyuan Guan, Ling Yan, Qiang Wang, Liangbo Qi, Sixing Hong, Zhou Gong, Chuangye Yan, and Ping Yin. Structural insights into assembly of human mitochondrial translocase tom complex. Cell Discovery, Apr 2021. URL: https://doi.org/10.1038/s41421-021-00252-7, doi:10.1038/s41421-021-00252-7. This article has 50 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(guan2021structuralinsightsinto media 07568b50): Zeyuan Guan, Ling Yan, Qiang Wang, Liangbo Qi, Sixing Hong, Zhou Gong, Chuangye Yan, and Ping Yin. Structural insights into assembly of human mitochondrial translocase tom complex. Cell Discovery, Apr 2021. URL: https://doi.org/10.1038/s41421-021-00252-7, doi:10.1038/s41421-021-00252-7. This article has 50 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 3-6): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(pitt2021abiochemicaland pages 11-12): Ashley S. Pitt and Susan K. Buchanan. A biochemical and structural understanding of tom complex interactions and implications for human health and disease. Cells, 10:1164, May 2021. URL: https://doi.org/10.3390/cells10051164, doi:10.3390/cells10051164. This article has 46 citations.</p>
+</li>
+<li>
+<p>(kamradt2023mitochondrialmicroproteinscritical pages 1-4): Michael L. Kamradt and Catherine A. Makarewich. Mitochondrial microproteins: critical regulators of protein import, energy production, stress response pathways, and programmed cell death. American Journal of Physiology-Cell Physiology, 325:C807-C816, Oct 2023. URL: https://doi.org/10.1152/ajpcell.00189.2023, doi:10.1152/ajpcell.00189.2023. This article has 12 citations.</p>
+</li>
+<li>
+<p>(nussberger2024newinsightsinto pages 2-4): Stephan Nussberger, Robin Ghosh, and Shuo Wang. New insights into the structure and dynamics of the tom complex in mitochondria. Biochemical Society Transactions, 52:911-922, Apr 2024. URL: https://doi.org/10.1042/bst20231236, doi:10.1042/bst20231236. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -TOMM5): Open Targets Query (-TOMM5, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(vogel2013cryptogenicorganizingpneumonia pages 1-2): P. Vogel, R. W. Read, J. E. Rehg, and G. M. Hansen. Cryptogenic organizing pneumonia in tomm5–/– mice. Veterinary Pathology, 50:65-75, Jan 2013. URL: https://doi.org/10.1177/0300985812450723, doi:10.1177/0300985812450723. This article has 19 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vogel2013cryptogenicorganizingpneumonia pages 5-7): P. Vogel, R. W. Read, J. E. Rehg, and G. M. Hansen. Cryptogenic organizing pneumonia in tomm5–/– mice. Veterinary Pathology, 50:65-75, Jan 2013. URL: https://doi.org/10.1177/0300985812450723, doi:10.1177/0300985812450723. This article has 19 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pitt2021abiochemicaland pages 1-3</li>
+<li>araiso2022structuraloverviewof pages 1-3</li>
+<li>becker2010assemblyofthe pages 1-2</li>
+<li>pitt2021abiochemicaland pages 6-9</li>
+<li>pitt2021abiochemicaland pages 11-12</li>
+<li>kamradt2023mitochondrialmicroproteinscritical pages 1-4</li>
+<li>nussberger2024newinsightsinto pages 2-4</li>
+<li>bausewein2020thestructureof pages 5-8</li>
+<li>vogel2013cryptogenicorganizingpneumonia pages 5-7</li>
+<li>pitt2021abiochemicaland pages 16-17</li>
+<li>tucker2019cryoemstructureof pages 1-3</li>
+<li>pitt2021abiochemicaland pages 3-6</li>
+<li>vogel2013cryptogenicorganizingpneumonia pages 1-2</li>
+<li>https://doi.org/10.3390/cells10051164</li>
+<li>https://doi.org/10.1002/bies.202200160</li>
+<li>https://doi.org/10.1038/s41421-021-00252-7</li>
+<li>https://doi.org/10.1038/s41421-020-00198-2;</li>
+<li>https://doi.org/10.2142/biophysico.bppb-v19.0022</li>
+<li>https://doi.org/10.1038/s41594-019-0339-2</li>
+<li>https://doi.org/10.1038/s41421-021-00252-7;</li>
+<li>https://doi.org/10.1038/s41421-020-00198-2</li>
+<li>https://doi.org/10.1091/mbc.e10-06-0518</li>
+<li>https://doi.org/10.1152/ajpcell.00189.2023;</li>
+<li>https://doi.org/10.1002/bies.202200160;</li>
+<li>https://doi.org/10.1042/bst20231236;</li>
+<li>https://doi.org/10.1515/hsz-2024-0043</li>
+<li>https://doi.org/10.1089/dna.2018.4292;</li>
+<li>https://doi.org/10.3389/fcvm.2021.749756;</li>
+<li>https://doi.org/10.1177/0300985812450723;</li>
+<li>https://doi.org/10.1016/j.xhgg.2022.100148</li>
+<li>https://doi.org/10.1042/bst20231236</li>
+<li>https://doi.org/10.1152/ajpcell.00189.2023</li>
+<li>https://doi.org/10.1177/0300985812450723</li>
+<li>https://doi.org/10.3390/cells10051164,</li>
+<li>https://doi.org/10.1038/s41594-019-0339-2,</li>
+<li>https://doi.org/10.1091/mbc.e10-06-0518,</li>
+<li>https://doi.org/10.1515/hsz-2020-0104,</li>
+<li>https://doi.org/10.2142/biophysico.bppb-v19.0022,</li>
+<li>https://doi.org/10.1038/s41421-021-00252-7,</li>
+<li>https://doi.org/10.1152/ajpcell.00189.2023,</li>
+<li>https://doi.org/10.1042/bst20231236,</li>
+<li>https://doi.org/10.1177/0300985812450723,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8N4H5
+gene_symbol: TOMM5
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  TOMM5 is a very small single-pass mitochondrial outer membrane subunit of the
+  TOM translocase core. It is a structural/regulatory accessory component, not
+  an enzyme or independent receptor, and supports TOM core organization,
+  stability, and biogenesis around TOMM40.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8N4H5-1
+- name: &#39;2&#39;
+  id: Q8N4H5-2
+  sequence_note: VSP_046982
+- name: &#39;3&#39;
+  id: Q8N4H5-3
+  sequence_note: VSP_046983
+existing_annotations:
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: &gt;-
+      Correct phylogenetic inference. TOMM5 is a conserved small Tom subunit of
+      the TOM core complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:human/TOMM5/TOMM5-deep-research-falcon.md
+      supporting_text: &#34;TOMM5 is a component of the TOM machinery embedded in the **mitochondrial outer membrane** as part of the detergent-stable TOM **core complex**&#34;
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: &gt;-
+      Correct UniProt-derived localization. Human structural and review evidence
+      place TOMM5 in the mitochondrial outer membrane TOM core.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: &gt;-
+      Correct InterPro-derived complex annotation. TOMM5 is a small subunit of
+      the mitochondrial TOM translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  review:
+    summary: &gt;-
+      Correct but less specific than the well-supported mitochondrial outer
+      membrane/TOM complex localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and TOM complex annotations.
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Kato and Mihara identified human Tom5 in the outer membrane TOM
+      preprotein translocase complex; this matches the Falcon synthesis of
+      structural evidence.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0045040
+    label: protein insertion into mitochondrial outer membrane
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      TOMM5 supports TOM organization and biogenesis, but the evidence does not
+      support TOMM5 as an independent insertase for outer membrane proteins.
+      TOM complex assembly is the more precise process annotation.
+    action: MODIFY
+    reason: &gt;-
+      Replace the insertion term with TOM complex assembly/stability, which is
+      the small Tom5 subunit role supported by structural and ortholog evidence.
+    proposed_replacement_terms:
+    - id: GO:0070096
+      label: mitochondrial outer membrane translocase complex assembly
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0140596
+    label: TOM complex
+  evidence_type: NAS
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Correct and specific. TOMM5 is a detergent-stable TOM core subunit
+      adjacent to TOMM40, TOMM6, TOMM7, and TOMM22.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome data support mitochondrial
+      localization, but the term is too general for a TOM outer membrane core
+      subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Subsumed by mitochondrial outer membrane and TOM complex annotations.
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005741
+    label: mitochondrial outer membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5205661
+  review:
+    summary: &gt;-
+      Reactome places TOMM5 at the mitochondrial outer membrane in TOM/PINK1
+      pathway context. This agrees with the TOM core localization.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0070585
+    label: protein localization to mitochondrion
+  evidence_type: IC
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Correct as a broad process annotation for a TOM complex subunit, but
+      TOMM5&#39;s more specific role is structural support of TOM core assembly and
+      organization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broad process term; the synthesized core function emphasizes TOM complex
+      assembly/stability.
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+- term:
+    id: GO:0005742
+    label: mitochondrial outer membrane translocase complex
+  evidence_type: IDA
+  original_reference_id: PMID:18331822
+  review:
+    summary: &gt;-
+      Direct evidence from Kato and Mihara supports human TOMM5 membership in
+      the mitochondrial outer membrane translocase complex.
+    action: ACCEPT
+    additional_reference_ids:
+    - file:human/TOMM5/TOMM5-deep-research-falcon.md
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: PMID:18331822
+  title: Identification of Tom5 and Tom6 in the preprotein translocase complex of
+    human mitochondrial outer membrane.
+  findings: []
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+- id: Reactome:R-HSA-5205661
+  title: Pink1 is recruited from the cytoplasm to the mitochondria
+  findings: []
+- id: file:human/TOMM5/TOMM5-deep-research-falcon.md
+  title: Falcon deep research report for human TOMM5
+  findings: []
+core_functions:
+- description: &gt;-
+    TOMM5 is a structural/regulatory small Tom subunit that contributes to the
+    TOM core translocase by stabilizing TOMM40-containing assemblies and likely
+    assisting TOM biogenesis.
+  supported_by:
+  - reference_id: file:human/TOMM5/TOMM5-deep-research-falcon.md
+    supporting_text: &#34;TOMM5 is **not an enzyme** and has **no known catalytic reaction or substrate specificity** in the enzyme/transporter sense.&#34;
+  - reference_id: file:human/TOMM5/TOMM5-deep-research-falcon.md
+    supporting_text: &#34;TOMM5 is a component of the TOM machinery embedded in the **mitochondrial outer membrane** as part of the detergent-stable TOM **core complex**&#34;
+  - reference_id: file:human/TOMM5/TOMM5-deep-research-falcon.md
+    supporting_text: &#34;Mechanistically, TOMM5 is best annotated as an **accessory structural/regulatory subunit** that supports TOM complex organization and likely assists biogenesis/assembly&#34;
+  contributes_to_molecular_function:
+    id: GO:0008320
+    label: protein transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0070096
+    label: mitochondrial outer membrane translocase complex assembly
+  locations:
+  - id: GO:0005741
+    label: mitochondrial outer membrane
+  in_complex:
+    id: GO:0140596
+    label: TOM complex
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which Tom5 contacts in the human TOM core are essential for TOMM40 assembly
+    versus precursor routing?
+  experts: []
+- question: &gt;-
+    How much of TOMM5 function in human cells can be separated from conserved
+    yeast Tom5 roles in late Tom40 assembly at SAM?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    TOMM5 promotes stable TOM core biogenesis by contacting TOMM40 during or
+    after TOMM40 assembly.
+  description: &gt;-
+    Use endogenous TOMM5 depletion/rescue with structure-guided mutants and
+    measure TOMM40 assembly intermediates, mature TOM complex abundance, and
+    import of representative mitochondrial precursor classes.
+  experiment_type: endogenous rescue and mitochondrial import assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

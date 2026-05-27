@@ -35,10 +35,11 @@ All refresh operations include rate limiting (0.5-2.0 second delays) to:
 
 import time
 import yaml
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from .publication import cache_publication
+from .publication import cache_publication, extract_pmids_from_yaml
 
 
 def find_pmc_candidates(
@@ -197,19 +198,27 @@ def refetch_publications(
                         else:
                             print("  ⚠ Full text too short (may be restricted)")
                             stats["failed"] += 1
+                            if pmcid:
+                                log_pmc_failure(pmid, pmcid, "full_text_too_short")
                     else:
                         print("  ⚠ Still no full text (may be restricted)")
                         stats["failed"] += 1
+                        if pmcid:
+                            log_pmc_failure(pmid, pmcid, "no_full_text_after_refresh")
                 else:
                     print("  ✗ Cache file disappeared")
                     stats["failed"] += 1
             else:
                 print("  ✗ Failed to fetch publication")
                 stats["failed"] += 1
+                if pmcid:
+                    log_pmc_failure(pmid, pmcid, "fetch_failed")
 
         except Exception as e:
             print(f"  ✗ Error: {e}")
             stats["failed"] += 1
+            if pmcid:
+                log_pmc_failure(pmid, pmcid, f"error: {e}")
 
         stats["processed"] += 1
 
@@ -268,3 +277,161 @@ def get_refresh_summary(
         "estimated_success": int(len(candidates) * 0.9),
         "success_rate_estimate": 0.9,
     }
+
+
+def find_active_review_pmids(
+    genes_dir: Path = Path("genes"),
+    active_statuses: Optional[tuple] = None,
+) -> Dict[str, Any]:
+    """Find all PMIDs referenced by gene reviews under active review.
+
+    Scans gene review YAML files for those with status IN_PROGRESS or DRAFT,
+    and collects all PMIDs referenced in their annotations and references.
+
+    Args:
+        genes_dir: Root directory containing organism/gene subdirectories
+        active_statuses: Tuple of status values to consider active.
+            Defaults to ("IN_PROGRESS", "DRAFT").
+
+    Returns:
+        Dictionary with:
+        - pmids: Deduplicated sorted list of PMID strings
+        - reviews: List of dicts with gene, organism, status, pmid_count
+
+    Examples:
+        >>> import tempfile, yaml
+        >>> from pathlib import Path
+        >>> with tempfile.TemporaryDirectory() as tmpdir:
+        ...     genes_dir = Path(tmpdir)
+        ...     gene_dir = genes_dir / "human" / "TP53"
+        ...     gene_dir.mkdir(parents=True)
+        ...     review = {"id": "P04637", "gene_symbol": "TP53", "status": "IN_PROGRESS", "references": [{"id": "PMID:12345"}]}
+        ...     _ = open(gene_dir / "TP53-ai-review.yaml", "w").write(yaml.dump(review))
+        ...     result = find_active_review_pmids(genes_dir)
+        ...     result["pmids"]
+        ['12345']
+    """
+    if active_statuses is None:
+        active_statuses = ("IN_PROGRESS", "DRAFT")
+
+    all_pmids: set[str] = set()
+    reviews: List[Dict[str, Any]] = []
+
+    for review_file in sorted(genes_dir.glob("*/*/*.yaml")):
+        if not review_file.name.endswith("-ai-review.yaml"):
+            continue
+
+        with open(review_file) as f:
+            data = yaml.safe_load(f)
+
+        if not data:
+            continue
+
+        status = data.get("status", "")
+        if status not in active_statuses:
+            continue
+
+        pmids = extract_pmids_from_yaml(review_file)
+        all_pmids.update(pmids)
+
+        # Derive organism and gene from path: genes/<organism>/<gene>/<gene>-ai-review.yaml
+        parts = review_file.parts
+        gene_idx = len(genes_dir.parts)
+        organism = parts[gene_idx] if len(parts) > gene_idx else "unknown"
+        gene = parts[gene_idx + 1] if len(parts) > gene_idx + 1 else "unknown"
+
+        reviews.append({
+            "gene": gene,
+            "organism": organism,
+            "status": status,
+            "pmid_count": len(pmids),
+        })
+
+    return {
+        "pmids": sorted(all_pmids),
+        "reviews": reviews,
+    }
+
+
+def _get_default_candidates_path() -> Path:
+    """Get the default path for pmc_override_candidates.tsv.
+
+    Searches in the same locations as pmc_overrides.tsv.
+    """
+    candidate_paths = [
+        Path(__file__).parent / "pmc_override_candidates.tsv",
+        Path("src/ai_gene_review/etl/pmc_override_candidates.tsv"),
+        Path("pmc_override_candidates.tsv"),
+    ]
+    for p in candidate_paths:
+        if p.exists():
+            return p
+    # Default to module directory
+    return Path(__file__).parent / "pmc_override_candidates.tsv"
+
+
+def log_pmc_failure(
+    pmid: str,
+    pmcid: str,
+    reason: str,
+    candidates_file: Optional[Path] = None,
+) -> None:
+    """Log a PMC full-text retrieval failure to the candidates file.
+
+    Appends a line to pmc_override_candidates.tsv for manual review.
+    Skips if the PMID is already logged.
+
+    Args:
+        pmid: PubMed ID that failed
+        pmcid: PMC ID that was attempted
+        reason: Short description of the failure
+        candidates_file: Path to candidates TSV (auto-detected if None)
+    """
+    if candidates_file is None:
+        candidates_file = _get_default_candidates_path()
+
+    # Check for existing entry
+    if candidates_file.exists():
+        existing = candidates_file.read_text()
+        for line in existing.splitlines():
+            if line.startswith(f"{pmid}\t"):
+                return  # Already logged
+
+    # Append new entry
+    today = date.today().isoformat()
+    with open(candidates_file, "a") as f:
+        f.write(f"{pmid}\t{pmcid}\t{reason}\t{today}\n")
+
+
+def load_pmc_candidates(
+    candidates_file: Optional[Path] = None,
+) -> Dict[str, Dict[str, str]]:
+    """Load PMC override candidates from the TSV file.
+
+    Args:
+        candidates_file: Path to candidates TSV (auto-detected if None)
+
+    Returns:
+        Dictionary mapping PMID to dict with pmcid, reason, date keys.
+    """
+    if candidates_file is None:
+        candidates_file = _get_default_candidates_path()
+
+    candidates: Dict[str, Dict[str, str]] = {}
+
+    if not candidates_file.exists():
+        return candidates
+
+    for line in candidates_file.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("\t")
+        if len(parts) >= 3:
+            candidates[parts[0]] = {
+                "pmcid": parts[1],
+                "reason": parts[2],
+                "date": parts[3] if len(parts) >= 4 else "",
+            }
+
+    return candidates

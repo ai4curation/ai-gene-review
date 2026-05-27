@@ -1,0 +1,26 @@
+# Ghr notes
+
+## Core mouse biology
+
+- Mouse `Ghr` encodes a bona fide growth hormone receptor with direct receptor/binding evidence in mouse liver membranes [PMID:6303755 Hepatic binding of human and bovine growth hormones and ovine prolactin in the dwarf "little" mouse., "GH receptors were at normal levels in lit/lit mice despite their deficiency of pituitary and serum GH."].
+- GH induces STAT5 association with GHR in mouse cells, making the JAK-STAT branch the strongest directly supported signaling output in mouse [PMID:8702683 Growth hormone promotes the association of transcription factor STAT5 with the growth hormone receptor., "GH-induced tyrosine phosphorylation of STAT5 and the interaction of STAT5 with GHR can be observed in mouse 3T3-F442A cells which express endogenous mouse GHR."].
+- The embryo staining paper reports mainly nuclear signal in cleavage-stage embryos but membrane signal in blastocysts, so nuclear localization should be treated as developmental/context-specific rather than the default location [PMID:9144201 Functional growth hormone (GH) receptors and GH are expressed by preimplantation mouse embryos: a role for GH in early embryogenesis?, "In cleavage-stage embryos this immunoreactivity was localized mainly to the nucleus, but clear evidence of membrane labeling was apparent in blastocysts."].
+
+## Isoform biology relevant to annotation review
+
+- UniProt records two alternative products: full-length isoform `P16882-1` and the shorter `P16882-2` GH-binding protein isoform [file:mouse/Ghr/Ghr-uniprot.txt, "Event=Alternative splicing; Named isoforms=2;"].
+- Mouse GH-binding protein biology matters for localization curation. Mouse liver GHBP is structurally distinct from serum GHBP and is found on intracellular membranes and plasma membrane [PMID:11834450 Structurally distinct membrane-associated and soluble forms of GH-binding protein in the mouse., "mouse liver GHBP is predominantly present as a membrane-associated protein structurally distinct from the soluble form of GHBP present in serum. Liver GHBP is associated with both intracellular membranes and the plasma membrane."].
+- This isoform split argues against blindly attaching every signaling term to the gene product without asking whether the evidence concerns the signaling-competent membrane receptor or the shorter GHBP product [file:mouse/Ghr/Ghr-uniprot.txt, "The soluble form (GHBP) acts as a reservoir of growth hormone in plasma and may be a modulator/inhibitor of GH signaling."].
+
+## ISO donor-trace conclusions
+
+- Every mouse ISO annotation in `Ghr-goa.tsv` traces to either human `UniProtKB:P10912` or rat `RGD:2687`/`UniProtKB:P16310` [file:mouse/Ghr/Ghr-goa.tsv, "ISO rows use WITH/FROM values pointing to human P10912 or rat RGD:2687."].
+- The detailed donor trace is in [file:mouse/Ghr/Ghr-iso-donor-trace.md, "Current donor tracing distinguishes direct donor experiments from circular or stale ISO chains."].
+- Rat donor `P16310` is the main circularity problem: it has genuine direct experimental support for JAK2/STAT5-oriented terms, but several rat donor annotations are themselves ISO from human GHR, and rat also carries NOT annotations for receptor internalization and cycloheximide response [file:mouse/Ghr/Ghr-iso-donor-trace.md, "Rat donor P16310 carries direct JAK2/STAT5 experiments but also multiple ISO-from-human terms and NOT annotations for GO:0031623 and GO:0046898."].
+- Broad cytokine-family IBA terms need extra skepticism. The mouse UniProt record places GHR in PANTHER subfamily `PTHR23037:SF46 INTERLEUKIN 5 RECEPTOR SUBUNIT ALPHA`, which is a clear warning sign for paralog-driven over-transfer of generic cytokine receptor terms [file:mouse/Ghr/Ghr-uniprot.txt, "PANTHER; PTHR23037:SF46; INTERLEUKIN 5 RECEPTOR SUBUNIT ALPHA; 1."].
+
+## Downstream phenotype caution
+
+- The metabolomics paper is useful for consequences of altered signaling, not direct receptor function. It studies mice with altered intracellular GHR signaling and reports altered taurine/choline/creatinine metabolism plus obesity and insulin resistance as downstream outcomes [PMID:18648510 Altered metabolism of growth hormone receptor mutant mice: a combined NMR metabonomics and microarray study., "These mutations result in altered liver metabolism, obesity and insulin resistance."].
+- That same paper explicitly frames the altered metabolites as consequences of impaired STAT5 signaling, so terms such as taurine metabolic process or broad organismal growth regulation should be treated as downstream/non-core rather than direct receptor activity [PMID:18648510 Altered metabolism of growth hormone receptor mutant mice: a combined NMR metabonomics and microarray study., "provides a coherent picture of metabolic changes resulting from impaired STAT5 signalling by the growth hormone receptor"].
+- The HDA extracellular-space annotation comes from a cardiac fibroblast secretome paper that is not centered on GHR biology and should not outweigh the receptor/GHBP literature [PMID:24006456 Extracellular matrix secretion by cardiac fibroblasts: role of microRNA-29b and microRNA-30c., "Mouse cardiac fibroblasts were transfected with pre-/anti-miR of miR-29b and miR-30c, and their conditioned medium was analyzed by mass spectrometry."].

@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vanB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>vanB</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88GI5" target="_blank" class="term-link">
+                        Q88GI5
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+                    
+                    <span class="badge">PP_3737</span>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "vanB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88GI5" data-a="DESCRIPTION: vanB encodes the reductase component of the VanAB ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>vanB encodes the reductase component of the VanAB two-component vanillate O-demethylase in Pseudomonas putida KT2440. The protein is a flavin- and 2Fe-2S-containing electron-transfer subunit that supplies reducing equivalents from NADH to the oxygenase component VanA during conversion of vanillate to protocatechuate and formaldehyde. The cofactor-binding calls are well supported by sequence features, whereas the current GOA oxidoreductase annotation is too generic and should be narrowed to a subunit-level redox role plus a complex-level vanillate monooxygenase annotation.</p>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+        
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>vanillate catabolic process</h3>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="vanillate catabolic process" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+            
+            <p><strong>Definition:</strong> The chemical reactions and pathways resulting in the breakdown of vanillate (4-hydroxy-3-methoxybenzoate), typically by O-demethylation to protocatechuate and formaldehyde.</p>
+            
+
+            
+            <p><strong>Justification:</strong> GO already contains the molecular function term vanillate monooxygenase activity (GO:0018489) but lacks a matching biological process term for the catabolic step catalyzed by VanAB and related systems.</p>
+            
+
+            
+
+            
+
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GI5" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This annotation captures the redox nature of VanB but is too generic for a dedicated reductase subunit in a specific aromatic O-demethylase system. A narrower subunit-level term is more informative.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> VanB is best described as an electron-transfer reductase subunit rather than by the broad parent oxidoreductase term.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                                    electron transfer activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/vanB/vanB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SubName: Full=Vanillate O-demethylase oxidoreductase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051536" target="_blank" class="term-link">
+                                    GO:0051536
+                                </a>
+                            </span>
+                            <span class="term-label">iron-sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GI5" data-a="GO:0051536" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This parent term is not wrong, but the UniProt/InterPro evidence supports a specific 2Fe-2S ferredoxin-type cofactor rather than an unspecified iron-sulfur cluster.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GO:0051537 captures the same feature more precisely and should be preferred as the core cofactor-binding annotation.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/vanB/vanB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051537" target="_blank" class="term-link">
+                                    GO:0051537
+                                </a>
+                            </span>
+                            <span class="term-label">2 iron, 2 sulfur cluster binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GI5" data-a="GO:0051537" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the strongest existing annotation. The C-terminal ferredoxin-type domain and conserved cysteine motif support a bound 2Fe-2S cluster.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt record explicitly assigns a 2Fe-2S ferredoxin-type domain and corresponding InterPro/PROSITE signatures.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/vanB/vanB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018489" target="_blank" class="term-link">
+                                    GO:0018489
+                                </a>
+                            </span>
+                            <span class="term-label">vanillate monooxygenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33741529" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33741529
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Metabolism of Syringyl Lignin-Derived Compounds in Pseudomon...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88GI5" data-a="GO:0018489" data-r="PMID:33741529" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> vanB should carry a curator-proposed complex-level annotation to vanillate monooxygenase activity. The gene product is the reductase subunit of the two-component VanAB enzyme, so the proper qualifier is contributes_to rather than enables.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The current GOA set misses the vanillate-specific catalytic context of VanB. Adding the complex activity with a contributes_to qualifier is more informative and avoids overclaiming that VanB alone performs the full monooxygenase reaction.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:PSEPK/vanB/vanB-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SubName: Full=Vanillate O-demethylase oxidoreductase</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33741529" target="_blank" class="term-link">
+                                        PMID:33741529
+                                    </a>
+                                    
+                                </span>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>VanB is the flavin/2Fe-2S electron-transfer subunit of the VanAB two-component enzyme that channels reducing equivalents from NADH to the oxygenase component during vanillate O-demethylation.</h3>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="FUNCTION: VanB is the flavin/2Fe-2S electron-transfer subuni..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009055" target="_blank" class="term-link">
+                            electron transfer activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/vanB/vanB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">SubName: Full=Vanillate O-demethylase oxidoreductase</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/vanB/vanB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">CC   -!- COFACTOR: ... Name=FMN</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:PSEPK/vanB/vanB-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33741529" target="_blank" class="term-link">
+                                PMID:33741529
+                            </a>
+                            
+                        </span>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro2GO supports generic redox and cofactor terms for the VanB reductase subunit, but the annotations need refinement to the 2Fe-2S electron-transfer context.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The combined UniProt automated pipeline supplies broad oxidoreductase terms; curator review narrows VanB to its reductase and electron-transfer role in VanAB.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12534463" target="_blank" class="term-link">
+                            PMID:12534463
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides the genome context and original sequence source for the PP_3737 locus in Pseudomonas putida KT2440.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33741529" target="_blank" class="term-link">
+                            PMID:33741529
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Metabolism of Syringyl Lignin-Derived Compounds in Pseudomonas putida Enables Convergent Production of 2-Pyrone-4,6-Dicarboxylic Acid.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">VanAB is a two-component monooxygenase in KT2440, and kinetic analysis in that study treated vanillate as a native substrate.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:PSEPK/vanB/vanB-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry Q88GI5</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt names vanB/PP_3737 as vanillate O-demethylase oxidoreductase.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein is predicted to bind FMN and contains a 2Fe-2S ferredoxin-type domain.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does VanB transfer electrons exclusively within the VanAB complex, or can it reduce free flavins or alternative oxygenases in vivo?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Bacterial redox enzymologists, Aromatic catabolism researchers</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="Q: Does VanB transfer electrons exclusively within th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under native KT2440 expression levels, how much VanAB activity is devoted to vanillate versus promiscuous substrates such as syringate or 3-O-methylgallate?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Pseudomonas metabolism researchers, Lignin valorization groups</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="Q: Under native KT2440 expression levels, how much Va..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute purified VanA and VanB separately and together to measure NADH oxidation, flavin reduction, and vanillate O-demethylation and thereby resolve the subunit-specific electron-transfer step.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="EXPERIMENT: Reconstitute purified VanA and VanB separately and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Compare vanB deletion and complementation strains on vanillate, ferulate-derived vanillate, and syringate co-metabolism to distinguish the physiological substrate range from the enzyme&#39;s broader catalytic promiscuity.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="EXPERIMENT: Compare vanB deletion and complementation strains ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Measure VanB cofactor occupancy and redox properties by UV-visible spectroscopy and EPR to confirm the predicted FMN and 2Fe-2S centers.</p>
+                    
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q88GI5" data-a="EXPERIMENT: Measure VanB cofactor occupancy and redox properti..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(vanB-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88GI5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">40 citations</span>
+                    
+                    
+                    
+                    <span class="report-meta-text">2026-03-21T13:56:12.568472</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-pseudomonas-putida-kt2440-vanb-pp_3737-uniprot-q88gi5">Research report: Functional annotation of <em>Pseudomonas putida</em> KT2440 <strong>vanB</strong> (PP_3737; UniProt Q88GI5)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p>The UniProt entry <strong>Q88GI5</strong> from <em>Pseudomonas putida</em> KT2440 corresponds to <strong>vanB (PP_3737)</strong>, encoding <strong>VanB</strong>, the <strong>reductase/oxidoreductase component</strong> of the two-component vanillate O-demethylase <strong>VanAB</strong>. In KT2440, VanAB catalyzes <strong>oxidative O-demethylation of vanillate to protocatechuate</strong>, generating <strong>formaldehyde</strong> as a coproduct; VanB supplies reducing equivalents from NAD(P)H to the oxygenase component (VanA). Recent work (2023–2024) demonstrates VanB is an engineering lever and evolutionary hotspot that can substantially increase vanillate consumption and growth on vanillate, highlighting its importance for lignin-derived aromatic upgrading. (bleem2024evolutionandengineering pages 1-2, bleem2024evolutionandengineering pages 2-3)</p>
+<h3 id="1-target-verification-and-geneprotein-identity-mandatory">1. Target verification and gene/protein identity (mandatory)</h3>
+<p><strong>Verified target:</strong> Bleem et al. explicitly describe <strong>VanB (PP_3737)</strong> as “<strong>the reductase for vanillate O-demethylase</strong>” in <em>P. putida</em> KT2440 and show that mutations in VanB were among the most impactful changes improving vanillate utilization during adaptive evolution. (Bleem et al., 2024-07, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009) (bleem2024evolutionandengineering pages 1-2)</p>
+<p><strong>Function matches UniProt description:</strong> The same study defines KT2440 VanAB as a <strong>Rieske-type non-heme iron monooxygenase system</strong> that performs O-demethylation of vanillate to protocatechuate, consistent with the UniProt description “vanillate O-demethylase oxidoreductase” for Q88GI5. (bleem2024evolutionandengineering pages 2-3)</p>
+<h3 id="2-key-concepts-and-definitions-current-understanding">2. Key concepts and definitions (current understanding)</h3>
+<h4 id="21-vanillate-o-demethylase-vanab">2.1 Vanillate O-demethylase (VanAB)</h4>
+<p><strong>Definition:</strong> VanAB is a two-component aromatic O-demethylase system (classically encoded by <strong>vanA</strong> and <strong>vanB</strong>) that converts <strong>vanillate (4-hydroxy-3-methoxybenzoate)</strong> to <strong>protocatechuate (3,4-dihydroxybenzoate)</strong> via <strong>oxidative O-demethylation</strong>, releasing <strong>formaldehyde (HCHO)</strong> as a C1 byproduct. This is the canonical activation step that converts methoxylated lignin-derived aromatics into catecholic diols suitable for ring cleavage in central aromatic metabolism. (bleem2024evolutionandengineering pages 2-3, wolf2024thecatabolismof pages 1-3)</p>
+<p><strong>Stoichiometric/redox concept:</strong> For related p-O-demethylation reactions, one equivalent of <strong>NADH + H+ + O2</strong> is consumed and <strong>NAD+ + H2O + formaldehyde</strong> are produced per aromatic substrate converted, formalizing the intrinsic redox cost and the formaldehyde burden (expert perspective across organisms). (Wolf et al., 2024-02, <em>Applied and Environmental Microbiology</em>, https://doi.org/10.1128/aem.02155-23) (wolf2024thecatabolismof pages 1-3)</p>
+<h4 id="22-vanb-pp_3737-uniprot-q88gi5">2.2 VanB (PP_3737; UniProt Q88GI5)</h4>
+<p><strong>Definition/role:</strong> VanB is the <strong>reductase (oxidoreductase) subunit</strong> of VanAB. In KT2440 it is directly referred to as the reductase for vanillate O-demethylase and is a major determinant of in vivo demethylation performance. (bleem2024evolutionandengineering pages 1-2)</p>
+<p><strong>Cofactors and domain architecture (inferred from characterized homologs):</strong> Multiple studies across bacteria converge that VanB-type reductases contain (i) a <strong>NAD(P)H binding domain</strong>, (ii) a <strong>flavin (FMN) cofactor</strong>, and (iii) a <strong>[2Fe–2S] ferredoxin-type center</strong>, enabling electron transfer from NAD(P)H through flavin/Fe–S centers to the oxygenase VanA. (gosling2024biocatalyticconversionof pages 76-80, morawski2000substraterangeand pages 1-2, donoso2022identificationofa pages 1-2)</p>
+<p><strong>Electron-transfer chain concept:</strong> Morawski et al. (Acinetobacter) describe a conserved Rieske-oxygenase-style electron pathway in which electrons move from NADH to the reductase’s flavin and [2Fe–2S] center (VanB), then to the Rieske center and mononuclear iron site in VanA where oxygen activation occurs. This mechanistic framing is widely applied to VanAB homologs, including in <em>Pseudomonas</em>. (Morawski et al., 2000-03, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.182.5.1383-1389.2000) (morawski2000substraterangeand pages 1-2)</p>
+<h3 id="3-biochemical-function-and-substrate-specificity">3. Biochemical function and substrate specificity</h3>
+<h4 id="31-primary-reaction-catalyzed-by-the-vanab-system-in-kt2440">3.1 Primary reaction catalyzed by the VanAB system in KT2440</h4>
+<p>Bleem et al. state that KT2440 VanAB <strong>O-demethylates vanillate to protocatechuate</strong>, generating formaldehyde as a byproduct; this is the central biochemical function that connects vanB to aromatic catabolism. (bleem2024evolutionandengineering pages 2-3)</p>
+<h4 id="32-substrate-scope-what-is-known-and-what-is-safest-to-claim">3.2 Substrate scope (what is known, and what is safest to claim)</h4>
+<p>The safest KT2440-specific statement supported here is that vanillate is the canonical substrate (bleem2024evolutionandengineering pages 2-3). Broader substrate scope is supported across homologs: Donoso et al. describe vanAB systems enabling growth on vanillate-like substrates and specify that substrate recognition is influenced by the position of the methoxy group and presence of a carboxylate moiety (authoritative primary research in another genus, but mechanistically relevant). (Donoso et al., 2022-12, <em>Microorganisms</em>, https://doi.org/10.3390/microorganisms11010078) (donoso2022identificationofa pages 1-2)</p>
+<h3 id="4-cellular-localization-and-where-the-reaction-occurs">4. Cellular localization and where the reaction occurs</h3>
+<p>No retrieved source reports a direct localization experiment (e.g., cell fractionation, microscopy tagging) for KT2440 VanB. However, VanAB is consistently treated as part of <strong>intracellular aromatic catabolism</strong> where vanillate is converted to protocatechuate en route to central metabolism, and VanB is a soluble redox partner in a Rieske-oxygenase system rather than a membrane transporter or secreted enzyme. This localization inference is consistent with its electron-transfer/reductase function and operon organization, but should be treated as an inference rather than a validated localization claim. (bleem2024evolutionandengineering pages 2-3, morawski2000substraterangeand pages 1-2)</p>
+<h3 id="5-pathway-context-and-biological-process">5. Pathway context and biological process</h3>
+<p>VanAB sits in the lignin-derived aromatic “funneling” layer: diverse guaiacyl-type aromatics converge on <strong>vanillate</strong>, which is then demethylated to <strong>protocatechuate</strong>, a hub metabolite entering ring-cleavage pathways (e.g., β-ketoadipate pathway). Bleem et al. directly place VanAB in this vanillate → protocatechuate step in KT2440. (bleem2024evolutionandengineering pages 2-3)</p>
+<p>The formaldehyde coproduct makes one-carbon detoxification/assimilation physiologically important; Bleem et al. identify beneficial mutations in <strong>fghA</strong> (formaldehyde detoxification) alongside VanB mutations during adaptation to vanillate. (bleem2024evolutionandengineering pages 1-2)</p>
+<h3 id="6-recent-developments-prioritizing-20232024">6. Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="61-2024-evolution-and-engineering-of-kt2440-aromatic-o-demethylation-highlights-vanb-as-a-performance-determinant">6.1 2024: Evolution and engineering of KT2440 aromatic O-demethylation highlights VanB as a performance determinant</h4>
+<p>Bleem et al. (2024-07) compared native VanAB versus an alternative THF-dependent demethylation strategy (LigM) under constitutive expression and adaptive laboratory evolution on vanillate. They report that evolved strains using native VanAB achieved <strong>~1.8× faster growth</strong> than LigM strains, and that the most impactful mutations included <strong>VanB (PP_3737)</strong>. A reconstructed strain combining mutations in <strong>VanB</strong>, a global regulator (<strong>PP_3493/PP_3494</strong>), and <strong>fghA</strong> showed <strong>~5× faster vanillate consumption in the first 8 hours</strong> than wild type, directly establishing VanB as an actionable engineering target. (Bleem et al., 2024-07, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009) (bleem2024evolutionandengineering pages 1-2)</p>
+<h4 id="62-2024-aerobic-o-demethylation-viewed-as-a-key-bottleneck-due-to-energyredox-and-formaldehyde-costs">6.2 2024: Aerobic O-demethylation viewed as a key bottleneck due to energy/redox and formaldehyde costs</h4>
+<p>Meriläinen et al. (2024-06) argue that aerobic O-demethylation (including Rieske oxygenase systems) is <strong>energy-limited</strong>, can inhibit growth, and commonly leads to <strong>carbon loss</strong> because formaldehyde is detoxified to CO2; they present a mixed anaerobic/aerobic strategy to improve carbon-wise upgrading, emphasizing why VanAB-type steps are engineering pain points in real processes. (Meriläinen et al., 2024-06, <em>Biotechnology for Biofuels and Bioproducts</em>, https://doi.org/10.1186/s13068-024-02526-0) (merilainen2024carbonwiseutilizationof pages 1-2)</p>
+<p>Wolf et al. (2024-02) similarly frame O-demethylation as potentially rate-limiting for biocatalytic transformation of lignin-derived aromatics, and give a clear NADH/O2/formaldehyde stoichiometry that underscores why VanB-dependent electron transfer is a lever (higher activity directly translates to higher NADH demand and higher formaldehyde flux). (wolf2024thecatabolismof pages 1-3)</p>
+<h4 id="63-2023-industrially-relevant-lignin-valorization-metrics-emphasize-the-importance-of-aromatic-funneling">6.3 2023: Industrially relevant lignin-valorization metrics emphasize the importance of aromatic funneling</h4>
+<p>Werner et al. (2023-09) engineered <em>P. putida</em> KT2440 for bioconversion of lignin-related aromatic mixtures (p-coumarate and ferulate) to <strong>β-ketoadipate</strong>, reaching <strong>~40 g/L titers</strong> and <strong>&gt;1 g·L−1·h−1 productivities</strong>, demonstrating that KT2440 aromatic-catabolic capacity can be harnessed at high performance. While the excerpt does not isolate vanAB-specific contributions, vanillate/protocatechuate funneling is a core component of ferulate/guaiacyl processing in KT2440-type networks and motivates attention to O-demethylation steps in process design. (Werner et al., 2023-09, <em>Science Advances</em>, https://doi.org/10.1126/sciadv.adj0053) (werner2023ligninconversionto pages 8-10)</p>
+<h3 id="7-current-applications-and-real-world-implementations">7. Current applications and real-world implementations</h3>
+<h4 id="71-lignin-valorization-and-aromatic-bioproducts">7.1 Lignin valorization and aromatic bioproducts</h4>
+<p>Aromatic O-demethylation is a gating step for converting methoxylated lignin monomers into central intermediates used to make value-added chemicals. Authoritative mechanistic review work in <em>Nature Catalysis</em> highlights vanillate O-demethylation by VanAB as rate-limiting in at least some engineered contexts (e.g., muconate production), and stresses that electron-transfer and redox-partner limitations must be addressed to improve turnover. (Erickson et al., 2022-02, <em>Nature Catalysis</em>, https://doi.org/10.1038/s41929-022-00747-w) (erickson2022criticalenzymereactions pages 9-10)</p>
+<h4 id="72-vanillinvanillate-pathway-engineering-vanab-as-a-deletion-target">7.2 Vanillin/vanillate pathway engineering (VanAB as a deletion target)</h4>
+<p>In vanillin production and related aromatic aldehyde processes, VanAB is often <strong>deleted</strong> to prevent loss of vanillate carbon into protocatechuate (i.e., to arrest catabolism and accumulate upstream products). For example, Ruhl et al. describe deleting <strong>vanAB</strong> because it converts <strong>vanillic acid to protocatechuate</strong>, as part of an engineered KT2440 strain for vanillin accumulation from ferulic acid; their approach demonstrates real-world process logic: modulate/disable native aromatic funneling to favor a desired product pool. (Ruhl et al., 2025-05, <em>Microbial Biotechnology</em>, https://doi.org/10.1111/1751-7915.70152) (ruhl2025productionofvanillin pages 5-7)</p>
+<h3 id="8-expert-opinions-and-analysis-authoritative-sources">8. Expert opinions and analysis (authoritative sources)</h3>
+<p><strong>Consensus view:</strong> O-demethylation is a central and challenging step in aerobic lignin-derived aromatic metabolism because it (i) requires specialized oxygenase/redox machinery, (ii) consumes reducing power, and (iii) generates toxic C1 species (formaldehyde) that require detoxification/assimilation, lowering carbon and energy efficiency. (erickson2022criticalenzymereactions pages 9-10, merilainen2024carbonwiseutilizationof pages 1-2, wolf2024thecatabolismof pages 1-3)</p>
+<p><strong>Engineering implication for vanB:</strong> Because VanB is the reductase that supplies electrons to VanA, it is a natural locus for improving flux through vanillate O-demethylation, but improvements may increase NADH draw and formaldehyde generation. Hence the frequent co-optimization with formaldehyde-handling genes (e.g., fghA) observed in evolved KT2440 strains. (bleem2024evolutionandengineering pages 1-2, erickson2022criticalenzymereactions pages 9-10)</p>
+<h3 id="9-quantitative-statistics-and-data-highlights">9. Quantitative statistics and data highlights</h3>
+<h4 id="91-kt2440-vanb-centered-adaptive-evolution-and-engineered-performance-2024">9.1 KT2440 VanB-centered adaptive evolution and engineered performance (2024)</h4>
+<ul>
+<li><strong>~1.8× faster growth</strong> on vanillate in evolved VanAB strains compared with evolved strains using THF-dependent LigM demethylation. (bleem2024evolutionandengineering pages 1-2)</li>
+<li><strong>~5× faster vanillate consumption</strong> during the first 8 hours for a reconstructed strain combining top mutations including a <strong>VanB</strong> mutation, a global regulator mutation, and an <strong>fghA</strong> mutation. (bleem2024evolutionandengineering pages 1-2)</li>
+</ul>
+<h4 id="92-proteomicsmetabolite-evidence-for-vanab-as-an-inducedbottleneck-node-quantitative-multi-omics">9.2 Proteomics/metabolite evidence for VanAB as an induced/bottleneck node (quantitative multi-omics)</h4>
+<p>In a quantitative multi-omics study of <em>P. putida</em> KT2440 grown on phenolic substrates, VanAB protein abundance increased up to <strong>~2700-fold</strong> on ferulate or vanillate compared with succinate, and the vanillate transporter VanK increased up to <strong>~830-fold</strong>. Protocatechuate remained low in vanillate-grown cells (<strong>0.8 ± 0.1 µmol gCDW−1</strong>), consistent with VanAB being a potential bottleneck under some conditions; formaldehyde oxidation proteins increased up to <strong>~40-fold</strong> on ferulate/vanillate, consistent with formaldehyde flux from O-demethylation. (Zhou et al., 2025-03, bioRxiv preprint, https://doi.org/10.1101/2025.03.24.645021) (zhou2025quantitativeanalysisof pages 5-8)</p>
+<h4 id="93-lignin-valorization-bioprocess-outcomes-in-kt2440-2023">9.3 Lignin-valorization bioprocess outcomes in KT2440 (2023)</h4>
+<p>Engineered <em>P. putida</em> KT2440 produced β-ketoadipate at <strong>~40 g/L titers</strong> with <strong>&gt;1 g·L−1·h−1 productivities</strong> from lignin-related aromatics, demonstrating that aromatic catabolism can be pushed to industrially relevant metrics and that upstream funneling steps (including O-demethylation where relevant) are important design parameters. (Werner et al., 2023-09, <em>Science Advances</em>, https://doi.org/10.1126/sciadv.adj0053) (werner2023ligninconversionto pages 8-10)</p>
+<h4 id="94-process-logic-where-vanab-is-disabled-to-accumulate-valuable-aromatics-2025-example">9.4 Process logic where VanAB is disabled to accumulate valuable aromatics (2025 example)</h4>
+<p>Although outside the requested 2023–2024 window, Ruhl et al. provide a clear bioprocess example where <strong>vanAB is deleted</strong> because it converts vanillic acid to protocatechuate, illustrating that VanAB/VanB function is a central consideration when choosing between “catabolize” vs “accumulate” operating modes in aromatic bioprocesses. (ruhl2025productionofvanillin pages 5-7)</p>
+<h3 id="10-visual-evidence-from-recent-literature">10. Visual evidence from recent literature</h3>
+<p>Bleem et al. provide a pathway schematic and quantitative growth/consumption curves directly comparing VanAB vs alternative O-demethylation strategies and demonstrating the performance impact of VanB-associated mutations. (bleem2024evolutionandengineering media 887e76b0, bleem2024evolutionandengineering media 710020e6)</p>
+<h3 id="11-evidence-mapped-functional-annotation-summary">11. Evidence-mapped functional annotation summary</h3>
+<p>The following table consolidates the strongest evidence linking UniProt Q88GI5 to VanB function, cofactors, pathway role, recent engineering findings, and quantitative data.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Evidence summary</th>
+<th>Key sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>UniProt Q88GI5 corresponds to <strong>vanB / PP_3737</strong> from <em>Pseudomonas putida</em> KT2440, annotated as the <strong>oxidoreductase (reductase) component</strong> of vanillate O-demethylase. Recent KT2440 work explicitly describes VanB as “the reductase for vanillate O-demethylase,” confirming the gene symbol matches the target protein rather than unrelated vanB genes in other organisms (bleem2024evolutionandengineering pages 1-2).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 1-2); Donoso 2022, <em>Microorganisms</em>, https://doi.org/10.3390/microorganisms11010078 (donoso2022identificationofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>In KT2440, the native <strong>VanAB</strong> system catalyzes <strong>oxidative O-demethylation of vanillate to protocatechuate</strong>, with formaldehyde released as the C1 byproduct. This establishes the primary biochemical function of the operon in guaiacyl aromatic catabolism (bleem2024evolutionandengineering pages 2-3).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 2-3); Gosling 2024, doi text, https://doi.org/10.25916/sut.26291827 (gosling2024biocatalyticconversionof pages 76-80)</td>
+</tr>
+<tr>
+<td>Enzyme system type</td>
+<td>VanAB is a <strong>two-component Rieske/non-heme iron monooxygenase (class IA monooxygenase)</strong>. The oxygenase subunit (VanA) performs O2 activation, while the reductase subunit (VanB) transfers reducing equivalents from NAD(P)H into the catalytic oxygenase chain (bleem2024evolutionandengineering pages 2-3, morawski2000substraterangeand pages 1-2).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 2-3); Morawski 2000, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.182.5.1383-1389.2000 (morawski2000substraterangeand pages 1-2)</td>
+</tr>
+<tr>
+<td>VanB role</td>
+<td>VanB is the <strong>electron-transfer reductase</strong> for vanillate O-demethylase, supplying electrons required for VanA-mediated oxidative demethylation. Homolog studies consistently define vanB as the reductase gene adjacent to vanA in the functional operon, and KT2440 engineering directly targeted VanB as an activity-limiting determinant (bleem2024evolutionandengineering pages 1-2, civolani2000bioconversionofferulic pages 3-4).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 1-2); Civolani 2000, <em>Applied and Environmental Microbiology</em>, https://doi.org/10.1128/aem.66.6.2311-2317.2000 (civolani2000bioconversionofferulic pages 3-4)</td>
+</tr>
+<tr>
+<td>Cofactors/domains</td>
+<td>Evidence from homologous VanB proteins supports a domain architecture with <strong>NAD(P)H-binding</strong>, <strong>FMN/flavin-binding</strong>, and <strong>[2Fe-2S] ferredoxin-type</strong> redox centers, matching the UniProt/InterPro assignment for Q88GI5. Electron flow is inferred as NAD(P)H → flavin/[2Fe-2S] in VanB → Rieske center/mononuclear iron in VanA (gosling2024biocatalyticconversionof pages 76-80, morawski2000substraterangeand pages 1-2, donoso2022identificationofa pages 1-2).</td>
+<td>Donoso 2022, <em>Microorganisms</em>, https://doi.org/10.3390/microorganisms11010078 (donoso2022identificationofa pages 1-2); Morawski 2000, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.182.5.1383-1389.2000 (morawski2000substraterangeand pages 1-2); Gosling 2024, doi text, https://doi.org/10.25916/sut.26291827 (gosling2024biocatalyticconversionof pages 76-80)</td>
+</tr>
+<tr>
+<td>Substrates/specificity</td>
+<td>The established native substrate is <strong>vanillate</strong>; recent comparative work in KT2440 and related systems indicates VanAB can also act on some other methoxylated aromatics, but vanillate remains the canonical substrate. Literature summarized in 2025 preprint evidence notes KT2440 VanAB shows stronger activity on vanillate and syringate than on 3-methoxygallic acid, consistent with substrate preference centered on meta-methoxylated aromatic acids (tuomela2025conversionandupgradinga pages 15-17, donoso2022identificationofa pages 1-2).</td>
+<td>Tuomela 2025, preprint, https://doi.org/10.21203/rs.3.rs-6218493/v1 (tuomela2025conversionandupgradinga pages 15-17); Donoso 2022, <em>Microorganisms</em>, https://doi.org/10.3390/microorganisms11010078 (donoso2022identificationofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Products/byproducts</td>
+<td>The aromatic product of VanAB action is <strong>protocatechuate (3,4-dihydroxybenzoate)</strong>, which enters central aromatic metabolism; the one-carbon byproduct is <strong>formaldehyde</strong>. Formaldehyde detoxification genes become important for efficient growth and engineering, indicating this byproduct is physiologically significant rather than incidental (bleem2024evolutionandengineering pages 2-3, tuomela2025conversionandupgradinga pages 15-17).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 2-3); Tuomela 2025, preprint, https://doi.org/10.21203/rs.3.rs-6218493/v1 (tuomela2025conversionandupgradinga pages 15-17)</td>
+</tr>
+<tr>
+<td>Pathway context</td>
+<td>VanAB functions in the <strong>lignin-derived aromatic funneling pathway</strong>, converting guaiacyl-type compounds through vanillate into protocatechuate and then the <strong>β-ketoadipate pathway</strong>. This places vanB in cytosolic aromatic catabolism rather than transport, secretion, or structural cell functions (bleem2024evolutionandengineering pages 2-3, donoso2022identificationofa pages 1-2).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 2-3); Donoso 2022, <em>Microorganisms</em>, https://doi.org/10.3390/microorganisms11010078 (donoso2022identificationofa pages 1-2)</td>
+</tr>
+<tr>
+<td>Regulation/engineering insights</td>
+<td>In KT2440, vanAB expression level strongly affects vanillate utilization, and adaptive evolution identified beneficial mutations in <strong>VanB</strong>, a nearby global regulatory locus (<strong>PP_3493/PP_3494</strong>), and <strong>fghA/formaldehyde detoxification</strong>. Functional genomics also grouped vanAB with hydroxycinnamate/vanillate catabolism modules, supporting coordinated regulation with aromatic utilization traits (bleem2024evolutionandengineering pages 1-2, bleem2024evolutionandengineering media 887e76b0).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 1-2, bleem2024evolutionandengineering media 887e76b0); Borchert 2024, <em>mSystems</em>, https://doi.org/10.1128/msystems.00942-23 (reported in search results)</td>
+</tr>
+<tr>
+<td>Quantitative data</td>
+<td>Recent KT2440 engineering data are especially informative: VanAB-evolved strains grew on vanillate about <strong>1.8× faster</strong> than LigM strains, and a reconstructed strain carrying <strong>VanB A24P + PP_3493 P133L + FghA W15C</strong> consumed vanillate about <strong>5× faster than wild type during the first 8 h</strong>. Figures and tables in the 2024 study also report VanB mutant kinetic effects and vanillate-consumption/growth curves, making VanB one of the few directly quantified determinants of improved O-demethylation performance (bleem2024evolutionandengineering pages 1-2, bleem2024evolutionandengineering media 887e76b0).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 1-2, bleem2024evolutionandengineering media 887e76b0)</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>No strong evidence from the retrieved sources supports secretion or membrane localization; instead, VanAB is treated as a soluble <strong>intracellular/cytosolic enzyme system</strong> acting on imported aromatic acids within central catabolism. This inference is consistent with its reductase/oxygenase architecture and role in intracellular protocatechuate funneling, but explicit localization experiments for KT2440 VanB were not identified in the retrieved literature (bleem2024evolutionandengineering pages 2-3, morawski2000substraterangeand pages 1-2).</td>
+<td>Bleem 2024, <em>Metabolic Engineering</em>, https://doi.org/10.1016/j.ymben.2024.06.009 (bleem2024evolutionandengineering pages 2-3); Morawski 2000, <em>Journal of Bacteriology</em>, https://doi.org/10.1128/jb.182.5.1383-1389.2000 (morawski2000substraterangeand pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the validated identity, biochemical role, cofactors, pathway placement, and recent engineering evidence for </em>Pseudomonas putida<em> KT2440 vanB (PP_3737; UniProt Q88GI5). It is useful as a compact evidence map linking UniProt annotation to primary literature and recent 2024 functional studies.</em></p>
+<h3 id="12-key-takeaways-for-annotation-recommended-statements">12. Key takeaways for annotation (recommended statements)</h3>
+<ul>
+<li><strong>Molecular function:</strong> VanB (PP_3737; UniProt Q88GI5) is a <strong>flavin/Fe–S-containing reductase</strong> that transfers electrons from NAD(P)H to the VanA oxygenase in the VanAB vanillate O-demethylase system. (bleem2024evolutionandengineering pages 1-2, morawski2000substraterangeand pages 1-2, donoso2022identificationofa pages 1-2)</li>
+<li><strong>Biological process:</strong> VanAB-mediated <strong>vanillate → protocatechuate</strong> conversion, enabling catabolism of methoxylated lignin-derived aromatics; formaldehyde coproduct necessitates detoxification/assimilation pathways. (bleem2024evolutionandengineering pages 2-3, erickson2022criticalenzymereactions pages 9-10)</li>
+<li><strong>Cellular component:</strong> Best supported as <strong>intracellular/soluble</strong> (inference from enzyme class and catabolic role); explicit localization data were not identified in retrieved sources. (bleem2024evolutionandengineering pages 2-3, morawski2000substraterangeand pages 1-2)</li>
+<li><strong>Engineering relevance:</strong> VanB is a demonstrated target for improving vanillate utilization (ALE/strain reconstruction) and, conversely, VanAB is frequently deleted to prevent carbon loss from vanillate/vanillin pathways when producing aromatics. (bleem2024evolutionandengineering pages 1-2, ruhl2025productionofvanillin pages 5-7)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(bleem2024evolutionandengineering pages 1-2): Alissa C. Bleem, Eugene Kuatsjah, Josefin Johnsen, Elsayed T. Mohamed, William G. Alexander, Zoe A. Kellermyer, Austin L. Carroll, Riccardo Rossi, Ian B. Schlander, George L. Peabody V, Adam M. Guss, Adam M. Feist, and Gregg T. Beckham. Evolution and engineering of pathways for aromatic o-demethylation in pseudomonas putida kt2440. Jul 2024. URL: https://doi.org/10.1016/j.ymben.2024.06.009, doi:10.1016/j.ymben.2024.06.009. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bleem2024evolutionandengineering pages 2-3): Alissa C. Bleem, Eugene Kuatsjah, Josefin Johnsen, Elsayed T. Mohamed, William G. Alexander, Zoe A. Kellermyer, Austin L. Carroll, Riccardo Rossi, Ian B. Schlander, George L. Peabody V, Adam M. Guss, Adam M. Feist, and Gregg T. Beckham. Evolution and engineering of pathways for aromatic o-demethylation in pseudomonas putida kt2440. Jul 2024. URL: https://doi.org/10.1016/j.ymben.2024.06.009, doi:10.1016/j.ymben.2024.06.009. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wolf2024thecatabolismof pages 1-3): Megan E. Wolf, Anne T. Lalande, Brianne L. Newman, Alissa C. Bleem, Chad T. Palumbo, Gregg T. Beckham, and Lindsay D. Eltis. The catabolism of lignin-derived p-methoxylated aromatic compounds by rhodococcus jostii rha1. Applied and Environmental Microbiology, Feb 2024. URL: https://doi.org/10.1128/aem.02155-23, doi:10.1128/aem.02155-23. This article has 13 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gosling2024biocatalyticconversionof pages 76-80): Aaron Gosling. Biocatalytic conversion of vanillin to 3-carboxy muconate. Text, Jan 2024. URL: https://doi.org/10.25916/sut.26291827, doi:10.25916/sut.26291827. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(morawski2000substraterangeand pages 1-2): Birgit Morawski, A. Segura, L. Nicholas, Ornston Vanillate, and Demethylase Acinetobacter. Substrate range and genetic analysis ofacinetobacter vanillate demethylase. Journal of Bacteriology, 182:1383-1389, Mar 2000. URL: https://doi.org/10.1128/jb.182.5.1383-1389.2000, doi:10.1128/jb.182.5.1383-1389.2000. This article has 49 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(donoso2022identificationofa pages 1-2): Raúl A. Donoso, Ricardo Corbinaud, Carla Gárate-Castro, Sandra Galaz, and Danilo Pérez-Pantoja. Identification of a phylogenetically divergent vanillate o-demethylase from rhodococcus ruber r1 supporting growth on meta-methoxylated aromatic acids. Microorganisms, 11:78, Dec 2022. URL: https://doi.org/10.3390/microorganisms11010078, doi:10.3390/microorganisms11010078. This article has 4 citations.</p>
+</li>
+<li>
+<p>(merilainen2024carbonwiseutilizationof pages 1-2): Ella Meriläinen, Elena Efimova, Ville Santala, and Suvi Santala. Carbon-wise utilization of lignin-related compounds by synergistically employing anaerobic and aerobic bacteria. Biotechnology for Biofuels and Bioproducts, Jun 2024. URL: https://doi.org/10.1186/s13068-024-02526-0, doi:10.1186/s13068-024-02526-0. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner2023ligninconversionto pages 8-10): Allison Z. Werner, William T. Cordell, Ciaran W. Lahive, Bruno C. Klein, Christine A. Singer, Eric C. D. Tan, Morgan A. Ingraham, Kelsey J. Ramirez, Dong Hyun Kim, Jacob Nedergaard Pedersen, Christopher W. Johnson, Brian F. Pfleger, Gregg T. Beckham, and Davinia Salvachúa. Lignin conversion to β-ketoadipic acid by <i>pseudomonas putida</i> via metabolic engineering and bioprocess development. Science Advances, Sep 2023. URL: https://doi.org/10.1126/sciadv.adj0053, doi:10.1126/sciadv.adj0053. This article has 82 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(erickson2022criticalenzymereactions pages 9-10): Erika Erickson, Alissa Bleem, Eugene Kuatsjah, Allison Z. Werner, Jennifer L. DuBois, John E. McGeehan, Lindsay D. Eltis, and Gregg T. Beckham. Critical enzyme reactions in aromatic catabolism for microbial lignin conversion. Feb 2022. URL: https://doi.org/10.1038/s41929-022-00747-w, doi:10.1038/s41929-022-00747-w. This article has 139 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ruhl2025productionofvanillin pages 5-7): Ilona A. Ruhl, Sean P. Woodworth, Stefan J. Haugen, Hannah M. Alt, Gregg T. Beckham, and Christopher W. Johnson. Production of vanillin from ferulic acid by pseudomonas putida kt2440 using metabolic engineering and in situ product recovery. Microbial Biotechnology, May 2025. URL: https://doi.org/10.1111/1751-7915.70152, doi:10.1111/1751-7915.70152. This article has 6 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2025quantitativeanalysisof pages 5-8): Nanqing Zhou, Rebecca A. Wilkes, Xinyu Chen, Kelly P. Teitel, James A. Belgrave, Gregg T. Beckham, Allison Z. Werner, Yanbao Yu, and Ludmilla Aristilde. Quantitative analysis of coupled carbon and energy metabolism for lignin carbon utilization in pseudomonas putida. bioRxiv, Mar 2025. URL: https://doi.org/10.1101/2025.03.24.645021, doi:10.1101/2025.03.24.645021. This article has 3 citations.</p>
+</li>
+<li>
+<p>(bleem2024evolutionandengineering media 887e76b0): Alissa C. Bleem, Eugene Kuatsjah, Josefin Johnsen, Elsayed T. Mohamed, William G. Alexander, Zoe A. Kellermyer, Austin L. Carroll, Riccardo Rossi, Ian B. Schlander, George L. Peabody V, Adam M. Guss, Adam M. Feist, and Gregg T. Beckham. Evolution and engineering of pathways for aromatic o-demethylation in pseudomonas putida kt2440. Jul 2024. URL: https://doi.org/10.1016/j.ymben.2024.06.009, doi:10.1016/j.ymben.2024.06.009. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bleem2024evolutionandengineering media 710020e6): Alissa C. Bleem, Eugene Kuatsjah, Josefin Johnsen, Elsayed T. Mohamed, William G. Alexander, Zoe A. Kellermyer, Austin L. Carroll, Riccardo Rossi, Ian B. Schlander, George L. Peabody V, Adam M. Guss, Adam M. Feist, and Gregg T. Beckham. Evolution and engineering of pathways for aromatic o-demethylation in pseudomonas putida kt2440. Jul 2024. URL: https://doi.org/10.1016/j.ymben.2024.06.009, doi:10.1016/j.ymben.2024.06.009. This article has 23 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(civolani2000bioconversionofferulic pages 3-4): Claudio Civolani, Paolo Barghini, Anna Rita Roncetti, Maurizio Ruzzi, and Alma Schiesser. Bioconversion of ferulic acid into vanillic acid by means of a vanillate-negative mutant of pseudomonas fluorescens strain bf13. Applied and Environmental Microbiology, 66:2311-2317, Jun 2000. URL: https://doi.org/10.1128/aem.66.6.2311-2317.2000, doi:10.1128/aem.66.6.2311-2317.2000. This article has 159 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tuomela2025conversionandupgradinga pages 15-17): Heidi Tuomela, Johanna Koivisto, Elena Efimova, and Suvi Santala. Conversion and upgrading of s-lignin related syringate by acinetobacter baylyi adp1. Mar 2025. URL: https://doi.org/10.21203/rs.3.rs-6218493/v1, doi:10.21203/rs.3.rs-6218493/v1.</p>
+</li>
+</ol>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bleem2024evolutionandengineering pages 1-2</li>
+<li>bleem2024evolutionandengineering pages 2-3</li>
+<li>wolf2024thecatabolismof pages 1-3</li>
+<li>morawski2000substraterangeand pages 1-2</li>
+<li>donoso2022identificationofa pages 1-2</li>
+<li>merilainen2024carbonwiseutilizationof pages 1-2</li>
+<li>werner2023ligninconversionto pages 8-10</li>
+<li>erickson2022criticalenzymereactions pages 9-10</li>
+<li>ruhl2025productionofvanillin pages 5-7</li>
+<li>zhou2025quantitativeanalysisof pages 5-8</li>
+<li>gosling2024biocatalyticconversionof pages 76-80</li>
+<li>civolani2000bioconversionofferulic pages 3-4</li>
+<li>tuomela2025conversionandupgradinga pages 15-17</li>
+<li>2Fe–2S</li>
+<li>2Fe-2S</li>
+<li>https://doi.org/10.1016/j.ymben.2024.06.009</li>
+<li>https://doi.org/10.1128/aem.02155-23</li>
+<li>https://doi.org/10.1128/jb.182.5.1383-1389.2000</li>
+<li>https://doi.org/10.3390/microorganisms11010078</li>
+<li>https://doi.org/10.1186/s13068-024-02526-0</li>
+<li>https://doi.org/10.1126/sciadv.adj0053</li>
+<li>https://doi.org/10.1038/s41929-022-00747-w</li>
+<li>https://doi.org/10.1111/1751-7915.70152</li>
+<li>https://doi.org/10.1101/2025.03.24.645021</li>
+<li>https://doi.org/10.25916/sut.26291827</li>
+<li>https://doi.org/10.1128/aem.66.6.2311-2317.2000</li>
+<li>https://doi.org/10.21203/rs.3.rs-6218493/v1</li>
+<li>https://doi.org/10.1128/msystems.00942-23</li>
+<li>https://doi.org/10.1016/j.ymben.2024.06.009,</li>
+<li>https://doi.org/10.1128/aem.02155-23,</li>
+<li>https://doi.org/10.25916/sut.26291827,</li>
+<li>https://doi.org/10.1128/jb.182.5.1383-1389.2000,</li>
+<li>https://doi.org/10.3390/microorganisms11010078,</li>
+<li>https://doi.org/10.1186/s13068-024-02526-0,</li>
+<li>https://doi.org/10.1126/sciadv.adj0053,</li>
+<li>https://doi.org/10.1038/s41929-022-00747-w,</li>
+<li>https://doi.org/10.1111/1751-7915.70152,</li>
+<li>https://doi.org/10.1101/2025.03.24.645021,</li>
+<li>https://doi.org/10.1128/aem.66.6.2311-2317.2000,</li>
+<li>https://doi.org/10.21203/rs.3.rs-6218493/v1,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88GI5
+gene_symbol: vanB
+product_type: PROTEIN
+status: DRAFT
+aliases:
+- PP_3737
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: vanB encodes the reductase component of the VanAB two-component vanillate
+  O-demethylase in Pseudomonas putida KT2440. The protein is a flavin- and 2Fe-2S-containing
+  electron-transfer subunit that supplies reducing equivalents from NADH to the oxygenase
+  component VanA during conversion of vanillate to protocatechuate and formaldehyde.
+  The cofactor-binding calls are well supported by sequence features, whereas the
+  current GOA oxidoreductase annotation is too generic and should be narrowed to a
+  subunit-level redox role plus a complex-level vanillate monooxygenase annotation.
+existing_annotations:
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: This annotation captures the redox nature of VanB but is too generic
+      for a dedicated reductase subunit in a specific aromatic O-demethylase system.
+      A narrower subunit-level term is more informative.
+    action: MODIFY
+    reason: VanB is best described as an electron-transfer reductase subunit rather
+      than by the broad parent oxidoreductase term.
+    proposed_replacement_terms:
+    - id: GO:0009055
+      label: electron transfer activity
+    supported_by:
+    - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+      supporting_text: &#39;SubName: Full=Vanillate O-demethylase oxidoreductase&#39;
+- term:
+    id: GO:0051536
+    label: iron-sulfur cluster binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This parent term is not wrong, but the UniProt/InterPro evidence supports
+      a specific 2Fe-2S ferredoxin-type cofactor rather than an unspecified iron-sulfur
+      cluster.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0051537 captures the same feature more precisely and should be preferred
+      as the core cofactor-binding annotation.
+    supported_by:
+    - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+      supporting_text: DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;
+- term:
+    id: GO:0051537
+    label: 2 iron, 2 sulfur cluster binding
+  qualifier: enables
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: This is the strongest existing annotation. The C-terminal ferredoxin-type
+      domain and conserved cysteine motif support a bound 2Fe-2S cluster.
+    action: ACCEPT
+    reason: The UniProt record explicitly assigns a 2Fe-2S ferredoxin-type domain
+      and corresponding InterPro/PROSITE signatures.
+    supported_by:
+    - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+      supporting_text: DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;
+- term:
+    id: GO:0018489
+    label: vanillate monooxygenase activity
+  qualifier: contributes_to
+  evidence_type: IC
+  original_reference_id: PMID:33741529
+  review:
+    summary: vanB should carry a curator-proposed complex-level annotation to vanillate
+      monooxygenase activity. The gene product is the reductase subunit of the two-component
+      VanAB enzyme, so the proper qualifier is contributes_to rather than enables.
+    action: NEW
+    reason: The current GOA set misses the vanillate-specific catalytic context of
+      VanB. Adding the complex activity with a contributes_to qualifier is more informative
+      and avoids overclaiming that VanB alone performs the full monooxygenase reaction.
+    supported_by:
+    - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+      supporting_text: &#39;SubName: Full=Vanillate O-demethylase oxidoreductase&#39;
+    - reference_id: PMID:33741529
+      supporting_text_fulltext: Overexpression of vanAB enabled growth on syringate
+        as the sole carbon source ... syringate was found to be O-demethylated to
+        gallate by VanAB, a two-component monooxygenase ... the specificity (kcat/KM)
+        of VanAB for syringate was within 25% that for vanillate.
+      full_text_unavailable: true
+core_functions:
+- description: VanB is the flavin/2Fe-2S electron-transfer subunit of the VanAB two-component
+    enzyme that channels reducing equivalents from NADH to the oxygenase component
+    during vanillate O-demethylation.
+  molecular_function:
+    id: GO:0009055
+    label: electron transfer activity
+  contributes_to_molecular_function:
+    id: GO:0018489
+    label: vanillate monooxygenase activity
+  supported_by:
+  - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+    supporting_text: &#39;SubName: Full=Vanillate O-demethylase oxidoreductase&#39;
+  - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+    supporting_text: &#39;CC   -!- COFACTOR: ... Name=FMN&#39;
+  - reference_id: file:PSEPK/vanB/vanB-uniprot.txt
+    supporting_text: DOMAIN          229..316 ... /note=&#34;2Fe-2S ferredoxin-type&#34;
+  - reference_id: PMID:33741529
+    supporting_text_fulltext: Overexpression of vanAB enabled growth on syringate
+      as the sole carbon source ... syringate was found to be O-demethylated to gallate
+      by VanAB, a two-component monooxygenase ... the specificity (kcat/KM) of VanAB
+      for syringate was within 25% that for vanillate.
+    full_text_unavailable: true
+proposed_new_terms:
+- proposed_name: vanillate catabolic process
+  proposed_definition: The chemical reactions and pathways resulting in the breakdown
+    of vanillate (4-hydroxy-3-methoxybenzoate), typically by O-demethylation to protocatechuate
+    and formaldehyde.
+  justification: GO already contains the molecular function term vanillate monooxygenase
+    activity (GO:0018489) but lacks a matching biological process term for the catabolic
+    step catalyzed by VanAB and related systems.
+suggested_questions:
+- question: Does VanB transfer electrons exclusively within the VanAB complex, or
+    can it reduce free flavins or alternative oxygenases in vivo?
+  experts:
+  - Bacterial redox enzymologists
+  - Aromatic catabolism researchers
+- question: Under native KT2440 expression levels, how much VanAB activity is devoted
+    to vanillate versus promiscuous substrates such as syringate or 3-O-methylgallate?
+  experts:
+  - Pseudomonas metabolism researchers
+  - Lignin valorization groups
+suggested_experiments:
+- description: Reconstitute purified VanA and VanB separately and together to measure
+    NADH oxidation, flavin reduction, and vanillate O-demethylation and thereby resolve
+    the subunit-specific electron-transfer step.
+- description: Compare vanB deletion and complementation strains on vanillate, ferulate-derived
+    vanillate, and syringate co-metabolism to distinguish the physiological substrate
+    range from the enzyme&#39;s broader catalytic promiscuity.
+- description: Measure VanB cofactor occupancy and redox properties by UV-visible
+    spectroscopy and EPR to confirm the predicted FMN and 2Fe-2S centers.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms.
+  findings:
+  - statement: InterPro2GO supports generic redox and cofactor terms for the VanB
+      reductase subunit, but the annotations need refinement to the 2Fe-2S electron-transfer
+      context.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods.
+  findings:
+  - statement: The combined UniProt automated pipeline supplies broad oxidoreductase
+      terms; curator review narrows VanB to its reductase and electron-transfer role
+      in VanAB.
+- id: PMID:12534463
+  title: Complete genome sequence and comparative analysis of the metabolically versatile
+    Pseudomonas putida KT2440.
+  findings:
+  - statement: Provides the genome context and original sequence source for the PP_3737
+      locus in Pseudomonas putida KT2440.
+- id: PMID:33741529
+  title: Metabolism of Syringyl Lignin-Derived Compounds in Pseudomonas putida Enables
+    Convergent Production of 2-Pyrone-4,6-Dicarboxylic Acid.
+  findings:
+  - statement: VanAB is a two-component monooxygenase in KT2440, and kinetic analysis
+      in that study treated vanillate as a native substrate.
+    full_text_unavailable: true
+- id: file:PSEPK/vanB/vanB-uniprot.txt
+  title: UniProt entry Q88GI5
+  findings:
+  - statement: UniProt names vanB/PP_3737 as vanillate O-demethylase oxidoreductase.
+  - statement: The protein is predicted to bind FMN and contains a 2Fe-2S ferredoxin-type
+      domain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>naa50 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>naa50</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6DBY2" target="_blank" class="term-link">
+                        Q6DBY2
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Danio rerio</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "naa50";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6DBY2" data-a="DESCRIPTION: naa50 encodes N-alpha-acetyltransferase 50/NAT13, ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>naa50 encodes N-alpha-acetyltransferase 50/NAT13, an N-terminal methionine/protein amino-acid acetyltransferase associated with embryonic growth and cell proliferation. The core function is protein N-terminal acetylation; sister-chromatid cohesion annotations are retained as non-core transferred roles and the zebrafish somitogenesis annotation is left undecided because the accessible abstract supports embryonic growth/vascular defects rather than a specific somitogenesis mechanism.</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031415" target="_blank" class="term-link">
+                                    GO:0031415
+                                </a>
+                            </span>
+                            <span class="term-label">NatA complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0031415" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NatA complex (GO:0031415) is retained as complex context but is not the core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The core activity is N-terminal protein acetyltransferase; complex membership is contextual.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007064" target="_blank" class="term-link">
+                                    GO:0007064
+                                </a>
+                            </span>
+                            <span class="term-label">mitotic sister chromatid cohesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0007064" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitotic sister chromatid cohesion (GO:0007064) is supported by transferred NAA50 biology but is not the core enzymatic role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for sister chromatid</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleus (GO:0005634) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytoplasm (GO:0005737) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006338" target="_blank" class="term-link">
+                                    GO:0006338
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin remodeling</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0006338" data-r="GO_REF:0000108" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> chromatin remodeling (GO:0006338) is not supported as the Naa50 process and should not be modified across GO aspects.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The supported function is N-terminal protein acetyltransferase activity and N-terminal protein amino-acid acetylation, which are already reviewed separately; chromatin remodeling should be retired rather than replaced with MF terms.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> acyltransferase activity, transferring groups other than amino-acyl groups (GO:0016747) is too broad or off-target for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The supported activity/process is N-terminal protein acetyltransferase activity and N-terminal protein amino acid acetylation.
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120518" target="_blank" class="term-link">
+                                    protein N-terminal-methionine acetyltransferase activity
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004596" target="_blank" class="term-link">
+                                    protein-N-terminal amino-acid acetyltransferase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120518" target="_blank" class="term-link">
+                                    GO:0120518
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-terminal-methionine acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0120518" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> protein N-terminal-methionine acetyltransferase activity (GO:0120518) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleus (GO:0005634) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytoplasm (GO:0005737) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0005829" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytosol (GO:0005829) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006474" target="_blank" class="term-link">
+                                    GO:0006474
+                                </a>
+                            </span>
+                            <span class="term-label">N-terminal protein amino acid acetylation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0006474" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> N-terminal protein amino acid acetylation (GO:0006474) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034087" target="_blank" class="term-link">
+                                    GO:0034087
+                                </a>
+                            </span>
+                            <span class="term-label">establishment of mitotic sister chromatid cohesion</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0034087" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> establishment of mitotic sister chromatid cohesion (GO:0034087) is supported by transferred NAA50 biology but is not the core enzymatic role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for sister chromatid</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004596" target="_blank" class="term-link">
+                                    GO:0004596
+                                </a>
+                            </span>
+                            <span class="term-label">protein-N-terminal amino-acid acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0004596" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> protein-N-terminal amino-acid acetyltransferase activity (GO:0004596) is supported for Naa50.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010485" target="_blank" class="term-link">
+                                    GO:0010485
+                                </a>
+                            </span>
+                            <span class="term-label">histone H4 acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0010485" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> histone H4 acetyltransferase activity (GO:0010485) is over-specific for the Naa50 evidence.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt supports N-terminal methionine/protein acetyltransferase activity and notes N-epsilon activity is unclear; histone H4 specificity is not the best supported function here.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061733" target="_blank" class="term-link">
+                                    GO:0061733
+                                </a>
+                            </span>
+                            <span class="term-label">protein-lysine-acetyltransferase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0061733" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> protein-lysine-acetyltransferase activity (GO:0061733) is retained as a possible secondary lysine acetyltransferase property, not the core function.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> UniProt notes N-epsilon-acetyltransferase activity by similarity but says its relevance is unclear.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">N-epsilon-acetyltransferase activity</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">relevance of N-epsilon-acetyltransferase activity</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071962" target="_blank" class="term-link">
+                                    GO:0071962
+                                </a>
+                            </span>
+                            <span class="term-label">mitotic sister chromatid cohesion, centromeric</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000024
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0071962" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitotic sister chromatid cohesion, centromeric (GO:0071962) is supported by transferred NAA50 biology but is not the core enzymatic role.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:DANRE/naa50/naa50-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Required for sister chromatid</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001756" target="_blank" class="term-link">
+                                    GO:0001756
+                                </a>
+                            </span>
+                            <span class="term-label">somitogenesis</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16484612
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Embryonic growth-associated protein is one subunit of a nove...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DBY2" data-a="GO:0001756" data-r="PMID:16484612" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> somitogenesis (GO:0001756) is not sufficiently supported by the accessible cached abstract.
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The cached abstract supports embryonic growth, vascular defects, proliferation, and lethality, but not a specific somitogenesis mechanism; full text would be needed to decide.
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                        PMID:16484612
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">fail to develop because of, in part, decreased cell proliferation</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>naa50 catalyzes N-terminal methionine/protein amino-acid acetylation using acetyl-CoA.</h3>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="FUNCTION: naa50 catalyzes N-terminal methionine/protein amin..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120518" target="_blank" class="term-link">
+                            protein N-terminal-methionine acetyltransferase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006474" target="_blank" class="term-link">
+                                N-terminal protein amino acid acetylation
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DANRE/naa50/naa50-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">N-alpha-acetyltransferase that acetylates the N-terminus</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:DANRE/naa50/naa50-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reaction=N-terminal L-methionyl-L-alanyl-[protein]</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                                PMID:16484612
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Naa50 matches InterPro signature IPR000182 (GNAT acetyltransferase domain); the InterPro2GO mapping assigns acyltransferase activity, transferring groups other than amino-acyl groups (GO:0016747).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Localization (GO:0005634 nucleus, GO:0005737 cytoplasm, GO:0005829 cytosol), N-terminal protein amino acid acetylation (GO:0006474), protein-N-terminal amino-acid acetyltransferase activity (GO:0004596), histone H4 acetyltransferase activity (GO:0010485), protein-lysine-acetyltransferase activity (GO:0061733), and mitotic sister chromatid cohesion roles (GO:0034087, GO:0071962) were transferred to zebrafish Naa50 by curator-judged sequence similarity to human NAA50 (UniProtKB:Q9GZZ1).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Phylogenetic inference within PANTHER family PTN000558165 supports Naa50 membership in the NatA complex (GO:0031415) and a role in mitotic sister chromatid cohesion (GO:0007064).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The UniProt Swiss-Prot subcellular location keywords SL-0191 (Nucleus) and SL-0086 (Cytoplasm) map Naa50 to nucleus (GO:0005634) and cytoplasm (GO:0005737).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Logical inference over inter-ontology links derives chromatin remodeling (GO:0006338) from the histone H4 acetyltransferase activity (GO:0010485) annotation.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA evidence (RHEA reactions 50520-50580 and EC 2.3.1.258) assigns Naa50 protein N-terminal-methionine acetyltransferase activity (GO:0120518).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" target="_blank" class="term-link">
+                            PMID:16484612
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Embryonic growth-associated protein is one subunit of a novel N-terminal acetyltransferase complex essential for embryonic vascular development.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The zebrafish embryonic growth-associated protein corresponds to Naa50, a subunit of a novel N-terminal acetyltransferase complex; depleted embryos fail to develop, in part because of decreased cell proliferation, indicating an essential role in embryonic growth and vascular development.</div>
+                        
+                        <div class="finding-text">"N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:DANRE/naa50/naa50-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProtKB entry Q6DBY2 for Danio rerio naa50</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes Naa50 as an N-alpha-acetyltransferase acting on protein N-termini.</div>
+                        
+                        <div class="finding-text">"N-alpha-acetyltransferase that acetylates the N-terminus"</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does zebrafish Naa50 act predominantly as the catalytic NatE subunit on methionine-retaining N-termini, or does it also contribute substantial N-epsilon (lysine) acetyltransferase activity in vivo?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="Q: Does zebrafish Naa50 act predominantly as the cata..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the somitogenesis phenotype of naa50-deficient zebrafish a direct consequence of impaired N-terminal acetylation, or a secondary effect of the general embryonic growth and proliferation defect?</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="Q: Is the somitogenesis phenotype of naa50-deficient ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Assay purified Naa50 against synthetic N-terminal peptides (Met-Leu-, Met-Ala-, Met-Lys-, etc.) and internal-lysine substrates and quantify acetyl transfer to define substrate specificity.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Recombinant zebrafish Naa50 acetylates protein N-termini bearing a retained initiator methionine (NatE-type substrates) with little or no lysine epsilon-acetylation.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="EXPERIMENT: Assay purified Naa50 against synthetic N-terminal ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Rescue naa50 morphant or mutant zebrafish with wild-type versus catalytically dead naa50 mRNA and score somite formation, vascular development, and proliferation.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The somitogenesis and vascular defects of naa50-deficient embryos require Naa50 catalytic activity.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="EXPERIMENT: Rescue naa50 morphant or mutant zebrafish with wil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Deplete naa50 in zebrafish embryos and assess premature sister chromatid separation and mitotic progression by chromosome spreads and live imaging.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Naa50 supports mitotic sister chromatid cohesion in zebrafish, as inferred from its orthologs.</em></p>
+                    
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q6DBY2" data-a="EXPERIMENT: Deplete naa50 in zebrafish embryos and assess prem..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+
+    <!-- Additional Documentation Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+        
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(naa50-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6DBY2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="naa50-review-notes">naa50 review notes</h1>
+<ul>
+<li>Curated in DANRE batch 04. Naa50 is curated around N-terminal protein acetylation. I did not force-accept the somitogenesis annotation because the cached abstract supports embryonic growth/vascular lethality and cell proliferation but not a specific somite mechanism <a href="https://pubmed.ncbi.nlm.nih.gov/16484612" title="N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases">PMID:16484612</a>.</li>
+<li>Follow-up: changed chromatin remodeling BP from cross-aspect MODIFY to REMOVE.</li>
+</ul>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6DBY2
+gene_symbol: naa50
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7955
+  label: Danio rerio
+description: naa50 encodes N-alpha-acetyltransferase 50/NAT13, an N-terminal methionine/protein amino-acid acetyltransferase
+  associated with embryonic growth and cell proliferation. The core function is protein N-terminal acetylation; sister-chromatid
+  cohesion annotations are retained as non-core transferred roles and the zebrafish somitogenesis annotation is left undecided
+  because the accessible abstract supports embryonic growth/vascular defects rather than a specific somitogenesis mechanism.
+existing_annotations:
+- term:
+    id: GO:0031415
+    label: NatA complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: NatA complex (GO:0031415) is retained as complex context but is not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: The core activity is N-terminal protein acetyltransferase; complex membership is contextual.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0007064
+    label: mitotic sister chromatid cohesion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  review:
+    summary: mitotic sister chromatid cohesion (GO:0007064) is supported by transferred NAA50 biology but is not the core
+      enzymatic role.
+    action: KEEP_AS_NON_CORE
+    reason: Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Required for sister chromatid
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: nucleus (GO:0005634) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  review:
+    summary: cytoplasm (GO:0005737) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0006338
+    label: chromatin remodeling
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  review:
+    summary: chromatin remodeling (GO:0006338) is not supported as the Naa50 process and should not be modified across GO
+      aspects.
+    action: REMOVE
+    reason: The supported function is N-terminal protein acetyltransferase activity and N-terminal protein amino-acid acetylation,
+      which are already reviewed separately; chromatin remodeling should be retired rather than replaced with MF terms.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  review:
+    summary: acyltransferase activity, transferring groups other than amino-acyl groups (GO:0016747) is too broad or off-target
+      for Naa50.
+    action: MODIFY
+    reason: The supported activity/process is N-terminal protein acetyltransferase activity and N-terminal protein amino acid
+      acetylation.
+    proposed_replacement_terms:
+    - id: GO:0120518
+      label: protein N-terminal-methionine acetyltransferase activity
+    - id: GO:0004596
+      label: protein-N-terminal amino-acid acetyltransferase activity
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0120518
+    label: protein N-terminal-methionine acetyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: protein N-terminal-methionine acetyltransferase activity (GO:0120518) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: nucleus (GO:0005634) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: cytoplasm (GO:0005737) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: cytosol (GO:0005829) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0006474
+    label: N-terminal protein amino acid acetylation
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: N-terminal protein amino acid acetylation (GO:0006474) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0034087
+    label: establishment of mitotic sister chromatid cohesion
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: establishment of mitotic sister chromatid cohesion (GO:0034087) is supported by transferred NAA50 biology but
+      is not the core enzymatic role.
+    action: KEEP_AS_NON_CORE
+    reason: Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Required for sister chromatid
+- term:
+    id: GO:0004596
+    label: protein-N-terminal amino-acid acetyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: protein-N-terminal amino-acid acetyltransferase activity (GO:0004596) is supported for Naa50.
+    action: ACCEPT
+    reason: Naa50 is an N-terminal protein acetyltransferase localized to cytoplasm/nucleus.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0010485
+    label: histone H4 acetyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: histone H4 acetyltransferase activity (GO:0010485) is over-specific for the Naa50 evidence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: UniProt supports N-terminal methionine/protein acetyltransferase activity and notes N-epsilon activity is unclear;
+      histone H4 specificity is not the best supported function here.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+    - reference_id: PMID:16484612
+      supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- term:
+    id: GO:0061733
+    label: protein-lysine-acetyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: protein-lysine-acetyltransferase activity (GO:0061733) is retained as a possible secondary lysine acetyltransferase
+      property, not the core function.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt notes N-epsilon-acetyltransferase activity by similarity but says its relevance is unclear.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: N-epsilon-acetyltransferase activity
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: relevance of N-epsilon-acetyltransferase activity
+- term:
+    id: GO:0071962
+    label: mitotic sister chromatid cohesion, centromeric
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  review:
+    summary: mitotic sister chromatid cohesion, centromeric (GO:0071962) is supported by transferred NAA50 biology but is
+      not the core enzymatic role.
+    action: KEEP_AS_NON_CORE
+    reason: Sister chromatid cohesion is downstream/contextual relative to N-terminal acetyltransferase activity.
+    supported_by:
+    - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+      supporting_text: Required for sister chromatid
+- term:
+    id: GO:0001756
+    label: somitogenesis
+  evidence_type: IMP
+  original_reference_id: PMID:16484612
+  review:
+    summary: somitogenesis (GO:0001756) is not sufficiently supported by the accessible cached abstract.
+    action: UNDECIDED
+    reason: The cached abstract supports embryonic growth, vascular defects, proliferation, and lethality, but not a specific
+      somitogenesis mechanism; full text would be needed to decide.
+    supported_by:
+    - reference_id: PMID:16484612
+      supporting_text: fail to develop because of, in part, decreased cell proliferation
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: Naa50 matches InterPro signature IPR000182 (GNAT acetyltransferase
+      domain); the InterPro2GO mapping assigns acyltransferase activity, transferring
+      groups other than amino-acyl groups (GO:0016747).
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence
+    similarity
+  findings:
+  - statement: Localization (GO:0005634 nucleus, GO:0005737 cytoplasm, GO:0005829
+      cytosol), N-terminal protein amino acid acetylation (GO:0006474), protein-N-terminal
+      amino-acid acetyltransferase activity (GO:0004596), histone H4 acetyltransferase
+      activity (GO:0010485), protein-lysine-acetyltransferase activity (GO:0061733),
+      and mitotic sister chromatid cohesion roles (GO:0034087, GO:0071962) were transferred
+      to zebrafish Naa50 by curator-judged sequence similarity to human NAA50 (UniProtKB:Q9GZZ1).
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: Phylogenetic inference within PANTHER family PTN000558165 supports
+      Naa50 membership in the NatA complex (GO:0031415) and a role in mitotic sister
+      chromatid cohesion (GO:0007064).
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative
+    changes to GO terms applied by UniProt
+  findings:
+  - statement: The UniProt Swiss-Prot subcellular location keywords SL-0191 (Nucleus)
+      and SL-0086 (Cytoplasm) map Naa50 to nucleus (GO:0005634) and cytoplasm (GO:0005737).
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology links
+  findings:
+  - statement: Logical inference over inter-ontology links derives chromatin remodeling
+      (GO:0006338) from the histone H4 acetyltransferase activity (GO:0010485) annotation.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined IEA evidence (RHEA reactions 50520-50580 and EC 2.3.1.258)
+      assigns Naa50 protein N-terminal-methionine acetyltransferase activity (GO:0120518).
+- id: PMID:16484612
+  title: Embryonic growth-associated protein is one subunit of a novel N-terminal acetyltransferase complex essential for
+    embryonic vascular development.
+  findings:
+  - statement: The zebrafish embryonic growth-associated protein corresponds to Naa50,
+      a subunit of a novel N-terminal acetyltransferase complex; depleted embryos
+      fail to develop, in part because of decreased cell proliferation, indicating
+      an essential role in embryonic growth and vascular development.
+    supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+- id: file:DANRE/naa50/naa50-uniprot.txt
+  title: UniProtKB entry Q6DBY2 for Danio rerio naa50
+  findings:
+  - statement: UniProt describes Naa50 as an N-alpha-acetyltransferase acting on protein N-termini.
+    supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+core_functions:
+- description: naa50 catalyzes N-terminal methionine/protein amino-acid acetylation using acetyl-CoA.
+  molecular_function:
+    id: GO:0120518
+    label: protein N-terminal-methionine acetyltransferase activity
+  directly_involved_in:
+  - id: GO:0006474
+    label: N-terminal protein amino acid acetylation
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+    supporting_text: N-alpha-acetyltransferase that acetylates the N-terminus
+  - reference_id: file:DANRE/naa50/naa50-uniprot.txt
+    supporting_text: Reaction=N-terminal L-methionyl-L-alanyl-[protein]
+  - reference_id: PMID:16484612
+    supporting_text: N-terminal protein acetylation, catalyzed by N-terminal acetyltransferases
+suggested_questions:
+- question: Does zebrafish Naa50 act predominantly as the catalytic NatE subunit on
+    methionine-retaining N-termini, or does it also contribute substantial N-epsilon
+    (lysine) acetyltransferase activity in vivo?
+- question: Is the somitogenesis phenotype of naa50-deficient zebrafish a direct consequence
+    of impaired N-terminal acetylation, or a secondary effect of the general embryonic
+    growth and proliferation defect?
+suggested_experiments:
+- hypothesis: Recombinant zebrafish Naa50 acetylates protein N-termini bearing a retained
+    initiator methionine (NatE-type substrates) with little or no lysine epsilon-acetylation.
+  description: Assay purified Naa50 against synthetic N-terminal peptides (Met-Leu-,
+    Met-Ala-, Met-Lys-, etc.) and internal-lysine substrates and quantify acetyl transfer
+    to define substrate specificity.
+- hypothesis: The somitogenesis and vascular defects of naa50-deficient embryos require
+    Naa50 catalytic activity.
+  description: Rescue naa50 morphant or mutant zebrafish with wild-type versus catalytically
+    dead naa50 mRNA and score somite formation, vascular development, and proliferation.
+- hypothesis: Naa50 supports mitotic sister chromatid cohesion in zebrafish, as inferred
+    from its orthologs.
+  description: Deplete naa50 in zebrafish embryos and assess premature sister chromatid
+    separation and mitotic progression by chromosome spreads and live imaging.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

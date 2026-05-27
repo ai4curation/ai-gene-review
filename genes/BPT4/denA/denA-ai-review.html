@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P07059 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>P07059</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P07059" target="_blank" class="term-link">
+                        P07059
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Enterobacteria phage T4</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "P07059";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P07059" data-a="DESCRIPTION: TODO: Add description for P07059..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TODO: Add description for P07059</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0003677" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004518" target="_blank" class="term-link">
+                                    GO:0004518
+                                </a>
+                            </span>
+                            <span class="term-label">nuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0004518" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004519" target="_blank" class="term-link">
+                                    GO:0004519
+                                </a>
+                            </span>
+                            <span class="term-label">endonuclease activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0004519" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0016787" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0039657" target="_blank" class="term-link">
+                                    GO:0039657
+                                </a>
+                            </span>
+                            <span class="term-label">symbiont-mediated suppression of host gene expression</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0039657" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0046872" data-r="GO_REF:0000120" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0099015" target="_blank" class="term-link">
+                                    GO:0099015
+                                </a>
+                            </span>
+                            <span class="term-label">degradation of host chromosome by virus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-pending">
+                            PENDING
+                        </span>
+                        <span class="vote-buttons" data-g="P07059" data-a="GO:0099015" data-r="GO_REF:0000043" data-act="PENDING">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TODO: Review this GOA annotation
+                        </div>
+                        
+                        
+                        
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(denA-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P07059" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Functional Annotation Research Report: **denA** (UniProt **P07059**) from **Enterobacteria phage T4**</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">35 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-22T01:06:58.071082</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="denA-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="denA-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000034 Figure 3 displays the cleavage frequencies (%) at various EndoII-dependent restriction sites in pBR322 DNA, along with the specific</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-research-report-dena-uniprot-p07059-from-enterobacteria-phage-t4">Functional Annotation Research Report: <strong>denA</strong> (UniProt <strong>P07059</strong>) from <strong>Enterobacteria phage T4</strong></h1>
+<h2 id="0-target-verification-mandatory-disambiguation">0. Target verification (mandatory disambiguation)</h2>
+<p>Multiple independent primary sources explicitly link <strong>T4 gene denA</strong> to <strong>Endonuclease II (EndoII)</strong>, a <strong>GIY–YIG</strong> nuclease involved in host-DNA degradation during T4 infection, matching the UniProt-provided identity (Endonuclease II; EC 3.1.21.8; phage T4). Carlson et al. mapped <strong>EndoII-dependent cleavage</strong> in vivo and state the enzyme is encoded by <strong>denA</strong> (Carlson 1993) (carlson1993dnadeterminantsof pages 1-2). Lagerbäck et al. explicitly state EndoII is encoded by <strong>gene denA</strong> and analyze it as a <strong>GIY–YIG</strong> nuclease (Lagerbäck 2009) (lagerback2009bacteriophaget4endonuclease pages 1-2). Kutter et al. likewise describe <strong>denA → endonuclease II</strong> as the initiating nuclease in T4-mediated host DNA degradation (Kutter 2018) (kutter2018fromhostto pages 6-9).</p>
+<h2 id="1-key-concepts-and-current-understanding">1. Key concepts and current understanding</h2>
+<h3 id="11-what-denaendonuclease-ii-is">1.1 What DenA/Endonuclease II is</h3>
+<p><strong>DenA (Endonuclease II; EndoII)</strong> is a phage-encoded, sequence-context-sensitive DNA endonuclease of the <strong>GIY–YIG nuclease superfamily</strong> that initiates degradation (“restriction”) of <strong>cytosine-containing, unmodified host DNA</strong> during T4 infection. T4 protects its own genome from this activity by replacing cytosine with <strong>hydroxymethylcytosine</strong> (and glucosylating it), enabling discrimination between host and phage DNA during takeover (kutter2018fromhostto pages 6-9, lagerback2009bacteriophaget4endonuclease pages 1-2, carlson1993dnadeterminantsof pages 1-2).</p>
+<h3 id="12-reaction-type-and-products">1.2 Reaction type and products</h3>
+<p>In vivo mapping demonstrates that EndoII produces <strong>double-strand breaks</strong> at preferred sites but with short staggering: cleavage products include <strong>blunt ends or 1–2 nt 5′ overhangs</strong>, with cleavage occurring most frequently around a variable central base pair in the motif (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 4-5). In vivo, the breakpoints often involve adjacent interruptions in both strands displaced by <strong>0–2 bp</strong> (carlson1993dnadeterminantsof pages 4-5).</p>
+<h3 id="13-site-preference-substrate-specificity-sequence-determinants">1.3 Site preference (substrate specificity / sequence determinants)</h3>
+<p>EndoII exhibits <strong>sequence-dependent site preference</strong> rather than strict specificity. Carlson et al. derived a consensus from 12 in vivo cleavage sites in pBR322:<br />
+- <strong>Unweighted consensus:</strong> 5′-<strong>GRCCGCNTYGC</strong>-3′<br />
+- <strong>Weighted consensus (more frequently cleaved sites):</strong> 5′-<strong>CGRCCGCNTTGSYNGC</strong>-3′<br />
+(carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 7-8, carlson1993dnadeterminantsof media 89cd4389).</p>
+<p>A follow-up synthetic-site study concluded that a <strong>16-bp variable sequence</strong> is sufficient to direct cleavage, with a highly cleaved motif described as <strong>CGRCCGCNTTGGCNGC</strong>, and that both local sequence/shape and longer-range context influence cleavage efficiency (carlson1996shortrangeandlongrange pages 1-2).</p>
+<h3 id="14-giyyig-catalytic-fold-and-oligomerization">1.4 GIY–YIG catalytic fold and oligomerization</h3>
+<p>Lagerbäck et al. show that EndoII behaves unusually among many GIY–YIG enzymes by forming an active <strong>tetrameric</strong> DNA complex that can bind <strong>two DNA molecules</strong> at once (lagerback2009bacteriophaget4endonuclease pages 1-2, lagerback2009bacteriophaget4endonuclease pages 7-8). In solution it is mainly <strong>dimeric</strong> at low ionic strength but shifts toward tetramers at higher salt, consistent with a dimer–tetramer equilibrium (lagerback2009bacteriophaget4endonuclease pages 2-4, lagerback2009bacteriophaget4endonuclease pages 7-8). A catalytic-surface residue <strong>E118</strong> is implicated in catalysis and also affects DNA binding: the <strong>E118A</strong> variant can bind stably as monomer/dimer to a single DNA substrate (lagerback2009bacteriophaget4endonuclease pages 1-2).</p>
+<h2 id="2-mechanistic-evidence-from-primary-studies-function-specificity-pathway">2. Mechanistic evidence from primary studies (function, specificity, pathway)</h2>
+<h3 id="21-in-vivo-restrictioncleavage-of-cytosine-dna">2.1 In vivo restriction/cleavage of cytosine DNA</h3>
+<p>Carlson et al. (1993-04-??; <em>J Biol Chem</em>; https://doi.org/10.1016/S0021-9258(18)52959-8) demonstrated EndoII-dependent restriction cleavage of plasmid DNA in T4-infected cells, identifying <strong>12 double-stranded restriction sites</strong> in pBR322 and reporting that cleavage <strong>commenced before 10 min postinfection</strong> at 37°C (carlson1993dnadeterminantsof pages 1-2). Site-to-site cleavage efficiency varied substantially, with reported frequencies spanning <strong>10–90% at 50 min</strong> postinfection (carlson1993dnadeterminantsof pages 1-2). In a sequenced subset, cleavage frequencies varied <strong>25–65%</strong> and cleavage generated a <strong>2-base 5′ overhang</strong> at those sites (carlson1993dnadeterminantsof pages 2-2). </p>
+<h3 id="22-short-and-long-range-context-effects">2.2 Short- and long-range context effects</h3>
+<p>Carlson et al. (1996-11; <em>J Bacteriol</em>; https://doi.org/10.1128/jb.178.22.6419-6426.1996) show that recognition is not “position-wise additive”: a synthetic site composed of the most preferred base at each position was nevertheless cleaved poorly, implying that multiple base combinations can satisfy recognition requirements and that sequence-dependent DNA structure contributes (carlson1996shortrangeandlongrange pages 1-2). They also found that inserting a strong synthetic site reduced cleavage at natural sites within <strong>~800–1,500 bp</strong>, supporting a model where EndoII engages a larger DNA region and cleaves the best available site within that region (carlson1996shortrangeandlongrange pages 1-2).</p>
+<h3 id="23-in-vitro-binding-state-and-two-mode-cleavage-model">2.3 In vitro binding state and two-mode cleavage model</h3>
+<p>Lagerbäck et al. (2009-08; <em>Nucleic Acids Res</em>; https://doi.org/10.1093/nar/gkp652) provide biochemical evidence that the <strong>DNA-bound species is a tetramer</strong> that binds <strong>two DNA substrates</strong> (lagerback2009bacteriophaget4endonuclease pages 7-8). Gel filtration showed peaks consistent with <strong>dimer (~35 kDa)</strong> and <strong>tetramer (~74.7 kDa)</strong> and an enzyme–DNA complex at <strong>~170 kDa</strong>, consistent with a <strong>tetramer + two DNAs</strong> (expected ~179 kDa) (lagerback2009bacteriophaget4endonuclease pages 6-7, lagerback2009bacteriophaget4endonuclease pages 7-8). Stable binding required <strong>&gt;30 bp</strong> of DNA; a 24-bp duplex containing the site gave erratic nicking and no stable shifts, whereas a 44-bp substrate was reproducibly nicked (lagerback2009bacteriophaget4endonuclease pages 2-4).</p>
+<p>Mechanistically, Lagerbäck et al. describe two catalytic modes: a predominant <strong>single-strand nicking</strong> mode (mode I; prominent in vitro), and a mode capable of nicking both strands in one functional complex (mode II), which is considered more observable in vivo because nicks are rapidly repaired; even limited double-strand cleavage is sufficient to trigger extensive host DNA degradation by downstream exonucleases (lagerback2009bacteriophaget4endonuclease pages 9-9).</p>
+<h2 id="3-role-during-infection-pathway-placement-timing-and-localization">3. Role during infection: pathway placement, timing, and localization</h2>
+<h3 id="31-biological-role-initiating-host-dna-degradation-and-nucleotide-scavenging">3.1 Biological role: initiating host DNA degradation and nucleotide scavenging</h3>
+<p>DenA/EndoII is positioned at the <strong>initiation step</strong> of T4 host DNA degradation, producing rare nicks in host DNA that enable further processing. Kutter et al. (2018-07; <em>Viruses</em>; https://doi.org/10.3390/v10070387) synthesize decades of work into a pathway model: <strong>DenA (EndoII)</strong> makes rare nicks; the resulting single-stranded regions are substrates for <strong>DenB (Endonuclease IV)</strong>, which cuts cytosine-containing stretches of ssDNA; subsequent breakdown is driven by a strong exonuclease activity associated with phage genes <strong>46/47</strong> (kutter2018fromhostto pages 6-9). This supports a functional annotation of DenA as a targeted initiator of host genome fragmentation that feeds <strong>nucleotide salvage</strong> for phage DNA synthesis (kutter2018fromhostto pages 6-9).</p>
+<h3 id="32-timing">3.2 Timing</h3>
+<p>Direct in vivo cleavage mapping indicates EndoII-dependent restriction cleavage begins <strong>before 10 min</strong> postinfection (carlson1993dnadeterminantsof pages 1-2). Kutter et al. emphasize that host DNA degradation is mainly observed <strong>~6–20 min</strong> postinfection in classical experiments (kutter2018fromhostto pages 6-9). In stationary-phase infections using radiolabeling and a DNA polymerase amber mutant, host DNA breakdown reached <strong>40% acid-soluble at 60 min</strong> and <strong>60% at 120 min</strong>, demonstrating that when phage DNA synthesis is blocked, extensive degradation is measurable; in wild-type infections only ~<strong>10%</strong> reduction was detected because host nucleotides are rapidly reincorporated into phage DNA (kutter2018fromhostto pages 9-12).</p>
+<h3 id="33-localization">3.3 Localization</h3>
+<p>The DenA product functions <strong>intracellularly</strong> during infection, acting on host plasmid/chromosomal DNA in the infected bacterium (demonstrated by in vivo cleavage of plasmid pBR322 inside infected cells) (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 2-4). At the resolution supported by these data, DenA acts in the infected-cell cytosol/nucleoid region where host DNA resides.</p>
+<h2 id="4-quantitative-summary-of-key-evidence">4. Quantitative summary of key evidence</h2>
+<p>The following table compiles the most direct functional-annotation measurements (cleavage consensus, timing, cleavage frequency, oligomeric state and binding stoichiometry, and relevant assay parameters) from primary sources.</p>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Key finding</th>
+<th>Quantitative details/statistics</th>
+<th>Source (author year journal) and URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>In vivo cleavage mapping</td>
+<td>T4 <strong>denA</strong> encodes Endonuclease II (EndoII), which cleaves cytosine-containing plasmid DNA at sequence-dependent sites in infected cells; cleavage occurs around a central variable base pair and yields blunt ends or short 5' overhangs. Consensus motifs derived from mapped sites were <strong>5'-GRCCGCNTYGC-3'</strong> and weighted <strong>5'-CGRCCGCNTTGSYNGC-3'</strong>. (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof media 89cd4389)</td>
+<td>Cleavage at <strong>12 sites</strong> in pBR322; starts <strong>before 10 min postinfection</strong> at 37°C; site-specific cleavage frequencies ranged <strong>10–90% by 50 min</strong>; sequenced sites showed <strong>25–65%</strong> cleavage; products had <strong>0–2 bp</strong> strand displacement / <strong>1–2 nt 5' overhangs</strong>. (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 2-2, carlson1993dnadeterminantsof pages 4-5)</td>
+<td>Carlson et al. 1993, <em>J. Biol. Chem.</em> (1993-04). https://doi.org/10.1016/S0021-9258(18)52959-8</td>
+</tr>
+<tr>
+<td>In vitro binding/oligomerization</td>
+<td>EndoII is a <strong>GIY-YIG nuclease</strong> that binds DNA predominantly as a <strong>tetramer engaging two DNA substrates</strong>; free enzyme is mainly dimeric at low ionic strength and shifts toward tetramers at higher salt. The catalytic-surface mutant <strong>E118A</strong> uniquely forms monomer/dimer complexes on a single DNA. (lagerback2009bacteriophaget4endonuclease pages 1-2, lagerback2009bacteriophaget4endonuclease pages 2-4, lagerback2009bacteriophaget4endonuclease pages 7-8)</td>
+<td>Expected masses: monomer <strong>16.8 kDa</strong>, dimer <strong>33.6 kDa</strong>, tetramer <strong>67.2 kDa</strong>; gel filtration showed ~<strong>35 kDa</strong> (dimer), ~<strong>74.7 kDa</strong> (tetramer), and ~<strong>170 kDa</strong> for tetramer + two DNAs (expected ~<strong>179 kDa</strong>); stable binding required <strong>&gt;30 bp</strong> DNA; ~<strong>80%</strong> of K12A C4-complexed 44-bp substrate was nicked after <strong>15 min</strong> in-gel with MgCl2; example enzyme:DNA ratios included <strong>42:1</strong> and <strong>27:1–450:1</strong>. (lagerback2009bacteriophaget4endonuclease pages 6-7, lagerback2009bacteriophaget4endonuclease pages 7-8, lagerback2009bacteriophaget4endonuclease pages 2-4)</td>
+<td>Lagerbäck et al. 2009, <em>Nucleic Acids Res.</em> (2009-08). https://doi.org/10.1093/nar/gkp652</td>
+</tr>
+<tr>
+<td>Infection timing/role</td>
+<td>DenA/EndoII performs the <strong>initial nicking step in host DNA degradation</strong> during T4 takeover, targeting host cytosine DNA while T4 DNA is protected by hydroxymethylcytosine/glucosylation. Nicked regions then become substrates for <strong>DenB (Endonuclease IV)</strong> and downstream <strong>46/47 exonuclease</strong> processing, supporting irreversible host shutoff and nucleotide scavenging for phage DNA synthesis. (kutter2018fromhostto pages 6-9)</td>
+<td>Host DNA degradation is mainly observed between about <strong>6–20 min</strong> postinfection; nucleotide-production/DNA-replication enzymes are produced around <strong>3–8 min</strong>; in stationary-phase infections with a DNA polymerase amber mutant, <strong>40%</strong> of host 3HdT became acid-soluble by <strong>60 min</strong> and <strong>60%</strong> by <strong>120 min</strong>; with wild-type T4, only about <strong>10%</strong> reduction was seen by <strong>60 min</strong> because released nucleotides were rapidly reincorporated into phage DNA. (kutter2018fromhostto pages 6-9, kutter2018fromhostto pages 9-12)</td>
+<td>Kutter et al. 2018, <em>Viruses</em> (2018-07). https://doi.org/10.3390/v10070387</td>
+</tr>
+<tr>
+<td>Context effects</td>
+<td>EndoII recognizes a <strong>16-bp variable site</strong>, but cleavage efficiency depends strongly on both local sequence/shape and longer-range DNA context; recognition appears to involve both base readout and sequence-dependent DNA structure. Introducing a strong synthetic site suppresses cleavage at nearby weaker natural sites, implying competition over an extended DNA region. (carlson1996shortrangeandlongrange pages 1-2, lagerback2009bacteriophaget4endonuclease pages 9-10)</td>
+<td>Efficient synthetic motif: <strong>CGRCCGCNTTGGCNGC</strong>; a 16-bp variable sequence was sufficient for cleavage, but a “best-base-at-each-position” consensus was paradoxically cleaved poorly; insertion of a synthetic site reduced cleavage at natural sites within about <strong>800–1,500 bp</strong>; Lagerbäck et al. proposed interference over roughly <strong>~1000 bp</strong> on each side for neighboring sites in mode II cleavage models. (carlson1996shortrangeandlongrange pages 1-2, lagerback2009bacteriophaget4endonuclease pages 9-10)</td>
+<td>Carlson et al. 1996, <em>J. Bacteriol.</em> (1996-11). https://doi.org/10.1128/jb.178.22.6419-6426.1996; Lagerbäck et al. 2009, <em>Nucleic Acids Res.</em> (2009-08). https://doi.org/10.1093/nar/gkp652</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main experimental evidence supporting functional annotation of Enterobacteria phage T4 denA/Endonuclease II, including cleavage specificity, oligomeric state, infection role, and context dependence. It is useful as a compact evidence map linking key findings to quantitative observations and primary sources.</em></p>
+<p>In addition, Carlson et al. 1993 provide a visual summary of cleavage frequency across sites and consensus motifs (Figure 3 and Figure 7 region) (carlson1993dnadeterminantsof media 89cd4389, carlson1993dnadeterminantsof media 695568e2).</p>
+<h2 id="5-recent-developments-20232024-relevant-to-dena-functional-annotation">5. Recent developments (2023–2024) relevant to DenA functional annotation</h2>
+<p>Direct 2023–2024 experimental work on <strong>T4 DenA itself</strong> appears limited in the retrieved corpus; however, 2023–2024 studies significantly update understanding of the <strong>GIY–YIG nuclease superfamily</strong> and its modular deployment, which is directly relevant to interpreting DenA’s domain-driven mechanism and potential repurposing.</p>
+<h3 id="51-giyyig-nucleases-as-modular-components-in-restrictiondefense">5.1 GIY–YIG nucleases as modular components in restriction/defense</h3>
+<p>Helbrecht et al. (2024-04; <em>Frontiers in Microbiology</em>; https://doi.org/10.3389/fmicb.2024.1286822) characterize multiple modification-dependent restriction systems where a reader domain (e.g., winged-helix) is fused to nuclease domains including <strong>GIY–YIG</strong>, supporting a general “sensor + nuclease” modular architecture in which recognition of modified DNA can be coupled to GIY–YIG-mediated cleavage (helbrecht2024characterizationofwinged pages 1-2, helbrecht2024characterizationofwinged pages 16-17). While not about DenA specifically, these data strengthen the modern view that GIY–YIG nuclease cores are repurposed in diverse DNA-targeting systems.</p>
+<h3 id="52-newly-described-giyyig-single-domain-ssdna-nucleases-with-applications">5.2 Newly described GIY–YIG single-domain ssDNA nucleases with applications</h3>
+<p>Veyrier et al. (2024-07; preprint; https://doi.org/10.21203/rs.3.rs-4622751/v1) describe a widespread family of <strong>GIY–YIG single-domain nucleases (Ssn)</strong> that cleave <strong>single-stranded DNA</strong> in a site-specific manner and demonstrate applications such as <strong>ssDNA detection</strong> and digestion of ssDNA from rolling-circle amplification (veyrier2024discoveryofthe pages 1-6). This provides an up-to-date example of GIY–YIG enzymes being operationalized as tools, relevant to discussions of possible DenA-inspired engineering even if DenA itself targets dsDNA and functions as a nicking/fragmentation initiator.</p>
+<h3 id="53-broader-2024-cataloging-of-giyyig-domains-in-antiviral-defense-and-genome-degradation-contexts">5.3 Broader 2024 cataloging of GIY–YIG domains in antiviral defense and genome degradation contexts</h3>
+<p>Li et al. (2024-10; bioRxiv; https://doi.org/10.1101/2024.10.26.620412) summarize the GIY–YIG domain as a conserved ~100-aa catalytic core and describe its recurrence in nuclease-mediated defense and genome degradation contexts (li2024genomiclandscapeof pages 4-6). This supports the general principle that DenA’s fold is part of an expanding repertoire of nuclease-based conflict systems.</p>
+<h2 id="6-current-applications-and-real-world-implementations">6. Current applications and real-world implementations</h2>
+<h3 id="61-phage-therapy-and-safety-assessment-of-t4-like-phages">6.1 Phage therapy and safety assessment of T4-like phages</h3>
+<p>A practical, applied context for DenA-like functions is phage therapy development. Weber-Dąbrowska et al. (2023-01; <em>Pharmaceutics</em>; https://doi.org/10.3390/pharmaceutics15020434) discuss T4-like (T4-related) therapeutic candidates and note that rapid host DNA degradation modules (including homologs of <strong>DenA/EndoII</strong>) are used as an argument that such phages are <strong>generally considered non-transducing</strong>, despite headful packaging posing a theoretical risk (weberdabrowska2023characteristicsofenvironmental pages 20-22). They also identify DenA homologs in some sequenced Klebsiella T4-related phages and define DenA as initiating degradation of unmodified cytosine DNA (weberdabrowska2023characteristicsofenvironmental pages 22-23). This is a real-world implementation: genomic screening for DenA-like modules contributes to therapeutic-phage safety evaluation.</p>
+<h3 id="62-phage-engineering-constraints-and-strategies-2024">6.2 Phage engineering constraints and strategies (2024)</h3>
+<p>Pozhydaieva et al. (2024-01; <em>PLOS Genetics</em>; preprint DOI: https://doi.org/10.1101/2024.01.28.577628) highlight that <strong>early degradation of donor DNA/plasmids by phage nucleases</strong> can severely limit homologous recombination in phage engineering, a phenomenon consistent with T4’s aggressive nuclease program (pozhydaieva2024temporalepigenomemodulation pages 16-17). They show that temporally modulating phage DNA modifications can improve CRISPR targeting and yields of engineered mutants: Cas targeting improved by up to <strong>~70%</strong>, and mutagenesis efficiencies reached <strong>~6%</strong> in some conditions (e.g., 2/36 plaques; 5.6%) (pozhydaieva2024temporalepigenomemodulation pages 16-17). Although denA is not named in the excerpted pages, this study provides a 2024 practical “engineering” angle on the broader class of phage nuclease-driven DNA degradation programs that DenA exemplifies.</p>
+<h2 id="7-expert-synthesis-and-interpretation-authoritative-perspectives">7. Expert synthesis and interpretation (authoritative perspectives)</h2>
+<p>Kutter et al. emphasize that DenA’s biological role is not simply “restriction” but a carefully staged <strong>host takeover and metabolic rewiring</strong>, where host DNA is converted into precursors for phage DNA synthesis and host shutoff (kutter2018fromhostto pages 6-9). Carlson et al. interpret EndoII recognition as depending not only on base identity but also on <strong>sequence-dependent DNA structure</strong>, supported by the observation that combining “best bases” across positions does not yield maximal cleavage (carlson1996shortrangeandlongrange pages 1-2). Lagerbäck et al. provide a mechanistic synthesis in which unusual <strong>tetrameric binding to two DNA substrates</strong> and a two-mode nicking/cleavage mechanism allow a GIY–YIG nuclease to generate sufficient initiating lesions to drive extensive downstream degradation (lagerback2009bacteriophaget4endonuclease pages 9-9, lagerback2009bacteriophaget4endonuclease pages 7-8).</p>
+<h2 id="8-conclusions-for-functional-annotation">8. Conclusions for functional annotation</h2>
+<p><strong>Primary function:</strong> DenA (EndoII; EC 3.1.21.8) is a <strong>GIY–YIG DNA endonuclease</strong> that preferentially attacks <strong>unmodified cytosine-containing DNA</strong> early during T4 infection. It generates primarily <strong>nicks</strong> and limited <strong>DSBs</strong> at sequence/structure-preferred sites (consensus centered on GRCCGC… motifs), producing blunt or short <strong>5′ overhang</strong> ends. These initiating lesions enable subsequent cleavage by DenB and extensive exonucleolytic degradation by gp46/gp47, supplying nucleotides for phage DNA synthesis and contributing to irreversible host shutoff (carlson1993dnadeterminantsof pages 1-2, kutter2018fromhostto pages 6-9, lagerback2009bacteriophaget4endonuclease pages 9-9).</p>
+<p><strong>Substrate specificity (operational):</strong> Cytosine DNA with preferred motifs (e.g., GRCCGCNTYGC; CGRCCGCNTTGSYNGC), strong context dependence across ~kilobase scales; stable engagement requires &gt;30 bp DNA, with binding as a <strong>tetramer bound to two DNAs</strong> (carlson1993dnadeterminantsof pages 1-2, carlson1996shortrangeandlongrange pages 1-2, lagerback2009bacteriophaget4endonuclease pages 2-4, lagerback2009bacteriophaget4endonuclease pages 7-8).</p>
+<p><strong>Cellular location:</strong> intracellular, acting on host DNA in infected cells (plasmid/chromosome context) (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 2-4).</p>
+<h2 id="references-retrieved-corpus-urls-include-publication-venue-landing-pages">References (retrieved corpus; URLs include publication venue landing pages)</h2>
+<ul>
+<li>Carlson K. et al. 1993-04. <em>J Biol Chem</em>. “DNA determinants of restriction. Bacteriophage T4 endonuclease II-dependent cleavage of plasmid DNA in vivo.” https://doi.org/10.1016/S0021-9258(18)52959-8 (carlson1993dnadeterminantsof pages 1-2, carlson1993dnadeterminantsof pages 2-2, carlson1993dnadeterminantsof media 89cd4389)</li>
+<li>Carlson K. et al. 1996-11. <em>J Bacteriol</em>. “Short-range and long-range context effects on coliphage T4 endonuclease II-dependent restriction.” https://doi.org/10.1128/jb.178.22.6419-6426.1996 (carlson1996shortrangeandlongrange pages 1-2)</li>
+<li>Lagerbäck P. et al. 2009-08. <em>Nucleic Acids Res</em>. “Bacteriophage T4 endonuclease II, a promiscuous GIY-YIG nuclease, binds as a tetramer to two DNA substrates.” https://doi.org/10.1093/nar/gkp652 (lagerback2009bacteriophaget4endonuclease pages 1-2, lagerback2009bacteriophaget4endonuclease pages 7-8, lagerback2009bacteriophaget4endonuclease pages 9-9)</li>
+<li>Kutter E. et al. 2018-07. <em>Viruses</em>. “From Host to Phage Metabolism: Hot Tales of Phage T4’s Takeover of E. coli.” https://doi.org/10.3390/v10070387 (kutter2018fromhostto pages 6-9, kutter2018fromhostto pages 9-12)</li>
+<li>Weber-Dąbrowska B. et al. 2023-01. <em>Pharmaceutics</em>. “Characteristics of Environmental Klebsiella pneumoniae and Klebsiella oxytoca Bacteriophages and Their Therapeutic Applications.” https://doi.org/10.3390/pharmaceutics15020434 (weberdabrowska2023characteristicsofenvironmental pages 20-22, weberdabrowska2023characteristicsofenvironmental pages 22-23)</li>
+<li>Pozhydaieva N. et al. 2024-01. <em>PLOS Genetics</em> (preprint DOI). “Temporal epigenome modulation enables efficient bacteriophage engineering and functional analysis of phage DNA modifications.” https://doi.org/10.1101/2024.01.28.577628 (pozhydaieva2024temporalepigenomemodulation pages 16-17, pozhydaieva2024temporalepigenomemodulation pages 9-10)</li>
+<li>Helbrecht I. et al. 2024-04. <em>Frontiers in Microbiology</em>. “Characterization of winged helix domain fusion endonucleases as N6-methyladenine-dependent type IV restriction systems.” https://doi.org/10.3389/fmicb.2024.1286822 (helbrecht2024characterizationofwinged pages 1-2, helbrecht2024characterizationofwinged pages 16-17)</li>
+<li>Veyrier F. et al. 2024-07. Preprint. “Discovery of the Widespread Site-Specific Single-Stranded Nuclease Family Ssn.” https://doi.org/10.21203/rs.3.rs-4622751/v1 (veyrier2024discoveryofthe pages 1-6)</li>
+<li>Li J. et al. 2024-10. bioRxiv. “Genomic landscape of antiviral defense systems in prokaryotes and phages.” https://doi.org/10.1101/2024.10.26.620412 (li2024genomiclandscapeof pages 4-6)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(carlson1993dnadeterminantsof pages 1-2): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 1-2): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutter2018fromhostto pages 6-9): Elizabeth Kutter, Daniel Bryan, Georgia Ray, Erin Brewster, Bob Blasdel, and Burton Guttman. From host to phage metabolism: hot tales of phage t4’s takeover of e. coli. Viruses, 10:387, Jul 2018. URL: https://doi.org/10.3390/v10070387, doi:10.3390/v10070387. This article has 99 citations.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof pages 4-5): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof pages 7-8): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof media 89cd4389): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(carlson1996shortrangeandlongrange pages 1-2): K. Carlson, L. D. Kosturko, and A. Nyström. Short-range and long-range context effects on coliphage t4 endonuclease ii-dependent restriction. Journal of Bacteriology, 178:6419-6426, Nov 1996. URL: https://doi.org/10.1128/jb.178.22.6419-6426.1996, doi:10.1128/jb.178.22.6419-6426.1996. This article has 11 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 7-8): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 2-4): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof pages 2-2): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 6-7): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 9-9): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kutter2018fromhostto pages 9-12): Elizabeth Kutter, Daniel Bryan, Georgia Ray, Erin Brewster, Bob Blasdel, and Burton Guttman. From host to phage metabolism: hot tales of phage t4’s takeover of e. coli. Viruses, 10:387, Jul 2018. URL: https://doi.org/10.3390/v10070387, doi:10.3390/v10070387. This article has 99 citations.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof pages 2-4): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(lagerback2009bacteriophaget4endonuclease pages 9-10): Pernilla Lagerbäck, Evalena Andersson, Christer Malmberg, and Karin Carlson. Bacteriophage t4 endonuclease ii, a promiscuous giy-yig nuclease, binds as a tetramer to two dna substrates. Nucleic Acids Research, 37:6174-6183, Aug 2009. URL: https://doi.org/10.1093/nar/gkp652, doi:10.1093/nar/gkp652. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(carlson1993dnadeterminantsof media 695568e2): K. Carlson, M. Krabbe, A.C. Nyström, and L.D. Kosturko. Dna determinants of restriction. bacteriophage t4 endonuclease ii-dependent cleavage of plasmid dna in vivo. The Journal of biological chemistry, 268 12:8908-18, Apr 1993. URL: https://doi.org/10.1016/s0021-9258(18)52959-8, doi:10.1016/s0021-9258(18)52959-8. This article has 14 citations.</p>
+</li>
+<li>
+<p>(helbrecht2024characterizationofwinged pages 1-2): Igor Helbrecht, Daniel Heiter, Weiwei Yang, Tamas Vincze, Andrew Hanneman, Thomas Lutz, Laurence Ettwiller, Matthias Bochtler, and Shuang-yong Xu. Characterization of winged helix domain fusion endonucleases as n6-methyladenine-dependent type iv restriction systems. Frontiers in Microbiology, Apr 2024. URL: https://doi.org/10.3389/fmicb.2024.1286822, doi:10.3389/fmicb.2024.1286822. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(helbrecht2024characterizationofwinged pages 16-17): Igor Helbrecht, Daniel Heiter, Weiwei Yang, Tamas Vincze, Andrew Hanneman, Thomas Lutz, Laurence Ettwiller, Matthias Bochtler, and Shuang-yong Xu. Characterization of winged helix domain fusion endonucleases as n6-methyladenine-dependent type iv restriction systems. Frontiers in Microbiology, Apr 2024. URL: https://doi.org/10.3389/fmicb.2024.1286822, doi:10.3389/fmicb.2024.1286822. This article has 4 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(veyrier2024discoveryofthe pages 1-6): Frédéric Veyrier, Martin Chenal, Alex Rivera-Millot, Luke Harrisson, Ahmed Khairalla, Cecilia Nieves, Eve Bernet, Mansoor Esmaili, Manel Belkhir, and Jonathan Perreault. Discovery of the widespread site-specific single-stranded nuclease family ssn. Unknown journal, Jul 2024. URL: https://doi.org/10.21203/rs.3.rs-4622751/v1, doi:10.21203/rs.3.rs-4622751/v1.</p>
+</li>
+<li>
+<p>(li2024genomiclandscapeof pages 4-6): Jinquan Li, Jiazheng Gu, Runyue Xia, and Meng Li. Genomic landscape of antiviral defense systems in prokaryotes and phages. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.26.620412, doi:10.1101/2024.10.26.620412. This article has 0 citations.</p>
+</li>
+<li>
+<p>(weberdabrowska2023characteristicsofenvironmental pages 20-22): Beata Weber-Dąbrowska, Maciej Żaczek, Małgorzata Łobocka, Marzanna Łusiak-Szelachowska, Barbara Owczarek, Filip Orwat, Norbert Łodej, Aneta Skaradzińska, Łukasz Łaczmański, Dariusz Martynowski, Marta Kaszowska, and Andrzej Górski. Characteristics of environmental klebsiella pneumoniae and klebsiella oxytoca bacteriophages and their therapeutic applications. Pharmaceutics, 15:434, Jan 2023. URL: https://doi.org/10.3390/pharmaceutics15020434, doi:10.3390/pharmaceutics15020434. This article has 17 citations.</p>
+</li>
+<li>
+<p>(weberdabrowska2023characteristicsofenvironmental pages 22-23): Beata Weber-Dąbrowska, Maciej Żaczek, Małgorzata Łobocka, Marzanna Łusiak-Szelachowska, Barbara Owczarek, Filip Orwat, Norbert Łodej, Aneta Skaradzińska, Łukasz Łaczmański, Dariusz Martynowski, Marta Kaszowska, and Andrzej Górski. Characteristics of environmental klebsiella pneumoniae and klebsiella oxytoca bacteriophages and their therapeutic applications. Pharmaceutics, 15:434, Jan 2023. URL: https://doi.org/10.3390/pharmaceutics15020434, doi:10.3390/pharmaceutics15020434. This article has 17 citations.</p>
+</li>
+<li>
+<p>(pozhydaieva2024temporalepigenomemodulation pages 16-17): Nadiia Pozhydaieva, Franziska Anna Billau, Maik Wolfram-Schauerte, Adán Andrés Ramírez Rojas, Nicole Paczia, Daniel Schindler, and Katharina Höfer. Temporal epigenome modulation enables efficient bacteriophage engineering and functional analysis of phage dna modifications. PLOS Genetics, Jan 2024. URL: https://doi.org/10.1101/2024.01.28.577628, doi:10.1101/2024.01.28.577628. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pozhydaieva2024temporalepigenomemodulation pages 9-10): Nadiia Pozhydaieva, Franziska Anna Billau, Maik Wolfram-Schauerte, Adán Andrés Ramírez Rojas, Nicole Paczia, Daniel Schindler, and Katharina Höfer. Temporal epigenome modulation enables efficient bacteriophage engineering and functional analysis of phage dna modifications. PLOS Genetics, Jan 2024. URL: https://doi.org/10.1101/2024.01.28.577628, doi:10.1101/2024.01.28.577628. This article has 10 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="denA-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000034 Figure 3 displays the cleavage frequencies (%) at various EndoII-dependent restriction sites in pBR322 DNA, along with the specific" src="denA-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>carlson1993dnadeterminantsof pages 1-2</li>
+<li>kutter2018fromhostto pages 6-9</li>
+<li>carlson1993dnadeterminantsof pages 4-5</li>
+<li>carlson1996shortrangeandlongrange pages 1-2</li>
+<li>carlson1993dnadeterminantsof pages 2-2</li>
+<li>kutter2018fromhostto pages 9-12</li>
+<li>veyrier2024discoveryofthe pages 1-6</li>
+<li>li2024genomiclandscapeof pages 4-6</li>
+<li>weberdabrowska2023characteristicsofenvironmental pages 20-22</li>
+<li>weberdabrowska2023characteristicsofenvironmental pages 22-23</li>
+<li>pozhydaieva2024temporalepigenomemodulation pages 16-17</li>
+<li>carlson1993dnadeterminantsof pages 7-8</li>
+<li>carlson1993dnadeterminantsof pages 2-4</li>
+<li>helbrecht2024characterizationofwinged pages 1-2</li>
+<li>helbrecht2024characterizationofwinged pages 16-17</li>
+<li>pozhydaieva2024temporalepigenomemodulation pages 9-10</li>
+<li>https://doi.org/10.1016/S0021-9258(18</li>
+<li>https://doi.org/10.1128/jb.178.22.6419-6426.1996</li>
+<li>https://doi.org/10.1093/nar/gkp652</li>
+<li>https://doi.org/10.3390/v10070387</li>
+<li>https://doi.org/10.1128/jb.178.22.6419-6426.1996;</li>
+<li>https://doi.org/10.3389/fmicb.2024.1286822</li>
+<li>https://doi.org/10.21203/rs.3.rs-4622751/v1</li>
+<li>https://doi.org/10.1101/2024.10.26.620412</li>
+<li>https://doi.org/10.3390/pharmaceutics15020434</li>
+<li>https://doi.org/10.1101/2024.01.28.577628</li>
+<li>https://doi.org/10.1016/s0021-9258(18</li>
+<li>https://doi.org/10.1093/nar/gkp652,</li>
+<li>https://doi.org/10.3390/v10070387,</li>
+<li>https://doi.org/10.1128/jb.178.22.6419-6426.1996,</li>
+<li>https://doi.org/10.3389/fmicb.2024.1286822,</li>
+<li>https://doi.org/10.21203/rs.3.rs-4622751/v1,</li>
+<li>https://doi.org/10.1101/2024.10.26.620412,</li>
+<li>https://doi.org/10.3390/pharmaceutics15020434,</li>
+<li>https://doi.org/10.1101/2024.01.28.577628,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P07059
+gene_symbol: P07059
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:10665
+  label: Enterobacteria phage T4
+description: &#39;TODO: Add description for P07059&#39;
+existing_annotations:
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004518
+    label: nuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0004519
+    label: endonuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0039657
+    label: symbiont-mediated suppression of host gene expression
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+- term:
+    id: GO:0099015
+    label: degradation of host chromosome by virus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  review:
+    summary: &#39;TODO: Review this GOA annotation&#39;
+    action: PENDING
+references:
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

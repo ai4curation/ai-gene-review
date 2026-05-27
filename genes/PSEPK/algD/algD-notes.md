@@ -1,0 +1,20 @@
+# algD Notes
+
+## Identity and direct biochemical role
+
+- `algD` in *Pseudomonas putida* KT2440 encodes GDP-mannose 6-dehydrogenase / GMD, EC 1.1.1.132 [file:PSEPK/algD/algD-uniprot.txt "Full=GDP-mannose 6-dehydrogenase;" and "EC=1.1.1.132;"].
+- UniProt assigns the direct reaction as oxidation of GDP-mannose to GDP-mannuronate, placing AlgD in alginate biosynthesis [file:PSEPK/algD/algD-uniprot.txt "Catalyzes the oxidation of guanosine diphospho-D-mannose...to GDP-D-mannuronic acid, a precursor for alginate polymerization." and "PATHWAY: Glycan biosynthesis; alginate biosynthesis."].
+- The protein belongs to the UDP-glucose/GDP-mannose dehydrogenase family and contains an NAD(P)-binding Rossmann-like domain, consistent with GO MF terms for GDP-mannose 6-dehydrogenase activity and NAD binding [file:PSEPK/algD/algD-uniprot.txt "Belongs to the UDP-glucose/GDP-mannose dehydrogenase" and "NAD(P)-binding Rossmann-like Domain"].
+
+## KT2440-specific biology
+
+- Under matric stress / water limitation, alginate production increases in *P. putida* and alginate shapes biofilm properties [PMID:17601783 "Total exopolysaccharide (EPS) and alginate production increased with increasing matric, but not solute, stress severity, and alginate was a significant component, but not the major component, of EPS." and "Alginate influenced biofilm architecture, resulting in biofilms that were taller, covered less surface area, and had a thicker EPS layer at the air interface than those formed by an mt-2 algD mutant under water-limiting conditions"].
+- `algD` expression itself is induced in this context: reporters showed that most residents transiently express alginate biosynthesis genes during dehydration, and transcriptomics found early alginate-gene upregulation [PMID:20236161 "Here we report that during growth under water-limiting conditions and when biofilms become dehydrated most residents transiently express the alginate biosynthesis genes leading to distinct spatial patterns as the biofilm ages." and PMID:22138988 "Upregulation of alginate genes was notable in this early response."].
+- Alginate contributes to stress protection under water limitation: loss of `algD` increases dehydration-associated oxidative stress and alginate deficiency decreases desiccation survival [PMID:19222541 "Under water-limiting conditions, ROS accumulation is greater in an DeltaalgD mutant compared with the wild type, suggesting that the exopolysaccharide alginate attenuates the extent of dehydration-mediated oxidative stress." and PMID:17601783 "Alginate deficiency decreased survival of desiccation not only by P. putida but also by Pseudomonas aeruginosa PAO1 and Pseudomonas syringae pv. syringae B728a."].
+
+## Curation implications
+
+- The catalytic MF `GDP-mannose 6-dehydrogenase activity` is the clearest core function; the broader mechanistic parent term `oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor` is also correct.
+- `alginic acid biosynthetic process` is appropriate because AlgD performs the committed precursor-forming step for alginate biosynthesis and KT2440-specific studies show `algD` induction and alginate-dependent phenotypes under water limitation.
+- Important nuance: in KT2440, alginate is context dependent rather than the dominant EPS in every assay. Under the conditions tested in Nilsson et al. 2011, the `alg` cluster played only a minor role in standard biofilm formation/stability [PMID:21507178 "The gene clusters alg and bcs, which code for proteins mediating alginate and cellulose biosynthesis, were found to play minor roles in P. putida KT2440 biofilm formation and stability under the conditions tested."].
+- I do not currently see a strong case for adding broader process terms such as generic biofilm formation or stress-response annotations to the core review, because the phenotype evidence is environmental-context dependent and mediated through the exopolysaccharide product rather than a direct signaling role for AlgD.

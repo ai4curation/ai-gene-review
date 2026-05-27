@@ -1,0 +1,40 @@
+# VCP/p97 Bioinformatics Analysis Pipeline
+# All recipes take input/output paths as parameters for reproducibility
+
+# Default paths
+data_dir := "data"
+results_dir := "results"
+
+# Extract sequence from UniProt flat file
+extract-sequence uniprot_file output_fasta:
+    uv run python extract_sequence.py {{uniprot_file}} {{output_fasta}}
+
+# Analyze domain architecture and functional motifs
+analyze-domains input_fasta output_prefix:
+    uv run python analyze_domains.py {{input_fasta}} {{output_prefix}}
+
+# Fetch CDC48/p97 orthologs from UniProt
+fetch-orthologs input_fasta output_fasta:
+    uv run python fetch_orthologs.py {{input_fasta}} {{output_fasta}}
+
+# Analyze conservation across orthologs
+analyze-conservation orthologs_fasta motifs_tsv output_prefix:
+    uv run python analyze_conservation.py {{orthologs_fasta}} {{motifs_tsv}} {{output_prefix}}
+
+# Analyze disease mutations relative to domains
+analyze-mutations uniprot_file domain_tsv output_prefix:
+    uv run python analyze_disease_mutations.py {{uniprot_file}} {{domain_tsv}} {{output_prefix}}
+
+# Analyze cofactor binding interfaces
+analyze-cofactors uniprot_file domain_tsv output_prefix:
+    uv run python analyze_cofactor_interfaces.py {{uniprot_file}} {{domain_tsv}} {{output_prefix}}
+
+# Run full pipeline for VCP
+run-vcp:
+    mkdir -p {{data_dir}} {{results_dir}}
+    just extract-sequence ../VCP-uniprot.txt {{data_dir}}/VCP.fasta
+    just analyze-domains {{data_dir}}/VCP.fasta {{results_dir}}/VCP
+    just fetch-orthologs {{data_dir}}/VCP.fasta {{data_dir}}/VCP_orthologs.fasta
+    just analyze-conservation {{data_dir}}/VCP_orthologs.fasta {{results_dir}}/VCP_motifs.tsv {{results_dir}}/VCP
+    just analyze-mutations ../VCP-uniprot.txt {{results_dir}}/VCP_domains.tsv {{results_dir}}/VCP
+    just analyze-cofactors ../VCP-uniprot.txt {{results_dir}}/VCP_domains.tsv {{results_dir}}/VCP
