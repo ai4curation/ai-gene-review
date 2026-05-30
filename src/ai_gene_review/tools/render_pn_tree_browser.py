@@ -311,6 +311,9 @@ def build_data(
             "scrutiny_decision_counts": {},
             "target_terms": [],
             "gene_examples": [],
+            "source_workbook_evidence": [],
+            "source_evidence_row_count": 0,
+            "source_reference_count": 0,
             "existing_iba_by_gene": [],
             "existing_iba_gene_count": 0,
             "existing_iba_annotation_count": 0,
@@ -372,9 +375,23 @@ def build_data(
     for code, rows in workbook_rows_by_leaf.items():
         if code not in nodes:
             continue
+        source_evidence_rows: list[dict[str, Any]] = []
+        seen_evidence_rows: set[tuple[str, str, str, tuple[str, ...]]] = set()
         seen_genes: set[tuple[str, str]] = set()
         iba_by_gene_rows: list[dict[str, Any]] = []
         for row in sorted(rows, key=lambda item: (item.order is None, item.order or 0, item.gene_symbol)):
+            evidence_key = (row.gene_symbol, row.uniprot_id, row.notes, row.references)
+            if (row.notes or row.references) and evidence_key not in seen_evidence_rows:
+                seen_evidence_rows.add(evidence_key)
+                source_evidence_rows.append(
+                    {
+                        "gene_symbol": row.gene_symbol,
+                        "gene_name": row.gene_name or gene_names.get(row.gene_symbol, ""),
+                        "uniprot_id": row.uniprot_id or gene_accessions.get(row.gene_symbol, ""),
+                        "notes": row.notes,
+                        "references": list(row.references),
+                    }
+                )
             key = (row.gene_symbol, row.uniprot_id)
             if key in seen_genes:
                 continue
@@ -390,6 +407,11 @@ def build_data(
                     "terms": terms,
                 }
             )
+        nodes[code]["source_workbook_evidence"] = source_evidence_rows
+        nodes[code]["source_evidence_row_count"] = len(source_evidence_rows)
+        nodes[code]["source_reference_count"] = sum(
+            len(row["references"]) for row in source_evidence_rows
+        )
         nodes[code]["existing_iba_by_gene"] = iba_by_gene_rows
         nodes[code]["existing_iba_gene_count"] = len(iba_by_gene_rows)
         nodes[code]["existing_iba_annotation_count"] = sum(
@@ -532,6 +554,12 @@ def build_data(
             "curation_status_counts": dict(curation_status_counts),
             "audit_rows": len(audit_rows),
             "audit_decision_counts": dict(audit_decision_counts),
+            "source_evidence_rows_on_leaf_nodes": sum(
+                node["source_evidence_row_count"] for node in nodes.values()
+            ),
+            "source_references_on_leaf_nodes": sum(
+                node["source_reference_count"] for node in nodes.values()
+            ),
             "existing_iba_genes_on_leaf_nodes": sum(
                 node["existing_iba_gene_count"] for node in nodes.values()
             ),
@@ -849,6 +877,12 @@ HTML_TEMPLATE = """<!doctype html>
       flex-wrap: wrap;
       gap: 5px;
     }
+    .ref-list {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+      padding-left: 18px;
+    }
     .aspect-bp { background: #e7f5ee; color: #1f7a52; }
     .aspect-mf { background: #e8f1fb; color: #1f5d99; }
     .aspect-cc { background: #fff1d1; color: #835600; }
@@ -1004,6 +1038,15 @@ HTML_TEMPLATE = """<!doctype html>
             <dd>No GOA record was available from the configured source, currently <code>~/repos/go-db/db/goa_human.ddb</code>; this is a data-availability state, not biological evidence.</dd>
           </dl>
         </section>
+        <section class="help-section">
+          <h2>Workbook Evidence</h2>
+          <dl>
+            <dt>Notes</dt>
+            <dd>Free-text PN workbook justification for the gene-to-PN row.</dd>
+            <dt>REF1-REF8</dt>
+            <dd>Workbook reference fields supplied by the PN annotation source for that row.</dd>
+          </dl>
+        </section>
       </div>
     </details>
   </header>
@@ -1109,6 +1152,15 @@ HTML_TEMPLATE = """<!doctype html>
       return `aspect-${String(aspect || "").toLowerCase()}`;
     }
 
+    function renderWorkbookReference(value) {
+      const raw = String(value || "");
+      const escaped = escapeHtml(raw);
+      if (/^https?:\\/\\//i.test(raw)) {
+        return `<a href="${escaped}" target="_blank" rel="noopener">${escaped}</a>`;
+      }
+      return escaped;
+    }
+
     function selectedStatuses() {
       return new Set([...document.querySelectorAll(".filters input[type=checkbox]:checked")].map(input => input.value));
     }
@@ -1136,6 +1188,12 @@ HTML_TEMPLATE = """<!doctype html>
           item.gene_symbol,
           item.uniprot_id,
           item.terms.map(term => `${term.go_id} ${term.go_label} ${term.aspect}`).join(" ")
+        ].join(" ")).join(" "),
+        (node.source_workbook_evidence || []).map(item => [
+          item.gene_symbol,
+          item.uniprot_id,
+          item.notes,
+          item.references.join(" ")
         ].join(" ")).join(" ")
       ].join(" ").toLowerCase();
     }
@@ -1306,6 +1364,21 @@ HTML_TEMPLATE = """<!doctype html>
       </table>`;
     }
 
+    function renderSourceWorkbookEvidence(node) {
+      const rows = node.source_workbook_evidence || [];
+      if (!rows.length) return `<div class="empty">No workbook notes or REF fields found for genes at this leaf.</div>`;
+      const limited = rows.slice(0, 80);
+      return `<table>
+        <thead><tr><th>Gene</th><th>Notes</th><th>Workbook references</th></tr></thead>
+        <tbody>${limited.map(row => `
+          <tr>
+            <td>${renderGeneCell(row.gene_symbol, row.gene_name, row.uniprot_id)}</td>
+            <td>${row.notes ? escapeHtml(row.notes) : `<span class="empty">No notes.</span>`}</td>
+            <td>${(row.references || []).length ? `<ol class="ref-list">${row.references.map(ref => `<li>${renderWorkbookReference(ref)}</li>`).join("")}</ol>` : `<span class="empty">No references.</span>`}</td>
+          </tr>`).join("")}</tbody>
+      </table>${rows.length > limited.length ? `<div class="empty">Showing ${limited.length} of ${rows.length} evidence rows.</div>` : ""}`;
+    }
+
     function renderExistingIba(node) {
       const rows = node.existing_iba_by_gene || [];
       if (!rows.length) return `<div class="empty">No existing IBA annotations found for genes at this leaf.</div>`;
@@ -1368,6 +1441,10 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.existing_iba_gene_count || 0)}</strong><span>genes with existing IBA</span></div>
           <div class="mini"><strong>${compactNumber(node.existing_iba_annotation_count || 0)}</strong><span>existing IBA terms</span></div>
       ` : "";
+      const sourceEvidenceMetric = isLeaf ? `
+          <div class="mini"><strong>${compactNumber(node.source_evidence_row_count || 0)}</strong><span>source evidence rows</span></div>
+          <div class="mini"><strong>${compactNumber(node.source_reference_count || 0)}</strong><span>source references</span></div>
+      ` : "";
       const subtreeCoverage = isLeaf ? "" : `
         <h3>Subtree Coverage</h3>
         <div class="badges">
@@ -1394,6 +1471,7 @@ HTML_TEMPLATE = """<!doctype html>
           <div class="mini"><strong>${compactNumber(node.projected_gene_count)}</strong><span>projected genes</span></div>
           <div class="mini"><strong>${compactNumber(node.projected_gene_go_count)}</strong><span>gene-GO pairs</span></div>
           <div class="mini"><strong>${compactNumber(node.candidate_gene_go_count)}</strong><span>candidate pairs</span></div>
+          ${sourceEvidenceMetric}
           ${existingIbaMetric}
         </div>
 
@@ -1410,6 +1488,8 @@ HTML_TEMPLATE = """<!doctype html>
 
         <h3>Candidate Additions</h3>
         ${renderProjectionTable(candidateRows)}
+
+        ${isLeaf ? `<h3>Source Workbook Evidence</h3>${renderSourceWorkbookEvidence(node)}` : ""}
 
         ${isLeaf ? `<h3>Existing IBA GO Annotations</h3>${renderExistingIba(node)}` : ""}
 

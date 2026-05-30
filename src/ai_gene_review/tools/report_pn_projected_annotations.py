@@ -42,6 +42,8 @@ class PNWorkbookRow:
     type_name: str
     subtype: str
     uniprot_id: str
+    notes: str = ""
+    references: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -250,6 +252,13 @@ def load_workbook_rows(
             return ""
         return _clean_value(row[index[column]])
 
+    def references(row: tuple[Any, ...]) -> tuple[str, ...]:
+        return tuple(
+            reference
+            for column in [f"REF{i}" for i in range(1, 9)]
+            if (reference := cell(row, column))
+        )
+
     workbook_rows: list[PNWorkbookRow] = []
     for row in rows:
         gene_symbol = cell(row, "Gene Symbol")
@@ -270,6 +279,8 @@ def load_workbook_rows(
                 type_name=cell(row, WORKBOOK_COLUMNS["type"]),
                 subtype=cell(row, WORKBOOK_COLUMNS["subtype"]),
                 uniprot_id=cell(row, "UniProt ID"),
+                notes=cell(row, "Notes"),
+                references=references(row),
             )
         )
 
