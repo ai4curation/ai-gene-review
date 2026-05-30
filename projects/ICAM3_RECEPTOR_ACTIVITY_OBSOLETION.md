@@ -97,9 +97,8 @@ this would be the entry point for that area of immunology.
   term. The biology of LFA-1 and DC-SIGNR is well established, so reviews
   can typically ACCEPT GO:0004888 (with the ICAM3 `has_input` extension)
   as a contributing MF term, while the core MF for LFA-1 is integrin /
-  ICAM-binding adhesion (e.g. GO:0050839 cell adhesion molecule binding,
-  GO:0007157 heterophilic cell-cell adhesion via plasma membrane cell
-  adhesion molecules) and for DC-SIGNR is C-type lectin / mannose-binding
+  ICAM-binding adhesion (e.g. GO:0050839 cell adhesion molecule binding)
+  and for DC-SIGNR is C-type lectin / mannose-binding
   (GO:0005537 D-mannose binding, GO:0038023 signaling receptor activity
   with `has_input` ICAM3 and other ligands).
 - **Special case (CLEC4M NAS annotation)**: the CLEC4M GO:0030369 entry
