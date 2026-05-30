@@ -82,18 +82,44 @@ def read_fasta(path: Path) -> list[tuple[str, str]]:
     return out
 
 
-def build_structure_input(chains: list[tuple[str, str]]) -> Any:
+def build_structure_input(
+    chains: list[tuple[str, str]],
+    ligands: list[tuple[str, str]] | None = None,
+    pocket: tuple[str, list[tuple[str, int]]] | None = None,
+) -> Any:
     """Build an ESMFold2 complex input from (chain_id, sequence) pairs.
+
+    ``ligands`` is an optional list of ``(ligand_id, ccd_code)`` pairs (e.g.
+    ``("U1", "CU")``) appended as ``LigandInput`` entities to the same complex.
+    This lets us run metal-aware predictions (Cu/heme/Fe-S) alongside the apo
+    protein-only runs.
+
+    ``pocket`` is an optional ``(binder_chain_id, contacts)`` pair where
+    ``contacts`` is a list of ``(chain_id, residue_index_0based)`` the binder is
+    conditioned to sit against. The SDK uses **0-based** residue indices into the
+    submitted sequence (see ``input_builder_test.py``), and only a single pocket
+    (one binder) is supported. Used for the bridging-copper probe: condition one
+    Cu against the cysteines of two different sites to test whether a shared
+    transition-state geometry can form.
 
     Isolated so the SDK input-builder surface is easy to adjust in one place.
     """
     from esm.utils.structure.input_builder import (  # type: ignore
+        LigandInput,
+        PocketConditioning,
         ProteinInput,
         StructurePredictionInput,
     )
 
-    proteins = [ProteinInput(id=cid, sequence=seq) for cid, seq in chains]
-    return StructurePredictionInput(sequences=proteins)
+    entities: list[Any] = [ProteinInput(id=cid, sequence=seq) for cid, seq in chains]
+    for lid, ccd in ligands or []:
+        entities.append(LigandInput(id=lid, ccd=[ccd]))
+
+    pocket_conditioning = None
+    if pocket is not None:
+        binder, contacts = pocket
+        pocket_conditioning = PocketConditioning(binder_chain_id=binder, contacts=contacts)
+    return StructurePredictionInput(sequences=entities, pocket=pocket_conditioning)
 
 
 def make_client(model: str, url: str, token: str) -> Any:
@@ -135,7 +161,17 @@ def run_prediction(client: Any, structure_input: Any) -> Any:
     """
     method = getattr(client, "fold_all_atom", None)
     if callable(method):
-        return method(structure_input, config=make_folding_config())
+        result = method(structure_input, config=make_folding_config())
+        # fold_all_atom returns an ESMProteinError as a *value* (not raised) when
+        # the server rejects the request, so check for it explicitly instead of
+        # silently writing an empty response.
+        from esm.sdk.api import ESMProteinError  # type: ignore
+
+        if isinstance(result, ESMProteinError):
+            raise RuntimeError(
+                f"ESMFold2 server error {result.error_code}: {result.error_msg}"
+            )
+        return result
     raise AttributeError(
         "Could not find fold_all_atom on "
         f"{type(client).__name__}. Run with --check-sdk and adjust "
@@ -327,6 +363,27 @@ def main() -> int:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--url", default=DEFAULT_URL)
     parser.add_argument(
+        "--ligand",
+        action="append",
+        default=[],
+        metavar="ID:CCD",
+        help=(
+            "Add a ligand entity by CCD code, e.g. --ligand U1:CU. Repeatable. "
+            "Used for metal-aware runs (the all-atom model places the ligand)."
+        ),
+    )
+    parser.add_argument(
+        "--pocket",
+        default=None,
+        metavar="BINDER:CHAIN/RES,...",
+        help=(
+            "Condition a single binder (e.g. a ligand id) to sit against the "
+            "listed residues, e.g. --pocket U1:A/109,A/113,B/58,B/62. RES are "
+            "1-based submitted-sequence positions (converted to the SDK's 0-based "
+            "contacts internally). Only one pocket/binder is supported by the SDK."
+        ),
+    )
+    parser.add_argument(
         "--check-sdk",
         action="store_true",
         help="Print the resolved esm SDK client/input surface and exit (no network call).",
@@ -360,11 +417,38 @@ def main() -> int:
         return 2
 
     chains = read_fasta(args.fasta)
+    ligands: list[tuple[str, str]] = []
+    for spec in args.ligand:
+        if ":" not in spec:
+            sys.stderr.write(f"--ligand must be ID:CCD, got {spec!r}.\n")
+            return 2
+        lid, ccd = spec.split(":", 1)
+        ligands.append((lid.strip(), ccd.strip().upper()))
+
+    pocket: tuple[str, list[tuple[str, int]]] | None = None
+    if args.pocket:
+        if ":" not in args.pocket:
+            sys.stderr.write(f"--pocket must be BINDER:CHAIN/RES,..., got {args.pocket!r}.\n")
+            return 2
+        binder, contact_spec = args.pocket.split(":", 1)
+        contacts: list[tuple[str, int]] = []
+        for token in contact_spec.split(","):
+            chain, _, res = token.strip().partition("/")
+            if not chain or not res.isdigit():
+                sys.stderr.write(f"--pocket contact must be CHAIN/RES, got {token!r}.\n")
+                return 2
+            contacts.append((chain, int(res) - 1))  # 1-based input -> 0-based SDK
+        pocket = (binder.strip(), contacts)
+
     print(f"Submitting {len(chains)} chains: {', '.join(c for c, _ in chains)}")
+    if ligands:
+        print(f"With {len(ligands)} ligands: {', '.join(f'{i}={c}' for i, c in ligands)}")
+    if pocket:
+        print(f"Pocket: binder {pocket[0]} -> contacts (0-based) {pocket[1]}")
 
     try:
         client = make_client(args.model, args.url, token)
-        structure_input = build_structure_input(chains)
+        structure_input = build_structure_input(chains, ligands, pocket)
         response = run_prediction(client, structure_input)
     except ModuleNotFoundError as e:
         sys.stderr.write(
