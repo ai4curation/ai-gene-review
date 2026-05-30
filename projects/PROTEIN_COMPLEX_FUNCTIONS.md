@@ -466,10 +466,23 @@ actual token before committing to batch runs.
 
 ```python
 from esm.sdk.forge import SequenceStructureForgeInferenceClient
+from esm.sdk.api import FoldingConfig
+from esm.utils.structure.input_builder import ProteinInput, StructurePredictionInput
+
 client = SequenceStructureForgeInferenceClient(
     model="esmfold2-fast-2026-05",
     url="https://biohub.ai",
     token="<API token>",
+)
+complex_input = StructurePredictionInput(
+    sequences=[
+        ProteinInput(id="A", sequence="..."),
+        ProteinInput(id="B", sequence="..."),
+    ]
+)
+result = client.fold_all_atom(
+    complex_input,
+    config=FoldingConfig(num_loops=3, num_sampling_steps=32),
 )
 ```
 
@@ -492,3 +505,21 @@ cited as GO evidence.
 Open items before relying on it: confirm free-tier/rate limits with a real token; confirm whether
 PAE/iPAE is exposed by the hosted API; confirm metal/cofactor (Cu, heme, Fe-S) parameterization in
 the ligand input.
+
+### 2026-05-29 hosted re-run on archived protein-complex inputs
+
+Ran the three archived Boltz2 inputs through the Biohub hosted ESMFold2 endpoint using the pinned
+GitHub SDK adapter in `analysis/esmfold2/run_esmfold2.py`. The live runs succeeded and produced
+CIF, raw response JSON, confidence JSON, and analyzer markdown under `analysis/esmfold2/`.
+
+| Input | Result note | ipTM | pTM | complex pLDDT | Analyzer readout |
+|---|---|---:|---:|---:|---|
+| CYC1:UQCRFS1 | `analysis/esmfold2/RESULTS_CYC1_UQCRFS1_ESMFOLD2.md` | 0.228 | 0.603 | 0.829 | heme/Rieske min CA distance 14.63 A |
+| PSMB5:PSMA1 | `analysis/esmfold2/RESULTS_PSMB5_PSMA1_ESMFOLD2.md` | 0.362 | 0.616 | 0.825 | 27 residue contacts within 5 A; active-site T60 to PSMA1 30.00 A |
+| COX2:SCO1:SCO2 Model C | `analysis/esmfold2/RESULTS_MODEL_C_ESMFOLD2.md` | 0.390 | 0.532 | 0.757 | SCO1/SCO2 CxxxC motifs remain far from COX2 CuA residues |
+
+Interpretation: none of the hosted ESMFold2 runs exceeded the provisional interface-confidence
+threshold (ipTM > 0.5). The global pLDDT values are higher than the prior Boltz2 runs, but the
+interface signal remains weak and the hosted response did not populate pair-chain ipTM/PAE in the
+SDK result object. These results support keeping ESMFold2 as a secondary hypothesis-generation
+backend rather than replacing the Boltz2 notes or using any output as curation-grade evidence.

@@ -22,13 +22,11 @@ This makes the head-to-head re-run trivial, e.g.::
 IMPORTANT / HONESTY NOTE
 ------------------------
 The hosted endpoint is real (``https://biohub.ai``, model ``esmfold2-fast-2026-05``)
-and the SDK is ``pip install esm`` (MIT, https://github.com/evolutionaryscale/esm).
-However, the exact SDK method name and response attribute names below were taken
-from the published docs/README and have NOT been executed against a live token in
-this repo. The constructor, FASTA parsing, confidence extraction, and output
-writing are all defensive, and the single network call is isolated and clearly
-marked so it is a one-line fix if the installed SDK version differs. Run
-``--check-sdk`` to print the resolved client surface before submitting.
+and the SDK is pinned to Biohub/esm from GitHub (MIT, https://github.com/Biohub/esm).
+The exact SDK surface has historically moved faster than the PyPI wheel, so this
+caller targets the documented GitHub ``fold_all_atom`` API and keeps the single
+network call isolated. Run ``--check-sdk`` to print the resolved client/input
+surface before submitting.
 
 No ESMFold2 output is GO curation evidence on its own; it is triage only.
 """
@@ -36,7 +34,9 @@ No ESMFold2 output is GO curation evidence on its own; it is triage only.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -92,8 +92,8 @@ def build_structure_input(chains: list[tuple[str, str]]) -> Any:
         StructurePredictionInput,
     )
 
-    proteins = [ProteinInput(sequence=seq, chain_id=cid) for cid, seq in chains]
-    return StructurePredictionInput(proteins=proteins)
+    proteins = [ProteinInput(id=cid, sequence=seq) for cid, seq in chains]
+    return StructurePredictionInput(sequences=proteins)
 
 
 def make_client(model: str, url: str, token: str) -> Any:
@@ -102,19 +102,42 @@ def make_client(model: str, url: str, token: str) -> Any:
     return SequenceStructureForgeInferenceClient(model=model, url=url, token=token)
 
 
+def make_folding_config() -> Any:
+    from esm.sdk.api import FoldingConfig  # type: ignore
+
+    return FoldingConfig(
+        include_pair_chains_iptm=True,
+        num_loops=3,
+        num_sampling_steps=32,
+    )
+
+
+def check_input_builder_surface() -> bool:
+    """Return whether the SDK input-builder classes needed for a run import."""
+    try:
+        from esm.sdk.api import FoldingConfig  # noqa: F401
+        from esm.utils.structure.input_builder import (  # noqa: F401
+            ProteinInput,
+            StructurePredictionInput,
+        )
+    except ImportError as e:
+        print(f"input-builder classes: IMPORT FAILED ({e})")
+        return False
+    print("input-builder classes: ProteinInput, StructurePredictionInput OK")
+    return True
+
+
 def run_prediction(client: Any, structure_input: Any) -> Any:
     """Call the hosted fold endpoint.
 
-    The published surface exposes a fold call on the client. We try the
-    documented name and fall back across the small set of plausible aliases so a
-    minor SDK rename surfaces a clear error rather than a silent failure.
+    The published Biohub ESMFold2 complex surface exposes ``fold_all_atom``.
+    Keep this call isolated so any future SDK rename is localized.
     """
-    for method_name in ("fold", "predict", "structure_predict"):
-        method = getattr(client, method_name, None)
-        if callable(method):
-            return method(structure_input)
+    method = getattr(client, "fold_all_atom", None)
+    if callable(method):
+        return method(structure_input, config=make_folding_config())
     raise AttributeError(
-        "Could not find a fold/predict method on "
+        "Could not find fold_all_atom on "
         f"{type(client).__name__}. Run with --check-sdk and adjust "
         "run_prediction() to match the installed esm SDK version."
     )
@@ -145,19 +168,51 @@ def extract_confidence(response: Any) -> dict[str, Any]:
     pair = _get(response, "pair_chains_iptm", "pair_chain_iptm", "chain_pair_iptm")
 
     if ptm is not None:
-        summary["ptm"] = ptm
+        summary["ptm"] = _to_jsonable(ptm)
     if iptm is not None:
-        summary["iptm"] = iptm
+        summary["iptm"] = _to_jsonable(iptm)
         # Boltz analyzers treat confidence_score as the headline number.
-        summary.setdefault("confidence_score", iptm)
+        summary.setdefault("confidence_score", _to_jsonable(iptm))
     if plddt is not None:
-        summary["complex_plddt"] = plddt
+        summary["complex_plddt"] = _mean_or_jsonable(plddt)
     if pair is not None:
-        summary["pair_chains_iptm"] = pair
+        summary["pair_chains_iptm"] = _to_jsonable(pair)
     return summary
 
 
+def _mean_or_jsonable(obj: Any) -> Any:
+    value = obj.detach().float().cpu() if hasattr(obj, "detach") else obj
+    mean = getattr(value, "mean", None)
+    if callable(mean):
+        try:
+            mean_value = mean()
+            return mean_value.item() if hasattr(mean_value, "item") else mean_value
+        except Exception:  # noqa: BLE001
+            pass
+    return _to_jsonable(obj)
+
+
 def _to_jsonable(obj: Any) -> Any:
+    if dataclasses.is_dataclass(obj):
+        return {
+            field.name: _to_jsonable(getattr(obj, field.name))
+            for field in dataclasses.fields(obj)
+        }
+    if hasattr(obj, "tolist"):
+        try:
+            return obj.tolist()
+        except Exception:  # noqa: BLE001
+            pass
+    if hasattr(obj, "item"):
+        try:
+            return obj.item()
+        except Exception:  # noqa: BLE001
+            pass
+    if hasattr(obj, "detach"):
+        try:
+            return _to_jsonable(obj.detach().cpu().tolist())
+        except Exception:  # noqa: BLE001
+            pass
     try:
         json.dumps(obj)
         return obj
@@ -178,6 +233,12 @@ def extract_cif(response: Any) -> str | None:
     cif = _get(response, "cif", "structure", "mmcif", "cif_string")
     if isinstance(cif, str) and cif.strip():
         return cif
+    complex_obj = _get(response, "complex")
+    method = getattr(complex_obj, "to_mmcif", None)
+    if callable(method):
+        text = method()
+        if isinstance(text, str) and text.strip():
+            return text
     # Some SDKs return a structure object with a to_cif/to_mmcif method.
     structure = _get(response, "protein_structure", "structure_object")
     for attr in ("to_cif", "to_mmcif_string", "to_pdb_string"):
@@ -192,6 +253,41 @@ def extract_cif(response: Any) -> str | None:
     return None
 
 
+def ensure_mmcif_occupancy(cif: str) -> str:
+    """Fill default occupancy values when Biohub omits the atom_site column.
+
+    Bio.PDB's MMCIFParser requires ``_atom_site.occupancy``. Biohub's current
+    ``to_mmcif()`` output includes B-factors/confidence but omits occupancy, so
+    add a neutral 1.00 occupancy column without altering coordinates.
+    """
+    lines = cif.splitlines()
+    for loop_idx, line in enumerate(lines):
+        if line.strip() != "loop_":
+            continue
+        col_start = loop_idx + 1
+        col_end = col_start
+        while col_end < len(lines) and lines[col_end].strip().startswith("_atom_site."):
+            col_end += 1
+        cols = [line.strip() for line in lines[col_start:col_end]]
+        if not cols or "_atom_site.occupancy" in cols:
+            continue
+        if "_atom_site.B_iso_or_equiv" not in cols:
+            continue
+        insert_at = cols.index("_atom_site.B_iso_or_equiv") + 1
+        lines.insert(col_start + insert_at, "_atom_site.occupancy")
+        row_idx = col_end + 1
+        while row_idx < len(lines) and lines[row_idx].strip() != "#":
+            if lines[row_idx].startswith(("ATOM ", "HETATM ")):
+                parts = lines[row_idx].split()
+                if len(parts) == len(cols):
+                    parts.insert(insert_at, "1.00")
+                    lines[row_idx] = " ".join(parts)
+            row_idx += 1
+        return "\n".join(line.rstrip() for line in lines) + "\n"
+    suffix = "\n" if cif.endswith("\n") else ""
+    return "\n".join(line.rstrip() for line in lines) + suffix
+
+
 def write_outputs(response: Any, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / RAW_NAME).write_text(
@@ -200,6 +296,7 @@ def write_outputs(response: Any, output_dir: Path) -> None:
 
     cif = extract_cif(response)
     if cif is not None:
+        cif = ensure_mmcif_occupancy(cif)
         (output_dir / CIF_NAME).write_text(cif, encoding="utf-8")
     else:
         sys.stderr.write(
@@ -236,8 +333,6 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    import os
-
     token = os.environ.get("BIOHUB_API_TOKEN") or os.environ.get("ESM_API_TOKEN")
 
     if args.check_sdk:
@@ -247,12 +342,13 @@ def main() -> int:
             sys.stderr.write(f"Could not construct client: {e}\n")
             return 2
         fold_methods = [
-            n for n in ("fold", "predict", "structure_predict")
+            n for n in ("fold_all_atom", "fold", "predict", "structure_predict")
             if callable(getattr(client, n, None))
         ]
         print(f"client: {type(client).__name__}")
         print(f"fold-like methods present: {fold_methods or 'NONE FOUND'}")
-        return 0
+        input_builder_ok = check_input_builder_surface()
+        return 0 if "fold_all_atom" in fold_methods and input_builder_ok else 2
 
     if not args.fasta:
         sys.stderr.write("--fasta is required unless using --check-sdk.\n")
@@ -273,7 +369,7 @@ def main() -> int:
     except ModuleNotFoundError as e:
         sys.stderr.write(
             f"Missing dependency: {e}. Install with `uv sync` in analysis/esmfold2/ "
-            "or `pip install esm`.\n"
+            "to get the pinned Biohub/esm SDK.\n"
         )
         return 2
     except Exception as e:  # noqa: BLE001 - surface the real error to the operator

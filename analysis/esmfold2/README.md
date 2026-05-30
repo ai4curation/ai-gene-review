@@ -30,7 +30,7 @@ inputs unchanged — only the structure-prediction backend changes.
 
 ```bash
 cd analysis/esmfold2
-uv sync          # installs the `esm` SDK (MIT) + biopython
+uv sync          # installs the pinned Biohub/esm GitHub SDK + biopython
 export BIOHUB_API_TOKEN=...   # token from biohub.ai (or ESM_API_TOKEN)
 ```
 
@@ -47,6 +47,8 @@ Boltz2 `RESULTS_*` notes, so the confidence/interface readouts are directly
 comparable.
 
 ```bash
+cd analysis/esmfold2
+
 # Complex III: CYC1:UQCRFS1 active electron-transfer interface
 python3 run_esmfold2.py \
   --fasta ../complex_iii_boltz/inputs/cyc1_uqcrfs1_ims_domains.fasta \
@@ -78,10 +80,11 @@ once `LigandInput` parameterization is verified.
 
 These are the same caveats recorded in the project note:
 
-1. **SDK surface.** The constructor, input-builder classes, and fold method
-   were taken from the published docs/README and not executed against a live
-   token here. `run_prediction()` tries `fold`/`predict`/`structure_predict`
-   and `extract_*` read fields defensively; `--check-sdk` prints what resolved.
+1. **SDK surface.** The constructor, input-builder classes, `FoldingConfig`,
+   and `fold_all_atom` call come from the Biohub/esm GitHub README. The PyPI
+   wheel currently lags that complex API, so `pyproject.toml` pins the GitHub
+   SDK commit used here. `extract_*` read fields defensively; `--check-sdk`
+   prints what resolved.
    Adjust the isolated `build_structure_input` / `run_prediction` /
    `extract_confidence` helpers if the installed version differs.
 2. **PAE / pair-chain iPAE.** Not confirmed in the hosted API surface; the
