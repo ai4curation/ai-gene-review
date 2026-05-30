@@ -127,6 +127,8 @@ def _normalize_conditions(raw_conditions: Any) -> tuple[tuple[str, str], ...]:
 
 
 def _level_value(row: PNWorkbookRow, level: str) -> str:
+    if level == "gene_symbol":
+        return row.gene_symbol
     if level == "branch":
         return row.branch
     if level == "class":

@@ -51,6 +51,8 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     assert schema["slots"]["subject_curations"]["range"] == "SubjectCuration"
     assert schema["slots"]["curation_status"]["range"] == "CurationStatusEnum"
     assert schema["slots"]["curation_status"]["required"] is True
+    assert schema["slots"]["condition_level"]["range"] == "MappingConditionLevelEnum"
+    assert "gene_symbol" in schema["enums"]["MappingConditionLevelEnum"]["permissible_values"]
     assert schema["enums"]["GOTermEnum"]["reachable_from"]["source_nodes"] == [
         "GO:0003674",
         "GO:0008150",
