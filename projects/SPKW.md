@@ -14,7 +14,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
-  project documented is now resolved at the source. Retrospective review of 14 non-Arabidopsis
+  project documented is now resolved at the source. Retrospective review of 18 non-Arabidopsis
   plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
@@ -32,7 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 14 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 18 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -53,6 +53,7 @@ See [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md) for detailed SQL queries and expl
 | **Toxin vs effector** | Effectors incorrectly called toxins | NleB1 (E. coli) | REMOVE |
 | **Subclade divergence** | Family keyword ignores subfunctionalization | LCR1 (Arabidopsis DEFL) | REMOVE |
 | **Kratagonist ≠ toxin** | Sequestration ≠ toxin activity | D7 proteins (mosquito) | MODIFY |
+| **Enzyme-class keyword → bare process** | An activity keyword maps to a generic, substrate-less process term; substrate specificity lives on the MF branch | Methyltransferase → methylation (plant MTases: MET1A, EZ1, CCOAOMT, COQ5) | MARK_OVER / MODIFY |
 
 ## Legitimate SPKW Contributions
 
@@ -69,8 +70,8 @@ Not all SPKW-unique annotations are over-annotations:
 ## Project Status
 
 - **Started**: 2025-12-23
-- **Last updated**: 2026-05-29
-- **Total genes reviewed**: 109 across 11 subprojects
+- **Last updated**: 2026-05-30
+- **Total genes reviewed**: 113 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -88,7 +89,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (14 genes, 13 species); term-tier classification + retrospective validation of GOA's SPKW retirement
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (18 genes, 13 species); term-tier classification + retrospective validation of GOA's SPKW retirement + Methyltransferase->methylation keyword batch
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -121,6 +122,26 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ---
 
 ## Session Notes
+
+### 2026-05-30
+
+- Added a **keyword-level** view to [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md): reverse-map
+  SPKW-unique GO terms to their source UniProt keywords via the public `keyword2go`
+  (external2go) mapping (the GAF stores only the GO term). Produced a tier-annotated
+  watch-list of the ~30 process/role keywords that drive plant over-annotation; it is
+  organism-independent (same keywords drove the human/pombe/Arabidopsis subprojects).
+- Reviewed the largest unreviewed Tier A keyword, **`Methyltransferase` → *methylation*
+  (GO:0032259)** (92 plant genes), across 4 substrate classes: MET1A (rice, DNA),
+  EZ1 (maize, histone H3K27), CCOAOMT (potato, lignin caffeoyl-CoA), COQ5 (rice, ubiquinone).
+- **Finding: `Methyltransferase → methylation` is a reliable, mechanistically-explained
+  over-annotation** (4/4 flagged; 3 MARK_OVER, 1 MODIFY). GO keeps methylation
+  substrate-specificity on the molecular-function branch and has **obsoleted** the specific
+  *process* terms (DNA methylation GO:0006306, histone methylation GO:0016571, H3K27
+  methylation GO:0070734), so the bare *methylation* (GO:0032259) is structurally doomed to be
+  redundant with the specific *…-methyltransferase activity* MF the gene already carries.
+- Bonus: the review pass also caught two unrelated over-predictions — CCOAOMT *circadian
+  rhythm* (ARBA) and EZ1 *single-stranded RNA binding* (ortholog transfer), both REMOVEd.
+- PLANTS now 18 genes / 13 species.
 
 ### 2026-05-29
 

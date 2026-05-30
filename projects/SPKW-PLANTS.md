@@ -22,10 +22,11 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for fourteen
+landscape, so this subproject is a **retrospective validation study**: for eighteen
 genes across thirteen species (nine in the original round, five in the 2026-05-29
-extension) we ask whether GOA's wholesale removal was justified, and we classify the
-214 SPKW-unique terms by their over-annotation risk.
+species extension, four in the 2026-05-30 methylation-keyword batch) we ask whether
+GOA's wholesale removal was justified, and we classify the 214 SPKW-unique terms by
+their over-annotation risk.
 
 ## Key Statistics (2026-05-21)
 
@@ -451,6 +452,103 @@ the gene's position in the pathway does.
 
 ---
 
+## Methylation-Keyword Batch (2026-05-30): One Keyword, Four Substrates
+
+Following the keyword-level watch-list in [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md),
+**`Methyltransferase` → *methylation* (GO:0032259)** was the largest *unreviewed* Tier A
+keyword (92 plant genes). Four methyltransferases spanning four substrate classes were
+reviewed to test whether the bare process term is a reliable over-annotation.
+
+| Gene | UniProt | Species | Substrate | "methylation" (GO:0032259) action | Tier |
+|------|---------|---------|-----------|-----------------------------------|------|
+| MET1A | Q7Y1I7 | rice | DNA (5-methylcytosine) | MODIFY → GO:0141119 (DNA-methylation maintenance) | A |
+| EZ1 | Q8S4P6 | maize | histone H3 Lys27 | MARK_AS_OVER_ANNOTATED | A |
+| CCOAOMT | Q8H9B6 | potato | caffeoyl-CoA (lignin) | MARK_AS_OVER_ANNOTATED | A |
+| COQ5 | Q5JNC0 | rice | benzoquinol (ubiquinone) | MARK_AS_OVER_ANNOTATED | A |
+
+**Result: in all four, the bare *methylation* (GO:0032259) is an over-annotation.** It drops
+the one thing that matters — the substrate — and in every case the substrate-specific
+*molecular function* (DNA (cytosine-5)-methyltransferase, histone H3K27 methyltransferase,
+caffeoyl-CoA O-methyltransferase, benzoquinol methyltransferase activity) is already present,
+making the bare process term redundant.
+
+### Why *methylation* is almost always redundant: GO puts the substrate on the MF branch
+
+A structural insight made this verdict near-deterministic. GO encodes methylation
+substrate-specificity on the **molecular-function** branch (the specific
+*…-methyltransferase activity* terms), not the process branch. The substrate-specific
+methylation **process** terms one would want to MODIFY to are now **obsolete** — *DNA
+methylation* (GO:0006306), *histone methylation* (GO:0016571), and *histone H3-K27
+methylation* (GO:0070734) are all obsoleted in the current ontology. So for a
+`Methyltransferase`-keyword gene there is usually **no specific process term to MODIFY to**,
+and the right action is to drop the bare *methylation* in favour of the specific MF the gene
+already carries. The one exception in this batch was MET1A, where a maintenance-specific
+process term survives (GO:0141119, *chromosomal DNA methylation maintenance following DNA
+replication*, whose GO definition explicitly names plant MET1).
+
+### Case 15: MET1A — DNA methylation maintenance (DNA substrate)
+
+**Gene:** MET1A (Q7Y1I7) — DNA (cytosine-5)-methyltransferase 1A, *Oryza sativa*.
+**Review file:** `genes/ORYSJ/MET1A/MET1A-ai-review.yaml`
+
+OsMET1a is the rice DNMT1-orthologue that maintains CG methylation after replication. The
+keyword-derived *methylation* drops both substrate (DNA) and mechanism (maintenance); decision
+**MODIFY → GO:0141119** (the surviving substrate-specific process term, whose definition names
+MET1). The redundant bare *methyltransferase activity* (GO:0008168) was also
+MARK_AS_OVER_ANNOTATED, leaving the specific *DNA (cytosine-5-)-methyltransferase activity*
+(GO:0003886) as the core MF. Tier A.
+
+### Case 16: EZ1 — histone H3K27 methylation (protein substrate)
+
+**Gene:** EZ1 (Q8S4P6) — Histone-lysine N-methyltransferase EZ1 (maize Enhancer-of-zeste, "Mez1").
+**Review file:** `genes/MAIZE/EZ1/EZ1-ai-review.yaml`
+
+EZ1/Mez1 is the catalytic SET-domain subunit of Polycomb Repressive Complex 2; it
+trimethylates histone H3 Lys27 to silence chromatin. *methylation* → **MARK_AS_OVER_ANNOTATED**:
+the substrate-specific *histone methylation* process terms are obsolete, and the specific MF
+*histone H3K27 methyltransferase activity* (GO:0046976) is already present, so the bare term is
+redundant with no MODIFY target. The review also tightened the generic *histone
+methyltransferase activity* → H3K27-specific, and **REMOVE**d a spurious ortholog-transferred
+*single-stranded RNA binding*. Tier A.
+
+### Case 17: CCOAOMT — lignin O-methylation, with collateral damage (small-molecule substrate)
+
+**Gene:** CCOAOMT (Q8H9B6) — Caffeoyl-CoA O-methyltransferase, *Solanum tuberosum*.
+**Review file:** `genes/SOLTU/CCOAOMT/CCOAOMT-ai-review.yaml`
+
+The Mg²⁺-dependent O-methyltransferase that converts caffeoyl-CoA to feruloyl-CoA in
+phenylpropanoid/lignin biosynthesis — and the **cleanest redundancy case**: *methylation* is
+fully covered by the specific MF *caffeoyl-CoA O-methyltransferase activity* (GO:0042409) plus
+the pathway process, so → **MARK_AS_OVER_ANNOTATED** (Tier A). But this gene is also **multi-tier
+and partly collateral damage**: its retired *lignin biosynthetic process* (GO:0009809) is
+correct and informative → **ACCEPT** (Tier C; the retained *phenylpropanoid biosynthetic
+process* is only the broader parent, not a substitute), and *metal ion binding* (GO:0046872) is
+broad-but-correct → MARK_OVER (Tier B). A spurious ARBA-predicted *circadian rhythm*
+(GO:0007623) was also **REMOVE**d. Tier A/C/B.
+
+### Case 18: COQ5 — ubiquinone C-methylation (cofactor substrate)
+
+**Gene:** COQ5 (Q5JNC0) — 2-methoxy-6-polyprenyl-1,4-benzoquinol methylase, mitochondrial, *Oryza sativa*.
+**Review file:** `genes/ORYSJ/COQ5/COQ5-ai-review.yaml`
+
+The C-methyltransferase of the coenzyme-Q (ubiquinone) biosynthesis pathway. *methylation* →
+**MARK_AS_OVER_ANNOTATED**: both the specific MF (GO:0008425, benzoquinol methyltransferase
+activity) and the specific process (GO:0006744, *ubiquinone biosynthetic process*) are already
+present, so the bare term is purely redundant. Tier A.
+
+### What the methylation batch adds
+
+`Methyltransferase → methylation` is a **reliable, mechanistically-explained over-annotation**:
+4/4 genes, across DNA / histone / secondary-metabolite / cofactor substrates, had the bare
+process term flagged (3 MARK_OVER, 1 MODIFY). Because GO deliberately keeps methylation
+substrate-specificity on the MF branch and obsoleted the specific process terms, the keyword's
+target term is structurally doomed to be uninformative or redundant. As a bonus, reviewing the
+keyword-derived terms surfaced **two unrelated over-predictions** (CCOAOMT *circadian rhythm*
+from ARBA; EZ1 *ssRNA binding* from ortholog transfer) — a reminder that the SPKW review pass
+is also a general annotation-quality pass.
+
+---
+
 ## Over-Annotation Patterns (Non-Arabidopsis Plants)
 
 | Pattern | Example | Mechanism | Tier |
@@ -547,6 +645,11 @@ genes/MAIZE/ABP1/ABP1-ai-review.yaml      (A: auxin signaling on the contested a
 genes/PHYPA/MPK4a/MPK4a-ai-review.yaml    (A: broad immunity terms redundant with PRR-signaling, in a moss)
 genes/MAIZE/AM1/AM1-ai-review.yaml        (A: cell-division/segregation keywords on a meiotic-entry switch)
 genes/SOLTU/PATB1/PATB1-ai-review.yaml    (C/A: storage role kept; defense over-annotated)
+# 2026-05-30 methylation-keyword batch (Methyltransferase -> methylation, GO:0032259):
+genes/ORYSJ/MET1A/MET1A-ai-review.yaml    (A: DNA MTase; methylation MODIFY -> DNA-maintenance GO:0141119)
+genes/MAIZE/EZ1/EZ1-ai-review.yaml        (A: histone H3K27 MTase; methylation redundant w/ specific MF)
+genes/SOLTU/CCOAOMT/CCOAOMT-ai-review.yaml (A/C/B: lignin OMT; methylation redundant, lignin process correct)
+genes/ORYSJ/COQ5/COQ5-ai-review.yaml      (A: ubiquinone MTase; methylation redundant w/ specific MF+process)
 ```
 
 ## Methods Note
