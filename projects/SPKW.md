@@ -14,7 +14,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
-  project documented is now resolved at the source. Retrospective review of 30 non-Arabidopsis
+  project documented is now resolved at the source. Retrospective review of 34 non-Arabidopsis
   plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
@@ -32,7 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 30 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 34 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -71,7 +71,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
-- **Total genes reviewed**: 125 across 11 subprojects
+- **Total genes reviewed**: 129 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -89,7 +89,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (30 genes, 14 species); term-tier classification + retrospective validation + keyword-watch-list sweep (methylation, developmental, defense, nodulation)
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (34 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6)
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -157,6 +157,15 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   relative to that process → (1) core component → keep; (2) wrong organism/pathway → MODIFY;
   (3) right area wrong altitude → MODIFY-to-specific; (4) expression/component ≠ function →
   MARK_OVER/REMOVE. PLANTS now **30 genes / 14 species** (added common bean).
+- **Hormone-signaling-subtype batch** (4 genes; completes all six major plant hormones):
+  VP1 (maize, ABA B3 TF) MODIFY→regulation of/response to ABA (responsive effector); CKX2
+  (rice cytokinin **dehydrogenase**) MARK_OVER — a catabolic enzyme that *degrades* the hormone,
+  not a signaling component (cleanest case); TUD1 (rice BR U-box E3 ligase) ACCEPT (legitimate
+  component); EIL2 (rice ethylene EIN3-like TF) ACCEPT (legitimate; collateral damage). With
+  auxin (ABP1) and GA (RHT1/DELLA), one keyword ("X signaling pathway") yields keep / MODIFY /
+  remove purely by the gene's pathway position (transduction component vs responsive effector vs
+  hormone-metabolism enzyme). PLANTS now **34 genes / 14 species**; the full high/medium-value
+  Tier A watch-list is covered.
 
 ### 2026-05-29
 

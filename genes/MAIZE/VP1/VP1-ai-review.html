@@ -1,0 +1,3297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VP1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>VP1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P26307" target="_blank" class="term-link">
+                        P26307
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Zea mays</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "VP1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P26307" data-a="DESCRIPTION: Maize VIVIPAROUS-1 (VP1; UniProt P26307) is a seed..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Maize VIVIPAROUS-1 (VP1; UniProt P26307) is a seed-specific B3-domain transcriptional regulator and the maize ortholog of Arabidopsis ABI3. It is genetically essential for coordinating the seed maturation program (acquisition of desiccation tolerance and dormancy) and for implementing ABA-responsive transcription during embryogenesis (deep-research falcon report; Suzuki et al. 2001, Pla et al. 1991, White 1995). VP1 is a modular transcription factor: it acts as (i) an ABA-dependent co-activator of seed ABA-regulated maturation genes via G-box/ABRE-related cis-elements (e.g. Em, rab28), (ii) a direct, B3-dependent sequence-specific DNA-binding activator of certain promoters (the maize anthocyanin regulator C1 via the Sph element), and (iii) a repressor of germination-associated programs in aleurone (e.g. alpha-amylase), with the co-activation and repression functions largely B3-independent and mediated by protein-protein interactions. The protein contains four conserved domains (A1, B1, B2 and the C-terminal B3 DNA-binding domain spanning residues 517-619) and an N-terminal acidic/disordered transcriptional-activation region. Loss-of-function vp1 mutants are ABA-insensitive and viviparous - they undergo precocious germination on the ear, fail to acquire desiccation tolerance, and lose normal accumulation of LEA/maturation transcripts; maize VP1 expressed in Arabidopsis abi3-6 restores green-seed/desiccation phenotypes and ABA sensitivity, demonstrating functional conservation with ABI3. A central nuance for GO annotation is that VP1 is a downstream transcriptional EFFECTOR that mediates and potentiates ABA responses (it sits at the terminal ABI3 node of the PYL-ABI1-SnRK2-ABI3 module), rather than being a component of the core PYR/PYL-PP2C-SnRK2 perception-to-transduction cascade (GO:0009738). VP1 function is nuclear (consistent with its DNA-binding transcriptional regulator role), though no direct experimental subcellular-localization assay for the maize protein was found in the retrieved literature; UniProt also lists a cytoplasmic location.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR003340, B3 DNA-binding domain). VP1 contains a C-terminal B3 DNA-binding domain (residues 517-619) and binds DNA directly - it activates the maize C1 promoter via B3 binding to the Sph element.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and core. The UniProt feature table annotates a TF-B3 DNA-binding domain at 517-619, and the deep-research synthesis confirms that VP1/ABI3 proteins contain four conserved domains in which B3 is the DNA-binding domain, with direct B3-dependent binding to the C1 promoter Sph element. &#34;DNA binding&#34; is generic but not incorrect; the more informative sequence-specific DNA-binding transcription factor activity is captured by GO:0003700 (modified below).
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">VP1/ABI3 proteins contain four prominent conserved domains, **A1, B1, B2, and B3**, where **B3 is the DNA-binding domain**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**maize *C1*** activation via B3 binding to the **Sph element**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR044800, LEC2-like B3 family) for sequence-specific DNA-binding transcription factor activity. This is VP1&#39;s core molecular function - it is a transcriptional regulator that activates and represses plant nuclear (RNA Pol II) protein-coding genes. The generic term is correct but can be made more precise.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> VP1 is unambiguously a sequence-specific DNA-binding transcription factor: it acts as a direct transcriptional activator of certain promoters via B3 DNA binding (C1 via the Sph element), as an ABA-dependent co-activator of seed maturation genes via G-box/ABRE elements, and as a repressor of germination genes. UniProt&#39;s original description (Cell 1991) is &#34;a novel transcriptional activator.&#34; Because VP1 regulates RNA polymerase II protein-coding genes, the generic GO:0003700 is better represented by the more specific child term GO:0000981 (DNA-binding transcription factor activity, RNA polymerase II-specific). The essence is correct; only the level of specificity is refined.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    DNA-binding transcription factor activity, RNA polymerase II-specific
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">VP1 functions as a **transcriptional regulator** (not an enzyme/transport protein)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt subcellular-location vocabulary. VP1 is a DNA-binding transcriptional regulator, so a nuclear location is where it carries out its function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with VP1&#39;s molecular function. The deep-research synthesis states that the evidence base strongly supports VP1 as a DNA-binding transcriptional regulator, which generally implies nuclear function, and UniProt lists Nucleus as a subcellular location. No direct GFP/fractionation experiment for maize VP1 was found in the retrieved texts, but nuclear localization is the functionally relevant location for a transcription factor and is accepted.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">The retrieved evidence base strongly supports VP1 as a **DNA-binding transcriptional regulator**, which generally implies nuclear function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt subcellular-location vocabulary (UniProt lists both Cytoplasm and Nucleus). VP1 carries out its function as a transcription factor in the nucleus; the cytoplasmic assignment is not where its core activity occurs.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The UniProt record lists Cytoplasm as a subcellular location, so the annotation is retained, but it does not represent VP1&#39;s core, functionally relevant compartment. The deep-research synthesis explicitly notes that no direct experimental subcellular localization assay (GFP fusion, fractionation) for maize VP1 was found, and that the evidence supports a nucleus-consistent function. A cytoplasmic pool would at most reflect a shuttling/storage population rather than the site of VP1&#39;s transcriptional activity. Marked non-core; not removed because it is a curated UniProt location.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**explicit experimental subcellular localization (e.g., GFP fusion microscopy, fractionation)** for maize VP1 **was not found in the obtained texts**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">this report does not make a definitive, experimentally sourced localization claim beyond nucleus-consistent function</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000108
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0006355" data-r="GO_REF:0000108" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation inferred logically from the DNA-binding transcription factor activity MF. VP1 regulates transcription of seed maturation and germination genes - primarily as an activator of ABA-inducible maturation genes (Em, rab28, C1) and as a repressor of germination-associated genes. The generic process term can be made more specific.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> VP1 is genuinely a transcriptional regulator, so the term is correct, but it is the broad parent. VP1 regulates RNA polymerase II protein-coding genes and is described primarily as a transcriptional activator that potentiates ABA-responsive maturation gene expression (it can transactivate ABRE-containing promoters synergistically with ABA and directly activates C1). The more informative child term is GO:0045944 (positive regulation of transcription by RNA polymerase II). VP1 also has a separable repressor function on germination genes (alpha-amylase), which is captured separately by the proposed negative-regulation-of-germination process term below.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    positive regulation of transcription by RNA polymerase II
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">VP1 can **transactivate ABRE-containing promoters** synergistically with ABA</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Distinct VP1 domains are required for different outputs: Em/C1 activation vs α-amylase repression</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009738" target="_blank" class="term-link">
+                                    GO:0009738
+                                </a>
+                            </span>
+                            <span class="term-label">abscisic acid-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0009738" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Abscisic acid signaling pathway&#34;; snapshot-only, removed in the current GOA release. VP1&#39;s genuine ABA role is real and central, but it is a downstream transcriptional EFFECTOR that mediates/potentiates ABA responses (the terminal ABI3 node of the PYL-ABI1-SnRK2-ABI3 module) rather than a component of the core PYR/PYL-PP2C-SnRK2 perception-to-transduction cascade that GO:0009738 denotes.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of the bare keyword term was partly justified but should not lose the genuine biology. GO:0009738 (abscisic acid-activated signaling pathway) denotes the ABA perception-to-transduction cascade (PYR/PYL receptors, PP2C phosphatases, SnRK2 kinases). VP1 is not part of that perception/transduction core: the multi-omics synthesis explicitly places VP1 at the downstream ABI3 node of the PYL-ABI1-SnRK2-ABI3 module and classifies vp1 as a plant-specific transcription factor acting in ABA signaling, while UniProt describes VP1 as &#34;potentiating the response to ABA.&#34; Its experimentally supported function is to regulate/potentiate the ABA-responsive transcriptional output (it co-activates ABRE/G-box maturation genes and is required for developmental ABA responsiveness of rab28), i.e. it regulates the pathway&#39;s effect rather than transducing perception. Genetic data place VP1 epistatic/downstream as an essential executor of the maturation/dormancy program. Therefore the annotation should be retained but MODIFIED to terms that capture VP1 as a regulator/effector of the ABA response: &#34;regulation of abscisic acid-activated signaling pathway&#34; (GO:0009787) and &#34;cellular response to abscisic acid stimulus&#34; (GO:0071215). The seed-maturation and germination-repression outputs are captured by the NEW process terms below.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009787" target="_blank" class="term-link">
+                                    regulation of abscisic acid-activated signaling pathway
+                                </a>
+                            </span>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071215" target="_blank" class="term-link">
+                                    cellular response to abscisic acid stimulus
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**vp1** is classified as a plant-specific transcription factor acting in ABA signaling</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">perturbation of the PYL-ABI1-SnRK2-ABI3 core module</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**ABA-dependent co-activation** of ABRE/G-box</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010431" target="_blank" class="term-link">
+                                    GO:0010431
+                                </a>
+                            </span>
+                            <span class="term-label">seed maturation</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0010431" data-r="file:MAIZE/VP1/VP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> VP1 is the master regulator of the maize seed maturation program (desiccation tolerance and dormancy). This core biological process is not represented in current GOA and should be added.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> VP1 is genetically essential for the seed maturation program: vp1 loss-of-function mutants are viviparous, undergo precocious germination, lose desiccation tolerance, and show strongly reduced accumulation of multiple maturation-associated transcripts. Maize VP1 expressed in Arabidopsis abi3-6 restores green-seed/desiccation phenotypes, confirming a conserved seed-maturation function with ABI3. GO:0010431 (seed maturation) is the precise process term; IMP is justified by the vp1 mutant phenotype. (A regulatory term, GO:2000693 positive regulation of seed maturation, is an alternative, since VP1 promotes the program; the directly-involved seed-maturation term is used here as the primary annotation.)
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">genetically essential for coordinating the **seed maturation program** (desiccation tolerance and dormancy) and for implementing **ABA-responsive transcription**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Suppression of germination in maize kernels absolutely requires functional **Vp1**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010187" target="_blank" class="term-link">
+                                    GO:0010187
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of seed germination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0010187" data-r="file:MAIZE/VP1/VP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> VP1 enforces seed dormancy and prevents precocious germination (vivipary); vp1 mutants germinate precociously on the ear. VP1 also directly represses germination-associated programs in aleurone.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The defining vp1 phenotype is vivipary - precocious germination of developing kernels on the ear - so VP1 normally negatively regulates germination and enforces the dormant state. VP1 represses germination-associated expression programs in maize aleurone (e.g. alpha-amylase), a separable function from its activation of maturation genes. GO:0010187 (negative regulation of seed germination) precisely captures this; IMP is justified by the viviparous mutant phenotype.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**Transcriptional repressor** of germination-associated expression programs in maize aleurone</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">precocious germination</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P26307" data-a="GO:0043565" data-r="file:MAIZE/VP1/VP1-deep-research-falcon.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> VP1&#39;s B3 domain binds DNA in a sequence-specific manner - directly recognizing the Sph element of the maize C1 promoter. This refines the generic GO:0003677 &#34;DNA binding&#34;.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The deep-research synthesis describes direct B3-dependent activation of the maize C1 gene via binding to the Sph element, a defined cis-element, demonstrating sequence-specific (not generic) DNA binding by the B3 domain. GO:0043565 (sequence-specific DNA binding) is more informative than the generic GO:0003677 and reflects the established B3 recognition of a specific promoter motif. IDA reflects the promoter-binding/activation evidence summarized for the Sph element.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:MAIZE/VP1/VP1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>VP1 is a sequence-specific B3-domain DNA-binding transcription factor that activates transcription of ABA-responsive seed maturation genes. It directly binds the Sph element of the maize C1 promoter via its B3 domain and acts as an ABA-dependent co-activator of G-box/ABRE-containing maturation genes (e.g. Em, rab28).
+</h3>
+                <span class="vote-buttons" data-g="P26307" data-a="FUNCTION: VP1 is a sequence-specific B3-domain DNA-binding t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                positive regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">VP1 can **transactivate ABRE-containing promoters** synergistically with ABA</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>VP1 is the master regulator of the maize seed maturation program, promoting acquisition of desiccation tolerance and dormancy and mediating/potentiating ABA responses downstream of ABA perception. Loss of VP1 causes ABA-insensitivity and vivipary.
+</h3>
+                <span class="vote-buttons" data-g="P26307" data-a="FUNCTION: VP1 is the master regulator of the maize seed matu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010431" target="_blank" class="term-link">
+                                seed maturation
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009787" target="_blank" class="term-link">
+                                regulation of abscisic acid-activated signaling pathway
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">genetically essential for coordinating the **seed maturation program** (desiccation tolerance and dormancy) and for implementing **ABA-responsive transcription**</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**vp1** is classified as a plant-specific transcription factor acting in ABA signaling</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>VP1 enforces seed dormancy and prevents precocious germination (vivipary), in part by repressing germination-associated transcriptional programs in the aleurone (e.g. alpha-amylase), a function separable from its activation of maturation genes.
+</h3>
+                <span class="vote-buttons" data-g="P26307" data-a="FUNCTION: VP1 enforces seed dormancy and prevents precocious..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010187" target="_blank" class="term-link">
+                                negative regulation of seed germination
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">**Transcriptional repressor** of germination-associated expression programs in maize aleurone</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:MAIZE/VP1/VP1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">Suppression of germination in maize kernels absolutely requires functional **Vp1**</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-to-GO mappings (IPR003340 B3 DNA-binding domain; IPR044800 LEC2-like) assign DNA binding and DNA-binding transcription factor activity to VP1, consistent with its experimentally supported role as a B3-domain transcriptional regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular-location mapping assigns Nucleus and Cytoplasm to VP1; the nucleus is the functionally relevant compartment for this transcription factor, whereas no direct localization experiment for maize VP1 was found in the literature.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on inter-ontology links</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Logical inference from the DNA-binding transcription factor activity MF assigns the broad &#34;regulation of DNA-templated transcription&#34; process; VP1&#39;s specific role is better captured by positive regulation of RNA Pol II transcription.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotation present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For VP1, the keyword &#34;Abscisic acid signaling pathway&#34; mapped to GO:0009738 (the perception-to-transduction cascade); VP1 is a downstream transcriptional effector that regulates/potentiates ABA responses rather than a component of the core cascade, so the term is better replaced by regulation-of/response-to ABA terms.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:MAIZE/VP1/VP1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of maize VP1 (P26307).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">VP1 is a B3-domain transcriptional regulator essential for the seed maturation program (desiccation tolerance, dormancy) and for ABA-responsive transcription during embryogenesis; it is the maize ortholog of Arabidopsis ABI3.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">VP1 is a modular transcription factor acting as an ABA-dependent co-activator of seed maturation genes via G-box/ABRE elements, a direct B3-dependent sequence-specific activator of C1 via the Sph element, and a repressor of germination-associated genes (alpha-amylase) in aleurone.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">vp1 mutants are ABA-insensitive and viviparous (precocious germination, loss of desiccation tolerance); maize VP1 complements Arabidopsis abi3-6, restoring green-seed/desiccation phenotypes and ABA sensitivity of germination.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Multi-omics analysis classifies vp1 as a plant-specific transcription factor acting in ABA signaling and places VP1 at the downstream ABI3 node of the PYL-ABI1-SnRK2-ABI3 core module, downstream of ABA perception/transduction.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">VP1 is required for normal developmental ABA responsiveness of rab28; rab28 transcripts fail to accumulate in vp1 embryos despite near-normal ABA levels, though exogenous ABA can partially induce rab28 in young vp1 embryos.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct experimental subcellular-localization assay for maize VP1 was found; the report supports a nucleus-consistent function for the DNA-binding transcriptional regulator.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does maize VP1 bind the Sph/RY cis-element directly and sequence-specifically in vitro, and what is the consensus B3 recognition motif, given that some VP1 activation and repression functions are reported to be B3-independent and partner-mediated?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Donald R. McCarty</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="Q: Does maize VP1 bind the Sph/RY cis-element directl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which bZIP/ABRE-binding partners does maize VP1 physically interact with to co-activate G-box/ABRE maturation genes, and are these interactions ABA-dependent?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Masaharu Suzuki</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="Q: Which bZIP/ABRE-binding partners does maize VP1 ph..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the cytoplasmic localization listed for VP1 a genuine regulated pool (e.g. nucleocytoplasmic shuttling) or an annotation artifact, given the absence of direct localization data for the maize protein?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Donald R. McCarty</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="Q: Is the cytoplasmic localization listed for VP1 a g..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform ChIP-seq and in vitro DNA-binding (EMSA/SELEX) for maize VP1 in developing embryos to define its direct genome-wide targets and the B3 recognition motif, and to distinguish direct B3-dependent targets (e.g. C1/Sph) from partner-mediated co-activated/repressed genes.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: VP1 directly and sequence-specifically binds Sph/RY-type elements at a subset of maturation gene promoters, while co-activation of ABRE/G-box genes is mediated by interaction with bZIP partners rather than direct VP1 DNA binding.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: ChIP-seq and in vitro DNA-binding assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="EXPERIMENT: Perform ChIP-seq and in vitro DNA-binding (EMSA/SE..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Epistasis and reporter analyses placing VP1 relative to the core ABA module (ZmPYL receptors, ZmPP2Cs, ZmSnRK2s) - e.g. testing whether VP1 transcriptional output requires SnRK2 activity and whether VP1 acts downstream of SnRK2-mediated phosphorylation of ABF/AREB-type factors.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: VP1 acts as a downstream transcriptional effector that regulates/potentiates the ABA response, downstream of the PYR/PYL-PP2C-SnRK2 perception-transduction cascade, rather than as a component of that cascade.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis and transactivation assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="EXPERIMENT: Epistasis and reporter analyses placing VP1 relati..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate a translational VP1-fluorescent-protein fusion expressed from the native promoter in maize and image its subcellular localization across embryo development, with fractionation, to test the curated cytoplasm vs nucleus assignment.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: VP1 is predominantly nuclear during seed maturation, consistent with its transcription-factor function, and any cytoplasmic signal reflects a minor or regulated population.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: live-cell fluorescence localization</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="P26307" data-a="EXPERIMENT: Generate a translational VP1-fluorescent-protein f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(VP1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P26307" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">Research Report: **Viviparous-1 (VP1)** regulatory protein in maize (*Zea mays*)</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">19 citations</span>
+                    
+                    
+                    <span class="report-badge">1 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T09:07:23.058022</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="VP1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-viviparous-1-vp1-regulatory-protein-in-maize-zea-mays">Research Report: <strong>Viviparous-1 (VP1)</strong> regulatory protein in maize (<em>Zea mays</em>)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>Maize <strong>Viviparous-1 (VP1; UniProt P26307; gene symbol Vp1)</strong> encodes a <strong>B3-domain transcriptional regulator</strong> that is genetically essential for coordinating the <strong>seed maturation program</strong> (desiccation tolerance and dormancy) and for implementing <strong>ABA-responsive transcription</strong> during embryogenesis. VP1 is functionally conserved with <em>Arabidopsis</em> ABI3 and acts through <strong>domain-modular transcriptional activation and repression</strong>, including <strong>direct promoter activation</strong> (e.g., <em>C1</em>) and <strong>ABA-dependent co-activation</strong> of ABRE/G-box–containing maturation genes (e.g., <em>rab28</em>). (suzuki2001maizevp1complements pages 1-2, pla1991regulationofthe pages 3-5, white1995molecularandphysiological pages 17-21)</p>
+<h2 id="1-critical-geneprotein-identity-verification-mandatory">1) Critical gene/protein identity verification (mandatory)</h2>
+<p>The literature analyzed here consistently refers to <strong>maize viviparous-1 (Vp1/vp1)</strong> as an ABA-related seed regulator and as the <strong>ortholog of <em>Arabidopsis</em> ABI3</strong>, with a <strong>conserved B3 DNA-binding domain</strong> and additional conserved regions (A1/B1/B2). This matches the UniProt target identity <strong>P26307: “Regulatory protein viviparous-1”</strong> from **<br />
+<em>Zea mays</em> (maize)<strong>, annotated with a </strong>B3 DNA-binding domain**. (suzuki2001maizevp1complements pages 1-2)</p>
+<h2 id="2-key-concepts-and-definitions-current-understanding">2) Key concepts and definitions (current understanding)</h2>
+<h3 id="21-vivipary-and-the-vp1-phenotype">2.1 Vivipary and the vp1 phenotype</h3>
+<p>In maize, <strong>vivipary</strong> refers to <strong>precocious germination of developing kernels on the ear</strong>, reflecting failure to maintain the normal separation between maturation and germination programs. The <strong>vp1 mutant</strong> is classically described as <strong>ABA-insensitive</strong> and exhibits defects characteristic of a failed maturation program (precocious germination, loss of desiccation tolerance, and developmental mistiming such as green embryos). (suzuki2001maizevp1complements pages 1-2)</p>
+<h3 id="22-vp1-as-a-modular-transcription-factor-domains-and-functions">2.2 VP1 as a modular transcription factor (domains and functions)</h3>
+<p>VP1/ABI3 proteins contain four prominent conserved domains, <strong>A1, B1, B2, and B3</strong>, where <strong>B3 is the DNA-binding domain</strong>. Functional analyses summarized in a key VP1 study distinguish at least three separable regulatory activities: (i) <strong>ABA-dependent co-activation</strong> of seed ABA-regulated genes via <strong>G-box/ABRE-related cis-elements</strong>, (ii) <strong>direct activation</strong> of certain targets via B3-dependent DNA binding (e.g., <em>C1</em> via the Sph element), and (iii) <strong>repression</strong> of germination-associated genes in aleurone; the co-activation and repression functions are described as largely <strong>B3-independent</strong> and mediated by <strong>protein–protein interactions</strong> with other transcription factors. (suzuki2001maizevp1complements pages 1-2, suzuki2001maizevp1complements pages 6-7)</p>
+<h3 id="23-abreg-box-logic-in-seed-maturation-gene-regulation">2.3 ABRE/G-box logic in seed maturation gene regulation</h3>
+<p>A central cis-regulatory theme in ABA-responsive transcription is the <strong>ABRE (ABA response element)</strong>, often centered on a <strong>G-box core (CACGTG)</strong>. A maize embryo-maturation synthesis notes VP1 can <strong>transactivate ABRE-containing promoters</strong> synergistically with ABA, and highlights the mechanistic relevance of ABRE-binding proteins (e.g., bZIP-type factors). (white1995molecularandphysiological pages 17-21)</p>
+<h2 id="3-molecular-function-and-pathways-of-maize-vp1">3) Molecular function and pathways of maize VP1</h2>
+<h3 id="31-primary-molecular-function">3.1 Primary molecular function</h3>
+<p>Across primary and synthesis sources, VP1 functions as a <strong>transcriptional regulator</strong> (not an enzyme/transport protein):<br />
+- <strong>ABA-dependent co-activator</strong> for seed-specific ABA-regulated genes through G-box/ABRE-related elements. (suzuki2001maizevp1complements pages 1-2)<br />
+- <strong>Direct transcriptional activator</strong> of some promoters via <strong>B3 DNA binding</strong>, exemplified by <strong>maize <em>C1</em></strong> activation via B3 binding to the <strong>Sph element</strong>. (suzuki2001maizevp1complements pages 1-2)<br />
+- <strong>Transcriptional repressor</strong> of germination-associated expression programs in maize aleurone, likely via protein interactions. (suzuki2001maizevp1complements pages 1-2)</p>
+<h3 id="32-position-in-abaga-antagonism-controlling-maturation-vs-germination">3.2 Position in ABA–GA antagonism controlling maturation vs germination</h3>
+<p>An embryo-maturation synthesis of maize hormonal control emphasizes that the developmental outcome is governed by <strong>ABA vs GA balance</strong>, but that preventing vivipary and enforcing maturation <strong>“absolutely requires” functional Vp1</strong>; reducing GA can suppress vivipary in ABA-deficient mutants, yet does not suppress vivipary when VP1 is nonfunctional, consistent with VP1 being epistatic/downstream as an essential executor of maturation/dormancy programs. (white1995molecularandphysiological pages 145-150, white1995molecularandphysiological pages 155-159, white1995molecularandphysiological pages 1-10)</p>
+<h3 id="33-regulatory-network-placement-vp1-as-an-embryo-program-node-controlled-upstream-by-other-tfs">3.3 Regulatory network placement: VP1 as an embryo program node controlled upstream by other TFs</h3>
+<p>A 2021 <em>Plant Cell</em> study (focused on maize seed development regulatory networks) provides direct evidence that <strong>ZmABI19</strong> binds the <strong>Vp1 promoter</strong> (ChIP-seq and reporter assays), with <strong>ABA enhancing ZmABI19 transactivation of Vp1</strong>. This positions VP1 within a broader ABA-coupled transcriptional circuit coordinating embryo development and grain filling. In that work, <strong>Vp1 expression begins ~3–5 DAP and peaks around ~10 DAP</strong>, overlapping spatially with ZmABI19 signal in the <strong>scutellum</strong>. (yang2021theb3domaincontaining pages 16-17)</p>
+<h2 id="4-experimentally-supported-downstream-targets-and-readouts">4) Experimentally supported downstream targets and readouts</h2>
+<h3 id="41-direct-activation-target-c1">4.1 Direct activation target: <em>C1</em></h3>
+<p>VP1 is described as a <strong>direct activator</strong> of the maize <em>C1</em> gene; activation is mediated by <strong>B3 binding</strong> to the <em>C1</em> promoter <strong>Sph element</strong>. This is among the clearest direct-target statements in the retrieved evidence. (suzuki2001maizevp1complements pages 1-2)</p>
+<h3 id="42-aba-responsive-maturation-gene-rab28-lea-like">4.2 ABA-responsive maturation gene: <em>rab28</em> (LEA-like)</h3>
+<p>A primary 1991 study directly examines <strong>rab28</strong> regulation in maize viviparous mutants:<br />
+- In <strong>vp1 (vpl) embryos</strong>, <strong>rab28 transcripts fail to accumulate to significant levels during embryogenesis</strong>, despite <strong>near-normal ABA levels</strong> in the mutant background—consistent with impaired developmental ABA responsiveness. (pla1991regulationofthe pages 1-2)<br />
+- <strong>Exogenous ABA</strong> (10 μM) can <strong>induce rab28 mRNA in young vp1 embryos</strong> (24 h), but this induction is reduced in older embryos, indicating partial bypass of VP1 dependence in a stage-dependent manner. (pla1991regulationofthe pages 3-5)<br />
+- The <strong>rab28 promoter</strong> contains an ABA-related motif <strong>CACGTGG</strong> (at ~-146) that confers ABA-dependent expression and binds nuclear protein, consistent with ABRE/G-box–centered transcriptional regulation logic. (pla1991regulationofthe pages 3-5)</p>
+<h3 id="43-broad-maturation-program-output-multi-gene-transcript-reductions-in-vp1">4.3 Broad maturation program output: multi-gene transcript reductions in vp1</h3>
+<p>A maize embryo-maturation synthesis reports multiple maturation-associated seed transcripts are strongly reduced in viviparous mutants, with quantitation indicating several messages reduced <strong>≥4-fold</strong> in <strong>vp1</strong> embryos (and some reduced up to <strong>~10-fold</strong>), supporting VP1 as a global regulator of the maturation gene program rather than a single-pathway effector. (white1995molecularandphysiological pages 40-47)</p>
+<h2 id="5-phenotypes-functional-tests-and-cross-species-complementation">5) Phenotypes, functional tests, and cross-species complementation</h2>
+<h3 id="51-maize-vp1-mutant-phenotype-core-functional-evidence">5.1 Maize vp1 mutant phenotype (core functional evidence)</h3>
+<p>A primary VP1-focused source summarizes vp1 mutants as having <strong>precocious germination</strong>, <strong>loss of desiccation tolerance</strong>, and an <strong>ABA-insensitive phenotype</strong>, and discusses developmental mistiming (e.g., green embryos in maturation program) consistent with a failure to enforce the seed maturation state. (suzuki2001maizevp1complements pages 1-2)</p>
+<h3 id="52-functional-conservation-with-abi3-transgenic-complementation-in-arabidopsis-2001">5.2 Functional conservation with ABI3: transgenic complementation in <em>Arabidopsis</em> (2001)</h3>
+<p>A landmark study demonstrates that <strong>35S:VP1</strong> expression in <em>Arabidopsis</em> <strong>abi3-6</strong> can substantially restore ABI3-associated functions:<br />
+- A single 35S-VP1 copy can complement the <strong>green seed</strong> and <strong>desiccation intolerant</strong> phenotypes of abi3-6, and multiple lines <strong>fully restore ABA sensitivity during seed germination</strong>. (suzuki2001maizevp1complements pages 2-4)<br />
+- <strong>cab3-GUS repression</strong> is restored; <strong>C1-GUS</strong> is only partially restored (about <strong>~20%</strong> of wild-type activity at seed maturity), highlighting separable VP1/ABI3 functions and possible partner specificity. (suzuki2001maizevp1complements pages 2-4, suzuki2001maizevp1complements pages 4-6)<br />
+- Ectopic VP1 in vegetative tissues causes ABA-related phenotypes and demonstrates <strong>ABA–auxin interaction</strong> in roots (auxin potentiating VP1-mediated ABA responses; ABA antagonizing auxin effects in the VP1 context). (suzuki2001maizevp1complements pages 4-6, suzuki2001maizevp1complements pages 6-7)</p>
+<h2 id="6-cellularsubcellular-localization">6) Cellular/subcellular localization</h2>
+<p>The retrieved evidence base strongly supports VP1 as a <strong>DNA-binding transcriptional regulator</strong>, which generally implies nuclear function, but <strong>explicit experimental subcellular localization (e.g., GFP fusion microscopy, fractionation)</strong> for maize VP1 <strong>was not found in the obtained texts</strong>. Therefore, this report does not make a definitive, experimentally sourced localization claim beyond nucleus-consistent function. (suzuki2001maizevp1complements pages 1-2, white1995molecularandphysiological pages 17-21)</p>
+<h2 id="7-recent-developments-prioritizing-20232024-relevant-to-vp1abi3-biology">7) Recent developments (prioritizing 2023–2024) relevant to VP1/ABI3 biology</h2>
+<p>Direct new biochemical characterization of maize VP1 itself is limited in the 2023–2024 sources retrieved; however, recent work strengthens the modern view of VP1/ABI3-like factors as central nodes in seed development and dormancy networks:</p>
+<h3 id="71-embryogenesis-master-tf-context-2024">7.1 Embryogenesis master TF context (2024)</h3>
+<p>A 2024 review of transcription factors in embryogenesis highlights the continuing centrality of seed “master regulators” (including B3 family factors) across crops, reflecting sustained focus on networks that include ABI3/VP1-like regulators in cereal embryogenesis. (long2024thetranscriptionfactor pages 71-73)</p>
+<h3 id="72-cereal-dormancy-network-branch-referencing-vp1-2024-rice">7.2 Cereal dormancy network branch referencing VP1 (2024, rice)</h3>
+<p>A 2024 rice study on OsWRKY71 links early germination phenotypes and transcriptomic shifts to changes in ABA-associated networks including the <strong>VP1–SDR4–DOG1L dormancy branch</strong>, illustrating that VP1 (or orthologous nodes) remains a reference point for dormancy regulation in cereals. (long2024thetranscriptionfactor pages 71-73)</p>
+<h3 id="73-ongoing-network-dissection-in-maize-seed-development-2024">7.3 Ongoing network dissection in maize seed development (2024)</h3>
+<p>A 2024 maize preprint on ZmbZIP75 focuses on grain filling and dehydration and cites literature tying VP1 to seed maturation and ABA-related pathways, including VP1’s placement among key regulators influencing desiccation-associated outputs (e.g., raffinose-related metabolism via VP1-linked networks). While not a primary VP1 study, it exemplifies how VP1 is integrated into modern multi-factor seed regulatory models. (long2024thetranscriptionfactor pages 71-73)</p>
+<h2 id="8-current-applications-and-real-world-implementations">8) Current applications and real-world implementations</h2>
+<p>The retrieved sources directly support VP1 as a <strong>master regulator of seed maturation/dormancy and ABA responsiveness</strong>, implying practical relevance for traits such as <strong>seed vigor, desiccation tolerance, and avoidance of precocious germination</strong>. (white1995molecularandphysiological pages 1-10, suzuki2001maizevp1complements pages 1-2)</p>
+<p>However, within the documents successfully obtained here, <strong>direct evidence of deployed VP1-based breeding programs or validated field implementations in maize</strong> was not captured. The most application-proximal evidence in hand is the <strong>cross-species functional complementation</strong> (maize VP1 functioning in <em>Arabidopsis</em>), which supports feasibility of manipulating VP1/ABI3 nodes but is not itself a crop deployment. (suzuki2001maizevp1complements pages 2-4)</p>
+<h2 id="9-quantitativestatistical-highlights-from-the-retrieved-studies">9) Quantitative/statistical highlights from the retrieved studies</h2>
+<ul>
+<li><strong>~20%</strong> of wild-type <strong>C1-GUS</strong> activity at seed maturity in <strong>35S-VP1 / abi3-6</strong> seeds (partial rescue). (suzuki2001maizevp1complements pages 2-4)</li>
+<li><strong>rab28 mRNA</strong>: absent/very low in <strong>vp1 embryos</strong> during development despite near-normal ABA, but inducible by <strong>10 μM ABA</strong> in young embryos (24 h), with reduced inducibility later. (pla1991regulationofthe pages 3-5, pla1991regulationofthe pages 1-2)</li>
+<li>Multiple maturation-associated messages show <strong>≥4-fold</strong> reductions in <strong>vp1</strong> embryos; one family reported as <strong>~10-fold</strong> reduced in vp1 in comparative quantitation. (white1995molecularandphysiological pages 40-47)</li>
+<li><strong>Vp1 expression timing</strong> reported as beginning <strong>~3–5 DAP</strong> and peaking around <strong>~10 DAP</strong> in maize seed development. (yang2021theb3domaincontaining pages 16-17)</li>
+</ul>
+<h2 id="evidence-summary-table">Evidence summary table</h2>
+<p>The following table consolidates key experimental evidence supporting VP1 functional annotation.</p>
+<table>
+<thead>
+<tr>
+<th>Evidence type</th>
+<th>Finding (domain/function/target/phenotype)</th>
+<th>System/tissue/stage</th>
+<th>Key experimental readout</th>
+<th>Interpretation for VP1 function</th>
+<th>Primary source (with year, journal, URL if available)</th>
+<th>Citation ID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Molecular</td>
+<td>VP1/ABI3 proteins contain four conserved domains (A1, B1, B2, B3); B3 is the DNA-binding domain</td>
+<td>Comparative VP1/ABI3 protein analysis; maize VP1 discussed in seed context</td>
+<td>Sequence/domain analysis summarized in functional study</td>
+<td>Confirms that maize VP1 is a B3-domain transcription factor, matching UniProt P26307 annotation</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>VP1 co-activates seed-specific ABA-regulated genes, strongly ABA-dependent and mediated mainly via G-box-related cis-elements</td>
+<td>Maize seed gene regulation; embryo/endosperm context</td>
+<td>Functional analyses cited in review/introduction</td>
+<td>Supports annotation of VP1 as an ABA-responsive transcriptional regulator rather than an enzyme or transporter</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>Direct activation of maize <strong>C1</strong> requires B3-mediated binding to the Sph element</td>
+<td>Maize promoter regulation</td>
+<td>Promoter-binding/activation evidence summarized in paper</td>
+<td>Establishes direct DNA-binding target specificity for at least one VP1-regulated promoter</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>VP1 represses germination-specific gene expression in aleurone; repression/co-activation functions do not require B3 and likely involve protein–protein interactions</td>
+<td>Maize aleurone/endosperm</td>
+<td>Domain-function dissection summarized in study</td>
+<td>Indicates VP1 has separable activator and repressor functions, including indirect transcriptional regulation via partner proteins</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 6-7, suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Genetic</td>
+<td><strong>vp1</strong> mutants are ABA-insensitive, undergo precocious germination (vivipary), lose desiccation tolerance, and produce green embryos during maturation</td>
+<td>Maize developing seeds/embryos</td>
+<td>Mutant phenotype analysis</td>
+<td>Strong genetic evidence that VP1 is essential for seed maturation, dormancy, and ABA responsiveness</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Genetic</td>
+<td>Suppression of germination in maize kernels absolutely requires functional <strong>Vp1</strong>; GA reduction suppresses vivipary in ABA-deficient mutants but not in <strong>vp1</strong></td>
+<td>Maize embryos during maturation/germination transition</td>
+<td>Hormone/genetic interaction studies summarized in thesis</td>
+<td>Places VP1 downstream of, or epistatic to, ABA/GA balance as an essential executor of maturation/dormancy</td>
+<td>White, 1995, thesis/review source</td>
+<td>(white1995molecularandphysiological pages 1-10, white1995molecularandphysiological pages 145-150, white1995molecularandphysiological pages 155-159)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>Multiple maturation-associated seed transcripts are strongly reduced in <strong>vp1</strong> embryos; several are decreased ~4- to 10-fold, and one family ~10-fold specifically in <strong>vp1</strong></td>
+<td>Maize maturing embryos (~30 DAP)</td>
+<td>Northern/slot-blot analyses of cDNA families</td>
+<td>VP1 is required for normal expression of a broad maturation gene program, including storage/LEA-like genes</td>
+<td>White, 1995, thesis/review source</td>
+<td>(white1995molecularandphysiological pages 40-47)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td><strong>rab28</strong> mRNA is undetectable in young <strong>vp1</strong> embryos and remains low in mature <strong>vp1</strong> embryos despite near-normal ABA levels</td>
+<td>Maize embryos during embryogenesis</td>
+<td>Northern blots in viviparous mutants</td>
+<td>VP1 is required for normal developmental ABA responsiveness of the LEA-like gene <strong>rab28</strong></td>
+<td>Pla et al., 1991, <em>Molecular and General Genetics</em>, https://doi.org/10.1007/bf00280296</td>
+<td>(pla1991regulationofthe pages 3-5, pla1991regulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>Exogenous ABA (10 μM, 24 h) can induce <strong>rab28</strong> precociously in young <strong>vp1</strong> embryos, but induction is reduced in older mutant embryos</td>
+<td>Excised young vs older maize <strong>vp1</strong> embryos</td>
+<td>ABA treatment followed by Northern analysis</td>
+<td>VP1 is not absolutely required for all ABA-induced <strong>rab28</strong> expression, but is needed for full developmental competence and sustained endogenous regulation</td>
+<td>Pla et al., 1991, <em>Molecular and General Genetics</em>, https://doi.org/10.1007/bf00280296</td>
+<td>(pla1991regulationofthe pages 3-5, pla1991regulationofthe pages 1-2)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>The <strong>rab28</strong> promoter contains an ABA-related motif (CACGTGG at -146) that confers ABA-dependent expression and binds nuclear protein</td>
+<td>Maize promoter assays</td>
+<td>Promoter/motif analysis and nuclear protein binding</td>
+<td>Supports a cis-regulatory basis for VP1-linked ABA control of <strong>rab28</strong>, likely via ABRE/G-box-centered transcription complexes</td>
+<td>Pla et al., 1991, <em>Molecular and General Genetics</em>, https://doi.org/10.1007/bf00280296</td>
+<td>(pla1991regulationofthe pages 3-5)</td>
+</tr>
+<tr>
+<td>Transgenic</td>
+<td>35S-driven maize <strong>VP1</strong> partially complements Arabidopsis <strong>abi3-6</strong>; one copy restores green seed/desiccation-intolerant phenotypes and multiple lines fully restore ABA sensitivity of germination</td>
+<td>Arabidopsis transgenic seeds expressing maize VP1</td>
+<td>Complementation of abi3 mutant phenotypes</td>
+<td>Demonstrates functional conservation between maize VP1 and ABI3 and validates VP1 as a master seed maturation regulator</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 2-4, suzuki2001maizevp1complements pages 1-2)</td>
+</tr>
+<tr>
+<td>Transgenic</td>
+<td>35S-VP1 restores repression of <strong>cab3-GUS</strong> and partially restores <strong>C1-GUS</strong> (~20% of wild type at seed maturity) in <strong>abi3-6</strong></td>
+<td>Arabidopsis developing seeds</td>
+<td>Reporter gene assays</td>
+<td>Shows VP1 can mediate both repression and activation functions in planta, but activation is incomplete in a heterologous seed context</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 4-6, suzuki2001maizevp1complements pages 2-4, suzuki2001maizevp1complements pages 6-7)</td>
+</tr>
+<tr>
+<td>Transgenic</td>
+<td>35S-VP1 enhances ABA inhibition of root growth, induces seed-specific <strong>CRC</strong> in leaves under ABA, and mediates ABA–auxin interaction in roots; ABA suppresses auxin-induced lateral roots in VP1-expressing plants</td>
+<td>Arabidopsis vegetative tissues/roots</td>
+<td>Root growth, reporter expression, and hormone treatment assays</td>
+<td>Indicates VP1 can act outside seeds when ectopically expressed and integrates ABA with auxin-responsive developmental programs</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 1-2, suzuki2001maizevp1complements pages 4-6, suzuki2001maizevp1complements pages 6-7)</td>
+</tr>
+<tr>
+<td>Molecular</td>
+<td>Distinct VP1 domains are required for different outputs: Em/C1 activation vs α-amylase repression</td>
+<td>Domain-function analysis summarized from maize work</td>
+<td>Functional dissection summarized in discussion</td>
+<td>Supports fine-grained annotation of VP1 as a modular transcriptional regulator with separable activation and repression activities</td>
+<td>Suzuki et al., 2001, <em>The Plant Journal</em>, https://doi.org/10.1046/j.1365-313x.2001.01165.x</td>
+<td>(suzuki2001maizevp1complements pages 6-7)</td>
+</tr>
+<tr>
+<td>Molecular/regulatory network</td>
+<td><strong>ZmABI19</strong> directly binds the <strong>Vp1</strong> promoter; ABA enhances this transactivation, and <strong>Vp1</strong> expression begins at 3–5 DAP and peaks around 10 DAP, overlapping with scutellum expression</td>
+<td>Maize early seed development; embryo/scutellum</td>
+<td>ChIP-seq, dual-luciferase, expression profiling</td>
+<td>Places VP1 in an upstream ABA-responsive grain-filling/embryogenesis transcription network rather than as an isolated regulator</td>
+<td>Yang et al., 2021, <em>The Plant Cell</em>, https://doi.org/10.1093/plcell/koaa008</td>
+<td>(yang2021theb3domaincontaining pages 16-17)</td>
+</tr>
+<tr>
+<td>Molecular/regulatory network</td>
+<td>ZmABI19 recognizes G-box4 in the <strong>Vp1</strong> promoter, whereas it binds RY motifs in many other targets</td>
+<td>Maize promoter regulation</td>
+<td>ChIP-seq and promoter-element analysis</td>
+<td>Consistent with B3/seed-factor regulatory logic and with VP1 participation in ABA-coupled LAFL-like seed developmental circuits</td>
+<td>Yang et al., 2021, <em>The Plant Cell</em>, https://doi.org/10.1093/plcell/koaa008</td>
+<td>(yang2021theb3domaincontaining pages 16-17)</td>
+</tr>
+<tr>
+<td>Genetic/omics</td>
+<td>In maize vivipary datasets, <strong>vp1</strong> is classified as a plant-specific transcription factor acting in ABA signaling; vivipary mutants show downregulation of <strong>NCED4</strong>, upregulation of <strong>GA3ox</strong>, and perturbation of the PYL-ABI1-SnRK2-ABI3 core module</td>
+<td>Maize vivipary mutants, seed transcriptomes/metabolomes</td>
+<td>Multi-omics comparison across seven vivipary mutants</td>
+<td>Reinforces current systems-level view that VP1 functions within the ABA–GA antagonism network controlling dormancy vs germination</td>
+<td>Wang et al., 2021, <em>Plants</em>, https://doi.org/10.3390/plants10112437</td>
+<td>(wang2021multiomicsanalysesreveal pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes functional annotation evidence for maize viviparous-1 (VP1; UniProt P26307), covering domains, molecular functions, target genes, regulatory interactions, and mutant/transgenic phenotypes. It is restricted to findings directly supported by the cited context IDs from the preceding evidence collection.</em></p>
+<h2 id="limitations-of-this-report-transparency">Limitations of this report (transparency)</h2>
+<ol>
+<li><strong>Subcellular localization</strong>: no explicit localization experiment for maize VP1 was present in the retrieved texts; thus localization is not claimed beyond being consistent with transcription factor function. (white1995molecularandphysiological pages 17-21, suzuki2001maizevp1complements pages 1-2)</li>
+<li><strong>Direct VP1 interactors</strong>: while protein–protein interaction dependence is discussed, specific physical interacting proteins for maize VP1 were not identified in the retrieved accessible full-text set. (suzuki2001maizevp1complements pages 1-2)</li>
+<li><strong>Figures/tables</strong>: image extraction for key figures (e.g., hormone-response reporter figures in Suzuki 2001) failed due to tool document access limitations; therefore no figure crops can be cited. (suzuki2001maizevp1complements pages 6-7)</li>
+</ol>
+<h2 id="key-primaryreview-sources-with-dates-and-urls">Key primary/review sources (with dates and URLs)</h2>
+<ul>
+<li>Pla et al. <strong>1991-12</strong>. <em>Molecular and General Genetics</em>.<br />
+  “Regulation of the abscisic acid-responsive gene rab28 in maize viviparous mutants.” https://doi.org/10.1007/bf00280296 (pla1991regulationofthe pages 3-5)</li>
+<li>Suzuki et al. <strong>2001-11</strong>. <em>The Plant Journal</em>.<br />
+  “Maize VP1 complements Arabidopsis abi3 and confers a novel ABA/auxin interaction in roots.” https://doi.org/10.1046/j.1365-313x.2001.01165.x (suzuki2001maizevp1complements pages 1-2)</li>
+<li>Yang et al. <strong>2021-03</strong>. <em>The Plant Cell</em>.<br />
+  “The B3 domain-containing transcription factor ZmABI19…” https://doi.org/10.1093/plcell/koaa008 (yang2021theb3domaincontaining pages 16-17)</li>
+<li>Wang et al. <strong>2021-11</strong>. <em>Plants</em>.<br />
+  “Multi-Omics Analyses Reveal Systemic Insights into Maize Vivipary.” https://doi.org/10.3390/plants10112437 (wang2021multiomicsanalysesreveal pages 1-2)</li>
+<li>Bataller et al. <strong>2024-11</strong>. <em>BMC Plant Biology</em>.<br />
+  “Disruption of the OsWRKY71…” https://doi.org/10.1186/s12870-024-05808-9 (long2024thetranscriptionfactor pages 71-73)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(suzuki2001maizevp1complements pages 1-2): Masaharu Suzuki, Chien‐Yuan Kao, Suzy Cocciolone, and Donald R. McCarty. Maize vp1 complements <i>arabidopsis</i><i>abi3</i> and confers a novel aba/auxin interaction in roots. The Plant Journal, 28(4):409-418, Nov 2001. URL: https://doi.org/10.1046/j.1365-313x.2001.01165.x, doi:10.1046/j.1365-313x.2001.01165.x. This article has 186 citations.</p>
+</li>
+<li>
+<p>(pla1991regulationofthe pages 3-5): Maria Pla, Jordi Gómez, Adela Goday, and Montserrat Pagès. Regulation of the abscisic acid-responsive gene rab28 in maize viviparous mutants. Molecular and General Genetics MGG, 230:394-400, Dec 1991. URL: https://doi.org/10.1007/bf00280296, doi:10.1007/bf00280296. This article has 129 citations.</p>
+</li>
+<li>
+<p>(white1995molecularandphysiological pages 17-21): CN White. Molecular and physiological aspects of maize embryo maturation. Unknown journal, 1995.</p>
+</li>
+<li>
+<p>(suzuki2001maizevp1complements pages 6-7): Masaharu Suzuki, Chien‐Yuan Kao, Suzy Cocciolone, and Donald R. McCarty. Maize vp1 complements <i>arabidopsis</i><i>abi3</i> and confers a novel aba/auxin interaction in roots. The Plant Journal, 28(4):409-418, Nov 2001. URL: https://doi.org/10.1046/j.1365-313x.2001.01165.x, doi:10.1046/j.1365-313x.2001.01165.x. This article has 186 citations.</p>
+</li>
+<li>
+<p>(white1995molecularandphysiological pages 145-150): CN White. Molecular and physiological aspects of maize embryo maturation. Unknown journal, 1995.</p>
+</li>
+<li>
+<p>(white1995molecularandphysiological pages 155-159): CN White. Molecular and physiological aspects of maize embryo maturation. Unknown journal, 1995.</p>
+</li>
+<li>
+<p>(white1995molecularandphysiological pages 1-10): CN White. Molecular and physiological aspects of maize embryo maturation. Unknown journal, 1995.</p>
+</li>
+<li>
+<p>(yang2021theb3domaincontaining pages 16-17): Taolan Yang, Liangxing Guo, Chen Ji, Haihai Wang, Jiechen Wang, Xixi Zheng, Qiao Xiao, and Yongrui Wu. The b3 domain-containing transcription factor zmabi19 coordinates expression of key factors required for maize seed development and grain filling. The Plant cell, 33 1:104-128, Mar 2021. URL: https://doi.org/10.1093/plcell/koaa008, doi:10.1093/plcell/koaa008. This article has 127 citations.</p>
+</li>
+<li>
+<p>(pla1991regulationofthe pages 1-2): Maria Pla, Jordi Gómez, Adela Goday, and Montserrat Pagès. Regulation of the abscisic acid-responsive gene rab28 in maize viviparous mutants. Molecular and General Genetics MGG, 230:394-400, Dec 1991. URL: https://doi.org/10.1007/bf00280296, doi:10.1007/bf00280296. This article has 129 citations.</p>
+</li>
+<li>
+<p>(white1995molecularandphysiological pages 40-47): CN White. Molecular and physiological aspects of maize embryo maturation. Unknown journal, 1995.</p>
+</li>
+<li>
+<p>(suzuki2001maizevp1complements pages 2-4): Masaharu Suzuki, Chien‐Yuan Kao, Suzy Cocciolone, and Donald R. McCarty. Maize vp1 complements <i>arabidopsis</i><i>abi3</i> and confers a novel aba/auxin interaction in roots. The Plant Journal, 28(4):409-418, Nov 2001. URL: https://doi.org/10.1046/j.1365-313x.2001.01165.x, doi:10.1046/j.1365-313x.2001.01165.x. This article has 186 citations.</p>
+</li>
+<li>
+<p>(suzuki2001maizevp1complements pages 4-6): Masaharu Suzuki, Chien‐Yuan Kao, Suzy Cocciolone, and Donald R. McCarty. Maize vp1 complements <i>arabidopsis</i><i>abi3</i> and confers a novel aba/auxin interaction in roots. The Plant Journal, 28(4):409-418, Nov 2001. URL: https://doi.org/10.1046/j.1365-313x.2001.01165.x, doi:10.1046/j.1365-313x.2001.01165.x. This article has 186 citations.</p>
+</li>
+<li>
+<p>(long2024thetranscriptionfactor pages 71-73): Tiandan Long, Yayun Wang, Jin Yang, Zhou Liu, Changqing Mao, Yufeng Hu, Junjie Zhang, Hanmei Liu, Yinghong Liu, Xiujun Fan, Lei Gao, Huanhuan Huang, Ying Xie, Daqiu Zhao, Yubi Huang, and Yangping Li. The transcription factor zmbzip75 promotes both grain filling and kernel dehydration in maize. BioRxiv, Sep 2024. URL: https://doi.org/10.1101/2024.09.11.612493, doi:10.1101/2024.09.11.612493. This article has 3 citations.</p>
+</li>
+<li>
+<p>(wang2021multiomicsanalysesreveal pages 1-2): Yiru A. Wang, Junli Zhang, Minghao Sun, Cheng He, K. Yu, Bing Zhao, Rui Li, Jian Li, Zongying Yang, Xiao Wang, Haiyan Duan, Junjie Fu, Sanzhen Liu, Xuebin Zhang, and Jun Zheng. Multi-omics analyses reveal systemic insights into maize vivipary. Plants, 10:2437, Nov 2021. URL: https://doi.org/10.3390/plants10112437, doi:10.3390/plants10112437. This article has 12 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="VP1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>white1995molecularandphysiological pages 17-21</li>
+<li>pla1991regulationofthe pages 1-2</li>
+<li>pla1991regulationofthe pages 3-5</li>
+<li>white1995molecularandphysiological pages 40-47</li>
+<li>long2024thetranscriptionfactor pages 71-73</li>
+<li>wang2021multiomicsanalysesreveal pages 1-2</li>
+<li>white1995molecularandphysiological pages 145-150</li>
+<li>white1995molecularandphysiological pages 155-159</li>
+<li>white1995molecularandphysiological pages 1-10</li>
+<li>https://doi.org/10.1046/j.1365-313x.2001.01165.x</li>
+<li>https://doi.org/10.1007/bf00280296</li>
+<li>https://doi.org/10.1093/plcell/koaa008</li>
+<li>https://doi.org/10.3390/plants10112437</li>
+<li>https://doi.org/10.1186/s12870-024-05808-9</li>
+<li>https://doi.org/10.1046/j.1365-313x.2001.01165.x,</li>
+<li>https://doi.org/10.1007/bf00280296,</li>
+<li>https://doi.org/10.1093/plcell/koaa008,</li>
+<li>https://doi.org/10.1101/2024.09.11.612493,</li>
+<li>https://doi.org/10.3390/plants10112437,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P26307
+gene_symbol: VP1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4577
+  label: Zea mays
+description: &gt;
+  Maize VIVIPAROUS-1 (VP1; UniProt P26307) is a seed-specific B3-domain transcriptional
+  regulator and the maize ortholog of Arabidopsis ABI3. It is genetically essential for
+  coordinating the seed maturation program (acquisition of desiccation tolerance and
+  dormancy) and for implementing ABA-responsive transcription during embryogenesis
+  (deep-research falcon report; Suzuki et al. 2001, Pla et al. 1991, White 1995). VP1 is a
+  modular transcription factor: it acts as (i) an ABA-dependent co-activator of seed
+  ABA-regulated maturation genes via G-box/ABRE-related cis-elements (e.g. Em, rab28),
+  (ii) a direct, B3-dependent sequence-specific DNA-binding activator of certain promoters
+  (the maize anthocyanin regulator C1 via the Sph element), and (iii) a repressor of
+  germination-associated programs in aleurone (e.g. alpha-amylase), with the co-activation
+  and repression functions largely B3-independent and mediated by protein-protein
+  interactions. The protein contains four conserved domains (A1, B1, B2 and the C-terminal
+  B3 DNA-binding domain spanning residues 517-619) and an N-terminal acidic/disordered
+  transcriptional-activation region. Loss-of-function vp1 mutants are ABA-insensitive and
+  viviparous - they undergo precocious germination on the ear, fail to acquire desiccation
+  tolerance, and lose normal accumulation of LEA/maturation transcripts; maize VP1 expressed
+  in Arabidopsis abi3-6 restores green-seed/desiccation phenotypes and ABA sensitivity,
+  demonstrating functional conservation with ABI3. A central nuance for GO annotation is
+  that VP1 is a downstream transcriptional EFFECTOR that mediates and potentiates ABA
+  responses (it sits at the terminal ABI3 node of the PYL-ABI1-SnRK2-ABI3 module), rather
+  than being a component of the core PYR/PYL-PP2C-SnRK2 perception-to-transduction cascade
+  (GO:0009738). VP1 function is nuclear (consistent with its DNA-binding transcriptional
+  regulator role), though no direct experimental subcellular-localization assay for the
+  maize protein was found in the retrieved literature; UniProt also lists a cytoplasmic
+  location.
+existing_annotations:
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR003340, B3 DNA-binding domain). VP1 contains a
+      C-terminal B3 DNA-binding domain (residues 517-619) and binds DNA directly - it
+      activates the maize C1 promoter via B3 binding to the Sph element.
+    action: ACCEPT
+    reason: &gt;
+      Correct and core. The UniProt feature table annotates a TF-B3 DNA-binding domain at
+      517-619, and the deep-research synthesis confirms that VP1/ABI3 proteins contain four
+      conserved domains in which B3 is the DNA-binding domain, with direct B3-dependent
+      binding to the C1 promoter Sph element. &#34;DNA binding&#34; is generic but not incorrect;
+      the more informative sequence-specific DNA-binding transcription factor activity is
+      captured by GO:0003700 (modified below).
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;VP1/ABI3 proteins contain four prominent conserved domains, **A1, B1, B2, and B3**, where **B3 is the DNA-binding domain**&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**maize *C1*** activation via B3 binding to the **Sph element**&#34;
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR044800, LEC2-like B3 family) for sequence-specific
+      DNA-binding transcription factor activity. This is VP1&#39;s core molecular function - it
+      is a transcriptional regulator that activates and represses plant nuclear (RNA Pol II)
+      protein-coding genes. The generic term is correct but can be made more precise.
+    action: MODIFY
+    reason: &gt;
+      VP1 is unambiguously a sequence-specific DNA-binding transcription factor: it acts as
+      a direct transcriptional activator of certain promoters via B3 DNA binding (C1 via the
+      Sph element), as an ABA-dependent co-activator of seed maturation genes via G-box/ABRE
+      elements, and as a repressor of germination genes. UniProt&#39;s original description (Cell
+      1991) is &#34;a novel transcriptional activator.&#34; Because VP1 regulates RNA polymerase II
+      protein-coding genes, the generic GO:0003700 is better represented by the more specific
+      child term GO:0000981 (DNA-binding transcription factor activity, RNA polymerase
+      II-specific). The essence is correct; only the level of specificity is refined.
+    proposed_replacement_terms:
+    - id: GO:0000981
+      label: DNA-binding transcription factor activity, RNA polymerase II-specific
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;VP1 functions as a **transcriptional regulator** (not an enzyme/transport protein)&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt subcellular-location vocabulary. VP1 is a DNA-binding
+      transcriptional regulator, so a nuclear location is where it carries out its function.
+    action: ACCEPT
+    reason: &gt;
+      Consistent with VP1&#39;s molecular function. The deep-research synthesis states that the
+      evidence base strongly supports VP1 as a DNA-binding transcriptional regulator, which
+      generally implies nuclear function, and UniProt lists Nucleus as a subcellular
+      location. No direct GFP/fractionation experiment for maize VP1 was found in the
+      retrieved texts, but nuclear localization is the functionally relevant location for a
+      transcription factor and is accepted.
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;The retrieved evidence base strongly supports VP1 as a **DNA-binding transcriptional regulator**, which generally implies nuclear function&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt subcellular-location vocabulary (UniProt lists both
+      Cytoplasm and Nucleus). VP1 carries out its function as a transcription factor in the
+      nucleus; the cytoplasmic assignment is not where its core activity occurs.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The UniProt record lists Cytoplasm as a subcellular location, so the annotation is
+      retained, but it does not represent VP1&#39;s core, functionally relevant compartment. The
+      deep-research synthesis explicitly notes that no direct experimental subcellular
+      localization assay (GFP fusion, fractionation) for maize VP1 was found, and that the
+      evidence supports a nucleus-consistent function. A cytoplasmic pool would at most
+      reflect a shuttling/storage population rather than the site of VP1&#39;s transcriptional
+      activity. Marked non-core; not removed because it is a curated UniProt location.
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**explicit experimental subcellular localization (e.g., GFP fusion microscopy, fractionation)** for maize VP1 **was not found in the obtained texts**&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;this report does not make a definitive, experimentally sourced localization claim beyond nucleus-consistent function&#34;
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation inferred logically from the DNA-binding transcription factor activity
+      MF. VP1 regulates transcription of seed maturation and germination genes - primarily
+      as an activator of ABA-inducible maturation genes (Em, rab28, C1) and as a repressor
+      of germination-associated genes. The generic process term can be made more specific.
+    action: MODIFY
+    reason: &gt;
+      VP1 is genuinely a transcriptional regulator, so the term is correct, but it is the
+      broad parent. VP1 regulates RNA polymerase II protein-coding genes and is described
+      primarily as a transcriptional activator that potentiates ABA-responsive maturation
+      gene expression (it can transactivate ABRE-containing promoters synergistically with
+      ABA and directly activates C1). The more informative child term is GO:0045944 (positive
+      regulation of transcription by RNA polymerase II). VP1 also has a separable repressor
+      function on germination genes (alpha-amylase), which is captured separately by the
+      proposed negative-regulation-of-germination process term below.
+    proposed_replacement_terms:
+    - id: GO:0045944
+      label: positive regulation of transcription by RNA polymerase II
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;VP1 can **transactivate ABRE-containing promoters** synergistically with ABA&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;Distinct VP1 domains are required for different outputs: Em/C1 activation vs α-amylase repression&#34;
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO pipeline for cellular
+# organisms. Reviewed retrospectively to assess whether removal was justified. Derived
+# from the UniProt keyword &#34;Abscisic acid signaling pathway&#34;.
+- term:
+    id: GO:0009738
+    label: abscisic acid-activated signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Abscisic acid
+      signaling pathway&#34;; snapshot-only, removed in the current GOA release. VP1&#39;s genuine
+      ABA role is real and central, but it is a downstream transcriptional EFFECTOR that
+      mediates/potentiates ABA responses (the terminal ABI3 node of the
+      PYL-ABI1-SnRK2-ABI3 module) rather than a component of the core PYR/PYL-PP2C-SnRK2
+      perception-to-transduction cascade that GO:0009738 denotes.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of the bare keyword term was partly justified but should not lose the
+      genuine biology. GO:0009738 (abscisic acid-activated signaling pathway) denotes the
+      ABA perception-to-transduction cascade (PYR/PYL receptors, PP2C phosphatases, SnRK2
+      kinases). VP1 is not part of that perception/transduction core: the multi-omics
+      synthesis explicitly places VP1 at the downstream ABI3 node of the PYL-ABI1-SnRK2-ABI3
+      module and classifies vp1 as a plant-specific transcription factor acting in ABA
+      signaling, while UniProt describes VP1 as &#34;potentiating the response to ABA.&#34; Its
+      experimentally supported function is to regulate/potentiate the ABA-responsive
+      transcriptional output (it co-activates ABRE/G-box maturation genes and is required
+      for developmental ABA responsiveness of rab28), i.e. it regulates the pathway&#39;s effect
+      rather than transducing perception. Genetic data place VP1 epistatic/downstream as an
+      essential executor of the maturation/dormancy program. Therefore the annotation should
+      be retained but MODIFIED to terms that capture VP1 as a regulator/effector of the ABA
+      response: &#34;regulation of abscisic acid-activated signaling pathway&#34; (GO:0009787) and
+      &#34;cellular response to abscisic acid stimulus&#34; (GO:0071215). The seed-maturation and
+      germination-repression outputs are captured by the NEW process terms below.
+    proposed_replacement_terms:
+    - id: GO:0009787
+      label: regulation of abscisic acid-activated signaling pathway
+    - id: GO:0071215
+      label: cellular response to abscisic acid stimulus
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**vp1** is classified as a plant-specific transcription factor acting in ABA signaling&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;perturbation of the PYL-ABI1-SnRK2-ABI3 core module&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**ABA-dependent co-activation** of ABRE/G-box&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0010431
+    label: seed maturation
+  evidence_type: IMP
+  original_reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      VP1 is the master regulator of the maize seed maturation program (desiccation
+      tolerance and dormancy). This core biological process is not represented in current
+      GOA and should be added.
+    action: NEW
+    reason: &gt;
+      VP1 is genetically essential for the seed maturation program: vp1 loss-of-function
+      mutants are viviparous, undergo precocious germination, lose desiccation tolerance,
+      and show strongly reduced accumulation of multiple maturation-associated transcripts.
+      Maize VP1 expressed in Arabidopsis abi3-6 restores green-seed/desiccation phenotypes,
+      confirming a conserved seed-maturation function with ABI3. GO:0010431 (seed maturation)
+      is the precise process term; IMP is justified by the vp1 mutant phenotype. (A
+      regulatory term, GO:2000693 positive regulation of seed maturation, is an alternative,
+      since VP1 promotes the program; the directly-involved seed-maturation term is used
+      here as the primary annotation.)
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;genetically essential for coordinating the **seed maturation program** (desiccation tolerance and dormancy) and for implementing **ABA-responsive transcription**&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;Suppression of germination in maize kernels absolutely requires functional **Vp1**&#34;
+- term:
+    id: GO:0010187
+    label: negative regulation of seed germination
+  evidence_type: IMP
+  original_reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      VP1 enforces seed dormancy and prevents precocious germination (vivipary); vp1 mutants
+      germinate precociously on the ear. VP1 also directly represses germination-associated
+      programs in aleurone.
+    action: NEW
+    reason: &gt;
+      The defining vp1 phenotype is vivipary - precocious germination of developing kernels
+      on the ear - so VP1 normally negatively regulates germination and enforces the dormant
+      state. VP1 represses germination-associated expression programs in maize aleurone (e.g.
+      alpha-amylase), a separable function from its activation of maturation genes. GO:0010187
+      (negative regulation of seed germination) precisely captures this; IMP is justified by
+      the viviparous mutant phenotype.
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**Transcriptional repressor** of germination-associated expression programs in maize aleurone&#34;
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;precocious germination&#34;
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IDA
+  original_reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+  review:
+    summary: &gt;
+      VP1&#39;s B3 domain binds DNA in a sequence-specific manner - directly recognizing the Sph
+      element of the maize C1 promoter. This refines the generic GO:0003677 &#34;DNA binding&#34;.
+    action: NEW
+    reason: &gt;
+      The deep-research synthesis describes direct B3-dependent activation of the maize C1
+      gene via binding to the Sph element, a defined cis-element, demonstrating
+      sequence-specific (not generic) DNA binding by the B3 domain. GO:0043565
+      (sequence-specific DNA binding) is more informative than the generic GO:0003677 and
+      reflects the established B3 recognition of a specific promoter motif. IDA reflects the
+      promoter-binding/activation evidence summarized for the Sph element.
+    supported_by:
+    - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+      supporting_text: &#34;**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro-to-GO mappings (IPR003340 B3 DNA-binding domain; IPR044800 LEC2-like)
+      assign DNA binding and DNA-binding transcription factor activity to VP1, consistent
+      with its experimentally supported role as a B3-domain transcriptional regulator.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: UniProt subcellular-location mapping assigns Nucleus and Cytoplasm to VP1;
+      the nucleus is the functionally relevant compartment for this transcription factor,
+      whereas no direct localization experiment for maize VP1 was found in the literature.
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on inter-ontology
+    links
+  findings:
+  - statement: Logical inference from the DNA-binding transcription factor activity MF
+      assigns the broad &#34;regulation of DNA-templated transcription&#34; process; VP1&#39;s specific
+      role is better captured by positive regulation of RNA Pol II transcription.
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotation present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For VP1, the keyword &#34;Abscisic acid signaling pathway&#34; mapped to GO:0009738
+      (the perception-to-transduction cascade); VP1 is a downstream transcriptional effector
+      that regulates/potentiates ABA responses rather than a component of the core cascade,
+      so the term is better replaced by regulation-of/response-to ABA terms.
+- id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional
+    annotation of maize VP1 (P26307).
+  findings:
+  - statement: VP1 is a B3-domain transcriptional regulator essential for the seed
+      maturation program (desiccation tolerance, dormancy) and for ABA-responsive
+      transcription during embryogenesis; it is the maize ortholog of Arabidopsis ABI3.
+  - statement: VP1 is a modular transcription factor acting as an ABA-dependent co-activator
+      of seed maturation genes via G-box/ABRE elements, a direct B3-dependent
+      sequence-specific activator of C1 via the Sph element, and a repressor of
+      germination-associated genes (alpha-amylase) in aleurone.
+  - statement: vp1 mutants are ABA-insensitive and viviparous (precocious germination, loss
+      of desiccation tolerance); maize VP1 complements Arabidopsis abi3-6, restoring
+      green-seed/desiccation phenotypes and ABA sensitivity of germination.
+  - statement: Multi-omics analysis classifies vp1 as a plant-specific transcription factor
+      acting in ABA signaling and places VP1 at the downstream ABI3 node of the
+      PYL-ABI1-SnRK2-ABI3 core module, downstream of ABA perception/transduction.
+  - statement: VP1 is required for normal developmental ABA responsiveness of rab28; rab28
+      transcripts fail to accumulate in vp1 embryos despite near-normal ABA levels, though
+      exogenous ABA can partially induce rab28 in young vp1 embryos.
+  - statement: No direct experimental subcellular-localization assay for maize VP1 was found;
+      the report supports a nucleus-consistent function for the DNA-binding transcriptional
+      regulator.
+core_functions:
+- description: &gt;
+    VP1 is a sequence-specific B3-domain DNA-binding transcription factor that activates
+    transcription of ABA-responsive seed maturation genes. It directly binds the Sph element
+    of the maize C1 promoter via its B3 domain and acts as an ABA-dependent co-activator of
+    G-box/ABRE-containing maturation genes (e.g. Em, rab28).
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;**Direct transcriptional activator** of some promoters via **B3 DNA binding**, exemplified by **maize *C1*** activation via B3 binding to the **Sph element**&#34;
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;VP1 can **transactivate ABRE-containing promoters** synergistically with ABA&#34;
+- description: &gt;
+    VP1 is the master regulator of the maize seed maturation program, promoting acquisition
+    of desiccation tolerance and dormancy and mediating/potentiating ABA responses
+    downstream of ABA perception. Loss of VP1 causes ABA-insensitivity and vivipary.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0010431
+    label: seed maturation
+  - id: GO:0009787
+    label: regulation of abscisic acid-activated signaling pathway
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;genetically essential for coordinating the **seed maturation program** (desiccation tolerance and dormancy) and for implementing **ABA-responsive transcription**&#34;
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;**vp1** is classified as a plant-specific transcription factor acting in ABA signaling&#34;
+- description: &gt;
+    VP1 enforces seed dormancy and prevents precocious germination (vivipary), in part by
+    repressing germination-associated transcriptional programs in the aleurone (e.g.
+    alpha-amylase), a function separable from its activation of maturation genes.
+  molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0010187
+    label: negative regulation of seed germination
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;**Transcriptional repressor** of germination-associated expression programs in maize aleurone&#34;
+  - reference_id: file:MAIZE/VP1/VP1-deep-research-falcon.md
+    supporting_text: &#34;Suppression of germination in maize kernels absolutely requires functional **Vp1**&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Does maize VP1 bind the Sph/RY cis-element directly and sequence-specifically
+    in vitro, and what is the consensus B3 recognition motif, given that some VP1 activation
+    and repression functions are reported to be B3-independent and partner-mediated?
+  experts:
+  - Donald R. McCarty
+- question: Which bZIP/ABRE-binding partners does maize VP1 physically interact with to
+    co-activate G-box/ABRE maturation genes, and are these interactions ABA-dependent?
+  experts:
+  - Masaharu Suzuki
+- question: Is the cytoplasmic localization listed for VP1 a genuine regulated pool (e.g.
+    nucleocytoplasmic shuttling) or an annotation artifact, given the absence of direct
+    localization data for the maize protein?
+  experts:
+  - Donald R. McCarty
+suggested_experiments:
+- description: Perform ChIP-seq and in vitro DNA-binding (EMSA/SELEX) for maize VP1 in
+    developing embryos to define its direct genome-wide targets and the B3 recognition motif,
+    and to distinguish direct B3-dependent targets (e.g. C1/Sph) from partner-mediated
+    co-activated/repressed genes.
+  hypothesis: VP1 directly and sequence-specifically binds Sph/RY-type elements at a subset
+    of maturation gene promoters, while co-activation of ABRE/G-box genes is mediated by
+    interaction with bZIP partners rather than direct VP1 DNA binding.
+  experiment_type: ChIP-seq and in vitro DNA-binding assay
+- description: Epistasis and reporter analyses placing VP1 relative to the core ABA module
+    (ZmPYL receptors, ZmPP2Cs, ZmSnRK2s) - e.g. testing whether VP1 transcriptional output
+    requires SnRK2 activity and whether VP1 acts downstream of SnRK2-mediated phosphorylation
+    of ABF/AREB-type factors.
+  hypothesis: VP1 acts as a downstream transcriptional effector that regulates/potentiates
+    the ABA response, downstream of the PYR/PYL-PP2C-SnRK2 perception-transduction cascade,
+    rather than as a component of that cascade.
+  experiment_type: genetic epistasis and transactivation assay
+- description: Generate a translational VP1-fluorescent-protein fusion expressed from the
+    native promoter in maize and image its subcellular localization across embryo
+    development, with fractionation, to test the curated cytoplasm vs nucleus assignment.
+  hypothesis: VP1 is predominantly nuclear during seed maturation, consistent with its
+    transcription-factor function, and any cytoplasmic signal reflects a minor or regulated
+    population.
+  experiment_type: live-cell fluorescence localization
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

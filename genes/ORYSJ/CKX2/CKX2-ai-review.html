@@ -1,0 +1,3562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CKX2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CKX2</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q4ADV8" target="_blank" class="term-link">
+                        Q4ADV8
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Oryza sativa subsp. japonica</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CKX2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q4ADV8" data-a="DESCRIPTION: OsCKX2 (Q4ADV8), also known as cytokinin oxidase/d..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OsCKX2 (Q4ADV8), also known as cytokinin oxidase/dehydrogenase 2 and as the grain-number QTL Gn1a, is a secreted FAD-linked flavoenzyme of the oxygen-dependent FAD-linked oxidoreductase family that catalyses the IRREVERSIBLE DEGRADATION of cytokinins (EC 1.5.99.12). It oxidatively cleaves the unsaturated N6-isoprenoid side chain of nucleobase cytokinins (e.g. N6-(dimethylallyl)adenine / isopentenyladenine), producing adenine and the corresponding aldehyde (3-methyl-2-butenal), thereby inactivating the active hormone. OsCKX2 is therefore a hormone-CATABOLISM (homeostasis) enzyme, not a component of the cytokinin signal-transduction machinery: it modulates the size of the available bioactive cytokinin pool rather than transducing the cytokinin signal (which is the role of the two-component AHK receptor -&gt; AHP -&gt; type-B ARR cascade). The enzyme was cloned as the major QTL Gn1a controlling rice grain number: reduced OsCKX2 expression or loss-of-function causes cytokinin accumulation in inflorescence (panicle) meristems and increases the number of reproductive organs, raising grain yield (Ashikari et al. 2005, PMID:15976269). It is highly (and preferentially) expressed in inflorescence meristems, leaves, culms and flowers, especially in vascular tissues, and its expression level correlates inversely with grain number. RNAi knockdown and CRISPR knockout independently confirm this negative-regulator role and link reduced OsCKX2 to higher tiller/grain number, delayed senescence and improved drought/salinity-stress yield maintenance (Joshi et al. 2018; Yeh et al. 2015; Rashid et al. 2024). The enzyme is a precursor with an N-terminal signal peptide and is predicted to be glycosylated and secreted to the extracellular space (UniProt). FAD is the catalytic cofactor, bound covalently via an 8-alpha-FAD histidine (His113) within the FAD-binding PCMH-type domain.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009736" target="_blank" class="term-link">
+                                    GO:0009736
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin-activated signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0009736" data-r="GO_REF:0000043" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Cytokinin signaling pathway&#34;; snapshot-only, removed in the current GOA release. OsCKX2 is a cytokinin-DEGRADING flavoenzyme (cytokinin oxidase/dehydrogenase, EC 1.5.99.12) - a hormone-catabolism enzyme - and is NOT a component of the two-component cytokinin signal-transduction cascade (AHK receptors -&gt; AHP -&gt; type-B ARR transcription factors).
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this annotation was JUSTIFIED. The keyword &#34;Cytokinin signaling pathway&#34; maps OsCKX2 to &#34;cytokinin-activated signaling pathway&#34; (GO:0009736), but this confuses hormone METABOLISM with hormone SIGNALING. OsCKX2 catalyses the irreversible oxidative degradation of cytokinins - it cleaves the N6-isoprenoid side chain of nucleobase cytokinins to inactivate the hormone (EC 1.5.99.12) - and thereby controls the LEVEL of bioactive cytokinin available; it does not act in the perception or transduction of the cytokinin signal (the AHK/AHP/ARR two-component relay). Its experimentally demonstrated role is enzymatic: reduced OsCKX2 expression causes cytokinin ACCUMULATION in inflorescence meristems and more reproductive organs [PMID:15976269], the hallmark of a catabolic enzyme acting on the hormone pool, not of a signaling-pathway component. Annotating a catabolic enzyme to &#34;cytokinin-activated signaling pathway&#34; is a clear over-annotation (a metabolic enzyme mislabelled as a signal-transduction component). The genuine biology is better captured by the catabolic process term &#34;cytokinin catabolic process&#34; (GO:0009823) and the molecular function &#34;cytokinin dehydrogenase activity&#34; (GO:0019139), both retained/proposed elsewhere in this review. Removal of the signaling-pathway term loses no correct biology.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that degrades the phytohormone cytokinin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reduced expression of OsCKX2 causes cytokinin accumulation in inflorescence meristems and increases the number of reproductive organs</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">Their levels are controlled by biosynthesis/activation, transport, signaling, and **irreversible degradation**.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsCKX2 is an oxidoreductase that irreversibly inactivates active cytokinins through side-chain cleavage, thereby lowering the pool of bioactive cytokinin available to sustain inflorescence meristem activity.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR016164, FAD-linked oxidase-like C-terminal) giving the root catalytic-activity term. OsCKX2 is an enzyme, so the term is correct but uninformative.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Catalytic activity&#34; is the top-level molecular-function grouping term and carries no information about what reaction OsCKX2 catalyses. The specific catalytic function - cytokinin dehydrogenase/oxidase activity (EC 1.5.99.12) - is demonstrated directly [PMID:15976269] and is annotated elsewhere in this review (GO:0019139). The annotation should be modified to that specific term rather than retained at the root level.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                                    cytokinin dehydrogenase activity
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that degrades the phytohormone cytokinin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsCKX2 is an FAD-linked cytokinin oxidase/dehydrogenase controlling cytokinin homeostasis in inflorescence meristems</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from the UniProt subcellular-location mapping (SL-0112). OsCKX2 is a precursor with an N-terminal signal peptide and is annotated as secreted to the extracellular space.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt entry, which records a signal peptide (residues 1-20), N-glycosylation sites, a &#34;Glycoprotein/Secreted/Signal&#34; keyword set, and a subcellular location of &#34;Secreted, extracellular space&#34; (by similarity to other CKX enzymes). Several plant CKX enzymes are apoplastic/extracellular, and extracellular/apoplastic cytokinin metabolism is an established feature of rice cytokinin homeostasis. The compartment assignment is consistent with the gene&#39;s biology even though no direct OsCKX2 localization assay is reported in the retrieved primary literature; the IEA term is therefore accepted but treated as non-core.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a precise compartment assignment (apoplast vs ER vs vacuole) for OsCKX2 cannot be stated from the current evidence set.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">a 2023 PNAS study demonstrated a **cell wall–localized** cytokinin/purine riboside nucleosidase involved in **apoplastic cytokinin metabolism**, expanding the framework in which cytokinin activation/turnover can occur outside the cell.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009690" target="_blank" class="term-link">
+                                    GO:0009690
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0009690" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR015345, Cytokinin_DH_FAD/cytokin-bd) placing OsCKX2 in cytokinin metabolism. Correct but unnecessarily broad: OsCKX2 specifically DEGRADES cytokinins.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> &#34;Cytokinin metabolic process&#34; is the parent term covering both biosynthesis and catabolism. OsCKX2 acts exclusively on the CATABOLIC side - it irreversibly degrades active cytokinins by oxidative side-chain cleavage [PMID:15976269] - so the more specific and accurate child term &#34;cytokinin catabolic process&#34; (GO:0009823) should be used. This is supported directly by the disruption phenotype (cytokinin ACCUMULATION when the gene is knocked down), which is diagnostic of a degradative enzyme.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009823" target="_blank" class="term-link">
+                                    cytokinin catabolic process
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an enzyme that degrades the phytohormone cytokinin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">they catalyze **irreversible cytokinin degradation**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">removal of the **N6-substituted isoprene chain** of cytokinins and **their ribonucleosides**, producing **adenosine** and corresponding aldehydes, consistent with irreversible cytokinin turnover</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                                    GO:0019139
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000120
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0019139" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (combined automated methods; ARBA/InterPro/RHEA:13625/EC:1.5.99.12) assigning the precise catalytic molecular function. This is the core function of OsCKX2.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function and is strongly supported. The UniProt CATALYTIC ACTIVITY block records the EC 1.5.99.12 reaction (N6-dimethylallyladenine + acceptor + H2O -&gt; 3-methyl-2-butenal + adenine + reduced acceptor; Rhea:13625), and Ashikari et al. (2005) demonstrated the activity by expressing OsCKX2 alleles in yeast and showing cleavage of the isopentenyl side chain [PMID:15976269]. The mapping (to a curated Rhea/EC-backed term) is at the correct level of specificity and duplicates the experimental IDA/IC annotations to the same term.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">expressed OsCKX2 alleles in yeast and showed both alleles were functional, catalyzing cleavage of iP side chains</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0050660" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (FAD-binding domains) for FAD binding. OsCKX2 is an FAD-linked flavoenzyme; FAD is its catalytic cofactor.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported. The UniProt COFACTOR block lists FAD (ChEBI:57692), the protein belongs to the &#34;oxygen-dependent FAD-linked oxidoreductase&#34; family, and the entry annotates multiple FAD-binding residues plus a covalent 8-alpha-FAD histidine (His113) within the FAD-binding PCMH-type domain. FAD binding is intrinsic to the cytokinin dehydrogenase mechanism.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CKX enzymes in rice are described as FAD-linked oxidoreductases with **FAD-binding and cytokinin-binding domains**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071949" target="_blank" class="term-link">
+                                    GO:0071949
+                                </a>
+                            </span>
+                            <span class="term-label">FAD binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0071949" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR016166, FAD-bd_PCMH) for FAD binding; closely related to / overlapping with the GO:0050660 annotation above.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct, for the same reasons as the GO:0050660 annotation: OsCKX2 is an FAD-linked flavoenzyme with a defined FAD-binding PCMH-type domain and a covalently bound FAD cofactor (UniProt). Duplicate/overlapping FAD-binding terms with the same evidence are acceptable; the cofactor binding is a genuine, conserved feature of the CKX family.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">CKX enzymes in rice are described as FAD-linked oxidoreductases with **FAD-binding and cytokinin-binding domains**</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010229" target="_blank" class="term-link">
+                                    GO:0010229
+                                </a>
+                            </span>
+                            <span class="term-label">inflorescence development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15976269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinin oxidase regulates rice grain production.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0010229" data-r="PMID:15976269" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP annotation from Ashikari et al. (2005): reduced OsCKX2 increases reproductive organ number and grain yield via cytokinin accumulation in inflorescence meristems. A genuine but downstream/developmental consequence of the enzyme&#39;s catabolic activity.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is supported by direct mutant/expression evidence - OsCKX2 expression level correlates inversely with grain number, and reduced expression elevates cytokinin in inflorescence meristems and increases reproductive organ number [PMID:15976269] - so it should be retained. However, &#34;inflorescence development&#34; is a pleiotropic, organism-level developmental outcome rather than the CORE molecular role of the protein. OsCKX2&#39;s core function is enzymatic (cytokinin degradation); the inflorescence/grain- number phenotype is the downstream physiological consequence of locally modulating the cytokinin pool in panicle meristems. It is therefore retained as a non-core developmental annotation.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Reduced expression of OsCKX2 causes cytokinin accumulation in inflorescence meristems and increases the number of reproductive organs, resulting in enhanced grain yield</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsCKX2 expression levels correlate inversely with grain number.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                                    GO:0019139
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15976269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinin oxidase regulates rice grain production.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0019139" data-r="PMID:15976269" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from Ashikari et al. (2005), who demonstrated OsCKX2 cytokinin oxidase/dehydrogenase activity directly. This is the core molecular function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Core function, supported by direct experimental evidence. Ashikari et al. cloned Gn1a as OsCKX2 and showed it encodes a cytokinin oxidase/dehydrogenase that degrades cytokinin; the activity was confirmed by expressing OsCKX2 alleles in yeast and showing cleavage of the isopentenyl (iP) side chain [PMID:15976269]. The UniProt entry records the corresponding EC 1.5.99.12 reaction (Rhea:13625) with experimental evidence from this paper. ACCEPT as the representative core MF.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that degrades the phytohormone cytokinin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">They expressed OsCKX2 alleles in yeast and showed both alleles were functional, catalyzing cleavage of iP side chains.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010229" target="_blank" class="term-link">
+                                    GO:0010229
+                                </a>
+                            </span>
+                            <span class="term-label">inflorescence development</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15976269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinin oxidase regulates rice grain production.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0010229" data-r="PMID:15976269" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC annotation (assigned by GR) to inflorescence development, curator-inferred from the same Ashikari et al. (2005) data; duplicates the IMP annotation to the same term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Same biology and same evidence as the IMP annotation to GO:0010229: a genuine but downstream developmental outcome of OsCKX2-mediated cytokinin degradation in inflorescence meristems [PMID:15976269]. Retained as non-core for the same reason - the developmental phenotype is a consequence of the enzyme&#39;s catabolic regulation of the local cytokinin pool, not the protein&#39;s core molecular role. Duplicate annotations with different evidence codes are acceptable.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">increases the number of reproductive organs, resulting in enhanced grain yield</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">reduced OsCKX2 expression increases cytokinin accumulation in inflorescence meristems, increasing reproductive organ number and grain yield</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                                    GO:0019139
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin dehydrogenase activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15976269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinin oxidase regulates rice grain production.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0019139" data-r="PMID:15976269" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IC annotation (assigned by GR) to cytokinin dehydrogenase activity, curator-inferred from Ashikari et al. (2005); duplicates the IDA annotation to the same core MF term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the IDA annotation to the same term and with the UniProt EC 1.5.99.12 catalytic-activity record. OsCKX2 is a cytokinin oxidase/dehydrogenase demonstrated by Ashikari et al. (2005) [PMID:15976269]. Duplicate annotations to the core molecular function with different evidence codes are acceptable; ACCEPT.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2)</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsCKX2 is consistently discussed as a CKX oxidase/dehydrogenase</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009823" target="_blank" class="term-link">
+                                    GO:0009823
+                                </a>
+                            </span>
+                            <span class="term-label">cytokinin catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15976269
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytokinin oxidase regulates rice grain production.
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q4ADV8" data-a="GO:0009823" data-r="PMID:15976269" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OsCKX2 irreversibly degrades active cytokinins by oxidative side-chain cleavage; the accurate biological process is cytokinin catabolism. Not currently in GOA (the GOA term is the broader &#34;cytokinin metabolic process&#34;) and proposed here as the precise process term.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Current GOA captures only the broad parent &#34;cytokinin metabolic process&#34; (GO:0009690, IEA). OsCKX2 acts exclusively as a degradative enzyme - it irreversibly inactivates cytokinins by cleaving the N6-isoprenoid side chain [PMID:15976269] - so the specific catabolic process term &#34;cytokinin catabolic process&#34; (GO:0009823) should be added (it is also the proposed replacement for the GO:0009690 MODIFY above). The diagnostic disruption phenotype - cytokinin ACCUMULATION upon loss of OsCKX2 - directly establishes catabolic involvement. IDA is justified by the demonstrated enzymatic degradation activity.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                        PMID:15976269
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">an enzyme that degrades the phytohormone cytokinin</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">they catalyze **irreversible cytokinin degradation**</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">OsCKX2 is an oxidoreductase that irreversibly inactivates active cytokinins through side-chain cleavage</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>OsCKX2 is an FAD-dependent cytokinin oxidase/dehydrogenase (EC 1.5.99.12) that irreversibly degrades active cytokinins by oxidative cleavage of the unsaturated N6-isoprenoid side chain of nucleobase cytokinins (e.g. isopentenyladenine), yielding adenine and 3-methyl-2-butenal. FAD is the catalytic cofactor.
+</h3>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="FUNCTION: OsCKX2 is an FAD-dependent cytokinin oxidase/dehyd..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                            cytokinin dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009823" target="_blank" class="term-link">
+                                cytokinin catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                PMID:15976269
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that degrades the phytohormone cytokinin</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">OsCKX2 is an oxidoreductase that irreversibly inactivates active cytokinins through side-chain cleavage, thereby lowering the pool of bioactive cytokinin available to sustain inflorescence meristem activity.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>By degrading cytokinins in inflorescence (panicle) meristems, OsCKX2 controls the local bioactive cytokinin pool and thereby acts as a negative regulator of meristem activity, reproductive organ number and grain yield. Reduced OsCKX2 raises cytokinin levels and increases grain number; the developmental effect is a downstream consequence of the enzyme&#39;s catabolic regulation of cytokinin homeostasis, not a signal-transduction role.
+</h3>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="FUNCTION: By degrading cytokinins in inflorescence (panicle)..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019139" target="_blank" class="term-link">
+                            cytokinin dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009823" target="_blank" class="term-link">
+                                cytokinin catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                extracellular region
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                                PMID:15976269
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Reduced expression of OsCKX2 causes cytokinin accumulation in inflorescence meristems and increases the number of reproductive organs, resulting in enhanced grain yield</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">OsCKX2/Gn1a emerges as a canonical case where a single cytokinin degradation gene exerts strong leverage on **inflorescence meristem cytokinin status**, thereby changing panicle branching and grain number</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-to-GO mappings (IPR016164 FAD-linked oxidase-like C-terminal; IPR015345 Cytokinin_DH_FAD/cytokin-bd; IPR016166 FAD-bd_PCMH; IPR006094) assign catalytic activity, cytokinin metabolic process, FAD binding and FAD-binding to OsCKX2.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt subcellular-location mapping (SL-0112) assigns extracellular region; OsCKX2 has an N-terminal signal peptide and is annotated as Secreted, extracellular space (by similarity).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotation present in the Sept 2025 goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For OsCKX2 the keyword &#34;Cytokinin signaling pathway&#34; mapped to &#34;cytokinin-activated signaling pathway&#34; (GO:0009736); this is an over-annotation because OsCKX2 is a cytokinin-DEGRADING enzyme, not a signal-transduction component. Its removal lost no correct biology.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Combined IEA methods (ARBA/InterPro/RHEA:13625/EC:1.5.99.12) assign the specific molecular function cytokinin dehydrogenase activity, matching the curated EC 1.5.99.12 reaction.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15976269" target="_blank" class="term-link">
+                            PMID:15976269
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Cytokinin oxidase regulates rice grain production.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The grain-number QTL Gn1a is OsCKX2, a gene for cytokinin oxidase/dehydrogenase (EC 1.5.99.12), an enzyme that degrades the phytohormone cytokinin.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reduced expression of OsCKX2 causes cytokinin accumulation in inflorescence meristems and increases the number of reproductive organs, enhancing grain yield; OsCKX2 expression correlates inversely with grain number.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsCKX2 activity was demonstrated by expressing alleles in yeast and showing cleavage of the isopentenyl (iP) side chain; QTL pyramiding of Gn1a with plant-height loci generated lines with beneficial yield traits.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">OsCKX2 is preferentially expressed in leaves, culms, inflorescence meristems and flowers, especially vascular tissues; the disruption phenotype is enhanced grain production with higher cytokinin in inflorescence meristems.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of rice CKX2 / OsCKX2 / Gn1a (Q4ADV8).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes Ashikari et al. 2005 (Science) with RNAi (Joshi et al. 2018; Yeh et al. 2015), CRISPR (Rashid et al. 2024) and review (Thiruppathi et al. 2024) literature, concluding OsCKX2 is an FAD-linked cytokinin oxidase/dehydrogenase that irreversibly inactivates cytokinins by N6-isoprenoid side-chain cleavage and controls cytokinin homeostasis in inflorescence meristems, acting as a major negative regulator of grain number/yield.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">CKX enzymes catalyse irreversible cytokinin degradation, removing the N6-substituted isoprene chain of cytokinins and their ribonucleosides to produce adenosine/adenine and corresponding aldehydes; CKX enzymes are FAD-linked oxidoreductases with FAD-binding and cytokinin-binding domains.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytokinin levels are controlled by biosynthesis/activation, transport, signaling and irreversible degradation; OsCKX2 acts on the degradation arm, lowering the bioactive cytokinin pool rather than transducing the cytokinin signal.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct experimental subcellular-localization assay for OsCKX2 itself is reported; a precise compartment (apoplast vs ER vs vacuole) cannot be assigned from the retrieved evidence, though apoplastic cytokinin metabolism occurs in rice.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reduced OsCKX2 (RNAi/CRISPR) increases tiller and/or grain number, delays senescence and improves salinity/drought-stress yield maintenance, confirming the negative-regulator role; OsCKX2 expression is stage-dependent and inflorescence-meristem enriched.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40703034" target="_blank" class="term-link">
+                            PMID:40703034
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">A critical assessment of computational function prediction.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Reference framework for assessing computational GO/EC predictions and over-annotation error types; relevant background for evaluating the IEA/keyword-derived annotations reviewed here (not gene-specific to OsCKX2).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the direct subcellular localization of OsCKX2 (apoplast/extracellular space vs ER vs vacuole), and does it act extracellularly on apoplastic cytokinin pools, as predicted by its signal peptide and the recently described apoplastic cytokinin metabolism in rice?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Hitoshi Sakakibara</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="Q: What is the direct subcellular localization of OsC..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the in vitro substrate-preference ranking and kinetic profile of OsCKX2 across cytokinin species (iP, tZ, dihydrozeatin and their nucleosides/nucleotides), and which electron acceptor it uses in vivo?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Hitoshi Sakakibara</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="Q: What is the in vitro substrate-preference ranking ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Express and purify recombinant OsCKX2 and measure steady-state kinetic constants (kcat, Km) against a panel of cytokinin substrates (iP, tZ, dihydrozeatin, cZ and their ribosides/ribotides) with both artificial and physiological electron acceptors, to establish substrate specificity and the in vivo acceptor.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsCKX2 preferentially degrades nucleobase isoprenoid cytokinins (iP-type) via its FAD-dependent dehydrogenase mechanism, defining the bioactive-cytokinin pool it controls.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme kinetics / substrate-specificity assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="EXPERIMENT: Express and purify recombinant OsCKX2 and measure ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate OsCKX2-GFP/fluorescent fusions and perform confocal imaging plus apoplastic-fluid fractionation in rice to determine whether the enzyme is secreted to the extracellular space/apoplast and where it degrades cytokinins.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: OsCKX2 is secreted via its N-terminal signal peptide and acts extracellularly (apoplastically) on cytokinin pools at the inflorescence-meristem periphery.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: subcellular-localization imaging and biochemical fractionation</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="EXPERIMENT: Generate OsCKX2-GFP/fluorescent fusions and perfor..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Quantify cytokinin metabolite profiles (active bases, ribosides, ribotides and degradation products) in inflorescence meristems of OsCKX2 loss-of-function vs wild-type plants by LC-MS to confirm catabolic flux and the affected cytokinin species in vivo.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of OsCKX2 increases active cytokinin (iP/tZ) levels and decreases degradation products in panicle meristems, directly demonstrating its catabolic role in cytokinin homeostasis.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: targeted hormone metabolomics (LC-MS) in mutant vs wild-type</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q4ADV8" data-a="EXPERIMENT: Quantify cytokinin metabolite profiles (active bas..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CKX2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q4ADV8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">15 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T09:21:48.820540</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CKX2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="CKX2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000012 The document contains figures showing the mapping of *Gn1a* to *OsCKX2* and cytokinin levels in the inflorescence meristem. 1. **Fi</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-functional-annotation-of-rice-ckx2-osckx2-gn1a-uniprot-q4adv8">Research Report: Functional Annotation of Rice <strong>CKX2 / OsCKX2 / Gn1a</strong> (UniProt Q4ADV8)</h2>
+<h3 id="executive-summary">Executive summary</h3>
+<p><strong>CKX2 (OsCKX2; Gn1a)</strong> encodes a cytokinin oxidase/dehydrogenase that <strong>irreversibly degrades cytokinins</strong>, thereby controlling cytokinin homeostasis in <strong>inflorescence meristems and developing panicles</strong> and tuning meristem activity that ultimately determines <strong>panicle branching and grain number</strong> in rice. Genetic reduction or loss of OsCKX2 activity increases cytokinin accumulation in reproductive meristems and can substantially increase grain number and yield components, making OsCKX2 one of the most validated hormone-metabolism targets for rice yield improvement. (ashikari2005cytokininoxidaseregulates pages 1-2, yeh2015downregulationofcytokinin pages 1-2)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="11-cytokinins-and-cytokinin-homeostasis">1.1 Cytokinins and cytokinin homeostasis</h4>
+<p>Cytokinins are adenine-derived phytohormones that regulate plant growth and development, including meristem activity. Their steady-state levels depend on biosynthesis, interconversion among nucleobase/nucleoside/nucleotide forms, conjugation, transport, and <strong>irreversible degradation</strong>. Cytokinin oxidase/dehydrogenase (CKX) enzymes mediate the key irreversible catabolic step by cleaving cytokinin side chains. (werner12006newinsightsinto pages 1-2)</p>
+<h4 id="12-ckx-enzymes-biochemical-definition">1.2 CKX enzymes (biochemical definition)</h4>
+<p>CKX enzymes catalyze <strong>irreversible cytokinin degradation</strong> by cleaving the <strong>unsaturated isoprenoid N6 side chain</strong> of cytokinin substrates to yield adenine/adenosine plus a corresponding aldehyde side-chain product. (werner12006newinsightsinto pages 1-2, werner12006newinsightsinto pages 6-7)</p>
+<p>At the mechanistic level, CKXs are <strong>FAD-dependent flavoenzymes</strong>. The cytokinin substrate reacts with oxidized FAD through a transient adduct, leading to formation of an intermediate that is hydrolyzed to adenine and an aldehyde; CKX can operate in an “oxidase” mode (using oxygen weakly) or more efficiently as a “dehydrogenase” using electron acceptors such as quinones, consistent with the dehydrogenase nomenclature. (werner12006newinsightsinto pages 6-7)</p>
+<h4 id="13-target-gene-verification-and-disambiguation">1.3 Target gene verification and disambiguation</h4>
+<p>The target protein is UniProt <strong>Q4ADV8</strong> from <em>Oryza sativa</em> subsp. japonica (rice), annotated as <strong>cytokinin dehydrogenase/oxidase 2</strong> with aliases <strong>OsCKX2</strong> and <strong>Gn1a</strong>. In rice genetics, <strong>Gn1a</strong> is a grain-number QTL on chromosome 1 that was molecularly cloned and shown to correspond to <strong>OsCKX2</strong> (cytokinin oxidase/dehydrogenase). (ashikari2005cytokininoxidaseregulates pages 1-2, ashikari2005cytokininoxidaseregulates pages 2-3)</p>
+<h3 id="2-core-functional-annotation-of-osckx2-gn1a">2) Core functional annotation of OsCKX2 (Gn1a)</h3>
+<h4 id="21-gene-identity-locus-and-organism">2.1 Gene identity, locus, and organism</h4>
+<p>High-resolution mapping and transgenic confirmation established that the rice QTL <strong>Gn1a</strong> corresponds to <strong>OsCKX2</strong>, a predicted cytokinin oxidase/dehydrogenase gene in <strong>rice (<em>Oryza sativa</em>)</strong>. This was shown in the context of <strong>japonica cultivar Koshihikari</strong> and the high-yield <strong>indica cultivar Habataki</strong>, among other materials. (ashikari2005cytokininoxidaseregulates pages 1-2, ashikari2005cytokininoxidaseregulates pages 2-3)</p>
+<p>A figure set in the original cloning paper shows the <strong>genetic mapping of Gn1a to OsCKX2</strong> and accompanying cytokinin/OsCKX2 expression data in inflorescence meristems. (ashikari2005cytokininoxidaseregulates media 9c2fb589)</p>
+<h4 id="22-enzymatic-function-and-reaction-osckx2-as-cytokinin-catabolic-enzyme">2.2 Enzymatic function and reaction (OsCKX2 as cytokinin catabolic enzyme)</h4>
+<p>OsCKX2 is a CKX-family cytokinin catabolic enzyme whose reduced activity leads to accumulation of cytokinin species (including nucleotide forms such as tZRMP and iPRMP) in inflorescence meristems, consistent with decreased cytokinin degradation. OsCKX2 protein variants expressed in yeast retain cytokinin-cleaving activity, supporting that OsCKX2 encodes an active CKX enzyme. (ashikari2005cytokininoxidaseregulates pages 3-4)</p>
+<p>Family-level enzymology indicates CKXs have highest affinity for isoprenoid cytokinins such as <strong>isopentenyladenine (iP)</strong> and <strong>trans-zeatin (tZ)</strong> (and their ribosides), often with low-micromolar Km values. (werner12006newinsightsinto pages 6-7)</p>
+<p><strong>OsCKX2-specific substrate evidence available in the retrieved corpus is primarily functional (in planta) rather than kinetic/enzymatic</strong>, but knockdown/reduced-expression OsCKX2 backgrounds are associated with elevated active cytokinin forms including tZ and iP-type cytokinins in reproductive meristems, consistent with OsCKX2 acting on those substrates. (ashikari2005cytokininoxidaseregulates pages 1-2, katerUnknownyear…cytokininmetabolism pages 17-19)</p>
+<h4 id="23-biological-process-and-pathway-context-inflorescence-meristem-activity-panicle-architecture-grain-number">2.3 Biological process and pathway context: inflorescence meristem activity → panicle architecture → grain number</h4>
+<p>OsCKX2 is a negative regulator of cytokinin levels in <strong>inflorescence meristems/young panicles</strong>, and thus acts as a negative regulator of meristem activity and reproductive organ production. Reduced OsCKX2 expression leads to cytokinin accumulation in inflorescence meristems and increases the number of reproductive organs, increasing grain yield. (ashikari2005cytokininoxidaseregulates pages 1-2, ashikari2005cytokininoxidaseregulates pages 3-4)</p>
+<h3 id="3-phenotypic-effects-and-quantitative-trait-data">3) Phenotypic effects and quantitative trait data</h3>
+<h4 id="31-qtl-effect-sizes-foundational-quantitative-genetics">3.1 QTL effect sizes (foundational quantitative genetics)</h4>
+<p>In the molecular cloning study of Gn1a, the <strong>Habataki</strong> Gn1a allele was reported to be semidominant and associated with <strong>~92 more grains per main panicle</strong>, accounting for <strong>44%</strong> of the grain-number difference relative to <strong>Koshihikari</strong>. A natural null allele (11-bp deletion) in variety <strong>5150</strong> was associated with <strong>&gt;400 grains per main panicle</strong>, consistent with the concept that reduced or lost OsCKX2 function enhances grain production. (ashikari2005cytokininoxidaseregulates pages 2-3)</p>
+<h4 id="32-field-tested-genetic-manipulation-of-osckx2-real-world-agronomic-performance">3.2 Field-tested genetic manipulation of OsCKX2 (real-world agronomic performance)</h4>
+<p>A field-evaluated shRNA knockdown strategy targeting OsCKX2 in rice demonstrated that OsCKX2 suppression increases multiple yield components. In field experiments, transgenic lines produced <strong>27–81% more tillers</strong> and <strong>24–67% more grains per plant</strong>, and showed <strong>5–15% heavier 1000-grain weight</strong> than wild-type plants. The authors also report that insertional activation (increased expression) of OsCKX2 reduces tiller number and growth in a gene-dosage–dependent manner. (yeh2015downregulationofcytokinin pages 1-2)</p>
+<h3 id="4-recent-developments-prioritizing-20232024">4) Recent developments (prioritizing 2023–2024)</h3>
+<h4 id="41-2023-regulatory-network-controlling-osckx2-via-fzpdst-module">4.1 2023: Regulatory network controlling OsCKX2 via FZP–DST module</h4>
+<p>A 2023 study (BMC Plant Biology; publication date Dec 2023; DOI URL https://doi.org/10.1186/s12870-023-04671-4) provides mechanistic insight into how OsCKX2 is transcriptionally positioned in panicle/spikelet development.</p>
+<p>The study shows that <strong>FZP</strong>, a nuclear AP2/ERF transcription factor, represses <strong>DST</strong> by directly binding its promoter; in a severe fzp allele, <strong>DST and OsCKX2 are upregulated</strong> in young panicles, and cytokinin content decreases substantially (IP ~60% lower, IPA ~25% lower, zeatin ~27% lower; DHZ unchanged). The severe fzp phenotype included a <strong>~66% reduction in grain number per main panicle</strong>, linking an upstream developmental regulator to OsCKX2-mediated cytokinin depletion and reduced grain number. (wang2023frizzlepanicle(fzp) pages 2-4, wang2023frizzlepanicle(fzp) pages 1-2)</p>
+<p>In addition, the same work synthesizes a regulatory concept in which DST binds the OsCKX2 promoter and its activity can be enhanced by phosphorylation via the OsMKKK10–OsMKK4–OsMPK6 cascade; MED25 is described as a DST coactivator, situating OsCKX2 in a broader meristem-patterning signaling context. (wang2023frizzlepanicle(fzp) pages 1-2)</p>
+<h4 id="42-2024-crisprcas9-osckx2-mutants-for-yield-traits-and-drought-tolerance">4.2 2024: CRISPR/Cas9 Osckx2 mutants for yield traits and drought tolerance</h4>
+<p>A 2024 study (Plant Cell Reports; publication date Aug 2024; DOI URL https://doi.org/10.1007/s00299-024-03289-6) generated <strong>OsCKX2-deficient mutants</strong> using <strong>CRISPR/Cas9</strong> in indica rice (MTU1010). The study reports that Osckx2 loss-of-function increases cytokinin accumulation in panicle tissue and improves panicle architecture (including increased secondary branching), grain number, and overall yield, and additionally enhances drought-related performance (reduced transpiration, improved survival under dehydration stress, better membrane/chloroplast integrity, and improved photosynthetic function through antioxidant protection). Within the excerpted pages available here, numeric effect sizes were not provided, but the mechanistic interpretation is consistent with OsCKX2 functioning as a negative regulator of reproductive cytokinin levels and panicle sink strength. (rashid2024cytokininoxidase2deficientmutants pages 1-5, rashid2024cytokininoxidase2deficientmutants pages 5-7)</p>
+<h3 id="5-cellular-and-subcellular-localization">5) Cellular and subcellular localization</h3>
+<p>Direct subcellular localization evidence for <strong>OsCKX2 protein</strong> (e.g., ER lumen vs apoplast) was <strong>not present in the retrieved full-text snippets</strong>. However, multiple authoritative sources emphasize that CKX family proteins have diverse subcellular targeting (extracellular/apoplastic, vacuolar, cytosolic, ER-associated) and that localization differences are an important axis of CKX functional specialization. In rice-family examples, OsCKX3 is described as ER-localized (GFP fusion), while OsCKX4 was reported as cytosolic, illustrating that rice CKX paralogs are not uniformly localized. (werner12006newinsightsinto pages 2-3, katerUnknownyear…cytokininmetabolism pages 17-19)</p>
+<p>Functionally, OsCKX2 action is repeatedly localized at the tissue level to <strong>inflorescence meristems/young panicles</strong>, where changes in OsCKX2 expression are coupled to changes in cytokinin levels and panicle/grain phenotypes. (ashikari2005cytokininoxidaseregulates pages 1-2, wang2023frizzlepanicle(fzp) pages 2-4)</p>
+<h3 id="6-current-applications-and-real-world-implementations">6) Current applications and real-world implementations</h3>
+<h4 id="61-yield-improvement-via-natural-alleles-and-qtl-introgression">6.1 Yield improvement via natural alleles and QTL introgression</h4>
+<p>OsCKX2/Gn1a is a canonical example of a yield QTL molecularly traced to a hormone catabolic enzyme. The large effect sizes reported for the Habataki allele (e.g., +92 grains per main panicle; 44% of difference vs Koshihikari) provide a rationale for <strong>marker-assisted introgression</strong> and QTL pyramiding strategies that incorporate sink-size loci. (ashikari2005cytokininoxidaseregulates pages 2-3, ashikari2005cytokininoxidaseregulates pages 1-2)</p>
+<h4 id="62-transgenic-suppression-and-field-trials">6.2 Transgenic suppression and field trials</h4>
+<p>The shRNA knockdown study demonstrates a path from molecular perturbation to field performance, showing that OsCKX2 suppression can increase tiller number, grains per plant, and 1000-grain weight in field conditions. (yeh2015downregulationofcytokinin pages 1-2)</p>
+<h4 id="63-genome-editing-crisprcas9">6.3 Genome editing (CRISPR/Cas9)</h4>
+<p>The 2024 indica-rice CRISPR/Cas9 study illustrates OsCKX2 as a target for <strong>precision breeding</strong> aimed at simultaneously improving sink traits (panicle branching, grain number) and climate resilience (drought tolerance traits). (rashid2024cytokininoxidase2deficientmutants pages 1-5, rashid2024cytokininoxidase2deficientmutants pages 5-7)</p>
+<h3 id="7-expert-synthesis-and-interpretation-authoritative-analysis">7) Expert synthesis and interpretation (authoritative analysis)</h3>
+<p>A consistent expert consensus across primary studies and mechanistic reviews is that <strong>cytokinin degradation is a leverage point for yield manipulation</strong> because cytokinins promote meristem activity and reproductive organ production. OsCKX2/Gn1a exemplifies this by connecting a defined enzymatic step (cytokinin side-chain cleavage) to a high-impact agronomic trait (grain number). (werner12006newinsightsinto pages 6-7, ashikari2005cytokininoxidaseregulates pages 1-2)</p>
+<p>Mechanistically, the 2023 FZP–DST–OsCKX2 study suggests that yield effects mediated through OsCKX2 are not simply “more cytokinin is better”; rather, OsCKX2 must be tuned within a regulatory network balancing meristem fate, spikelet development, and cytokinin levels, because excessive cytokinin depletion (via upregulated OsCKX2) can reduce grain number dramatically (e.g., ~66% reduction in the severe fzp allele context). (wang2023frizzlepanicle(fzp) pages 1-2)</p>
+<h3 id="8-evidence-map-compact">8) Evidence map (compact)</h3>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Key points</th>
+<th>Quantitative data</th>
+<th>Organism/background</th>
+<th>Supporting citation IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/locus</td>
+<td>OsCKX2 is the rice cytokinin oxidase/dehydrogenase 2 gene; the grain-number QTL <strong>Gn1a</strong> was molecularly cloned as <strong>OsCKX2</strong> on chromosome 1. Reduced-expression or null alleles increase cytokinin in inflorescence meristems and raise grain number. This matches the UniProt target CKX2/OsCKX2/Gn1a from <em>Oryza sativa</em>.</td>
+<td>Habataki Gn1a allele increased grain number by <strong>~92 grains per main panicle</strong> and explained <strong>44%</strong> of the grain-number difference versus Koshihikari; a natural 11-bp deletion allele in 5150 was associated with <strong>&gt;400 grains per main panicle</strong>.</td>
+<td>Rice (<em>Oryza sativa</em>), especially japonica Koshihikari and indica Habataki/5150 backgrounds</td>
+<td>(ashikari2005cytokininoxidaseregulates pages 2-3, ashikari2005cytokininoxidaseregulates pages 1-2)</td>
+</tr>
+<tr>
+<td>Enzymatic function</td>
+<td>OsCKX2 encodes a CKX-family enzyme that <strong>irreversibly degrades cytokinins</strong>, thereby lowering endogenous CK abundance in reproductive meristems and other tissues. Functional expression in yeast confirmed CKX catalytic activity for OsCKX2 protein variants.</td>
+<td>Reduced OsCKX2 activity in Gn1a-associated lines caused accumulation of cytokinin nucleotides such as <strong>tZRMP</strong> and <strong>iPRMP</strong> relative to Koshihikari.</td>
+<td>Rice Gn1a/OsCKX2 lines; yeast heterologous expression for catalytic confirmation</td>
+<td>(ashikari2005cytokininoxidaseregulates pages 3-4, yeh2015downregulationofcytokinin pages 1-2)</td>
+</tr>
+<tr>
+<td>Substrates &amp; mechanism</td>
+<td>Plant CKX enzymes are <strong>FAD-dependent flavoenzymes</strong> that cleave the unsaturated N6 isoprenoid side chain of cytokinin nucleobases/ribosides, yielding adenine/adenosine plus an aldehyde. Family-level evidence indicates preference for <strong>isoprenoid CKs</strong> such as <strong>iP</strong> and <strong>tZ</strong> (and their ribosides), supporting inference for OsCKX2. Rice-specific knockdown evidence indicates OsCKX2 normally restrains <strong>tZ, 2-iP, kinetin, and DHZ</strong> in inflorescence meristems.</td>
+<td>CKX enzymes have <strong>low-micromolar Km</strong> for iP/tZ-type substrates in family-level studies; OsCKX2-RNAi/knockdown plants showed elevated <strong>tZ, 2-iP, kinetin, DHZ</strong> in IM tissue.</td>
+<td>General plant CKX enzymology with rice OsCKX2 functional inference; rice inflorescence meristem knockdown lines</td>
+<td>(werner12006newinsightsinto pages 6-7, werner12006newinsightsinto pages 1-2, katerUnknownyear…cytokininmetabolism pages 17-19, katerUnknownyear…cytokininmetabolisma pages 17-19)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Direct OsCKX2 localization evidence was not retrieved in the gathered texts. However, OsCKX2 has a signal peptide in UniProt and CKX family proteins localize to distinct compartments including <strong>extracellular/apoplastic, ER-associated, vacuolar, and cytosolic</strong> pools depending on isoform. OsCKX2 function is experimentally tied to the <strong>inflorescence meristem/panicle tissue</strong> where its transcript abundance affects CK levels.</td>
+<td>No direct OsCKX2 compartment quantification retrieved; OsCKX3 localizes predominantly to <strong>ER</strong>, OsCKX4 is <strong>cytosolic</strong>, illustrating family divergence.</td>
+<td>Rice CKX family context; OsCKX2 expression/function studied in inflorescence meristems and young panicles</td>
+<td>(werner12006newinsightsinto pages 2-3, katerUnknownyear…cytokininmetabolism pages 17-19, ashikari2005cytokininoxidaseregulates media 9c2fb589)</td>
+</tr>
+<tr>
+<td>Pathway/regulation</td>
+<td>OsCKX2 is a core node in cytokinin-homeostasis pathways controlling inflorescence meristem activity. <strong>DST</strong> directly activates OsCKX2; <strong>MED25</strong> acts as a DST coactivator; phosphorylation by the <strong>OsMKKK10–OsMKK4–OsMPK6</strong> cascade promotes DST-mediated OsCKX2 expression. <strong>FZP</strong> represses <strong>DST</strong>, thereby indirectly limiting OsCKX2 and sustaining CK in young panicles.</td>
+<td>In the severe <strong>fzp/abp1</strong> allele, <strong>grain number per main panicle fell ~66%</strong>; in fzp young panicles, CKs decreased: <strong>IP ~60% lower</strong>, <strong>IPA ~25% lower</strong>, <strong>zeatin ~27% lower</strong>.</td>
+<td>Rice young panicles/inflorescence meristems; FZP-DST-OsCKX2 regulatory module</td>
+<td>(wang2023frizzlepanicle(fzp) pages 1-2, wang2023frizzlepanicle(fzp) pages 2-4)</td>
+</tr>
+<tr>
+<td>Phenotypes/yield data</td>
+<td>Lower OsCKX2 expression increases sink strength by enhancing meristem activity, panicle branching, tillering, and grain number; overexpression/activation has the opposite effect. OsCKX2 is therefore a <strong>negative regulator</strong> of grain number and tiller formation through cytokinin catabolism.</td>
+<td>shRNA suppression caused <strong>27–81% more tillers</strong>, <strong>24–67% more grains per plant</strong>, and <strong>5–15% higher 1000-grain weight</strong> in field tests; insertional activation reduced tiller number in a dosage-dependent manner.</td>
+<td>Transgenic rice, including <em>O. sativa</em> cv. TNG67; greenhouse and field experiments</td>
+<td>(yeh2015downregulationofcytokinin pages 1-2, yeh2015downregulationofcytokinin pages 8-10)</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 developments</td>
+<td>2023 work refined the upstream transcriptional network controlling OsCKX2 via <strong>FZP→DST→OsCKX2</strong> and linked altered OsCKX2 expression to reduced cytokinin and defective spikelet development. 2024 CRISPR work showed that <strong>Osckx2</strong> loss-of-function in indica rice increases panicle branching and grain yield while also improving drought-related performance.</td>
+<td>2023: <strong>66% reduction</strong> in grain number per main panicle in severe fzp background; CK decreases of <strong>~60% IP</strong>, <strong>~25% IPA</strong>, <strong>~27% zeatin</strong>. 2024: qualitative increases in secondary branching, grain number, and drought survival traits; provided pages did not include exact numeric effect sizes.</td>
+<td>2023 BMC Plant Biology study in rice panicles; 2024 CRISPR/Cas9 study in indica rice cv. MTU1010</td>
+<td>(wang2023frizzlepanicle(fzp) pages 2-4, wang2023frizzlepanicle(fzp) pages 1-2, rashid2024cytokininoxidase2deficientmutants pages 1-5, rashid2024cytokininoxidase2deficientmutants pages 5-7)</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>OsCKX2/Gn1a is a validated target for <strong>yield breeding</strong>, <strong>QTL introgression</strong>, <strong>gene pyramiding</strong>, RNAi knockdown, and <strong>CRISPR/Cas9 editing</strong>. Practical use cases include exploiting weak/null alleles to raise grain number and using edited alleles for high-yield, climate-resilient rice.</td>
+<td>Gn1a introgression delivered major sink-size effects (e.g., <strong>~92 grains/panicle</strong>, <strong>44%</strong> difference component); recent CRISPR mutants increased grain number and drought tolerance qualitatively; OsCKX2 knockdown also reduced yield penalty under salinity in earlier work.</td>
+<td>Rice breeding in japonica and indica backgrounds; near-isogenic lines, transgenics, and CRISPR-edited plants</td>
+<td>(ashikari2005cytokininoxidaseregulates pages 2-3, rashid2024cytokininoxidase2deficientmutants pages 1-5, ashikari2005cytokininoxidaseregulates pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles the main functional-annotation evidence for rice OsCKX2/Gn1a, including identity, enzymatic role, regulatory pathway, quantitative phenotypes, and 2023–2024 updates. It is useful as a compact evidence map for gene-function interpretation and breeding relevance.</em></p>
+<h3 id="9-key-reference-urls-and-publication-dates-selected">9) Key reference URLs and publication dates (selected)</h3>
+<ul>
+<li>Ashikari et al. <em>Science</em> (Jul 2005): “Cytokinin oxidase regulates rice grain production.” https://doi.org/10.1126/science.1113373 (ashikari2005cytokininoxidaseregulates pages 1-2)</li>
+<li>Yeh et al. <em>Rice</em> (Dec 2015): “Down-Regulation of Cytokinin Oxidase 2 Expression Increases Tiller Number and Improves Rice Yield.” https://doi.org/10.1186/s12284-015-0070-5 (yeh2015downregulationofcytokinin pages 1-2)</li>
+<li>Wang et al. <em>BMC Plant Biology</em> (Dec 2023): “FRIZZLE PANICLE (FZP) regulates rice spikelets development through modulating cytokinin metabolism.” https://doi.org/10.1186/s12870-023-04671-4 (wang2023frizzlepanicle(fzp) pages 2-4)</li>
+<li>Rashid et al. <em>Plant Cell Reports</em> (Aug 2024): “Cytokinin oxidase2-deficient mutants improve panicle and grain architecture… and enhance drought tolerance in indica rice.” https://doi.org/10.1007/s00299-024-03289-6 (rashid2024cytokininoxidase2deficientmutants pages 1-5)</li>
+<li>Werner et al. <em>Plant Biology</em> (May 2006): “New insights into the biology of cytokinin degradation.” https://doi.org/10.1055/s-2006-923928 (werner12006newinsightsinto pages 6-7)</li>
+</ul>
+<h3 id="10-limitations-and-gaps-important-for-functional-annotation">10) Limitations and gaps (important for functional annotation)</h3>
+<ol>
+<li><strong>Subcellular localization of OsCKX2</strong>: Although UniProt indicates a precursor/signal peptide, the retrieved texts here did not provide direct experimental localization (e.g., GFP fusion for OsCKX2). Conclusions about compartment should therefore be treated as provisional, informed by family-wide patterns rather than OsCKX2-specific experiments. (katerUnknownyear…cytokininmetabolism pages 17-19, werner12006newinsightsinto pages 2-3)</li>
+<li><strong>OsCKX2-specific kinetic parameters and substrate preference</strong>: Mechanistic and substrate preference details are robust at the CKX-family level, but OsCKX2-specific Km/kcat data and definitive substrate ranking were not present in the extracted snippets, so claims about OsCKX2’s precise substrate hierarchy remain inferential. (werner12006newinsightsinto pages 6-7, ashikari2005cytokininoxidaseregulates pages 3-4)</li>
+</ol>
+<p>References</p>
+<ol>
+<li>
+<p>(ashikari2005cytokininoxidaseregulates pages 1-2): Motoyuki Ashikari, Hitoshi Sakakibara, Shaoyang Lin, Toshio Yamamoto, Tomonori Takashi, Asuka Nishimura, Enrique R. Angeles, Qian Qian, Hidemi Kitano, and Makoto Matsuoka. Cytokinin oxidase regulates rice grain production. Science, 309:741-745, Jul 2005. URL: https://doi.org/10.1126/science.1113373, doi:10.1126/science.1113373. This article has 2477 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yeh2015downregulationofcytokinin pages 1-2): Su-Ying Yeh, Hau-Wen Chen, Chun-Yeung Ng, Chu-Yin Lin, Tung-Hai Tseng, Wen-Hsiung Li, and Maurice S. B. Ku. Down-regulation of cytokinin oxidase 2 expression increases tiller number and improves rice yield. Rice, Dec 2015. URL: https://doi.org/10.1186/s12284-015-0070-5, doi:10.1186/s12284-015-0070-5. This article has 192 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner12006newinsightsinto pages 1-2): T. Werner1, I. Köllmer1, I. Bartrina1, K. Holst1, and T. Schmülling1. New insights into the biology of cytokinin degradation. Plant Biology, 8:371-381, May 2006. URL: https://doi.org/10.1055/s-2006-923928, doi:10.1055/s-2006-923928. This article has 398 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner12006newinsightsinto pages 6-7): T. Werner1, I. Köllmer1, I. Bartrina1, K. Holst1, and T. Schmülling1. New insights into the biology of cytokinin degradation. Plant Biology, 8:371-381, May 2006. URL: https://doi.org/10.1055/s-2006-923928, doi:10.1055/s-2006-923928. This article has 398 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ashikari2005cytokininoxidaseregulates pages 2-3): Motoyuki Ashikari, Hitoshi Sakakibara, Shaoyang Lin, Toshio Yamamoto, Tomonori Takashi, Asuka Nishimura, Enrique R. Angeles, Qian Qian, Hidemi Kitano, and Makoto Matsuoka. Cytokinin oxidase regulates rice grain production. Science, 309:741-745, Jul 2005. URL: https://doi.org/10.1126/science.1113373, doi:10.1126/science.1113373. This article has 2477 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ashikari2005cytokininoxidaseregulates media 9c2fb589): Motoyuki Ashikari, Hitoshi Sakakibara, Shaoyang Lin, Toshio Yamamoto, Tomonori Takashi, Asuka Nishimura, Enrique R. Angeles, Qian Qian, Hidemi Kitano, and Makoto Matsuoka. Cytokinin oxidase regulates rice grain production. Science, 309:741-745, Jul 2005. URL: https://doi.org/10.1126/science.1113373, doi:10.1126/science.1113373. This article has 2477 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ashikari2005cytokininoxidaseregulates pages 3-4): Motoyuki Ashikari, Hitoshi Sakakibara, Shaoyang Lin, Toshio Yamamoto, Tomonori Takashi, Asuka Nishimura, Enrique R. Angeles, Qian Qian, Hidemi Kitano, and Makoto Matsuoka. Cytokinin oxidase regulates rice grain production. Science, 309:741-745, Jul 2005. URL: https://doi.org/10.1126/science.1113373, doi:10.1126/science.1113373. This article has 2477 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(katerUnknownyear…cytokininmetabolism pages 17-19): M KATER. … cytokinin metabolism during inflorescence meristem development to promote higher rice productivity through changes …. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(wang2023frizzlepanicle(fzp) pages 2-4): W. Wang, Wenqiang Chen, Qinglong Liu, and Junmin Wang. Frizzle panicle (fzp) regulates rice spikelets development through modulating cytokinin metabolism. BMC Plant Biology, Dec 2023. URL: https://doi.org/10.1186/s12870-023-04671-4, doi:10.1186/s12870-023-04671-4. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2023frizzlepanicle(fzp) pages 1-2): W. Wang, Wenqiang Chen, Qinglong Liu, and Junmin Wang. Frizzle panicle (fzp) regulates rice spikelets development through modulating cytokinin metabolism. BMC Plant Biology, Dec 2023. URL: https://doi.org/10.1186/s12870-023-04671-4, doi:10.1186/s12870-023-04671-4. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rashid2024cytokininoxidase2deficientmutants pages 1-5): Afreen Rashid, V. Mohan M. Achary, M. Z. Abdin, Sangeetha Karippadakam, Hemangini Parmar, Varakumar Panditi, Ganesan Prakash, Pooja Bhatnagar-Mathur, and Malireddy K. Reddy. Cytokinin oxidase2-deficient mutants improve panicle and grain architecture through cytokinin accumulation and enhance drought tolerance in indica rice. Plant cell reports, 43 8:207, Aug 2024. URL: https://doi.org/10.1007/s00299-024-03289-6, doi:10.1007/s00299-024-03289-6. This article has 25 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rashid2024cytokininoxidase2deficientmutants pages 5-7): Afreen Rashid, V. Mohan M. Achary, M. Z. Abdin, Sangeetha Karippadakam, Hemangini Parmar, Varakumar Panditi, Ganesan Prakash, Pooja Bhatnagar-Mathur, and Malireddy K. Reddy. Cytokinin oxidase2-deficient mutants improve panicle and grain architecture through cytokinin accumulation and enhance drought tolerance in indica rice. Plant cell reports, 43 8:207, Aug 2024. URL: https://doi.org/10.1007/s00299-024-03289-6, doi:10.1007/s00299-024-03289-6. This article has 25 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(werner12006newinsightsinto pages 2-3): T. Werner1, I. Köllmer1, I. Bartrina1, K. Holst1, and T. Schmülling1. New insights into the biology of cytokinin degradation. Plant Biology, 8:371-381, May 2006. URL: https://doi.org/10.1055/s-2006-923928, doi:10.1055/s-2006-923928. This article has 398 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(katerUnknownyear…cytokininmetabolisma pages 17-19): M KATER. … cytokinin metabolism during inflorescence meristem development to promote higher rice productivity through changes …. Unknown journal, Unknown year.</p>
+</li>
+<li>
+<p>(yeh2015downregulationofcytokinin pages 8-10): Su-Ying Yeh, Hau-Wen Chen, Chun-Yeung Ng, Chu-Yin Lin, Tung-Hai Tseng, Wen-Hsiung Li, and Maurice S. B. Ku. Down-regulation of cytokinin oxidase 2 expression increases tiller number and improves rice yield. Rice, Dec 2015. URL: https://doi.org/10.1186/s12284-015-0070-5, doi:10.1186/s12284-015-0070-5. This article has 192 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CKX2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000012 The document contains figures showing the mapping of *Gn1a* to *OsCKX2* and cytokinin levels in the inflorescence meristem. 1. **Fi" src="CKX2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ashikari2005cytokininoxidaseregulates pages 3-4</li>
+<li>ashikari2005cytokininoxidaseregulates pages 2-3</li>
+<li>yeh2015downregulationofcytokinin pages 1-2</li>
+<li>ashikari2005cytokininoxidaseregulates pages 1-2</li>
+<li>yeh2015downregulationofcytokinin pages 8-10</li>
+<li>https://doi.org/10.1186/s12870-023-04671-4</li>
+<li>https://doi.org/10.1007/s00299-024-03289-6</li>
+<li>https://doi.org/10.1126/science.1113373</li>
+<li>https://doi.org/10.1186/s12284-015-0070-5</li>
+<li>https://doi.org/10.1055/s-2006-923928</li>
+<li>https://doi.org/10.1126/science.1113373,</li>
+<li>https://doi.org/10.1186/s12284-015-0070-5,</li>
+<li>https://doi.org/10.1055/s-2006-923928,</li>
+<li>https://doi.org/10.1186/s12870-023-04671-4,</li>
+<li>https://doi.org/10.1007/s00299-024-03289-6,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q4ADV8
+gene_symbol: CKX2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:39947
+  label: Oryza sativa subsp. japonica
+description: &gt;
+  OsCKX2 (Q4ADV8), also known as cytokinin oxidase/dehydrogenase 2 and as the grain-number
+  QTL Gn1a, is a secreted FAD-linked flavoenzyme of the oxygen-dependent FAD-linked
+  oxidoreductase family that catalyses the IRREVERSIBLE DEGRADATION of cytokinins
+  (EC 1.5.99.12). It oxidatively cleaves the unsaturated N6-isoprenoid side chain of
+  nucleobase cytokinins (e.g. N6-(dimethylallyl)adenine / isopentenyladenine), producing
+  adenine and the corresponding aldehyde (3-methyl-2-butenal), thereby inactivating the
+  active hormone. OsCKX2 is therefore a hormone-CATABOLISM (homeostasis) enzyme, not a
+  component of the cytokinin signal-transduction machinery: it modulates the size of the
+  available bioactive cytokinin pool rather than transducing the cytokinin signal (which is
+  the role of the two-component AHK receptor -&gt; AHP -&gt; type-B ARR cascade). The enzyme was
+  cloned as the major QTL Gn1a controlling rice grain number: reduced OsCKX2 expression or
+  loss-of-function causes cytokinin accumulation in inflorescence (panicle) meristems and
+  increases the number of reproductive organs, raising grain yield (Ashikari et al. 2005,
+  PMID:15976269). It is highly (and preferentially) expressed in inflorescence meristems,
+  leaves, culms and flowers, especially in vascular tissues, and its expression level
+  correlates inversely with grain number. RNAi knockdown and CRISPR knockout independently
+  confirm this negative-regulator role and link reduced OsCKX2 to higher tiller/grain
+  number, delayed senescence and improved drought/salinity-stress yield maintenance
+  (Joshi et al. 2018; Yeh et al. 2015; Rashid et al. 2024). The enzyme is a precursor with
+  an N-terminal signal peptide and is predicted to be glycosylated and secreted to the
+  extracellular space (UniProt). FAD is the catalytic cofactor, bound covalently via an
+  8-alpha-FAD histidine (His113) within the FAD-binding PCMH-type domain.
+existing_annotations:
+# --- SPKW keyword-mapping annotation (GO_REF:0000043) ---
+# Present in the Sept 2025 goa_uniprot_gcrp snapshot (go-db plant.ddb); REMOVED from the
+# current (2026) GOA release when GOA retired the keyword2GO (keyword -&gt; GO) pipeline for
+# cellular organisms. Reviewed retrospectively to assess whether the removal was justified.
+# The single SPKW-derived term for OsCKX2 derives from the UniProt keyword
+# &#34;Cytokinin signaling pathway&#34;.
+- term:
+    id: GO:0009736
+    label: cytokinin-activated signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword
+      &#34;Cytokinin signaling pathway&#34;; snapshot-only, removed in the current GOA release.
+      OsCKX2 is a cytokinin-DEGRADING flavoenzyme (cytokinin oxidase/dehydrogenase,
+      EC 1.5.99.12) - a hormone-catabolism enzyme - and is NOT a component of the
+      two-component cytokinin signal-transduction cascade (AHK receptors -&gt; AHP -&gt; type-B
+      ARR transcription factors).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;
+      GOA&#39;s removal of this annotation was JUSTIFIED. The keyword &#34;Cytokinin signaling
+      pathway&#34; maps OsCKX2 to &#34;cytokinin-activated signaling pathway&#34; (GO:0009736), but
+      this confuses hormone METABOLISM with hormone SIGNALING. OsCKX2 catalyses the
+      irreversible oxidative degradation of cytokinins - it cleaves the N6-isoprenoid side
+      chain of nucleobase cytokinins to inactivate the hormone (EC 1.5.99.12) - and thereby
+      controls the LEVEL of bioactive cytokinin available; it does not act in the perception
+      or transduction of the cytokinin signal (the AHK/AHP/ARR two-component relay). Its
+      experimentally demonstrated role is enzymatic: reduced OsCKX2 expression causes
+      cytokinin ACCUMULATION in inflorescence meristems and more reproductive organs
+      [PMID:15976269], the hallmark of a catabolic enzyme acting on the hormone pool, not of
+      a signaling-pathway component. Annotating a catabolic enzyme to &#34;cytokinin-activated
+      signaling pathway&#34; is a clear over-annotation (a metabolic enzyme mislabelled as a
+      signal-transduction component). The genuine biology is better captured by the catabolic
+      process term &#34;cytokinin catabolic process&#34; (GO:0009823) and the molecular function
+      &#34;cytokinin dehydrogenase activity&#34; (GO:0019139), both retained/proposed elsewhere in
+      this review. Removal of the signaling-pathway term loses no correct biology.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that
+        degrades the phytohormone cytokinin&#34;
+    - reference_id: PMID:15976269
+      supporting_text: &#34;Reduced expression of OsCKX2 causes cytokinin accumulation in
+        inflorescence meristems and increases the number of reproductive organs&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;Their levels are controlled by biosynthesis/activation, transport,
+        signaling, and **irreversible degradation**.&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;OsCKX2 is an oxidoreductase that irreversibly inactivates active
+        cytokinins through side-chain cleavage, thereby lowering the pool of bioactive
+        cytokinin available to sustain inflorescence meristem activity.&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR016164, FAD-linked oxidase-like C-terminal) giving the
+      root catalytic-activity term. OsCKX2 is an enzyme, so the term is correct but
+      uninformative.
+    action: MODIFY
+    reason: &gt;
+      &#34;Catalytic activity&#34; is the top-level molecular-function grouping term and carries no
+      information about what reaction OsCKX2 catalyses. The specific catalytic function -
+      cytokinin dehydrogenase/oxidase activity (EC 1.5.99.12) - is demonstrated directly
+      [PMID:15976269] and is annotated elsewhere in this review (GO:0019139). The annotation
+      should be modified to that specific term rather than retained at the root level.
+    proposed_replacement_terms:
+    - id: GO:0019139
+      label: cytokinin dehydrogenase activity
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that
+        degrades the phytohormone cytokinin&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;OsCKX2 is an FAD-linked cytokinin oxidase/dehydrogenase controlling
+        cytokinin homeostasis in inflorescence meristems&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation from the UniProt subcellular-location mapping (SL-0112). OsCKX2 is a
+      precursor with an N-terminal signal peptide and is annotated as secreted to the
+      extracellular space.
+    action: ACCEPT
+    reason: &gt;
+      Consistent with the UniProt entry, which records a signal peptide (residues 1-20),
+      N-glycosylation sites, a &#34;Glycoprotein/Secreted/Signal&#34; keyword set, and a subcellular
+      location of &#34;Secreted, extracellular space&#34; (by similarity to other CKX enzymes).
+      Several plant CKX enzymes are apoplastic/extracellular, and extracellular/apoplastic
+      cytokinin metabolism is an established feature of rice cytokinin homeostasis. The
+      compartment assignment is consistent with the gene&#39;s biology even though no direct
+      OsCKX2 localization assay is reported in the retrieved primary literature; the IEA
+      term is therefore accepted but treated as non-core.
+    supported_by:
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;a precise compartment assignment (apoplast vs ER vs vacuole) for
+        OsCKX2 cannot be stated from the current evidence set.&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;a 2023 PNAS study demonstrated a **cell wall–localized**
+        cytokinin/purine riboside nucleosidase involved in **apoplastic cytokinin
+        metabolism**, expanding the framework in which cytokinin activation/turnover can
+        occur outside the cell.&#34;
+- term:
+    id: GO:0009690
+    label: cytokinin metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR015345, Cytokinin_DH_FAD/cytokin-bd) placing OsCKX2 in
+      cytokinin metabolism. Correct but unnecessarily broad: OsCKX2 specifically DEGRADES
+      cytokinins.
+    action: MODIFY
+    reason: &gt;
+      &#34;Cytokinin metabolic process&#34; is the parent term covering both biosynthesis and
+      catabolism. OsCKX2 acts exclusively on the CATABOLIC side - it irreversibly degrades
+      active cytokinins by oxidative side-chain cleavage [PMID:15976269] - so the more
+      specific and accurate child term &#34;cytokinin catabolic process&#34; (GO:0009823) should be
+      used. This is supported directly by the disruption phenotype (cytokinin ACCUMULATION
+      when the gene is knocked down), which is diagnostic of a degradative enzyme.
+    proposed_replacement_terms:
+    - id: GO:0009823
+      label: cytokinin catabolic process
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;an enzyme that degrades the phytohormone cytokinin&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;they catalyze **irreversible cytokinin degradation**&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;removal of the **N6-substituted isoprene chain** of cytokinins and
+        **their ribonucleosides**, producing **adenosine** and corresponding aldehydes,
+        consistent with irreversible cytokinin turnover&#34;
+- term:
+    id: GO:0019139
+    label: cytokinin dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation (combined automated methods; ARBA/InterPro/RHEA:13625/EC:1.5.99.12)
+      assigning the precise catalytic molecular function. This is the core function of
+      OsCKX2.
+    action: ACCEPT
+    reason: &gt;
+      This is the core molecular function and is strongly supported. The UniProt CATALYTIC
+      ACTIVITY block records the EC 1.5.99.12 reaction (N6-dimethylallyladenine + acceptor +
+      H2O -&gt; 3-methyl-2-butenal + adenine + reduced acceptor; Rhea:13625), and Ashikari et al.
+      (2005) demonstrated the activity by expressing OsCKX2 alleles in yeast and showing
+      cleavage of the isopentenyl side chain [PMID:15976269]. The mapping (to a curated
+      Rhea/EC-backed term) is at the correct level of specificity and duplicates the
+      experimental IDA/IC annotations to the same term.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2)&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;expressed OsCKX2 alleles in yeast and showed both alleles were
+        functional, catalyzing cleavage of iP side chains&#34;
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (FAD-binding domains) for FAD binding. OsCKX2 is an
+      FAD-linked flavoenzyme; FAD is its catalytic cofactor.
+    action: ACCEPT
+    reason: &gt;
+      Correct and well supported. The UniProt COFACTOR block lists FAD (ChEBI:57692), the
+      protein belongs to the &#34;oxygen-dependent FAD-linked oxidoreductase&#34; family, and the
+      entry annotates multiple FAD-binding residues plus a covalent 8-alpha-FAD histidine
+      (His113) within the FAD-binding PCMH-type domain. FAD binding is intrinsic to the
+      cytokinin dehydrogenase mechanism.
+    supported_by:
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;CKX enzymes in rice are described as FAD-linked oxidoreductases with
+        **FAD-binding and cytokinin-binding domains**&#34;
+- term:
+    id: GO:0071949
+    label: FAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR016166, FAD-bd_PCMH) for FAD binding; closely related
+      to / overlapping with the GO:0050660 annotation above.
+    action: ACCEPT
+    reason: &gt;
+      Correct, for the same reasons as the GO:0050660 annotation: OsCKX2 is an FAD-linked
+      flavoenzyme with a defined FAD-binding PCMH-type domain and a covalently bound FAD
+      cofactor (UniProt). Duplicate/overlapping FAD-binding terms with the same evidence are
+      acceptable; the cofactor binding is a genuine, conserved feature of the CKX family.
+    supported_by:
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;CKX enzymes in rice are described as FAD-linked oxidoreductases with
+        **FAD-binding and cytokinin-binding domains**&#34;
+- term:
+    id: GO:0010229
+    label: inflorescence development
+  evidence_type: IMP
+  original_reference_id: PMID:15976269
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IMP annotation from Ashikari et al. (2005): reduced OsCKX2 increases reproductive organ
+      number and grain yield via cytokinin accumulation in inflorescence meristems. A genuine
+      but downstream/developmental consequence of the enzyme&#39;s catabolic activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      The annotation is supported by direct mutant/expression evidence - OsCKX2 expression
+      level correlates inversely with grain number, and reduced expression elevates cytokinin
+      in inflorescence meristems and increases reproductive organ number [PMID:15976269] -
+      so it should be retained. However, &#34;inflorescence development&#34; is a pleiotropic,
+      organism-level developmental outcome rather than the CORE molecular role of the protein.
+      OsCKX2&#39;s core function is enzymatic (cytokinin degradation); the inflorescence/grain-
+      number phenotype is the downstream physiological consequence of locally modulating the
+      cytokinin pool in panicle meristems. It is therefore retained as a non-core
+      developmental annotation.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;Reduced expression of OsCKX2 causes cytokinin accumulation in
+        inflorescence meristems and increases the number of reproductive organs, resulting
+        in enhanced grain yield&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;OsCKX2 expression levels correlate inversely with grain number.&#34;
+- term:
+    id: GO:0019139
+    label: cytokinin dehydrogenase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15976269
+  qualifier: enables
+  review:
+    summary: &gt;
+      IDA annotation from Ashikari et al. (2005), who demonstrated OsCKX2 cytokinin
+      oxidase/dehydrogenase activity directly. This is the core molecular function.
+    action: ACCEPT
+    reason: &gt;
+      Core function, supported by direct experimental evidence. Ashikari et al. cloned Gn1a
+      as OsCKX2 and showed it encodes a cytokinin oxidase/dehydrogenase that degrades
+      cytokinin; the activity was confirmed by expressing OsCKX2 alleles in yeast and showing
+      cleavage of the isopentenyl (iP) side chain [PMID:15976269]. The UniProt entry records
+      the corresponding EC 1.5.99.12 reaction (Rhea:13625) with experimental evidence from
+      this paper. ACCEPT as the representative core MF.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that
+        degrades the phytohormone cytokinin&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;They expressed OsCKX2 alleles in yeast and showed both alleles were
+        functional, catalyzing cleavage of iP side chains.&#34;
+- term:
+    id: GO:0010229
+    label: inflorescence development
+  evidence_type: IC
+  original_reference_id: PMID:15976269
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IC annotation (assigned by GR) to inflorescence development, curator-inferred from the
+      same Ashikari et al. (2005) data; duplicates the IMP annotation to the same term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;
+      Same biology and same evidence as the IMP annotation to GO:0010229: a genuine but
+      downstream developmental outcome of OsCKX2-mediated cytokinin degradation in
+      inflorescence meristems [PMID:15976269]. Retained as non-core for the same reason - the
+      developmental phenotype is a consequence of the enzyme&#39;s catabolic regulation of the
+      local cytokinin pool, not the protein&#39;s core molecular role. Duplicate annotations with
+      different evidence codes are acceptable.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;increases the number of reproductive organs, resulting in enhanced
+        grain yield&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;reduced OsCKX2 expression increases cytokinin accumulation in
+        inflorescence meristems, increasing reproductive organ number and grain yield&#34;
+- term:
+    id: GO:0019139
+    label: cytokinin dehydrogenase activity
+  evidence_type: IC
+  original_reference_id: PMID:15976269
+  qualifier: enables
+  review:
+    summary: &gt;
+      IC annotation (assigned by GR) to cytokinin dehydrogenase activity, curator-inferred
+      from Ashikari et al. (2005); duplicates the IDA annotation to the same core MF term.
+    action: ACCEPT
+    reason: &gt;
+      Correct and consistent with the IDA annotation to the same term and with the UniProt
+      EC 1.5.99.12 catalytic-activity record. OsCKX2 is a cytokinin oxidase/dehydrogenase
+      demonstrated by Ashikari et al. (2005) [PMID:15976269]. Duplicate annotations to the
+      core molecular function with different evidence codes are acceptable; ACCEPT.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2)&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;OsCKX2 is consistently discussed as a CKX oxidase/dehydrogenase&#34;
+# --- NEW annotations proposed from the literature ---
+- term:
+    id: GO:0009823
+    label: cytokinin catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:15976269
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      OsCKX2 irreversibly degrades active cytokinins by oxidative side-chain cleavage; the
+      accurate biological process is cytokinin catabolism. Not currently in GOA (the GOA
+      term is the broader &#34;cytokinin metabolic process&#34;) and proposed here as the precise
+      process term.
+    action: NEW
+    reason: &gt;
+      Current GOA captures only the broad parent &#34;cytokinin metabolic process&#34; (GO:0009690,
+      IEA). OsCKX2 acts exclusively as a degradative enzyme - it irreversibly inactivates
+      cytokinins by cleaving the N6-isoprenoid side chain [PMID:15976269] - so the specific
+      catabolic process term &#34;cytokinin catabolic process&#34; (GO:0009823) should be added (it
+      is also the proposed replacement for the GO:0009690 MODIFY above). The diagnostic
+      disruption phenotype - cytokinin ACCUMULATION upon loss of OsCKX2 - directly
+      establishes catabolic involvement. IDA is justified by the demonstrated enzymatic
+      degradation activity.
+    supported_by:
+    - reference_id: PMID:15976269
+      supporting_text: &#34;an enzyme that degrades the phytohormone cytokinin&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;they catalyze **irreversible cytokinin degradation**&#34;
+    - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+      supporting_text: &#34;OsCKX2 is an oxidoreductase that irreversibly inactivates active
+        cytokinins through side-chain cleavage&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings:
+  - statement: InterPro-to-GO mappings (IPR016164 FAD-linked oxidase-like C-terminal;
+      IPR015345 Cytokinin_DH_FAD/cytokin-bd; IPR016166 FAD-bd_PCMH; IPR006094) assign
+      catalytic activity, cytokinin metabolic process, FAD binding and FAD-binding to OsCKX2.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings:
+  - statement: UniProt subcellular-location mapping (SL-0112) assigns extracellular region;
+      OsCKX2 has an N-terminal signal peptide and is annotated as Secreted, extracellular
+      space (by similarity).
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotation present in the Sept 2025
+      goa_uniprot_gcrp snapshot but removed from the current GOA release after GOA retired
+      the keyword2GO pipeline for cellular organisms.
+  - statement: For OsCKX2 the keyword &#34;Cytokinin signaling pathway&#34; mapped to
+      &#34;cytokinin-activated signaling pathway&#34; (GO:0009736); this is an over-annotation
+      because OsCKX2 is a cytokinin-DEGRADING enzyme, not a signal-transduction component.
+      Its removal lost no correct biology.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings:
+  - statement: Combined IEA methods (ARBA/InterPro/RHEA:13625/EC:1.5.99.12) assign the
+      specific molecular function cytokinin dehydrogenase activity, matching the curated
+      EC 1.5.99.12 reaction.
+- id: PMID:15976269
+  title: Cytokinin oxidase regulates rice grain production.
+  findings:
+  - statement: The grain-number QTL Gn1a is OsCKX2, a gene for cytokinin
+      oxidase/dehydrogenase (EC 1.5.99.12), an enzyme that degrades the phytohormone
+      cytokinin.
+  - statement: Reduced expression of OsCKX2 causes cytokinin accumulation in inflorescence
+      meristems and increases the number of reproductive organs, enhancing grain yield;
+      OsCKX2 expression correlates inversely with grain number.
+  - statement: OsCKX2 activity was demonstrated by expressing alleles in yeast and showing
+      cleavage of the isopentenyl (iP) side chain; QTL pyramiding of Gn1a with plant-height
+      loci generated lines with beneficial yield traits.
+  - statement: OsCKX2 is preferentially expressed in leaves, culms, inflorescence meristems
+      and flowers, especially vascular tissues; the disruption phenotype is enhanced grain
+      production with higher cytokinin in inflorescence meristems.
+- id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of rice CKX2 / OsCKX2 / Gn1a (Q4ADV8).
+  findings:
+  - statement: Synthesizes Ashikari et al. 2005 (Science) with RNAi (Joshi et al. 2018; Yeh
+      et al. 2015), CRISPR (Rashid et al. 2024) and review (Thiruppathi et al. 2024)
+      literature, concluding OsCKX2 is an FAD-linked cytokinin oxidase/dehydrogenase that
+      irreversibly inactivates cytokinins by N6-isoprenoid side-chain cleavage and controls
+      cytokinin homeostasis in inflorescence meristems, acting as a major negative regulator
+      of grain number/yield.
+  - statement: CKX enzymes catalyse irreversible cytokinin degradation, removing the
+      N6-substituted isoprene chain of cytokinins and their ribonucleosides to produce
+      adenosine/adenine and corresponding aldehydes; CKX enzymes are FAD-linked
+      oxidoreductases with FAD-binding and cytokinin-binding domains.
+  - statement: Cytokinin levels are controlled by biosynthesis/activation, transport,
+      signaling and irreversible degradation; OsCKX2 acts on the degradation arm, lowering
+      the bioactive cytokinin pool rather than transducing the cytokinin signal.
+  - statement: No direct experimental subcellular-localization assay for OsCKX2 itself is
+      reported; a precise compartment (apoplast vs ER vs vacuole) cannot be assigned from the
+      retrieved evidence, though apoplastic cytokinin metabolism occurs in rice.
+  - statement: Reduced OsCKX2 (RNAi/CRISPR) increases tiller and/or grain number, delays
+      senescence and improves salinity/drought-stress yield maintenance, confirming the
+      negative-regulator role; OsCKX2 expression is stage-dependent and inflorescence-meristem
+      enriched.
+- id: PMID:40703034
+  title: A critical assessment of computational function prediction.
+  findings:
+  - statement: Reference framework for assessing computational GO/EC predictions and
+      over-annotation error types; relevant background for evaluating the IEA/keyword-derived
+      annotations reviewed here (not gene-specific to OsCKX2).
+core_functions:
+- description: &gt;
+    OsCKX2 is an FAD-dependent cytokinin oxidase/dehydrogenase (EC 1.5.99.12) that
+    irreversibly degrades active cytokinins by oxidative cleavage of the unsaturated
+    N6-isoprenoid side chain of nucleobase cytokinins (e.g. isopentenyladenine), yielding
+    adenine and 3-methyl-2-butenal. FAD is the catalytic cofactor.
+  molecular_function:
+    id: GO:0019139
+    label: cytokinin dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0009823
+    label: cytokinin catabolic process
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:15976269
+    supporting_text: &#34;a gene for cytokinin oxidase/dehydrogenase (OsCKX2), an enzyme that
+      degrades the phytohormone cytokinin&#34;
+  - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+    supporting_text: &#34;OsCKX2 is an oxidoreductase that irreversibly inactivates active
+      cytokinins through side-chain cleavage, thereby lowering the pool of bioactive
+      cytokinin available to sustain inflorescence meristem activity.&#34;
+- description: &gt;
+    By degrading cytokinins in inflorescence (panicle) meristems, OsCKX2 controls the local
+    bioactive cytokinin pool and thereby acts as a negative regulator of meristem activity,
+    reproductive organ number and grain yield. Reduced OsCKX2 raises cytokinin levels and
+    increases grain number; the developmental effect is a downstream consequence of the
+    enzyme&#39;s catabolic regulation of cytokinin homeostasis, not a signal-transduction role.
+  molecular_function:
+    id: GO:0019139
+    label: cytokinin dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0009823
+    label: cytokinin catabolic process
+  locations:
+  - id: GO:0005576
+    label: extracellular region
+  supported_by:
+  - reference_id: PMID:15976269
+    supporting_text: &#34;Reduced expression of OsCKX2 causes cytokinin accumulation in
+      inflorescence meristems and increases the number of reproductive organs, resulting in
+      enhanced grain yield&#34;
+  - reference_id: file:ORYSJ/CKX2/CKX2-deep-research-falcon.md
+    supporting_text: &#34;OsCKX2/Gn1a emerges as a canonical case where a single cytokinin
+      degradation gene exerts strong leverage on **inflorescence meristem cytokinin status**,
+      thereby changing panicle branching and grain number&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: What is the direct subcellular localization of OsCKX2 (apoplast/extracellular
+    space vs ER vs vacuole), and does it act extracellularly on apoplastic cytokinin pools,
+    as predicted by its signal peptide and the recently described apoplastic cytokinin
+    metabolism in rice?
+  experts:
+  - Hitoshi Sakakibara
+- question: What is the in vitro substrate-preference ranking and kinetic profile of OsCKX2
+    across cytokinin species (iP, tZ, dihydrozeatin and their nucleosides/nucleotides), and
+    which electron acceptor it uses in vivo?
+  experts:
+  - Hitoshi Sakakibara
+suggested_experiments:
+- description: Express and purify recombinant OsCKX2 and measure steady-state kinetic
+    constants (kcat, Km) against a panel of cytokinin substrates (iP, tZ, dihydrozeatin,
+    cZ and their ribosides/ribotides) with both artificial and physiological electron
+    acceptors, to establish substrate specificity and the in vivo acceptor.
+  hypothesis: OsCKX2 preferentially degrades nucleobase isoprenoid cytokinins (iP-type) via
+    its FAD-dependent dehydrogenase mechanism, defining the bioactive-cytokinin pool it
+    controls.
+  experiment_type: in vitro enzyme kinetics / substrate-specificity assay
+- description: Generate OsCKX2-GFP/fluorescent fusions and perform confocal imaging plus
+    apoplastic-fluid fractionation in rice to determine whether the enzyme is secreted to
+    the extracellular space/apoplast and where it degrades cytokinins.
+  hypothesis: OsCKX2 is secreted via its N-terminal signal peptide and acts extracellularly
+    (apoplastically) on cytokinin pools at the inflorescence-meristem periphery.
+  experiment_type: subcellular-localization imaging and biochemical fractionation
+- description: Quantify cytokinin metabolite profiles (active bases, ribosides, ribotides
+    and degradation products) in inflorescence meristems of OsCKX2 loss-of-function vs
+    wild-type plants by LC-MS to confirm catabolic flux and the affected cytokinin species
+    in vivo.
+  hypothesis: Loss of OsCKX2 increases active cytokinin (iP/tZ) levels and decreases
+    degradation products in panicle meristems, directly demonstrating its catabolic role in
+    cytokinin homeostasis.
+  experiment_type: targeted hormone metabolomics (LC-MS) in mutant vs wild-type
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

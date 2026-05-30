@@ -22,12 +22,12 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for thirty
+landscape, so this subproject is a **retrospective validation study**: for thirty-four
 genes across fourteen species (nine in the original round, five in the 2026-05-29
-species extension, four in the 2026-05-30 methylation-keyword batch, and twelve in the
-2026-05-30 developmental/defense/nodulation keyword sweep) we ask whether GOA's
-wholesale removal was justified, and we classify the 214 SPKW-unique terms by their
-over-annotation risk.
+species extension, four in the 2026-05-30 methylation-keyword batch, twelve in the
+2026-05-30 developmental/defense/nodulation keyword sweep, and four in the hormone-
+signaling-subtype batch) we ask whether GOA's wholesale removal was justified, and we
+classify the 214 SPKW-unique terms by their over-annotation risk.
 
 ## Key Statistics (2026-05-21)
 
@@ -614,6 +614,35 @@ operates in the nodule (leghemoglobin's O₂ transport) or a nodule-specific *ex
 (ENOD2), "nodulation" is over-broad — the real biology is the molecular function / structural
 role, which is kept.
 
+### Hormone-signaling subtypes (ABA, cytokinin, BR, ethylene) — completing the picture
+
+| Gene | Species | Hormone | Role | SPKW term → action |
+|------|---------|---------|------|--------------------|
+| VP1 | maize | ABA | VIVIPAROUS1 B3 TF (seed maturation) | ABA signaling→**MODIFY → regulation of / cellular response to ABA** |
+| CKX2 | rice | cytokinin | cytokinin **dehydrogenase** (Gn1a) | cytokinin signaling→**MARK_OVER** (catabolic enzyme) |
+| TUD1 | rice | BR | U-box E3 ligase (Gα/RGA1-mediated) | BR signaling→**ACCEPT** (legitimate component) |
+| EIL2 | rice | ethylene | EIN3-like master TF | ethylene signaling→**ACCEPT** (legitimate component) |
+
+With auxin (ABP1) and GA (RHT1/DELLA) from the species extension, **all six major plant
+hormones are now covered**, and the "hormone-signaling cuts both ways" rule resolves cleanly by
+the gene's position in the pathway:
+
+| Hormone | Gene | Position in pathway | Verdict |
+|---------|------|---------------------|---------|
+| Gibberellin | RHT1 (DELLA) | core repressor (transduction) | **keep** (MODIFY→neg. reg.); removal = collateral damage |
+| Brassinosteroid | TUD1 | E3-ligase component | **keep** (ACCEPT) |
+| Ethylene | EIL2 | EIN3 master TF (transduction output) | **keep** (ACCEPT); removal = collateral damage |
+| Abscisic acid | VP1 | downstream responsive TF effector | **MODIFY** → regulation of / response to |
+| Auxin | ABP1 | contested ligand-binder | **MARK_OVER** → response to auxin |
+| Cytokinin | CKX2 | catabolic enzyme (degrades the hormone) | **MARK_OVER** (not signaling at all) |
+
+The keyword is right for genuine transduction **components** (DELLA, TUD1, EIL2 — keep), too
+coarse/misframed for downstream **responsive effectors** (VP1, ABP1 — MODIFY to "response
+to"/"regulation of"), and simply **wrong** for a hormone-**metabolism** enzyme (CKX2, which
+*degrades* cytokinin and has nothing to do with signal transduction). One keyword
+("X signaling pathway") thus yields keep / MODIFY / remove verdicts depending entirely on
+whether the gene perceives-and-transduces, merely responds to, or metabolizes the hormone.
+
 ### What the keyword-sweep confirms
 
 Across all three batches the same meta-rule holds — **a process/role keyword is only as good as
@@ -748,6 +777,11 @@ genes/MEDTR/NSP1/NSP1-ai-review.yaml      (legit core: Nod-signaling TF; nodulat
 genes/ORYSJ/CCAMK/CCAMK-ai-review.yaml    (A: rice common-symbiosis kinase; nodulation MODIFY->arbuscular mycorrhizal association)
 genes/PHAVU/LBA/LBA-ai-review.yaml        (C/A: leghemoglobin; O2-carrier ACCEPT, nodulation MARK_OVER)
 genes/SOYBN/ENOD2A/ENOD2A-ai-review.yaml  (A: early nodulin; nodulation MARK_OVER, expression marker)
+# 2026-05-30 hormone-signaling-subtype batch (ABA/cytokinin/BR/ethylene):
+genes/MAIZE/VP1/VP1-ai-review.yaml        (A: ABA B3 TF; ABA signaling MODIFY->regulation/response, responsive effector)
+genes/ORYSJ/CKX2/CKX2-ai-review.yaml      (A: cytokinin dehydrogenase; cytokinin signaling MARK_OVER, catabolic enzyme)
+genes/ORYSJ/TUD1/TUD1-ai-review.yaml      (A: BR E3 ligase; BR signaling ACCEPT, legitimate component)
+genes/ORYSJ/EIL2/EIL2-ai-review.yaml      (A: ethylene EIN3-like TF; ethylene signaling ACCEPT, legitimate component)
 ```
 
 ## Methods Note
