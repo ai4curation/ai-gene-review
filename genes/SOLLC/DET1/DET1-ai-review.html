@@ -1,0 +1,3531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DET1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DET1</h1>
+        <div class="gene-info">
+            
+            <div class="info-item">
+                
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9ZNU6" target="_blank" class="term-link">
+                        Q9ZNU6
+                    </a>
+                </span>
+                
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Solanum lycopersicum</span>
+            </div>
+            
+            
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+            
+            
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DET1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+    
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9ZNU6" data-a="DESCRIPTION: Tomato DET1 (Q9ZNU6; gene DET1, synonyms hp2/dg; a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tomato DET1 (Q9ZNU6; gene DET1, synonyms hp2/dg; also called tDET1, &#34;Light-mediated development protein DET1&#34;, &#34;High pigmentation protein 2&#34;, &#34;Protein dark green&#34;) is the tomato ortholog of Arabidopsis DE-ETIOLATED1 and is genetically defined as the HIGH PIGMENT 2 (hp2) locus, with dark-green (dg) as a further allele. It is a conserved NEGATIVE regulator of photomorphogenesis - a repressor that holds back light-driven development. Mechanistically it is not an enzyme acting on a small-molecule substrate but a nuclear regulatory adaptor: it participates in the CDD complex (with DDB1 and the E2 variant COP10) and, in tomato, is a substrate-selection component of a CUL4-DDB1-DET1 (CRL4) E3 ubiquitin ligase that targets transcription factors for 26S-proteasome degradation. The best-defined tomato substrate is the GOLDEN2-LIKE 2 (SlGLK2) transcription factor; in Arabidopsis the repressive output is mediated by degradation of photomorphogenesis-promoting factors such as HY5. DET1 localizes to the nucleus (UniProt; tomato YFP assays show nucleus and cytoplasm). Loss-of-function alleles (hp-2, hp-2j, dg) are constitutively/exaggeratedly photomorphogenic (&#34;high pigment&#34;): plants are darker and shorter with elevated anthocyanins, and fruits over-accumulate chlorophyll, carotenoids (lycopene), tocopherols and flavonoids - the basis of DET1 down-regulation as a biofortification target. The tomato hp-2 phenotype is strictly dependent on active phytochrome, placing DET1 as a downstream nuclear repressor within (rather than a photoreceptor-level component of) the light/phytochrome signaling network.
+</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009585" target="_blank" class="term-link">
+                                    GO:0009585
+                                </a>
+                            </span>
+                            <span class="term-label">red, far-red light phototransduction</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0009585" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Phytochrome signaling pathway&#34;; snapshot-only, removed in the current GOA release. DET1 is a conserved NEGATIVE regulator of photomorphogenesis - a downstream nuclear repressor acting via a CUL4-DDB1-DET1 E3 ligase / the CDD complex - not a photoreceptor-level phototransduction component.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this keyword-derived annotation was JUSTIFIED, and the term is mis-placed. GO:0009585 is defined as &#34;the sequence of reactions within a cell required to convert absorbed photons from red or far-red light into a molecular signal&#34; - i.e. photoreceptor-level signal conversion (the job of phytochromes), which DET1 does not perform. DET1 acts far downstream: it is a nuclear repressor that, through the CUL4-DDB1-DET1 (CRL4) ubiquitin ligase and the CDD complex, promotes degradation of photomorphogenesis-promoting factors such as HY5/transcription factors, thereby repressing light-driven development [file:SOLLC/DET1/DET1-uniprot.txt; file:SOLLC/DET1/DET1-deep-research-falcon.md]. Genetically, tomato hp-2/DET1 was cloned precisely because HP genes were proposed to be negative regulators of phytochrome signal transduction, and loss of DET1 yields exaggerated/constitutive photomorphogenesis [PMID:9927635]. The accurate term for DET1&#39;s role is therefore &#34;negative regulation of photomorphogenesis&#34; (GO:0010100), not red/far-red phototransduction.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010100" target="_blank" class="term-link">
+                                    negative regulation of photomorphogenesis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                                        PMID:9927635
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">It has been proposed that HP genes encode negative regulators of phytochrome signal transduction.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                                        PMID:9927635
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">encodes the tomato homolog of the nuclear protein DEETIOLATED1 (DET1) from Arabidopsis. Mutations in DET1 are known to result in constitutive deetiolation in darkness.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Repression of photomorphogenesis is
+CC       probably mediated by ubiquitination and subsequent degradation of
+CC       photomorphogenesis-promoting factors such as HY5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010017" target="_blank" class="term-link">
+                                    GO:0010017
+                                </a>
+                            </span>
+                            <span class="term-label">red or far-red light signaling pathway</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000043
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0010017" data-r="GO_REF:0000043" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Phytochrome signaling pathway&#34;; snapshot-only, removed in the current GOA release. DET1 participates in light/phytochrome signaling, but as a broad NEGATIVE regulator of photomorphogenesis rather than a red/far-red-specific signaling component.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> GOA&#39;s removal of this keyword-derived annotation was reasonable. The term is not entirely wrong - the tomato hp-2/DET1 phenotype is strictly dependent on active phytochrome, so DET1 does act within the red/far-red (phytochrome) signaling network [PMID:9927635] - but GO:0010017 (&#34;the series of molecular signals initiated upon sensing by photoreceptor molecules of red light or far red light&#34;) implies a wavelength-specific signaling role. DET1 is instead a convergent, downstream nuclear repressor of photomorphogenesis that is not red/far-red-specific: in the conserved CDD/CRL4 machinery it represses outputs of multiple photoreceptor pathways (its Arabidopsis context includes blue/UV cryptochrome inputs), acting by targeting photomorphogenesis-promoting factors (e.g. HY5) for ubiquitin-dependent degradation [file:SOLLC/DET1/DET1-uniprot.txt]. The dg allele links the DET1 locus to the photomorphogenic de-etiolation response generally [PMID:12589545]. The function is therefore more accurately captured by &#34;negative regulation of photomorphogenesis&#34; (GO:0010100).
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010100" target="_blank" class="term-link">
+                                    negative regulation of photomorphogenesis
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                                        PMID:9927635
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">whereas det1 mutations are epistatic to mutations in phytochrome genes, analysis of similar double mutants in tomato showed that manifestation of the phenotype of the hp-2 mutant is strictly dependent upon the presence of active phytochrome.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12589545" target="_blank" class="term-link">
+                                        PMID:12589545
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">the tomato homolog of the DEETIOLATED1 (DET1) gene, involved in the signal transduction cascade of light perception and morphogenesis.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">FUNCTION: Component of light signal transduction machinery.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016567" target="_blank" class="term-link">
+                                    GO:0016567
+                                </a>
+                            </span>
+                            <span class="term-label">protein ubiquitination</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0016567" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation propagated across the DET1 phylogenetic group. DET1 is a substrate- selection component of a CUL4-DDB1-DET1 (CRL4) E3 ubiquitin ligase that drives ubiquitination and proteasomal degradation of regulatory transcription factors.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Well supported and core to DET1&#39;s mechanism. In tomato, DET1 is part of a CUL4-DDB1-DET1 E3 ligase complex that mediates ubiquitin-conjugated degradation of the GOLDEN2-LIKE 2 (SlGLK2) transcription factor, with two ubiquitination-relevant lysines (K11, K253) and MG132-sensitive turnover [file:SOLLC/DET1/DET1-deep-research-falcon.md]. The UniProt FUNCTION statement likewise attributes DET1&#39;s repression of photomorphogenesis to ubiquitination and degradation of factors such as HY5 [file:SOLLC/DET1/DET1-uniprot.txt]. The IBA term is at an appropriate level of specificity for the process the complex carries out.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">promotes **ubiquitin-mediated proteasomal degradation** of the transcription factor **GOLDEN2-LIKE 2 (SlGLK2)**.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Repression of photomorphogenesis is
+CC       probably mediated by ubiquitination and subsequent degradation of
+CC       photomorphogenesis-promoting factors such as HY5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031461" target="_blank" class="term-link">
+                                    GO:0031461
+                                </a>
+                            </span>
+                            <span class="term-label">cullin-RING ubiquitin ligase complex</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0031461" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation: DET1 is part of a cullin-RING ubiquitin ligase complex. The tomato and Arabidopsis evidence specifies this as a CUL4-based (CRL4) complex, so a more precise term is available.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct but can be made more informative. DET1 specifically assembles into a CUL4-DDB1-DET1 cullin4-RING (CRL4) ligase: in Arabidopsis, CUL4 assembles with DDB1, RBX1, DET1 and DDB2 in vitro and in planta [PMID:16792691], and in tomato DET1 is part of a CUL4-DDB1-DET1 E3 ligase complex [file:SOLLC/DET1/DET1-deep-research-falcon.md]. GO:0080008 &#34;Cul4-RING E3 ubiquitin ligase complex&#34; is defined as a complex &#34;in which a cullin from the Cul4 family and a RING domain protein form the catalytic core; substrate specificity is conferred by an adaptor protein&#34;, which precisely describes DET1&#39;s complex. MODIFY to the CUL4-specific child term.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                    Cul4-RING E3 ubiquitin ligase complex
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                        PMID:16792691
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and DDB2 in vitro and in planta.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">the tomato hp1/hp2 loci (DDB1/DET1) are described as core components of a **CUL4-type E3 ubiquitin ligase** controlling plastid levels and pigment accumulation in fruit.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    GO:0031625
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin protein ligase binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0031625" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation: DET1 binds the cullin-RING ubiquitin ligase machinery (DDB1/CUL4), anchoring it within the CRL4/CDD complex.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported. DET1 physically associates with DDB1 and CUL4: Arabidopsis CUL4 assembles with DDB1, RBX1 and DET1 [PMID:16792691], and the IntAct interaction underlying the IPI annotation in this gene is with DDB1 (UniProtKB:Q8LGH4). In tomato, SlDET1 co-occurs in the CUL4-DDB1-DET1 complex [file:SOLLC/DET1/DET1-deep-research-falcon.md]. Binding to the ligase scaffold is consistent with DET1&#39;s role as the CRL4 substrate-recognition adaptor; the IBA term is appropriate.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                        PMID:16792691
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CUL4 associates with DDB1 and DET1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">SlGLK2 physically associates with SlDET1 (and SlDDB1/SlCUL4) in plant cells</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032436" target="_blank" class="term-link">
+                                    GO:0032436
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of proteasomal ubiquitin-dependent protein catabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0032436" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation: DET1 promotes proteasomal degradation of its substrate transcription factors. Directly supported by tomato data showing DET1-dependent turnover of SlGLK2.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Supported and consistent with DET1&#39;s repressor mechanism. As the substrate-selection adaptor of the CRL4 ligase, DET1 promotes ubiquitin-26S-proteasome degradation of target proteins: SlGLK2 turnover is retarded when CUL4/DDB1/DET1 are impaired and is stabilized by the proteasome inhibitor MG132 [file:SOLLC/DET1/DET1-deep-research-falcon.md]; in Arabidopsis the repressive output is degradation of photomorphogenesis-promoting factors such as HY5 [file:SOLLC/DET1/DET1-uniprot.txt]. The IBA term accurately captures DET1&#39;s positive role in driving substrate proteolysis.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">its turnover is retarded when CUL4/DDB1/DET1 are genetically impaired; proteasome inhibition (MG132) stabilizes SlGLK2.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">Repression of photomorphogenesis is
+CC       probably mediated by ubiquitination and subsequent degradation of
+CC       photomorphogenesis-promoting factors such as HY5.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990756" target="_blank" class="term-link">
+                                    GO:1990756
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin-like ligase-substrate adaptor activity</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000033
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:1990756" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA annotation: DET1 functions as the substrate-recognition adaptor of the CRL4 E3 ligase, bridging target transcription factors to the ubiquitination machinery. This is DET1&#39;s core molecular function.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This is the most informative molecular-function annotation for DET1 and is well supported. DET1 is not a catalytic enzyme but a regulatory scaffold/adaptor that helps the CUL4-DDB1 E3 ligase recognize and destabilize specific protein substrates such as SlGLK2 [file:SOLLC/DET1/DET1-deep-research-falcon.md]. The GO:0080008 definition of the DET1 complex explicitly notes that &#34;substrate specificity is conferred by an adaptor protein&#34;, matching the substrate-adaptor MF. ACCEPT as a core function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is not an enzyme that catalyzes a small-molecule reaction, but a **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize specific protein substrates.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                        PMID:16792691
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Cullins are central scaffolding subunits in eukaryotic E3 ligases that 
+facilitate the ubiquitination of target proteins.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000044
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation (UniProt subcellular-location keyword mapping) for nuclear localization. Strongly supported: DET1 is a nuclear protein, consistent with its role as a nuclear transcriptional/proteostatic repressor.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Correct and well supported. UniProt annotates DET1 subcellular location as Nucleus, and it carries two predicted nuclear localization signals [file:SOLLC/DET1/DET1-uniprot.txt]. Arabidopsis DET1 is a nuclear-localized protein that associates with histones, and in tomato YFP-tagged SlDET1 localizes to the nucleus (and cytoplasm), with strong nuclear BiFC signal for the SlDET1-SlGLK2 interaction [file:SOLLC/DET1/DET1-deep-research-falcon.md]. Nuclear localization is a core location for DET1&#39;s repressor function.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                                        PMID:9927635
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">encodes the tomato homolog of the nuclear protein DEETIOLATED1 (DET1) from Arabidopsis.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            GO_REF:0000002
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IEA annotation from InterPro (IPR008928, six-hairpin glycosidase superfamily fold). This is a spurious structural-fold-based mapping; DET1 has no role in carbohydrate metabolism.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> This annotation is a false-positive driven by remote structural similarity, not function. The InterPro signature IPR008928 is the &#34;six-hairpin glycosidase-like&#34; superfamily FOLD (SSF48208), which DET1 shares only at the level of overall fold architecture (the De-etiolated_protein_1_Det1 family, IPR019138/PF09737, is the function-relevant signature) [file:SOLLC/DET1/DET1-uniprot.txt]. DET1 is a nuclear ubiquitin-ligase adaptor and photomorphogenesis repressor with no glycoside-hydrolase or carbohydrate-metabolic activity in any of the experimental literature [file:SOLLC/DET1/DET1-deep-research-falcon.md]. Mapping a structural superfamily to &#34;carbohydrate metabolic process&#34; is an over-annotation and should be removed.
+
+                        </div>
+                        
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-uniprot.txt
+                                    
+                                </span>
+                                
+                                <div class="support-text">InterPro; IPR008928; 6-hairpin_glycosidase_sf.</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    file:SOLLC/DET1/DET1-deep-research-falcon.md
+                                    
+                                </span>
+                                
+                                <div class="support-text">it is not an enzyme that catalyzes a small-molecule reaction, but a **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize specific protein substrates.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="term-info">
+                            
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+                            
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+                        
+                        
+                        
+                        <br>
+                        <span style="font-size: 0.75rem;">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16792691
+                            </a>
+                            
+                                
+                                
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    CUL4 associates with DDB1 and DET1 and its downregulation af...
+                                </span>
+                                
+                            
+                            
+                        </span>
+                        
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9ZNU6" data-a="GO:0005515" data-r="PMID:16792691" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+                        
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation (IntAct) recording a binary interaction between tomato DET1 and UniProtKB:Q8LGH4 (DDB1), from the Arabidopsis CUL4-DDB1-DET1 study. &#34;Protein binding&#34; is uninformative; the interactor is the CRL4 ligase scaffold DDB1.
+
+                        </div>
+                        
+                        
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#34;protein binding&#34; (GO:0005515) should be replaced with a more informative molecular-function term. The IntAct partner Q8LGH4 is DDB1, the adaptor/scaffold of the CUL4-based E3 ligase, and the cited paper demonstrates that CUL4 associates with DDB1 and DET1 [PMID:16792691]. This specific interaction with the ubiquitin-ligase machinery is captured by &#34;ubiquitin protein ligase binding&#34; (GO:0031625), which is also independently supported by the IBA annotation above. MODIFY to the more informative term.
+
+                        </div>
+                        
+                        
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+                            
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031625" target="_blank" class="term-link">
+                                    ubiquitin protein ligase binding
+                                </a>
+                            </span>
+                            
+                        </div>
+                        
+                        
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                        PMID:16792691
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">CUL4 associates with DDB1 and DET1</div>
+                                
+                            </div>
+                            
+                            <div class="support-item">
+                                <span class="support-ref">
+                                    
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                        PMID:16792691
+                                    </a>
+                                    
+                                </span>
+                                
+                                <div class="support-text">Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and DDB2 in vitro and in planta.</div>
+                                
+                            </div>
+                            
+                        </div>
+                        
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DET1 is the substrate-recognition adaptor of a nuclear CUL4-DDB1-DET1 (CRL4) E3 ubiquitin ligase, and a component of the CDD complex (with DDB1 and the E2 variant COP10). It bridges specific target transcription factors to the cullin-RING ligase, driving their ubiquitination and 26S-proteasome degradation; the best-characterized tomato substrate is the GOLDEN2-LIKE 2 (SlGLK2) transcription factor.
+</h3>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="FUNCTION: DET1 is the substrate-recognition adaptor of a nuc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990756" target="_blank" class="term-link">
+                            ubiquitin-like ligase-substrate adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016567" target="_blank" class="term-link">
+                                protein ubiquitination
+                            </a>
+                        </span>
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032436" target="_blank" class="term-link">
+                                positive regulation of proteasomal ubiquitin-dependent protein catabolic process
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                            Cul4-RING E3 ubiquitin ligase complex
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLLC/DET1/DET1-deep-research-falcon.md
+                            
+                        </span>
+                        
+                        <div class="finding-text">it is not an enzyme that catalyzes a small-molecule reaction, but a **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize specific protein substrates.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                                PMID:16792691
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and DDB2 in vitro and in planta.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+        <div class="core-function-card">
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DET1 is a nuclear NEGATIVE regulator of photomorphogenesis. By promoting degradation of photomorphogenesis-promoting factors (e.g. HY5) and pigment-related transcription factors (e.g. SlGLK2), it represses light-driven development; loss-of-function alleles (hp-2, hp-2j, dg) are constitutively/exaggeratedly photomorphogenic (&#34;high pigment&#34;), with elevated chlorophyll, carotenoids, anthocyanins and flavonoids. Its action is downstream of, and dependent on, phytochrome signaling.
+</h3>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="FUNCTION: DET1 is a nuclear NEGATIVE regulator of photomorph..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+            
+
+            <div class="core-function-terms">
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990756" target="_blank" class="term-link">
+                            ubiquitin-like ligase-substrate adaptor activity
+                        </a>
+                    </span>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010100" target="_blank" class="term-link">
+                                negative regulation of photomorphogenesis
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+                        
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+                        
+                    </div>
+                </div>
+                
+
+                
+
+                
+            </div>
+
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                                PMID:9927635
+                            </a>
+                            
+                        </span>
+                        
+                        <div class="finding-text">It has been proposed that HP genes encode negative regulators of phytochrome signal transduction.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <span class="reference-id">
+                            
+                            file:SOLLC/DET1/DET1-uniprot.txt
+                            
+                        </span>
+                        
+                        <div class="finding-text">Acts as a negative
+CC       regulator of fruit pigmentation.</div>
+                        
+                    </li>
+                    
+                </ul>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">InterPro-to-GO mapping assigned &#34;carbohydrate metabolic process&#34; to DET1 via the six-hairpin glycosidase superfamily fold (IPR008928), a structural-fold artefact unrelated to DET1&#39;s true function.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">DET1 family functions (cullin-RING ubiquitin ligase complex membership, ubiquitin protein ligase binding, ubiquitin-like ligase-substrate adaptor activity, protein ubiquitination, positive regulation of proteasomal degradation) are conserved across the DET1 phylogenetic group (PANTHER PTHR13374 / PTN000332575).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000043.md" target="_blank" class="term-link">
+                            GO_REF:0000043
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">SwissProt keyword-derived (SPKW) annotations present in the goa_uniprot snapshot used by the SPKW-PLANTS project but removed from the current GOA release after GOA retired the keyword2GO pipeline for cellular organisms.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">For DET1, the keyword &#34;Phytochrome signaling pathway&#34; mapped to two red/far-red light terms (GO:0009585, GO:0010017); these are mis-placed/over-specific for a downstream nuclear repressor and are better replaced by negative regulation of photomorphogenesis (GO:0010100).</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Nuclear localization assigned from the UniProt Subcellular Location &#34;Nucleus&#34;; consistent with experimental nuclear localization of DET1.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9927635" target="_blank" class="term-link">
+                            PMID:9927635
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Phenotype of the tomato high pigment-2 mutant is caused by a mutation in the tomato homolog of DEETIOLATED1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The tomato HP-2 gene encodes the tomato homolog of the nuclear Arabidopsis protein DEETIOLATED1 (DET1); HP genes were proposed to be negative regulators of phytochrome signal transduction.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">det1 mutations cause constitutive de-etiolation in darkness; the tomato hp-2 phenotype is strictly dependent on active phytochrome, placing DET1 downstream within phytochrome signaling.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12589545" target="_blank" class="term-link">
+                            PMID:12589545
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">The tomato dark green mutation is a novel allele of the tomato homolog of the DEETIOLATED1 gene.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The dark-green (dg) and hp-2(j) mutations are allelic at the tomato DET1 locus; DET1 is involved in the signal transduction cascade of light perception and morphogenesis.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">dg mutants show an exaggerated photomorphogenic de-etiolation response, and the DET1 locus is strongly linked to the photomorphogenic (hypocotyl-length) response.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16792691" target="_blank" class="term-link">
+                            PMID:16792691
+                        </a>
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">CUL4 associates with DDB1 and DET1 and its downregulation affects diverse aspects of development in Arabidopsis thaliana.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Arabidopsis CUL4 assembles with DDB1, RBX1, DET1 and DDB2 in vitro and in planta to form a functional cullin4-RING E3 ligase; cullins are scaffolding subunits that facilitate ubiquitination of target proteins.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">The IntAct interaction underlying the IPI &#34;protein binding&#34; annotation for tomato DET1 is with DDB1 (UniProtKB:Q8LGH4), a component of the CUL4-based ligase.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLLC/DET1/DET1-uniprot.txt
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">UniProt entry DET1_SOLLC (Q9ZNU6) - Light-mediated development protein DET1.</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt annotates DET1 as a component of light signal transduction machinery and a negative regulator of fruit pigmentation, probably acting in the CDD complex (with DDB1); repression of photomorphogenesis is probably mediated by ubiquitination and degradation of photomorphogenesis-promoting factors such as HY5.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Subcellular location is Nucleus; the protein carries two predicted nuclear localization signals and belongs to the DET1 family (IPR019138/PF09737), with the six-hairpin glycosidase superfamily fold (IPR008928) being structural only.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+                        
+                        file:SOLLC/DET1/DET1-deep-research-falcon.md
+                        
+                    </span>
+                </div>
+                
+                <div class="reference-title">Deep-research report (falcon / Edison Scientific Literature) - functional annotation of tomato DET1 (Q9ZNU6).</div>
+                
+                
+                <ul class="findings-list">
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesizes the tomato DET1/hp2 literature, concluding DET1 is a nuclear regulatory scaffold/adaptor of a CUL4-DDB1-DET1 (CRL4) E3 ligase that ubiquitinates and degrades transcription factors (notably SlGLK2), repressing photomorphogenesis and controlling plastid/pigment accumulation in fruit.</div>
+                        
+                    </li>
+                    
+                    <li class="finding-item">
+                        <div class="finding-statement">Documents DET1 participation in the CDD complex (DDB1, COP10), nuclear (and cytoplasmic) localization in tomato YFP assays, and the high-pigment biofortification phenotype (elevated carotenoids, tocopherols, flavonoids) of DET1-downregulated fruit.</div>
+                        
+                    </li>
+                    
+                </ul>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which transcription-factor substrates does tomato DET1 select in vegetative versus fruit tissue, and are HY5 and PIFs direct CRL4-DET1 substrates in tomato as they are in Arabidopsis?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yongsheng Liu, Chris Bowler</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="Q: Which transcription-factor substrates does tomato ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DET1 confer substrate specificity directly (as a DCAF-like adaptor binding substrate) or indirectly via partner adaptors within the CDD/CRL4 complex?</p>
+                    
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Xing Wang Deng</em></p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="Q: Does DET1 confer substrate specificity directly (a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Reconstitute the tomato CUL4-DDB1-DET1 ligase from purified subunits and assay in vitro polyubiquitination of candidate substrates (SlGLK2, SlBBX20, HY5) with and without DET1, to establish DET1 as the substrate-selection adaptor.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DET1 is required for ligase-mediated ubiquitination of specific transcription factors and acts as the substrate-recognition module of the CRL4 complex.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: in vitro reconstituted ubiquitination assay</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="EXPERIMENT: Reconstitute the tomato CUL4-DDB1-DET1 ligase from..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Generate tomato det1 lines crossed into phytochrome-deficient and cryptochrome-deficient backgrounds and quantify de-etiolation/pigmentation, to test whether DET1 represses outputs of multiple photoreceptor pathways rather than red/far-red signaling specifically.</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DET1 is a convergent repressor of photomorphogenesis acting downstream of multiple photoreceptors, not a red/far-red-specific signaling component.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis analysis</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="EXPERIMENT: Generate tomato det1 lines crossed into phytochrom..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    
+                    <p><strong>Experiment:</strong> Perform quantitative proteomics of det1/hp-2 versus wild-type seedlings and fruit to identify the set of proteins stabilized upon DET1 loss (candidate CRL4-DET1 substrates).</p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DET1 loss stabilizes a defined set of photomorphogenesis-promoting and pigment biosynthesis transcription factors.</em></p>
+                    
+                    
+                    <p style="margin-top: 0.5rem;">Type: comparative quantitative proteomics</p>
+                    
+                </div>
+                <span class="vote-buttons" data-g="Q9ZNU6" data-a="EXPERIMENT: Perform quantitative proteomics of det1/hp-2 versu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+        
+    </div>
+    
+
+    
+
+    <!-- Computational Predictions Section -->
+    
+
+    <!-- Deep Research Sections -->
+    
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+        
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DET1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9ZNU6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                
+                <div class="report-meta">
+                    
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+                    
+                    
+                    <span class="report-badge">Falcon</span>
+                    
+                    
+                    <span class="report-badge">Edison Scientific Literature</span>
+                    
+                    
+                    <span class="report-badge">32 citations</span>
+                    
+                    
+                    <span class="report-badge">2 artifacts</span>
+                    
+                    
+                    <span class="report-meta-text">2026-05-30T10:15:31.533022</span>
+                    
+                    
+                    
+                </div>
+                
+                
+                <div class="artifact-list">
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="DET1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+                    
+                    
+                    
+                    
+                    <div class="artifact-link">
+                        <a href="DET1-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000015 The requested information is presented in Table 1 (carotenoids and tocopherols) and Table 2 (phenolics). In Table 1, the values for</a>
+                        <span>(image/png)</span>
+                    </div>
+                    
+                    
+                </div>
+                
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-tomato-det1-uniprot-q9znu6-gene-det1-synonyms-hp2dg">Research report: Tomato DET1 (UniProt Q9ZNU6; gene DET1; synonyms hp2/dg)</h2>
+<h3 id="scope-and-identity-verification-mandatory-disambiguation">Scope and identity verification (mandatory disambiguation)</h3>
+<p>The symbol <strong>DET1</strong> is used across eukaryotes; here the evidence base is restricted to <strong>tomato (Solanum lycopersicum) DET1</strong>, genetically defined as the <strong>HIGH PIGMENT 2 (hp2)</strong> locus and including alleles such as <strong>dark green (dg)</strong>. Multiple sources explicitly connect hp2/dg to the tomato <strong>DE-ETIOLATED 1 (DET1)</strong> homolog and place it in the conserved photomorphogenesis repression machinery. Tang et al. state that molecular cloning revealed hp2 encodes <strong>DE-ETIOLATED 1 (DET1)</strong> and that DET1 is part of a <strong>CUL4–DDB1–DET1 E3 ligase</strong> system. (tang2016ubiquitinconjugateddegradationof pages 1-2). Pick et al. also explicitly notes tomato DET1 is “known as HP2” and describes it as a negative regulator of light responses in plants. (pick2007mammaliandet1regulates pages 1-2)</p>
+<h3 id="1-key-concepts-and-definitions-current-understanding">1) Key concepts and definitions (current understanding)</h3>
+<h4 id="det1-as-a-photomorphogenesis-repressor-integrated-with-ubiquitin-dependent-proteolysis">DET1 as a photomorphogenesis repressor integrated with ubiquitin-dependent proteolysis</h4>
+<p>In plants, DET1 is a central repressor of light-mediated development (photomorphogenesis). It functions in protein-complex assemblies connected to <strong>CUL4–DDB1–RBX1 cullin-RING E3 ubiquitin ligases (CRL4s)</strong>, which select substrates for <strong>ubiquitin–26S proteasome</strong> degradation. Tomato DET1/hp2 is part of this conserved architecture, and the tomato hp1/hp2 loci (DDB1/DET1) are described as core components of a <strong>CUL4-type E3 ubiquitin ligase</strong> controlling plastid levels and pigment accumulation in fruit. (jia2023theubiquitin–26sproteasome pages 9-10, tang2016ubiquitinconjugateddegradationof pages 1-2)</p>
+<h4 id="the-cdd-complex-cop10det1ddb1">The CDD complex (COP10–DET1–DDB1)</h4>
+<p>DET1 also participates in the plant <strong>CDD complex</strong>, formed with <strong>DDB1</strong> and <strong>COP10</strong>. COP10 is described as a ubiquitin-conjugating <strong>E2 variant</strong> (UBC fold but lacking the catalytic cysteine), linking DET1 to regulation of ubiquitination reactions. (pick2007mammaliandet1regulates pages 1-2, nezames2012thecop9signalosome pages 3-5)</p>
+<h4 id="chromatin-association-and-transcriptional-corepression-arabidopsis-evidence-informing-tomato-annotation">Chromatin association and transcriptional corepression (Arabidopsis evidence informing tomato annotation)</h4>
+<p>Arabidopsis DET1 has been described as a <strong>nuclear-localized</strong> protein that associates with <strong>non-acetylated core histones</strong>, consistent with chromatin-associated repression functions. (ganpudi2012…ofarabidopsis pages 51-58). A Plant Physiology review describes DET1 as being recruited to promoters in a transcription-factor-dependent manner (e.g., with clock components CCA1/LHY) and functioning as a <strong>transcriptional corepressor</strong>, indicating that DET1 can act directly at gene regulatory regions in addition to regulating protein stability. (nezames2012thecop9signalosome pages 3-5)</p>
+<h3 id="2-molecular-function-and-mechanism-tomato-focused-with-supported-inference">2) Molecular function and mechanism (tomato-focused, with supported inference)</h3>
+<h4 id="primary-molecular-function-in-tomato-adaptorregulator-within-a-crl4-e3-ligase-targeting-transcription-factors">Primary molecular function in tomato: adaptor/regulator within a CRL4 E3 ligase targeting transcription factors</h4>
+<p>A direct mechanistic study in tomato demonstrates that DET1 is a component of a <strong>CUL4–DDB1–DET1 E3 ligase complex</strong> that promotes <strong>ubiquitin-mediated proteasomal degradation</strong> of the transcription factor <strong>GOLDEN2-LIKE 2 (SlGLK2)</strong>. (tang2016ubiquitinconjugateddegradationof pages 7-8, tang2016ubiquitinconjugateddegradationof pages 1-2). This provides the most precise “primary function” evidence for tomato DET1: it is not an enzyme that catalyzes a small-molecule reaction, but a <strong>regulatory scaffold/adaptor</strong> that helps the E3 ligase recognize and destabilize specific protein substrates.</p>
+<h5 id="evidence-for-slglk2-as-a-det1-dependent-substrate">Evidence for SlGLK2 as a DET1-dependent substrate</h5>
+<p>Tang et al. provide multiple lines of evidence: SlGLK2 physically associates with SlDET1 (and SlDDB1/SlCUL4) in plant cells, SlGLK2 undergoes polyubiquitination, and its turnover is retarded when CUL4/DDB1/DET1 are genetically impaired; proteasome inhibition (MG132) stabilizes SlGLK2. (tang2016ubiquitinconjugateddegradationof pages 7-8, tang2016ubiquitinconjugateddegradationof pages 1-2). They also identify two ubiquitination-relevant lysines (<strong>K11 and K253</strong>) whose substitution stabilizes SlGLK2, supporting a direct ubiquitin-dependent degradation mechanism. (tang2016ubiquitinconjugateddegradationof pages 7-8)</p>
+<h5 id="additional-targetspartners-summarized-in-2023-review-literature">Additional targets/partners summarized in 2023 review literature</h5>
+<p>A 2023 review on ubiquitin–proteasome roles in fleshy fruit ripening states that the <strong>CUL4–DDB1–DET1</strong> complex regulates plastid levels and pigment accumulation by targeting transcription factors <strong>SlGLK2</strong> and <strong>SlBBX20</strong>, and that <strong>SlMBD5</strong> interacts with the complex and synergistically influences pigment metabolism. (jia2023theubiquitin–26sproteasome pages 9-10)</p>
+<h4 id="how-det1-modulates-ubiquitination-chemistry-cross-species-mechanistic-context">How DET1 modulates ubiquitination chemistry (cross-species mechanistic context)</h4>
+<p>While tomato-specific biochemical reconstitution is limited in the retrieved texts, comparative mechanistic work indicates DET1-family complexes can modulate CUL4 activity and E2 behavior. Pick et al. report that mammalian DET1 assembles with DDB1 and DDA1 to recruit UBE2E E2 enzymes into stable complexes and that the DDD core inhibits Cul4A-dependent polyubiquitin chain assembly in vitro, illustrating a plausible regulatory mechanism whereby DET1-containing modules tune CRL4 output. (pick2007mammaliandet1regulates pages 1-2, pick2007mammaliandet1regulates pages 10-11). The same work notes Arabidopsis DET1 binds the N-terminal tail of histone H2B (nucleosome context), linking DET1-associated CRL4 function to chromatin-level regulation. (pick2007mammaliandet1regulates pages 10-11)</p>
+<h3 id="3-subcellular-localization-and-site-of-action">3) Subcellular localization and site of action</h3>
+<h4 id="tomato-det1-localization">Tomato DET1 localization</h4>
+<p>A recent tomato gene-editing/characterization study used <strong>YFP-tagged SlDET1</strong> fusions and DAPI nuclear staining in transient assays and reports that <strong>SlDET1 localizes to both nucleus and cytoplasm</strong>, and that mutations in the predicted NLS did <strong>not</strong> abolish nuclear signal in this assay. (hunziker2022phenotypiccharacterizationof pages 8-9, hunziker2022phenotypiccharacterizationof pages 9-11). </p>
+<p>Consistent with a nuclear functional site, BiFC experiments demonstrate SlDET1 interacts with SlGLK2 with a <strong>strong nuclear signal</strong> and weaker cytoplasmic signal, indicating that substrate engagement can occur in the nucleus and possibly the cytoplasm. (tang2016ubiquitinconjugateddegradationof pages 7-8)</p>
+<h4 id="arabidopsis-det1-localization-supporting-inference">Arabidopsis DET1 localization (supporting inference)</h4>
+<p>Arabidopsis DET1 is described as a <strong>nuclear-localized</strong> protein that associates with histones. (ganpudi2012…ofarabidopsis pages 51-58). This is consistent with the promoter/corepressor framing in Plant Physiology review literature. (nezames2012thecop9signalosome pages 3-5)</p>
+<h3 id="4-pathways-and-biological-processes-impacted-with-emphasis-on-mechanism">4) Pathways and biological processes impacted (with emphasis on mechanism)</h3>
+<h4 id="plastid-biogenesisstate-pigment-accumulation">Plastid biogenesis/state → pigment accumulation</h4>
+<p>Mechanistically, DET1 influences pigment accumulation primarily by controlling stability of transcriptional regulators that affect plastid biogenesis and differentiation. Stabilization of SlGLK2 (when DET1 is impaired) is associated with dark-green fruit phenotypes featuring increased chlorophyll and altered chloroplast ultrastructure (more stacked thylakoid grana) as described in the Tang et al. mechanistic context. (tang2016ubiquitinconjugateddegradationof pages 7-8)</p>
+<h4 id="lighthormone-crosstalk-in-ripening-downstream-network-effects">Light–hormone crosstalk in ripening (downstream network effects)</h4>
+<p>Loss of HP2/DET1 function in ripening fruit is associated with altered <strong>ethylene</strong> and <strong>auxin</strong> signaling outputs: disturbed ethylene production, higher ethylene sensitivity/signaling, changes in ethylene receptors/signaling components (including downregulation of ERF.E4), and strong changes in auxin signaling (DR5 activation, downregulation of Aux/IAAs, altered ARFs including upregulation of SlARF2 paralogs). (cruz2018lightethyleneand pages 1-2). These effects likely reflect downstream consequences of DET1’s core role in light signaling and proteostasis during fruit development.</p>
+<h3 id="5-phenotypes-quantitative-outcomes-and-statistics-from-key-studies">5) Phenotypes, quantitative outcomes, and statistics from key studies</h3>
+<h4 id="fruit-biofortification-carotenoids-tocopherols-vitamin-e-and-phenolics">Fruit biofortification: carotenoids, tocopherols (vitamin E), and phenolics</h4>
+<p>A comprehensive metabolomics/transcriptomics analysis of fruit-specific DET1 downregulation reports broad increases in antioxidant metabolites without detrimental yield effects. (enfissi2010integrativetranscriptand pages 1-2). Quantitatively, Enfissi et al. report large increases in specific carotenoids and tocopherols; for example, neurosporene increases on the order of ~3- to ~16-fold across lines, and total tocopherols increased to levels consistent with ~9-fold change in some lines. (enfissi2010integrativetranscriptand pages 4-5, enfissi2010integrativetranscriptand media 93516ae6). The same study reports increased phenolics (with some classes rising up to ~10-fold in excerpted text) and interprets nutritional significance, stating that a single ripe fruit from a high-DET1-downregulation line could deliver the RDA of provitamin A. (enfissi2010integrativetranscriptand pages 4-5)</p>
+<h4 id="reproductive-thermotolerance-under-heat-stress-pollen-flavonols-as-a-mechanism-linked-trait">Reproductive thermotolerance under heat stress (pollen flavonols as a mechanism-linked trait)</h4>
+<p>Rutley et al. (peer-reviewed) report that under moderate chronic heat stress, pollen flavonols increased by <strong>18% and 280%</strong> in two hp2 alleles relative to wild type, with an associated <strong>7.8-fold higher</strong> level of viable pollen on average and improved germination competence. (rutley2021enhancedreproductivethermotolerance pages 1-2). Additional quantitative descriptions include that hp2j can show strong induction of flavonol-positive pollen fractions under stress and large induction in the flavonol-hyperaccumulating subpopulation. (rutley2021enhancedreproductivethermotolerance pages 7-10, rutley2021enhancedreproductivethermotolerance pages 12-13)</p>
+<h3 id="6-recent-developments-prioritizing-20232024-and-real-world-implementations">6) Recent developments (prioritizing 2023–2024) and real-world implementations</h3>
+<h4 id="2023-integration-into-fruit-ubiquitinproteasome-regulatory-models">2023: Integration into fruit ubiquitin–proteasome regulatory models</h4>
+<p>A 2023 IJMS review on the ubiquitin–26S proteasome pathway in fleshy fruit ripening explicitly includes tomato <strong>hp2/DET1</strong> as part of a <strong>CUL4–DDB1–DET1 E3 ligase</strong> regulating plastid levels and pigment accumulation, naming downstream regulatory transcription factors (SlGLK2, SlBBX20) and an interacting factor (SlMBD5). (jia2023theubiquitin–26sproteasome pages 9-10)</p>
+<h4 id="2024-expert-assessment-and-open-mechanistic-questions-authoritative-opinions">2024: Expert assessment and open mechanistic questions (authoritative opinions)</h4>
+<p>A 2024 Plant Cell expert review (“open questions in plant proteolysis”) highlights unresolved, context-dependent roles of COP1/DET1-associated ubiquitin systems, including that it remains unclear <strong>how COP1 and DET1 stabilize PIF transcription factors in the dark</strong> and how dynamic interactions among COP1-, DET1-, and CSN-associated complexes are organized and regulated. (eckardt2024thelowdownon pages 14-15). This constitutes authoritative “expert opinion” describing gaps in understanding and priorities for the field.</p>
+<h4 id="implementation-in-crop-improvement-gene-editing-and-engineered-alleles">Implementation in crop improvement (gene editing and engineered alleles)</h4>
+<p>Although DET1-focused 2023–2024 gene-editing papers were not retrievable in the tool environment, a practical implementation pathway is supported by a tomato study using <strong>Target-AID base editing</strong> to generate SlDET1 alleles; the edited SlDET1 carried substitutions within a predicted NLS region (P479F/A481V), and localization assays demonstrated nuclear and cytoplasmic signals for both WT and edited proteins. (hunziker2022phenotypiccharacterizationof pages 9-11, hunziker2022phenotypiccharacterizationof pages 8-9). This provides an applied framework for engineering DET1 alleles to tune pigment accumulation.</p>
+<h3 id="7-functional-annotation-summary-for-uniprot-q9znu6">7) Functional annotation summary (for UniProt Q9ZNU6)</h3>
+<p><strong>Recommended core annotation (supported):</strong><br />
+- <strong>Molecular role:</strong> Component/adaptor of <strong>CRL4 (CUL4–DDB1–DET1)</strong> ubiquitin E3 ligase systems; contributes to substrate selection and/or regulation of ubiquitination, ultimately controlling <strong>26S proteasome-dependent degradation</strong> of regulatory proteins. (tang2016ubiquitinconjugateddegradationof pages 1-2, tang2016ubiquitinconjugateddegradationof pages 7-8)<br />
+- <strong>Key substrate evidence in tomato:</strong> <strong>SlGLK2</strong> is a DET1-dependent ubiquitination target; DET1 impairment retards GLK2 degradation. (tang2016ubiquitinconjugateddegradationof pages 7-8, tang2016ubiquitinconjugateddegradationof pages 1-2)<br />
+- <strong>Pathways/processes:</strong> Light signal transduction repression; regulation of plastid development and pigment accumulation in fruit; integration with hormone signaling during ripening (ethylene/auxin outputs altered in hp2). (cruz2018lightethyleneand pages 1-2, jia2023theubiquitin–26sproteasome pages 9-10)<br />
+- <strong>Localization:</strong> Nucleus and cytoplasm (tomato YFP assays); nuclear-predominant interaction signal with GLK2 (BiFC). (hunziker2022phenotypiccharacterizationof pages 8-9, tang2016ubiquitinconjugateddegradationof pages 7-8)</p>
+<h3 id="evidence-limitations-and-what-could-not-be-retrieved">Evidence limitations and what could not be retrieved</h3>
+<p>Two directly relevant 2023 and 2024 high-pigment mutant papers (IJMS 2023 hp mutants; J Proteins Proteomics 2024 hp-1 proteomics) were listed as unobtainable by the tool, limiting coverage of the very latest tomato hp2-specific experimental details beyond the accessible 2023 review and 2024 expert perspective. (No citable context id for unobtainable items)</p>
+<hr />
+<h3 id="evidence-map-quick-reference">Evidence map (quick reference)</h3>
+<table>
+<thead>
+<tr>
+<th>Claim/Topic</th>
+<th>Key finding</th>
+<th>Evidence type</th>
+<th>Species/tissue</th>
+<th>Citation (context id)</th>
+<th>Publication (year; DOI/URL if mentioned in snippets)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity of tomato DET1/hp2</td>
+<td>Tomato high pigment 2 (hp2) is caused by mutation in the tomato homolog of DE-ETIOLATED1 (DET1); dark green (dg) is also reported as an allele of the tomato DET1 homolog.</td>
+<td>Foundational genetics; mutant cloning; literature synthesis in later primary papers</td>
+<td><em>Solanum lycopersicum</em>; whole plant/fruit</td>
+<td>(tang2016ubiquitinconjugateddegradationof pages 1-2, tang2016ubiquitinconjugateddegradationof pages 10-11, pick2007mammaliandet1regulates pages 1-2)</td>
+<td>Tang et al. 2016, <em>New Phytologist</em>, doi:10.1111/nph.13635, https://doi.org/10.1111/nph.13635; Pick et al. 2007, doi:10.1128/MCB.02432-06, https://doi.org/10.1128/mcb.02432-06</td>
+</tr>
+<tr>
+<td>DET1 family / pathway placement</td>
+<td>DET1 is a conserved negative regulator of light responses/photomorphogenesis and functions with DDB1 and COP10 in the CDD complex, linked to CUL4-based ubiquitin ligase activity.</td>
+<td>Mechanistic biochemistry; cross-species comparative evidence; reviews</td>
+<td>Plants broadly; tomato relevance inferred and directly linked by tomato genetics</td>
+<td>(pick2007mammaliandet1regulates pages 1-2, pick2007mammaliandet1regulates pages 10-11)</td>
+<td>Pick et al. 2007, doi:10.1128/MCB.02432-06, https://doi.org/10.1128/mcb.02432-06</td>
+</tr>
+<tr>
+<td>Tomato molecular function</td>
+<td>In tomato, DET1 is part of a CUL4-DDB1-DET1 (CRL4) E3 ubiquitin ligase complex that mediates ubiquitin-proteasome degradation of regulatory proteins controlling plastid development and pigmentation.</td>
+<td>Primary mechanistic study</td>
+<td><em>S. lycopersicum</em> fruit/plant cells</td>
+<td>(tang2016ubiquitinconjugateddegradationof pages 1-2, tang2016ubiquitinconjugateddegradationof pages 7-8)</td>
+<td>Tang et al. 2016, <em>New Phytologist</em>, doi:10.1111/nph.13635, https://doi.org/10.1111/nph.13635</td>
+</tr>
+<tr>
+<td>Direct substrate: GLK2</td>
+<td>SlGLK2 associates with the CUL4-DDB1-DET1 complex and is degraded by the 26S proteasome; K11 and K253 are key ubiquitination-relevant residues, and impairing CUL4/DDB1/DET1 retards GLK2 degradation.</td>
+<td>Co-IP, Y2H, BiFC, ubiquitination assay, MG132 stabilization, mutagenesis</td>
+<td><em>S. lycopersicum</em>; fruit/plant cells</td>
+<td>(tang2016ubiquitinconjugateddegradationof pages 7-8, tang2016ubiquitinconjugateddegradationof pages 1-2)</td>
+<td>Tang et al. 2016, <em>New Phytologist</em>, doi:10.1111/nph.13635, https://doi.org/10.1111/nph.13635</td>
+</tr>
+<tr>
+<td>Additional reported regulatory targets/partners</td>
+<td>Recent expert summaries state that the tomato CUL4-DDB1-DET1 complex regulates plastid level and pigment accumulation by targeting SlGLK2 and SlBBX20, and that SlMBD5 interacts with the complex to influence pigment metabolism.</td>
+<td>2023 expert review / synthesis</td>
+<td><em>S. lycopersicum</em> fruit</td>
+<td>(jia2023theubiquitin–26sproteasome pages 9-10)</td>
+<td>Jia et al. 2023, <em>International Journal of Molecular Sciences</em>, doi:10.3390/ijms24032750, https://doi.org/10.3390/ijms24032750</td>
+</tr>
+<tr>
+<td>Localization from interaction assays</td>
+<td>BiFC detected SlGLK2 interaction with SlDET1 (and SlDDB1/SlCUL4) with strong nuclear YFP signal and weaker cytoplasmic signal, supporting nuclear and some cytoplasmic association of the complex.</td>
+<td>BiFC in plant cells</td>
+<td><em>S. lycopersicum</em> plant cells</td>
+<td>(tang2016ubiquitinconjugateddegradationof pages 7-8)</td>
+<td>Tang et al. 2016, <em>New Phytologist</em>, doi:10.1111/nph.13635, https://doi.org/10.1111/nph.13635</td>
+</tr>
+<tr>
+<td>DET1 localization and NLS-related editing</td>
+<td>Target-AID-generated SlDET1 edits were placed in the predicted NLS region/exon 11; mutant and WT YFP-SlDET1 both showed signal in nucleus and cytoplasm, so nuclear localization was not abolished in the transient assay.</td>
+<td>Base editing; transient expression; confocal microscopy with DAPI</td>
+<td>Tobacco leaf transient assay for tomato SlDET1 fusion proteins</td>
+<td>(hunziker2022phenotypiccharacterizationof pages 9-11, hunziker2022phenotypiccharacterizationof pages 8-9, hunziker2022phenotypiccharacterizationof pages 3-4)</td>
+<td>Hunziker et al. 2022, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2022.848560, https://doi.org/10.3389/fpls.2022.848560</td>
+</tr>
+<tr>
+<td>Specific edited residues in Target-AID line</td>
+<td>The edited full-length SlDET1 protein carried double substitutions P479F and A481V within the predicted NLS region; these were proposed to potentially alter CDD-complex interactions.</td>
+<td>Sequence-guided base editing and follow-up characterization</td>
+<td>Tomato gene; localization tested in tobacco leaves</td>
+<td>(hunziker2022phenotypiccharacterizationof pages 9-11)</td>
+<td>Hunziker et al. 2022, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2022.848560, https://doi.org/10.3389/fpls.2022.848560</td>
+</tr>
+<tr>
+<td>Fruit antioxidant/biofortification phenotype</td>
+<td>Fruit-specific downregulation of DET1 enhances nutritional antioxidants without detrimental yield effects; carotenoids, tocopherols, phenylpropanoids, flavonoids, anthocyanidins, and total antioxidant capacity increased.</td>
+<td>Fruit-specific RNAi; metabolomics/transcriptomics</td>
+<td><em>S. lycopersicum</em> fruit</td>
+<td>(enfissi2010integrativetranscriptand pages 1-2)</td>
+<td>Enfissi et al. 2010, <em>The Plant Cell</em>, doi:10.1105/tpc.110.073866, https://doi.org/10.1105/tpc.110.073866</td>
+</tr>
+<tr>
+<td>Quantitative metabolite gains</td>
+<td>In DET1-downregulated/hp2-related lines, neurosporene increased about 3- to 17-fold and tocopherol rose up to ~9-fold (TFM7); phenolics were also strongly elevated.</td>
+<td>Quantitative metabolite profiling tables</td>
+<td>Tomato fruit (breaker/ripe; skin/pericarp)</td>
+<td>(enfissi2010integrativetranscriptand pages 4-5, enfissi2010integrativetranscriptand media 93516ae6, enfissi2010integrativetranscriptand media ac2919d9)</td>
+<td>Enfissi et al. 2010, <em>The Plant Cell</em>, doi:10.1105/tpc.110.073866, https://doi.org/10.1105/tpc.110.073866</td>
+</tr>
+<tr>
+<td>Nutritional relevance statistic</td>
+<td>The Enfissi study notes that a single P119 ripe tomato could deliver the RDA of provitamin A, and increased tocopherol reduced the number of fruits needed to meet vitamin E RDA.</td>
+<td>Quantitative nutritional interpretation from primary metabolomics study</td>
+<td>Tomato fruit</td>
+<td>(enfissi2010integrativetranscriptand pages 4-5)</td>
+<td>Enfissi et al. 2010, <em>The Plant Cell</em>, doi:10.1105/tpc.110.073866, https://doi.org/10.1105/tpc.110.073866</td>
+</tr>
+<tr>
+<td>Hormone-signaling integration</td>
+<td>Loss of SlDET1/HP2 alters ethylene and auxin signaling during ripening: higher ethylene sensitivity/signaling output, downregulation of ERF.E4, severe downregulation of Aux/IAA genes, altered ARFs, and additive effects with light on carotenoid-biosynthetic and signaling genes.</td>
+<td>Primary transcript/physiology study</td>
+<td>Tomato ripening fruit</td>
+<td>(cruz2018lightethyleneand pages 1-2)</td>
+<td>Cruz et al. 2018, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2018.01370, https://doi.org/10.3389/fpls.2018.01370</td>
+</tr>
+<tr>
+<td>Heat-stress / pollen phenotype</td>
+<td>Under moderate chronic heat stress, hp2 pollen flavonols increased relative to WT (reported as 18% and 280% for two alleles in the peer-reviewed paper), with average 7.8-fold higher viable pollen and better germination competence.</td>
+<td>Peer-reviewed physiological study</td>
+<td>Tomato pollen under heat stress</td>
+<td>(rutley2021enhancedreproductivethermotolerance pages 1-2)</td>
+<td>Rutley et al. 2021, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2021.672368, https://doi.org/10.3389/fpls.2021.672368</td>
+</tr>
+<tr>
+<td>Additional heat-stress quantitative details</td>
+<td>The 2021 study also reports higher fractions of flavonol-hyperaccumulating pollen in hp2 lines; hp2j reached 35% DPBA-positive pollen under MCHS (9.2-fold above Moneymaker WT in one excerpted analysis), and pollen flavonol induction in hp2j reached up to 17.5-fold for enhanced-DPBA pollen.</td>
+<td>Flow cytometry / DPBA staining; figure-based quantitative analysis</td>
+<td>Tomato pollen</td>
+<td>(rutley2021enhancedreproductivethermotolerance pages 7-10, rutley2021enhancedreproductivethermotolerance pages 12-13)</td>
+<td>Rutley et al. 2021, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2021.672368, https://doi.org/10.3389/fpls.2021.672368</td>
+</tr>
+<tr>
+<td>Reproductive outcome under heat</td>
+<td>hp2 maintained percentage of fully seeded fruits and seed number per fruit under heat stress, whereas these measures decreased in WT plants.</td>
+<td>Whole-plant reproductive phenotype under stress</td>
+<td>Tomato fruits/seeds under heat stress</td>
+<td>(rutley2021enhancedreproductivethermotolerance pages 1-2, rutley2021enhancedreproductivethermotolerance pages 12-13)</td>
+<td>Rutley et al. 2021, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2021.672368, https://doi.org/10.3389/fpls.2021.672368</td>
+</tr>
+<tr>
+<td>Real-world application: breeding/gene editing</td>
+<td>Target-AID base editing generated new SlDET1 alleles that increased carotenoid accumulation; combined edits with other carotenoid genes showed additive effects, supporting DET1 as a practical biofortification target.</td>
+<td>Gene editing / crop-improvement application</td>
+<td>Tomato breeding lines / fruit</td>
+<td>(hunziker2022phenotypiccharacterizationof pages 3-4, hunziker2022phenotypiccharacterizationof pages 9-11)</td>
+<td>Hunziker et al. 2022, <em>Frontiers in Plant Science</em>, doi:10.3389/fpls.2022.848560, https://doi.org/10.3389/fpls.2022.848560</td>
+</tr>
+<tr>
+<td>Expert perspective / current understanding</td>
+<td>Recent reviews frame DET1-containing CUL4 systems as central post-translational regulators of plastid, pigment, and light-response networks in tomato fruit, while broader plant-proteolysis reviews note open questions on how COP1 and DET1 stabilize or destabilize specific signaling factors in context.</td>
+<td>2023–2024 expert review and analysis</td>
+<td>Tomato fruit / plants broadly</td>
+<td>(jia2023theubiquitin–26sproteasome pages 9-10)</td>
+<td>Jia et al. 2023, <em>International Journal of Molecular Sciences</em>, doi:10.3390/ijms24032750, https://doi.org/10.3390/ijms24032750</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compiles core evidence for the identity, mechanism, localization, phenotypes, and applications of tomato DET1/hp2. It is useful as a citation-ready summary for functional annotation and recent crop-improvement relevance.</em></p>
+<h3 id="urls-and-publication-dates-from-retrieved-sources">URLs and publication dates (from retrieved sources)</h3>
+<ul>
+<li>Tang et al., <strong>Feb 2016</strong>, <em>New Phytologist</em> — https://doi.org/10.1111/nph.13635 (tang2016ubiquitinconjugateddegradationof pages 1-2)</li>
+<li>Enfissi et al., <strong>Apr 2010</strong>, <em>The Plant Cell</em> — https://doi.org/10.1105/tpc.110.073866 (enfissi2010integrativetranscriptand pages 1-2)</li>
+<li>Cruz et al., <strong>Sep 2018</strong>, <em>Frontiers in Plant Science</em> — https://doi.org/10.3389/fpls.2018.01370 (cruz2018lightethyleneand pages 1-2)</li>
+<li>Rutley et al., <strong>May 2021</strong>, <em>Frontiers in Plant Science</em> — https://doi.org/10.3389/fpls.2021.672368 (rutley2021enhancedreproductivethermotolerance pages 1-2)</li>
+<li>Hunziker et al., <strong>Jul 2022</strong>, <em>Frontiers in Plant Science</em> — https://doi.org/10.3389/fpls.2022.848560 (hunziker2022phenotypiccharacterizationof pages 9-11)</li>
+<li>Jia et al., <strong>Feb 2023</strong>, <em>International Journal of Molecular Sciences</em> — https://doi.org/10.3390/ijms24032750 (jia2023theubiquitin–26sproteasome pages 9-10)</li>
+<li>Eckardt et al., <strong>Jul 2024</strong>, <em>The Plant Cell</em> — https://doi.org/10.1093/plcell/koae193 (eckardt2024thelowdownon pages 14-15)</li>
+<li>Nezames &amp; Deng, <strong>Jun 2012</strong>, <em>Plant Physiology</em> — https://doi.org/10.1104/pp.112.198879 (nezames2012thecop9signalosome pages 3-5)</li>
+<li>Pick et al., <strong>Jul 2007</strong>, <em>Molecular and Cellular Biology</em> — https://doi.org/10.1128/mcb.02432-06 (pick2007mammaliandet1regulates pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(tang2016ubiquitinconjugateddegradationof pages 1-2): Xiaofeng Tang, Min Miao, Xiangli Niu, Danfeng Zhang, Xulv Cao, Xichen Jin, Yunye Zhu, Youhong Fan, Hongtao Wang, Ying Liu, Yuan Sui, Wenjie Wang, Anquan Wang, Fangming Xiao, Jim Giovannoni, and Yongsheng Liu. Ubiquitin-conjugated degradation of golden 2-like transcription factor is mediated by cul4-ddb1-based e3 ligase complex in tomato. The New phytologist, 209 3:1028-39, Feb 2016. URL: https://doi.org/10.1111/nph.13635, doi:10.1111/nph.13635. This article has 101 citations.</p>
+</li>
+<li>
+<p>(pick2007mammaliandet1regulates pages 1-2): Elah Pick, On-Sun Lau, Tomohiko Tsuge, Suchithra Menon, Yingchun Tong, Naoshi Dohmae, Scott M. Plafker, Xing Wang Deng, and Ning Wei. Mammalian det1 regulates cul4a activity and forms stable complexes with e2 ubiquitin-conjugating enzymes. Jul 2007. URL: https://doi.org/10.1128/mcb.02432-06, doi:10.1128/mcb.02432-06. This article has 71 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jia2023theubiquitin–26sproteasome pages 9-10): Wen Jia, Gangshuai Liu, Peiyu Zhang, Hongli Li, Zhenzhen Peng, Yunxiang Wang, Tomislav Jemrić, and Daqi Fu. The ubiquitin–26s proteasome pathway and its role in the ripening of fleshy fruits. International Journal of Molecular Sciences, 24:2750, Feb 2023. URL: https://doi.org/10.3390/ijms24032750, doi:10.3390/ijms24032750. This article has 19 citations.</p>
+</li>
+<li>
+<p>(nezames2012thecop9signalosome pages 3-5): Cynthia D. Nezames and Xing Wang Deng. The cop9 signalosome: its regulation of cullin-based e3 ubiquitin ligases and role in photomorphogenesis1. Plant Physiology, 160:38-46, Jun 2012. URL: https://doi.org/10.1104/pp.112.198879, doi:10.1104/pp.112.198879. This article has 47 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ganpudi2012…ofarabidopsis pages 51-58): AL Ganpudi. … of arabidopsis damaged dna binding protein 1b and genetic interactions with ddb1a, ddb2, de-etiolated1 (det1) and constitutive photomorphogenic1 …. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(tang2016ubiquitinconjugateddegradationof pages 7-8): Xiaofeng Tang, Min Miao, Xiangli Niu, Danfeng Zhang, Xulv Cao, Xichen Jin, Yunye Zhu, Youhong Fan, Hongtao Wang, Ying Liu, Yuan Sui, Wenjie Wang, Anquan Wang, Fangming Xiao, Jim Giovannoni, and Yongsheng Liu. Ubiquitin-conjugated degradation of golden 2-like transcription factor is mediated by cul4-ddb1-based e3 ligase complex in tomato. The New phytologist, 209 3:1028-39, Feb 2016. URL: https://doi.org/10.1111/nph.13635, doi:10.1111/nph.13635. This article has 101 citations.</p>
+</li>
+<li>
+<p>(pick2007mammaliandet1regulates pages 10-11): Elah Pick, On-Sun Lau, Tomohiko Tsuge, Suchithra Menon, Yingchun Tong, Naoshi Dohmae, Scott M. Plafker, Xing Wang Deng, and Ning Wei. Mammalian det1 regulates cul4a activity and forms stable complexes with e2 ubiquitin-conjugating enzymes. Jul 2007. URL: https://doi.org/10.1128/mcb.02432-06, doi:10.1128/mcb.02432-06. This article has 71 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hunziker2022phenotypiccharacterizationof pages 8-9): Johan Hunziker, Keiji Nishida, Akihiko Kondo, Tohru Ariizumi, and Hiroshi Ezura. Phenotypic characterization of high carotenoid tomato mutants generated by the target-aid base-editing technology. Frontiers in Plant Science, Jul 2022. URL: https://doi.org/10.3389/fpls.2022.848560, doi:10.3389/fpls.2022.848560. This article has 12 citations.</p>
+</li>
+<li>
+<p>(hunziker2022phenotypiccharacterizationof pages 9-11): Johan Hunziker, Keiji Nishida, Akihiko Kondo, Tohru Ariizumi, and Hiroshi Ezura. Phenotypic characterization of high carotenoid tomato mutants generated by the target-aid base-editing technology. Frontiers in Plant Science, Jul 2022. URL: https://doi.org/10.3389/fpls.2022.848560, doi:10.3389/fpls.2022.848560. This article has 12 citations.</p>
+</li>
+<li>
+<p>(cruz2018lightethyleneand pages 1-2): Aline Bertinatto Cruz, Ricardo Ernesto Bianchetti, Frederico Rocha Rodrigues Alves, Eduardo Purgatto, Lazaro Eustaquio Pereira Peres, Magdalena Rossi, and Luciano Freschi. Light, ethylene and auxin signaling interaction regulates carotenoid biosynthesis during tomato fruit ripening. Frontiers in Plant Science, Sep 2018. URL: https://doi.org/10.3389/fpls.2018.01370, doi:10.3389/fpls.2018.01370. This article has 147 citations.</p>
+</li>
+<li>
+<p>(enfissi2010integrativetranscriptand pages 1-2): Eugenia M.A. Enfissi, Fredy Barneche, Ikhlak Ahmed, Christiane Lichtlé, Christopher Gerrish, Ryan P. McQuinn, James J. Giovannoni, Enrique Lopez-Juez, Chris Bowler, Peter M. Bramley, and Paul D. Fraser. Integrative transcript and metabolite analysis of nutritionally enhanced <i>de-etiolated1</i> downregulated tomato fruit. The Plant Cell, 22:1190-1215, Apr 2010. URL: https://doi.org/10.1105/tpc.110.073866, doi:10.1105/tpc.110.073866. This article has 214 citations.</p>
+</li>
+<li>
+<p>(enfissi2010integrativetranscriptand pages 4-5): Eugenia M.A. Enfissi, Fredy Barneche, Ikhlak Ahmed, Christiane Lichtlé, Christopher Gerrish, Ryan P. McQuinn, James J. Giovannoni, Enrique Lopez-Juez, Chris Bowler, Peter M. Bramley, and Paul D. Fraser. Integrative transcript and metabolite analysis of nutritionally enhanced <i>de-etiolated1</i> downregulated tomato fruit. The Plant Cell, 22:1190-1215, Apr 2010. URL: https://doi.org/10.1105/tpc.110.073866, doi:10.1105/tpc.110.073866. This article has 214 citations.</p>
+</li>
+<li>
+<p>(enfissi2010integrativetranscriptand media 93516ae6): Eugenia M.A. Enfissi, Fredy Barneche, Ikhlak Ahmed, Christiane Lichtlé, Christopher Gerrish, Ryan P. McQuinn, James J. Giovannoni, Enrique Lopez-Juez, Chris Bowler, Peter M. Bramley, and Paul D. Fraser. Integrative transcript and metabolite analysis of nutritionally enhanced <i>de-etiolated1</i> downregulated tomato fruit. The Plant Cell, 22:1190-1215, Apr 2010. URL: https://doi.org/10.1105/tpc.110.073866, doi:10.1105/tpc.110.073866. This article has 214 citations.</p>
+</li>
+<li>
+<p>(rutley2021enhancedreproductivethermotolerance pages 1-2): Nicholas Rutley, Golan Miller, Fengde Wang, Jeffrey F Harper, Gad Miller, and Michal Lieberman-Lazarovich. Enhanced reproductive thermotolerance of the tomato high pigment 2 mutant is associated with increased accumulation of flavonols in pollen. Frontiers in Plant Science, May 2021. URL: https://doi.org/10.3389/fpls.2021.672368, doi:10.3389/fpls.2021.672368. This article has 43 citations.</p>
+</li>
+<li>
+<p>(rutley2021enhancedreproductivethermotolerance pages 7-10): Nicholas Rutley, Golan Miller, Fengde Wang, Jeffrey F Harper, Gad Miller, and Michal Lieberman-Lazarovich. Enhanced reproductive thermotolerance of the tomato high pigment 2 mutant is associated with increased accumulation of flavonols in pollen. Frontiers in Plant Science, May 2021. URL: https://doi.org/10.3389/fpls.2021.672368, doi:10.3389/fpls.2021.672368. This article has 43 citations.</p>
+</li>
+<li>
+<p>(rutley2021enhancedreproductivethermotolerance pages 12-13): Nicholas Rutley, Golan Miller, Fengde Wang, Jeffrey F Harper, Gad Miller, and Michal Lieberman-Lazarovich. Enhanced reproductive thermotolerance of the tomato high pigment 2 mutant is associated with increased accumulation of flavonols in pollen. Frontiers in Plant Science, May 2021. URL: https://doi.org/10.3389/fpls.2021.672368, doi:10.3389/fpls.2021.672368. This article has 43 citations.</p>
+</li>
+<li>
+<p>(eckardt2024thelowdownon pages 14-15): N. Eckardt, Tamar Avin-Wittenberg, DC Bassham, Poyu Chen, Qian Chen, Jun Fang, P. Genschik, Abi S. Ghifari, Angelica M. Guercio, D. Gibbs, M. Heese, R. P. Jarvis, S. Michaeli, M. Murcha, Sergey Mursalimov, S. Noir, Malathy Palayam, Bruno Peixoto, Pedro L. Rodriguez, Andreas Schaller, A. Schnittger, G. Serino, N. Shabek, A. Stintzi, F. Theodoulou, Suayb Üstün, K. V. van Wijk, Ning Wei, Qi Xie, Feifei Yu, and Hongtao Zhang. The lowdown on breakdown: open questions in plant proteolysis. The Plant Cell, 36:2931-2975, Jul 2024. URL: https://doi.org/10.1093/plcell/koae193, doi:10.1093/plcell/koae193. This article has 30 citations.</p>
+</li>
+<li>
+<p>(tang2016ubiquitinconjugateddegradationof pages 10-11): Xiaofeng Tang, Min Miao, Xiangli Niu, Danfeng Zhang, Xulv Cao, Xichen Jin, Yunye Zhu, Youhong Fan, Hongtao Wang, Ying Liu, Yuan Sui, Wenjie Wang, Anquan Wang, Fangming Xiao, Jim Giovannoni, and Yongsheng Liu. Ubiquitin-conjugated degradation of golden 2-like transcription factor is mediated by cul4-ddb1-based e3 ligase complex in tomato. The New phytologist, 209 3:1028-39, Feb 2016. URL: https://doi.org/10.1111/nph.13635, doi:10.1111/nph.13635. This article has 101 citations.</p>
+</li>
+<li>
+<p>(hunziker2022phenotypiccharacterizationof pages 3-4): Johan Hunziker, Keiji Nishida, Akihiko Kondo, Tohru Ariizumi, and Hiroshi Ezura. Phenotypic characterization of high carotenoid tomato mutants generated by the target-aid base-editing technology. Frontiers in Plant Science, Jul 2022. URL: https://doi.org/10.3389/fpls.2022.848560, doi:10.3389/fpls.2022.848560. This article has 12 citations.</p>
+</li>
+<li>
+<p>(enfissi2010integrativetranscriptand media ac2919d9): Eugenia M.A. Enfissi, Fredy Barneche, Ikhlak Ahmed, Christiane Lichtlé, Christopher Gerrish, Ryan P. McQuinn, James J. Giovannoni, Enrique Lopez-Juez, Chris Bowler, Peter M. Bramley, and Paul D. Fraser. Integrative transcript and metabolite analysis of nutritionally enhanced <i>de-etiolated1</i> downregulated tomato fruit. The Plant Cell, 22:1190-1215, Apr 2010. URL: https://doi.org/10.1105/tpc.110.073866, doi:10.1105/tpc.110.073866. This article has 214 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="DET1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000015 The requested information is presented in Table 1 (carotenoids and tocopherols) and Table 2 (phenolics). In Table 1, the values for" src="DET1-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tang2016ubiquitinconjugateddegradationof pages 1-2</li>
+<li>tang2016ubiquitinconjugateddegradationof pages 7-8</li>
+<li>cruz2018lightethyleneand pages 1-2</li>
+<li>enfissi2010integrativetranscriptand pages 1-2</li>
+<li>enfissi2010integrativetranscriptand pages 4-5</li>
+<li>rutley2021enhancedreproductivethermotolerance pages 1-2</li>
+<li>eckardt2024thelowdownon pages 14-15</li>
+<li>hunziker2022phenotypiccharacterizationof pages 9-11</li>
+<li>hunziker2022phenotypiccharacterizationof pages 8-9</li>
+<li>rutley2021enhancedreproductivethermotolerance pages 7-10</li>
+<li>rutley2021enhancedreproductivethermotolerance pages 12-13</li>
+<li>tang2016ubiquitinconjugateddegradationof pages 10-11</li>
+<li>hunziker2022phenotypiccharacterizationof pages 3-4</li>
+<li>https://doi.org/10.1111/nph.13635;</li>
+<li>https://doi.org/10.1128/mcb.02432-06</li>
+<li>https://doi.org/10.1111/nph.13635</li>
+<li>https://doi.org/10.3390/ijms24032750</li>
+<li>https://doi.org/10.3389/fpls.2022.848560</li>
+<li>https://doi.org/10.1105/tpc.110.073866</li>
+<li>https://doi.org/10.3389/fpls.2018.01370</li>
+<li>https://doi.org/10.3389/fpls.2021.672368</li>
+<li>https://doi.org/10.1093/plcell/koae193</li>
+<li>https://doi.org/10.1104/pp.112.198879</li>
+<li>https://doi.org/10.1111/nph.13635,</li>
+<li>https://doi.org/10.1128/mcb.02432-06,</li>
+<li>https://doi.org/10.3390/ijms24032750,</li>
+<li>https://doi.org/10.1104/pp.112.198879,</li>
+<li>https://doi.org/10.3389/fpls.2022.848560,</li>
+<li>https://doi.org/10.3389/fpls.2018.01370,</li>
+<li>https://doi.org/10.1105/tpc.110.073866,</li>
+<li>https://doi.org/10.3389/fpls.2021.672368,</li>
+<li>https://doi.org/10.1093/plcell/koae193,</li>
+</ol>
+            </div>
+        </details>
+        
+    </div>
+    
+
+    <!-- Additional Documentation Sections -->
+    
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9ZNU6
+gene_symbol: DET1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:4081
+  label: Solanum lycopersicum
+description: &gt;
+  Tomato DET1 (Q9ZNU6; gene DET1, synonyms hp2/dg; also called tDET1, &#34;Light-mediated
+  development protein DET1&#34;, &#34;High pigmentation protein 2&#34;, &#34;Protein dark green&#34;) is the
+  tomato ortholog of Arabidopsis DE-ETIOLATED1 and is genetically defined as the HIGH
+  PIGMENT 2 (hp2) locus, with dark-green (dg) as a further allele. It is a conserved
+  NEGATIVE regulator of photomorphogenesis - a repressor that holds back light-driven
+  development. Mechanistically it is not an enzyme acting on a small-molecule substrate but
+  a nuclear regulatory adaptor: it participates in the CDD complex (with DDB1 and the E2
+  variant COP10) and, in tomato, is a substrate-selection component of a CUL4-DDB1-DET1
+  (CRL4) E3 ubiquitin ligase that targets transcription factors for 26S-proteasome
+  degradation. The best-defined tomato substrate is the GOLDEN2-LIKE 2 (SlGLK2)
+  transcription factor; in Arabidopsis the repressive output is mediated by degradation of
+  photomorphogenesis-promoting factors such as HY5. DET1 localizes to the nucleus (UniProt;
+  tomato YFP assays show nucleus and cytoplasm). Loss-of-function alleles (hp-2, hp-2j, dg)
+  are constitutively/exaggeratedly photomorphogenic (&#34;high pigment&#34;): plants are darker and
+  shorter with elevated anthocyanins, and fruits over-accumulate chlorophyll, carotenoids
+  (lycopene), tocopherols and flavonoids - the basis of DET1 down-regulation as a
+  biofortification target. The tomato hp-2 phenotype is strictly dependent on active
+  phytochrome, placing DET1 as a downstream nuclear repressor within (rather than a
+  photoreceptor-level component of) the light/phytochrome signaling network.
+existing_annotations:
+# --- SPKW keyword-mapping annotations (GO_REF:0000043) ---
+# Derived from the UniProt Swiss-Prot keyword &#34;Phytochrome signaling pathway&#34;
+# (see KW line in DET1-uniprot.txt). Present in the goa_uniprot snapshot used by the
+# SPKW-PLANTS project, but REMOVED from the current GOA release after GOA retired the
+# keyword2GO (keyword-to-GO) pipeline for cellular organisms. Re-added here and reviewed
+# retrospectively to assess whether removal was justified.
+- term:
+    id: GO:0009585
+    label: red, far-red light phototransduction
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Phytochrome
+      signaling pathway&#34;; snapshot-only, removed in the current GOA release. DET1 is a
+      conserved NEGATIVE regulator of photomorphogenesis - a downstream nuclear repressor
+      acting via a CUL4-DDB1-DET1 E3 ligase / the CDD complex - not a photoreceptor-level
+      phototransduction component.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of this keyword-derived annotation was JUSTIFIED, and the term is
+      mis-placed. GO:0009585 is defined as &#34;the sequence of reactions within a cell required
+      to convert absorbed photons from red or far-red light into a molecular signal&#34; - i.e.
+      photoreceptor-level signal conversion (the job of phytochromes), which DET1 does not
+      perform. DET1 acts far downstream: it is a nuclear repressor that, through the
+      CUL4-DDB1-DET1 (CRL4) ubiquitin ligase and the CDD complex, promotes degradation of
+      photomorphogenesis-promoting factors such as HY5/transcription factors, thereby
+      repressing light-driven development [file:SOLLC/DET1/DET1-uniprot.txt;
+      file:SOLLC/DET1/DET1-deep-research-falcon.md]. Genetically, tomato hp-2/DET1 was
+      cloned precisely because HP genes were proposed to be negative regulators of
+      phytochrome signal transduction, and loss of DET1 yields exaggerated/constitutive
+      photomorphogenesis [PMID:9927635]. The accurate term for DET1&#39;s role is therefore
+      &#34;negative regulation of photomorphogenesis&#34; (GO:0010100), not red/far-red
+      phototransduction.
+    proposed_replacement_terms:
+    - id: GO:0010100
+      label: negative regulation of photomorphogenesis
+    supported_by:
+    - reference_id: PMID:9927635
+      supporting_text: &#34;It has been proposed that HP genes encode negative regulators of
+        phytochrome signal transduction.&#34;
+    - reference_id: PMID:9927635
+      supporting_text: &#34;encodes the tomato homolog of the nuclear protein DEETIOLATED1
+        (DET1) from Arabidopsis. Mutations in DET1 are known to result in constitutive
+        deetiolation in darkness.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;Repression of photomorphogenesis is\nCC       probably mediated by
+        ubiquitination and subsequent degradation of\nCC       photomorphogenesis-promoting
+        factors such as HY5.&#34;
+- term:
+    id: GO:0010017
+    label: red or far-red light signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000043
+  retired: true
+  review:
+    summary: &gt;
+      SPKW (GO_REF:0000043) annotation derived from the UniProt keyword &#34;Phytochrome
+      signaling pathway&#34;; snapshot-only, removed in the current GOA release. DET1
+      participates in light/phytochrome signaling, but as a broad NEGATIVE regulator of
+      photomorphogenesis rather than a red/far-red-specific signaling component.
+    action: MODIFY
+    reason: &gt;
+      GOA&#39;s removal of this keyword-derived annotation was reasonable. The term is not
+      entirely wrong - the tomato hp-2/DET1 phenotype is strictly dependent on active
+      phytochrome, so DET1 does act within the red/far-red (phytochrome) signaling network
+      [PMID:9927635] - but GO:0010017 (&#34;the series of molecular signals initiated upon
+      sensing by photoreceptor molecules of red light or far red light&#34;) implies a
+      wavelength-specific signaling role. DET1 is instead a convergent, downstream nuclear
+      repressor of photomorphogenesis that is not red/far-red-specific: in the conserved
+      CDD/CRL4 machinery it represses outputs of multiple photoreceptor pathways (its
+      Arabidopsis context includes blue/UV cryptochrome inputs), acting by targeting
+      photomorphogenesis-promoting factors (e.g. HY5) for ubiquitin-dependent degradation
+      [file:SOLLC/DET1/DET1-uniprot.txt]. The dg allele links the DET1 locus to the
+      photomorphogenic de-etiolation response generally [PMID:12589545]. The function is
+      therefore more accurately captured by &#34;negative regulation of photomorphogenesis&#34;
+      (GO:0010100).
+    proposed_replacement_terms:
+    - id: GO:0010100
+      label: negative regulation of photomorphogenesis
+    supported_by:
+    - reference_id: PMID:9927635
+      supporting_text: &#34;whereas det1 mutations are epistatic to mutations in phytochrome
+        genes, analysis of similar double mutants in tomato showed that manifestation of the
+        phenotype of the hp-2 mutant is strictly dependent upon the presence of active
+        phytochrome.&#34;
+    - reference_id: PMID:12589545
+      supporting_text: &#34;the tomato homolog of the DEETIOLATED1 (DET1) gene, involved in the
+        signal transduction cascade of light perception and morphogenesis.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;FUNCTION: Component of light signal transduction machinery.&#34;
+# --- Current GOA annotations (2026 release) ---
+- term:
+    id: GO:0016567
+    label: protein ubiquitination
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IBA annotation propagated across the DET1 phylogenetic group. DET1 is a substrate-
+      selection component of a CUL4-DDB1-DET1 (CRL4) E3 ubiquitin ligase that drives
+      ubiquitination and proteasomal degradation of regulatory transcription factors.
+    action: ACCEPT
+    reason: &gt;
+      Well supported and core to DET1&#39;s mechanism. In tomato, DET1 is part of a
+      CUL4-DDB1-DET1 E3 ligase complex that mediates ubiquitin-conjugated degradation of the
+      GOLDEN2-LIKE 2 (SlGLK2) transcription factor, with two ubiquitination-relevant lysines
+      (K11, K253) and MG132-sensitive turnover [file:SOLLC/DET1/DET1-deep-research-falcon.md].
+      The UniProt FUNCTION statement likewise attributes DET1&#39;s repression of
+      photomorphogenesis to ubiquitination and degradation of factors such as HY5
+      [file:SOLLC/DET1/DET1-uniprot.txt]. The IBA term is at an appropriate level of
+      specificity for the process the complex carries out.
+    supported_by:
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;promotes **ubiquitin-mediated proteasomal degradation** of the transcription factor **GOLDEN2-LIKE 2 (SlGLK2)**.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;Repression of photomorphogenesis is\nCC       probably mediated by
+        ubiquitination and subsequent degradation of\nCC       photomorphogenesis-promoting
+        factors such as HY5.&#34;
+- term:
+    id: GO:0031461
+    label: cullin-RING ubiquitin ligase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;
+      IBA annotation: DET1 is part of a cullin-RING ubiquitin ligase complex. The tomato and
+      Arabidopsis evidence specifies this as a CUL4-based (CRL4) complex, so a more precise
+      term is available.
+    action: MODIFY
+    reason: &gt;
+      The annotation is correct but can be made more informative. DET1 specifically assembles
+      into a CUL4-DDB1-DET1 cullin4-RING (CRL4) ligase: in Arabidopsis, CUL4 assembles with
+      DDB1, RBX1, DET1 and DDB2 in vitro and in planta [PMID:16792691], and in tomato DET1 is
+      part of a CUL4-DDB1-DET1 E3 ligase complex [file:SOLLC/DET1/DET1-deep-research-falcon.md].
+      GO:0080008 &#34;Cul4-RING E3 ubiquitin ligase complex&#34; is defined as a complex &#34;in which a
+      cullin from the Cul4 family and a RING domain protein form the catalytic core; substrate
+      specificity is conferred by an adaptor protein&#34;, which precisely describes DET1&#39;s
+      complex. MODIFY to the CUL4-specific child term.
+    proposed_replacement_terms:
+    - id: GO:0080008
+      label: Cul4-RING E3 ubiquitin ligase complex
+    supported_by:
+    - reference_id: PMID:16792691
+      supporting_text: &#34;Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and
+        DDB2 in vitro and in planta.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;the tomato hp1/hp2 loci (DDB1/DET1) are described as core components
+        of a **CUL4-type E3 ubiquitin ligase** controlling plastid levels and pigment
+        accumulation in fruit.&#34;
+- term:
+    id: GO:0031625
+    label: ubiquitin protein ligase binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;
+      IBA annotation: DET1 binds the cullin-RING ubiquitin ligase machinery (DDB1/CUL4),
+      anchoring it within the CRL4/CDD complex.
+    action: ACCEPT
+    reason: &gt;
+      Supported. DET1 physically associates with DDB1 and CUL4: Arabidopsis CUL4 assembles
+      with DDB1, RBX1 and DET1 [PMID:16792691], and the IntAct interaction underlying the IPI
+      annotation in this gene is with DDB1 (UniProtKB:Q8LGH4). In tomato, SlDET1 co-occurs in
+      the CUL4-DDB1-DET1 complex [file:SOLLC/DET1/DET1-deep-research-falcon.md]. Binding to
+      the ligase scaffold is consistent with DET1&#39;s role as the CRL4 substrate-recognition
+      adaptor; the IBA term is appropriate.
+    supported_by:
+    - reference_id: PMID:16792691
+      supporting_text: &#34;CUL4 associates with DDB1 and DET1&#34;
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;SlGLK2 physically associates with SlDET1 (and SlDDB1/SlCUL4) in plant
+        cells&#34;
+- term:
+    id: GO:0032436
+    label: positive regulation of proteasomal ubiquitin-dependent protein catabolic
+      process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IBA annotation: DET1 promotes proteasomal degradation of its substrate transcription
+      factors. Directly supported by tomato data showing DET1-dependent turnover of SlGLK2.
+    action: ACCEPT
+    reason: &gt;
+      Supported and consistent with DET1&#39;s repressor mechanism. As the substrate-selection
+      adaptor of the CRL4 ligase, DET1 promotes ubiquitin-26S-proteasome degradation of
+      target proteins: SlGLK2 turnover is retarded when CUL4/DDB1/DET1 are impaired and is
+      stabilized by the proteasome inhibitor MG132
+      [file:SOLLC/DET1/DET1-deep-research-falcon.md]; in Arabidopsis the repressive output is
+      degradation of photomorphogenesis-promoting factors such as HY5
+      [file:SOLLC/DET1/DET1-uniprot.txt]. The IBA term accurately captures DET1&#39;s positive
+      role in driving substrate proteolysis.
+    supported_by:
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;its turnover is retarded when CUL4/DDB1/DET1 are genetically
+        impaired; proteasome inhibition (MG132) stabilizes SlGLK2.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;Repression of photomorphogenesis is\nCC       probably mediated by
+        ubiquitination and subsequent degradation of\nCC       photomorphogenesis-promoting
+        factors such as HY5.&#34;
+- term:
+    id: GO:1990756
+    label: ubiquitin-like ligase-substrate adaptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;
+      IBA annotation: DET1 functions as the substrate-recognition adaptor of the CRL4 E3
+      ligase, bridging target transcription factors to the ubiquitination machinery. This is
+      DET1&#39;s core molecular function.
+    action: ACCEPT
+    reason: &gt;
+      This is the most informative molecular-function annotation for DET1 and is well
+      supported. DET1 is not a catalytic enzyme but a regulatory scaffold/adaptor that helps
+      the CUL4-DDB1 E3 ligase recognize and destabilize specific protein substrates such as
+      SlGLK2 [file:SOLLC/DET1/DET1-deep-research-falcon.md]. The GO:0080008 definition of the
+      DET1 complex explicitly notes that &#34;substrate specificity is conferred by an adaptor
+      protein&#34;, matching the substrate-adaptor MF. ACCEPT as a core function.
+    supported_by:
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;it is not an enzyme that catalyzes a small-molecule reaction, but a
+        **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize
+        specific protein substrates.&#34;
+    - reference_id: PMID:16792691
+      supporting_text: &#34;Cullins are central scaffolding subunits in eukaryotic E3 ligases
+        that \nfacilitate the ubiquitination of target proteins.&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;
+      IEA annotation (UniProt subcellular-location keyword mapping) for nuclear localization.
+      Strongly supported: DET1 is a nuclear protein, consistent with its role as a nuclear
+      transcriptional/proteostatic repressor.
+    action: ACCEPT
+    reason: &gt;
+      Correct and well supported. UniProt annotates DET1 subcellular location as Nucleus, and
+      it carries two predicted nuclear localization signals [file:SOLLC/DET1/DET1-uniprot.txt].
+      Arabidopsis DET1 is a nuclear-localized protein that associates with histones, and in
+      tomato YFP-tagged SlDET1 localizes to the nucleus (and cytoplasm), with strong nuclear
+      BiFC signal for the SlDET1-SlGLK2 interaction [file:SOLLC/DET1/DET1-deep-research-falcon.md].
+      Nuclear localization is a core location for DET1&#39;s repressor function.
+    supported_by:
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Nucleus&#34;
+    - reference_id: PMID:9927635
+      supporting_text: &#34;encodes the tomato homolog of the nuclear protein DEETIOLATED1
+        (DET1) from Arabidopsis.&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;
+      IEA annotation from InterPro (IPR008928, six-hairpin glycosidase superfamily fold).
+      This is a spurious structural-fold-based mapping; DET1 has no role in carbohydrate
+      metabolism.
+    action: REMOVE
+    reason: &gt;
+      This annotation is a false-positive driven by remote structural similarity, not
+      function. The InterPro signature IPR008928 is the &#34;six-hairpin glycosidase-like&#34;
+      superfamily FOLD (SSF48208), which DET1 shares only at the level of overall fold
+      architecture (the De-etiolated_protein_1_Det1 family, IPR019138/PF09737, is the
+      function-relevant signature) [file:SOLLC/DET1/DET1-uniprot.txt]. DET1 is a nuclear
+      ubiquitin-ligase adaptor and photomorphogenesis repressor with no glycoside-hydrolase
+      or carbohydrate-metabolic activity in any of the experimental literature
+      [file:SOLLC/DET1/DET1-deep-research-falcon.md]. Mapping a structural superfamily to
+      &#34;carbohydrate metabolic process&#34; is an over-annotation and should be removed.
+    supported_by:
+    - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+      supporting_text: &#34;InterPro; IPR008928; 6-hairpin_glycosidase_sf.&#34;
+    - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+      supporting_text: &#34;it is not an enzyme that catalyzes a small-molecule reaction, but a
+        **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize
+        specific protein substrates.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16792691
+  qualifier: enables
+  review:
+    summary: &gt;
+      IPI annotation (IntAct) recording a binary interaction between tomato DET1 and
+      UniProtKB:Q8LGH4 (DDB1), from the Arabidopsis CUL4-DDB1-DET1 study. &#34;Protein binding&#34;
+      is uninformative; the interactor is the CRL4 ligase scaffold DDB1.
+    action: MODIFY
+    reason: &gt;
+      Per curation guidelines, bare &#34;protein binding&#34; (GO:0005515) should be replaced with a
+      more informative molecular-function term. The IntAct partner Q8LGH4 is DDB1, the
+      adaptor/scaffold of the CUL4-based E3 ligase, and the cited paper demonstrates that
+      CUL4 associates with DDB1 and DET1 [PMID:16792691]. This specific interaction with the
+      ubiquitin-ligase machinery is captured by &#34;ubiquitin protein ligase binding&#34;
+      (GO:0031625), which is also independently supported by the IBA annotation above. MODIFY
+      to the more informative term.
+    proposed_replacement_terms:
+    - id: GO:0031625
+      label: ubiquitin protein ligase binding
+    supported_by:
+    - reference_id: PMID:16792691
+      supporting_text: &#34;CUL4 associates with DDB1 and DET1&#34;
+    - reference_id: PMID:16792691
+      supporting_text: &#34;Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and
+        DDB2 in vitro and in planta.&#34;
+core_functions:
+- description: &gt;
+    DET1 is the substrate-recognition adaptor of a nuclear CUL4-DDB1-DET1 (CRL4) E3 ubiquitin
+    ligase, and a component of the CDD complex (with DDB1 and the E2 variant COP10). It bridges
+    specific target transcription factors to the cullin-RING ligase, driving their
+    ubiquitination and 26S-proteasome degradation; the best-characterized tomato substrate is
+    the GOLDEN2-LIKE 2 (SlGLK2) transcription factor.
+  molecular_function:
+    id: GO:1990756
+    label: ubiquitin-like ligase-substrate adaptor activity
+  directly_involved_in:
+  - id: GO:0016567
+    label: protein ubiquitination
+  - id: GO:0032436
+    label: positive regulation of proteasomal ubiquitin-dependent protein catabolic process
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  in_complex:
+    id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+  supported_by:
+  - reference_id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+    supporting_text: &#34;it is not an enzyme that catalyzes a small-molecule reaction, but a
+      **regulatory scaffold/adaptor** that helps the E3 ligase recognize and destabilize
+      specific protein substrates.&#34;
+  - reference_id: PMID:16792691
+    supporting_text: &#34;Arabidopsis cullin 4 is shown to assemble with DDB1, RBX1, DET1 and
+      DDB2 in vitro and in planta.&#34;
+- description: &gt;
+    DET1 is a nuclear NEGATIVE regulator of photomorphogenesis. By promoting degradation of
+    photomorphogenesis-promoting factors (e.g. HY5) and pigment-related transcription factors
+    (e.g. SlGLK2), it represses light-driven development; loss-of-function alleles (hp-2,
+    hp-2j, dg) are constitutively/exaggeratedly photomorphogenic (&#34;high pigment&#34;), with
+    elevated chlorophyll, carotenoids, anthocyanins and flavonoids. Its action is downstream
+    of, and dependent on, phytochrome signaling.
+  molecular_function:
+    id: GO:1990756
+    label: ubiquitin-like ligase-substrate adaptor activity
+  directly_involved_in:
+  - id: GO:0010100
+    label: negative regulation of photomorphogenesis
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:9927635
+    supporting_text: &#34;It has been proposed that HP genes encode negative regulators of
+      phytochrome signal transduction.&#34;
+  - reference_id: file:SOLLC/DET1/DET1-uniprot.txt
+    supporting_text: &#34;Acts as a negative\nCC       regulator of fruit pigmentation.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Which transcription-factor substrates does tomato DET1 select in vegetative
+    versus fruit tissue, and are HY5 and PIFs direct CRL4-DET1 substrates in tomato as they
+    are in Arabidopsis?
+  experts:
+  - Yongsheng Liu
+  - Chris Bowler
+- question: Does DET1 confer substrate specificity directly (as a DCAF-like adaptor binding
+    substrate) or indirectly via partner adaptors within the CDD/CRL4 complex?
+  experts:
+  - Xing Wang Deng
+suggested_experiments:
+- description: Reconstitute the tomato CUL4-DDB1-DET1 ligase from purified subunits and assay
+    in vitro polyubiquitination of candidate substrates (SlGLK2, SlBBX20, HY5) with and
+    without DET1, to establish DET1 as the substrate-selection adaptor.
+  hypothesis: DET1 is required for ligase-mediated ubiquitination of specific transcription
+    factors and acts as the substrate-recognition module of the CRL4 complex.
+  experiment_type: in vitro reconstituted ubiquitination assay
+- description: Generate tomato det1 lines crossed into phytochrome-deficient and
+    cryptochrome-deficient backgrounds and quantify de-etiolation/pigmentation, to test
+    whether DET1 represses outputs of multiple photoreceptor pathways rather than red/far-red
+    signaling specifically.
+  hypothesis: DET1 is a convergent repressor of photomorphogenesis acting downstream of
+    multiple photoreceptors, not a red/far-red-specific signaling component.
+  experiment_type: genetic epistasis analysis
+- description: Perform quantitative proteomics of det1/hp-2 versus wild-type seedlings and
+    fruit to identify the set of proteins stabilized upon DET1 loss (candidate CRL4-DET1
+    substrates).
+  hypothesis: DET1 loss stabilizes a defined set of photomorphogenesis-promoting and pigment
+    biosynthesis transcription factors.
+  experiment_type: comparative quantitative proteomics
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings:
+  - statement: InterPro-to-GO mapping assigned &#34;carbohydrate metabolic process&#34; to DET1 via
+      the six-hairpin glycosidase superfamily fold (IPR008928), a structural-fold artefact
+      unrelated to DET1&#39;s true function.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: DET1 family functions (cullin-RING ubiquitin ligase complex membership,
+      ubiquitin protein ligase binding, ubiquitin-like ligase-substrate adaptor activity,
+      protein ubiquitination, positive regulation of proteasomal degradation) are conserved
+      across the DET1 phylogenetic group (PANTHER PTHR13374 / PTN000332575).
+- id: GO_REF:0000043
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot keyword mapping
+  findings:
+  - statement: SwissProt keyword-derived (SPKW) annotations present in the goa_uniprot
+      snapshot used by the SPKW-PLANTS project but removed from the current GOA release after
+      GOA retired the keyword2GO pipeline for cellular organisms.
+  - statement: For DET1, the keyword &#34;Phytochrome signaling pathway&#34; mapped to two
+      red/far-red light terms (GO:0009585, GO:0010017); these are mis-placed/over-specific
+      for a downstream nuclear repressor and are better replaced by negative regulation of
+      photomorphogenesis (GO:0010100).
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings:
+  - statement: Nuclear localization assigned from the UniProt Subcellular Location &#34;Nucleus&#34;;
+      consistent with experimental nuclear localization of DET1.
+- id: PMID:9927635
+  title: Phenotype of the tomato high pigment-2 mutant is caused by a mutation in the tomato
+    homolog of DEETIOLATED1.
+  findings:
+  - statement: The tomato HP-2 gene encodes the tomato homolog of the nuclear Arabidopsis
+      protein DEETIOLATED1 (DET1); HP genes were proposed to be negative regulators of
+      phytochrome signal transduction.
+  - statement: det1 mutations cause constitutive de-etiolation in darkness; the tomato hp-2
+      phenotype is strictly dependent on active phytochrome, placing DET1 downstream within
+      phytochrome signaling.
+- id: PMID:12589545
+  title: The tomato dark green mutation is a novel allele of the tomato homolog of the
+    DEETIOLATED1 gene.
+  findings:
+  - statement: The dark-green (dg) and hp-2(j) mutations are allelic at the tomato DET1 locus;
+      DET1 is involved in the signal transduction cascade of light perception and morphogenesis.
+  - statement: dg mutants show an exaggerated photomorphogenic de-etiolation response, and the
+      DET1 locus is strongly linked to the photomorphogenic (hypocotyl-length) response.
+- id: PMID:16792691
+  title: CUL4 associates with DDB1 and DET1 and its downregulation affects diverse aspects of
+    development in Arabidopsis thaliana.
+  findings:
+  - statement: Arabidopsis CUL4 assembles with DDB1, RBX1, DET1 and DDB2 in vitro and in
+      planta to form a functional cullin4-RING E3 ligase; cullins are scaffolding subunits
+      that facilitate ubiquitination of target proteins.
+  - statement: The IntAct interaction underlying the IPI &#34;protein binding&#34; annotation for
+      tomato DET1 is with DDB1 (UniProtKB:Q8LGH4), a component of the CUL4-based ligase.
+- id: file:SOLLC/DET1/DET1-uniprot.txt
+  title: UniProt entry DET1_SOLLC (Q9ZNU6) - Light-mediated development protein DET1.
+  findings:
+  - statement: UniProt annotates DET1 as a component of light signal transduction machinery
+      and a negative regulator of fruit pigmentation, probably acting in the CDD complex
+      (with DDB1); repression of photomorphogenesis is probably mediated by ubiquitination and
+      degradation of photomorphogenesis-promoting factors such as HY5.
+  - statement: Subcellular location is Nucleus; the protein carries two predicted nuclear
+      localization signals and belongs to the DET1 family (IPR019138/PF09737), with the
+      six-hairpin glycosidase superfamily fold (IPR008928) being structural only.
+- id: file:SOLLC/DET1/DET1-deep-research-falcon.md
+  title: Deep-research report (falcon / Edison Scientific Literature) - functional annotation
+    of tomato DET1 (Q9ZNU6).
+  findings:
+  - statement: Synthesizes the tomato DET1/hp2 literature, concluding DET1 is a nuclear
+      regulatory scaffold/adaptor of a CUL4-DDB1-DET1 (CRL4) E3 ligase that ubiquitinates and
+      degrades transcription factors (notably SlGLK2), repressing photomorphogenesis and
+      controlling plastid/pigment accumulation in fruit.
+  - statement: Documents DET1 participation in the CDD complex (DDB1, COP10), nuclear (and
+      cytoplasmic) localization in tomato YFP assays, and the high-pigment biofortification
+      phenotype (elevated carotenoids, tocopherols, flavonoids) of DET1-downregulated fruit.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+    
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

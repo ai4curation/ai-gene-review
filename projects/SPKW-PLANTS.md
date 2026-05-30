@@ -22,12 +22,14 @@ current (≈April 2026) GOA release, GOA **retired the keyword-to-GO pipeline**
 `GO_REF:0000043` annotations for human, mouse, fly, worm, *S. pombe*, *Chlamydomonas*,
 Arabidopsis, rice, soybean, tobacco, and every other model organism checked (only viruses
 retain them). `plant.ddb` is effectively the last high-coverage record of the plant SPKW
-landscape, so this subproject is a **retrospective validation study**: for thirty-four
-genes across fourteen species (nine in the original round, five in the 2026-05-29
-species extension, four in the 2026-05-30 methylation-keyword batch, twelve in the
-2026-05-30 developmental/defense/nodulation keyword sweep, and four in the hormone-
-signaling-subtype batch) we ask whether GOA's wholesale removal was justified, and we
-classify the 214 SPKW-unique terms by their over-annotation risk.
+landscape, so this subproject is a **retrospective validation study**: for thirty-eight
+genes across fourteen species (nine original, five in the 2026-05-29 species extension,
+four methylation, twelve in the developmental/defense/nodulation sweep, four hormone-
+signaling subtypes, and four long-tail keywords — the latter five batches a full sweep of
+the high/medium-value Tier A keyword watch-list) we ask whether GOA's wholesale removal
+was justified, and we classify the 214 SPKW-unique terms by their over-annotation risk.
+All 38 reviews have had their `file:` supporting-text quotes verbatim-audited (the
+reference-validator does not check `file:` prefixes; see [SPKW-METHODOLOGY.md](SPKW-METHODOLOGY.md)).
 
 ## Key Statistics (2026-05-21)
 
@@ -643,6 +645,31 @@ to"/"regulation of"), and simply **wrong** for a hormone-**metabolism** enzyme (
 ("X signaling pathway") thus yields keep / MODIFY / remove verdicts depending entirely on
 whether the gene perceives-and-transduces, merely responds to, or metabolizes the hormone.
 
+### Long-tail keywords (fruit ripening, autophagy, hypersensitive response, light signaling)
+
+A final pass covered the remaining smaller Tier A keywords (each ≤30 genes):
+
+| Gene | Species | Keyword → GO term | Action |
+|------|---------|-------------------|--------|
+| PG2 | tomato | fruit ripening (GO:0009835) | **MARK_OVER** (enzyme-vs-process; STS3 pattern) |
+| JOKA2 | potato | autophagy (GO:0006914) | **MODIFY → macroautophagy** (legitimate autophagy gene) |
+| LSD1 | rice | plant-type hypersensitive response (GO:0009626) | **MODIFY → negative regulation of HR** |
+| DET1 | tomato | red/far-red light signaling (GO:0010017) | **MODIFY → negative regulation of photomorphogenesis** |
+
+These reconfirm the four outcomes and add two sharp variants:
+- **Regulatory-direction inversion** (LSD1, DET1): both are *negative* regulators of the process
+  their keyword names — LSD1 restrains the hypersensitive response (*lsd1* = runaway cell death),
+  DET1 represses photomorphogenesis. The keyword maps them to the bare process as if they
+  execute/promote it; the correct term is "negative regulation of …". This is a sharper form of
+  the regulator-vs-participant conflation — the keyword gets the *direction* backwards.
+- **Keyword reputation ≠ gene verdict** (JOKA2): the Autophagy keyword was ~80% over-annotated in
+  the human subproject, but potato JOKA2 is a bona fide NBR1/p62-family selective-autophagy cargo
+  receptor — so "autophagy" is correct here (MODIFY to the more specific macroautophagy/
+  autophagosome). Gene-specific biology overrides keyword priors.
+- PG2 (fruit ripening on the softening polygalacturonase) is the STS3/CPS4 enzyme-vs-process
+  pattern in developmental guise; the pass also removed spurious anther/fruit-dehiscence
+  cross-paralog transfers.
+
 ### What the keyword-sweep confirms
 
 Across all three batches the same meta-rule holds — **a process/role keyword is only as good as
@@ -782,6 +809,11 @@ genes/MAIZE/VP1/VP1-ai-review.yaml        (A: ABA B3 TF; ABA signaling MODIFY->r
 genes/ORYSJ/CKX2/CKX2-ai-review.yaml      (A: cytokinin dehydrogenase; cytokinin signaling MARK_OVER, catabolic enzyme)
 genes/ORYSJ/TUD1/TUD1-ai-review.yaml      (A: BR E3 ligase; BR signaling ACCEPT, legitimate component)
 genes/ORYSJ/EIL2/EIL2-ai-review.yaml      (A: ethylene EIN3-like TF; ethylene signaling ACCEPT, legitimate component)
+# 2026-05-30 long-tail keyword batch (fruit ripening, autophagy, HR, light signaling):
+genes/SOLLC/PG2/PG2-ai-review.yaml        (A: polygalacturonase; fruit ripening MARK_OVER, enzyme-vs-process)
+genes/SOLTU/JOKA2/JOKA2-ai-review.yaml    (A-legit: NBR1-like autophagy receptor; autophagy MODIFY->macroautophagy)
+genes/ORYSJ/LSD1/LSD1-ai-review.yaml      (A: neg. regulator of cell death; HR MODIFY->negative regulation of HR)
+genes/SOLLC/DET1/DET1-ai-review.yaml      (A: photomorphogenesis repressor; light signaling MODIFY->neg. reg. photomorphogenesis)
 ```
 
 ## Methods Note

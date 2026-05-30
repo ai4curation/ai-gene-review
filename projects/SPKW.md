@@ -14,7 +14,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 - **GOA has retired the SPKW pipeline (≈April 2026)**: `GO_REF:0000043` keyword-to-GO
   annotations have been removed from live GOA for all cellular organisms (verified zero for
   human, mouse, fly, worm, *S. pombe*, plants; only viruses retain them). The problem this
-  project documented is now resolved at the source. Retrospective review of 34 non-Arabidopsis
+  project documented is now resolved at the source. Retrospective review of 38 non-Arabidopsis
   plant genes (see [PLANTS](SPKW-PLANTS.md)) shows only ~15% of plant SPKW-unique terms carry
   real over-annotation risk; removal was justified for those, but blanket retirement also
   dropped *correct* annotations when the keyword was the only carrier of a fact.
@@ -32,7 +32,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PSEPK](SPKW-PSEPK.md) | P. putida | 1,098 | 4 | 25% | RT defense keyword |
 | [ARATH](SPKW-ARATH.md) | A. thaliana | 8,433 | 4 | 75% | Subclade divergence |
 | [Virus clades](SPKW-VIRUS.md) | Viral taxa | 54,131 | 11 | 55% | Host-context mismatch, specificity |
-| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 34 | 15% Tier-A | Term-tiering; GOA retired SPKW |
+| [PLANTS](SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
 
@@ -71,7 +71,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
-- **Total genes reviewed**: 129 across 11 subprojects
+- **Total genes reviewed**: 133 across 11 subprojects
 - **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
 
 ### Phase 1 (Original)
@@ -89,7 +89,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PSEPK](SPKW-PSEPK.md) - Bacterial control
 - [x] [ARATH](SPKW-ARATH.md) - Plant patterns
 - [x] [Virus clades](SPKW-VIRUS.md) - Virus-wide and clade-specific patterns
-- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (34 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6)
+- [x] [PLANTS](SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
 - [x] [BPT4](SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW-ECO57.md) - Toxin/effector
 
@@ -166,6 +166,22 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
   remove purely by the gene's pathway position (transduction component vs responsive effector vs
   hormone-metabolism enzyme). PLANTS now **34 genes / 14 species**; the full high/medium-value
   Tier A watch-list is covered.
+- **Long-tail keyword batch** (4 genes): PG2 (tomato polygalacturonase) fruit ripening MARK_OVER
+  (enzyme-vs-process); JOKA2 (potato NBR1-like) autophagy MODIFY->macroautophagy (legitimate
+  autophagy gene — keyword reputation ≠ gene verdict); LSD1 (rice) HR MODIFY->**negative**
+  regulation of HR; DET1 (tomato) light signaling MODIFY->**negative** regulation of
+  photomorphogenesis. New variant: **regulatory-direction inversion** — LSD1/DET1 are *negative*
+  regulators of the very process their keyword names. PLANTS now **38 genes / 14 species**.
+- **Data-integrity audit (important):** the reference-validator
+  (`conf/reference_validator_config.yaml`) lists `file` in `skip_prefixes`, so `file:`
+  supporting-text is NEVER verbatim-checked by `just validate` — only `PMID:` quotes are. An
+  audit found **265/550 (~48%)** of `file:` quotes across all SPKW-PLANTS reviews (incl. the
+  original 9 and the EME1 exemplar) were non-verbatim — fabricated/paraphrased/markdown-mangled —
+  yet had passed validation. Fixed every one (replaced with exact substrings or verbatim
+  primary-PMID quotes; removed a few genuinely fabricated claims) with **zero annotation-action
+  changes** (curation was sound; provenance was not). Re-verified with the validator's own
+  matching logic: **0/536 file: quotes non-verbatim** across all 38 genes. Lesson recorded:
+  prefer PMID quotes; grep-verify any file: quote.
 
 ### 2026-05-29
 
